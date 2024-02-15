@@ -1,0 +1,102 @@
+
+main:
+
+// set scoreboard messages
+setcvar "g_obj_alliedtext1" "Remagen"
+setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "mohdm3"
+
+setcvar "g_gametype" "1"
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "fraglimit" "0"
+setcvar "timelimit" "15"
+
+exec alienx/basebuild.scr::main 99999 10000
+
+
+
+	level waittill prespawn
+
+
+
+
+//                                              note all these must have a value!
+//                                                                                    +----------------- light on or off ( 1 = on, 0 = off )
+//                                                                                    | +--------------- red (1 is the max, so for a little red, use 0.5)
+//                                                                                    | | +------------- green (same for red)
+//                                                                                    | | | +----------- blue (same for red)
+//                                                                                    | | | | ++-------- rotation speed (keep it sensiable lol)
+//                                                                                    | | | | || ++----- the scale of the pickup object, 1 is default
+//                                                                                    | | | | || || +--- lift creator ( 1 = on, 0 = off )
+//													//													//					      | | | | || || | +--teleporter ( 1 = on, 0 = off )
+//													//													//						| | | | || || | | +-solid object ( 1 = solid, 2 = not solid )
+//													//													//		| | | | || || | | |
+//---| script                      |-| origin                |-|  model name        | | | | | || || |
+// allies spawn
+exec alienx/basebuild.scr::basebuild ( 1519 47 -63 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+
+// axis spawn
+exec alienx/basebuild.scr::basebuild ( 5172 -1723 8 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+
+// extra items
+
+	exec server_planes/trigger.scr ( 91 -373 -40 ) "allies" .2 
+	exec server_planes/trigger.scr ( 5660 -2960 1 ) "axis" .2 
+
+exec global/jetpack.scr ( 5631.53 -3148.37 1.13 ) //axis
+exec global/jetpack.scr ( 109.53 -235.13 -19.88 ) //allies
+
+exec global/dog.scr ( 2334.57 -1551.13 -55.88 )
+
+//*** precache dm stuff
+	exec global/dmprecache.scr
+
+	//hud
+	exec alienx/hud.scr::main
+	
+	level.script = maps/dm/mohdm3.scr
+	exec global/ambient.scr mohdm3
+
+exec map_triggers/allweapons.scr ( 1057.82 -2564.45 8.25 )
+exec map_triggers/giant.scr ( 2564.68 -2628.79 8.13 )
+exec map_triggers/invisible.scr ( 1691.13 -1872.87 144.13 )
+exec map_triggers/invulnerable.scr ( 1689.87 -2633.15 304.13 )
+exec map_triggers/midget.scr ( 1884.32 -1821.41 -55.88 )
+exec map_triggers/normal.scr ( 970.90 511.94 162.13 )
+exec map_triggers/camo.scr ( 3754 -2337 8 )
+exec map_triggers/health.scr ( 5022 -3547 287 ) ( 4052 -1319 8 ) ( 2703 -2067 8 ) ( 1987 -1968 -55 ) ( 2156 -1247 -5 ) ( 911 528 162 ) ( 762 -2208 -2 ) ( 2767 -2191 208 ) ( 2400 -1535 144 ) ( 3623 -807 16 )
+
+exec map_triggers/joint.scr ( 3881 -2775 704 )
+exec map_triggers/bomb.scr ( 3546 -1622 248 )
+exec map_triggers/bomb.scr ( 1016 -5 310 )
+exec map_triggers/spy.scr ( 546 169 162 ) ( 4520 -2725 248 )
+
+
+thread global/door_locked.scr::lock
+
+
+        thread night2day
+
+// comment these out if there are too many spotlights.
+exec spotlight_colors/player_spotlight_bluishgreen.scr ( 240 -1218 848 )
+exec spotlight_colors/player_spotlight_bluishred.scr ( 1512 -1662 744 )
+exec spotlight_colors/player_spotlight_greenishblue.scr ( 2076 -670 744 ) 
+exec spotlight_colors/player_spotlight_orange.scr ( 2819 -2597 280 ) 
+exec spotlight_colors/player_spotlight_purple.scr ( 3627 -1475 728 ) 
+exec spotlight_colors/player_spotlight_lightblue.scr ( 3893 -2780 960 ) 
+exec spotlight_colors/player_spotlight_lightgreen.scr ( 3138 -3984 880 ) 
+exec spotlight_colors/player_spotlight_lightred.scr ( 5645 -3946 640 )
+exec spotlight_colors/player_spotlight_reddishgreen.scr ( 5175 -1622 477 )
+exec spotlight_colors/player_spotlight_white.scr ( 1364 -3198 66 )
+
+
+	level waittill spawn
+
+end
+
