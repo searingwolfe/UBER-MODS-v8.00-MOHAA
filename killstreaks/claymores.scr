@@ -1,0 +1,406 @@
+main local.kills local.claymores:
+
+////////////////////////////////////////////////////////////////////////
+
+level.claymore_damage = 250
+level.claymore_radius = 200	// distance to trigger the claymores
+level.claymore_fov = 150	// field-of-view in degrees (facing forward) to trigger the claymores
+level.claymore_scale = 0.25
+
+////////////////////////////////////////////////////////////////////////
+
+	if(local.kills == NIL || int(local.kills) <= 1) { wait 1; println("----- ERROR claymores.scr: 'kills' parameter must be > 1."); end }
+	if(local.claymores == NIL || int(local.claymores) <= 0) { wait 1; println("----- ERROR claymores.scr: 'claymores' parameter must be > 0."); end }
+	else if(int(local.claymores) > 5) { wait 1; println("----- ERROR claymores.scr: 'claymores' parameter cannot be > 5."); end }
+
+	local.kills = int(local.kills)
+	local.claymores = int(local.claymores)
+	if(level.kill_streak[local.kills] != 1) { thread claymores local.kills local.claymores }
+	else { wait 1; println("----- ERROR claymores.scr: another killstreak is already checking for " + local.kills + " player kills."); end }
+	level.kill_streak[local.kills] = 1
+
+	if(level.check_player_kills != 1)
+	{
+		thread killstreaks
+		local.result = registerev damage killstreaks/damagehandler.scr // this replaces the "health" parameter; only enemies can destroy killstreaks.
+	}
+	level.check_player_kills = 1
+
+	cache models/static/exp_crate3.tik
+	cache models/emitters/explosion_mine.tik
+	thread scriptmaster
+end
+
+////////////////////////////////////////////////////////////////////////
+
+claymores local.kills local.claymores:
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(isalive $player[local.i] && $player[local.i].kill_streak != NIL && $player[local.i].kill_streak >= local.kills && $player[local.i].killstreak_selected != 1 && $player[local.i].killstreak_claymore != 1 && $player[local.i].dmteam == $player[local.i].teamm)
+			{
+				$player[local.i] thread holding_claymores local.claymores
+			}
+		}
+		waitframe
+	}
+	thread claymores local.kills local.claymores
+end
+
+holding_claymores local.claymores:
+
+	ihuddraw_string self 150 "Hold USE(e) + Lean Left/Right to show."
+	if(self.killstreak_claymore != 1)
+	{
+		self iprint ("*** Killstreak Acquired: " + local.claymores + " Claymores ***") 1
+		self iprint "*** If you die or switch teams, you will lose the killstreak! ***" 1
+		self iprint "Hold USE(e) + Lean Left/Right to begin placing it."
+		self iprint "Hold USE(e) + Right Click to place it."
+		println("----- $player[" + (self.entnum + 1) + "] acquired " + local.claymores + " Claymores.")
+	}
+	local.team = self.dmteam
+	self.placing_killstreak_old = 0		// only for ensuring that Light Bombs, Giant Bombs, & throwing knives don't shoot immediately after placing a killstreak
+	self.placing_killstreak = 0		// toggle for showing/hiding killstreak
+	self.killstreak_selected = 1		// only allows one killstreak to be held at a time, once placing_killstreak = 1
+	self.killstreak_claymore = 1		// prevents the player from obtaining multiple claymores per "life";
+						// removing this and setting "local.kills" = 1 could crash the server due to claymores being spam-spawned.
+	local.dummy = spawn script_model
+	local.dummy model models/static/exp_crate3.tik
+	local.dummy.origin = self.origin
+	local.dummy.angle = self.angle
+	local.dummy.scale = level.claymore_scale
+	local.dummy notsolid
+	local.dummy hide
+
+	local.laser = thread spawnlaser (self gettagposition "eyes bone") (self gettagposition "eyes bone") ( 0 1 0 ) 0.5 0.4
+	local.laser1 = thread spawnlaser local.dummy.origin local.dummy.origin ( 1 0 0 ) 0.25 0.25
+	local.laser2 = thread spawnlaser local.dummy.origin local.dummy.origin ( 1 0 0 ) 0.25 0.25
+	local.laser1 hide
+	local.laser2 hide
+
+	local.PI = 3.14159265359
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator" && self.placing_killstreak_old2 == 1) { waitframe }
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator")
+	{
+		local.laser.origin = self gettagposition "eyes bone"
+		local.laservec = angles_toforward self.viewangles
+
+		local.degrees = local.dummy.angle + 90 // shift the lasers origin point slightly left, since crate's origin is not in the center of the crate
+		if(local.degrees >= 180) { local.degrees -= 360 }
+		local.radians = local.degrees * (local.PI / 180)
+		local.sin0 = (sin local.radians) * 1
+		local.cos0 = (cos local.radians) * 1
+
+		local.degrees = local.dummy.angle + 35
+		if(local.degrees >= 180) { local.degrees -= 360 }
+		local.radians = local.degrees * (local.PI / 180)
+		local.sin1 = (sin local.radians) * 40
+		local.cos1 = (cos local.radians) * 40
+
+		local.degrees = local.dummy.angle - 35
+		if(local.degrees >= 180) { local.degrees -= 360 }
+		local.radians = local.degrees * (local.PI / 180)
+		local.sin2 = (sin local.radians) * 40
+		local.cos2 = (cos local.radians) * 40
+
+		if(local.toggle != 1 && self.placing_killstreak != 1 && self.useheld == 1 && (self.leanleftheld == 1 || self.leanrightheld == 1) && self.driving != 1 && self.flying != 1 && self.passenger != 1)
+		{
+			ihuddraw_string self 150 "Hold USE(e) + Right Click to place."
+			local.toggle = 1
+			local.dummy show
+			local.laser1 show
+			local.laser2 show
+			self.placing_killstreak = 1
+		}
+		if((local.toggle != 1 && self.placing_killstreak == 1 && self.useheld == 1 && (self.leanleftheld == 1 || self.leanrightheld == 1)) || self.driving == 1 || self.flying == 1 || self.passenger == 1)
+		{
+			if(self.driving == 1 || self.flying == 1 || self.passenger == 1) { ihuddraw_string self 150 "" }
+			else { ihuddraw_string self 150 "Hold USE(e) + Lean Left/Right to show." }
+			local.toggle = 1
+			local.dummy hide
+			local.laser1 hide
+			local.laser2 hide
+			self.placing_killstreak = 0
+		}
+		if(self.leanleftheld != 1 && self.leanrightheld != 1) { local.toggle = 0 }
+
+		if(self.placing_killstreak == 1 && self.useheld == 1)
+		{
+			local.dummy.origin = trace local.laser.origin (local.laser.origin + ( local.laservec * 350 )) 0
+			local.dummy.origin = trace local.dummy.origin (local.dummy.origin + ( 0 0 -10240 )) 0 // simulate droptofloor
+			local.laser endpoint local.dummy.origin
+			local.laser1.origin = local.dummy.origin + ( local.cos0 local.sin0 4 )
+			local.laser1 endpoint (local.dummy.origin + ( local.cos1 local.sin1 4 ))
+			local.laser2.origin = local.dummy.origin + ( local.cos0 local.sin0 4 )
+			local.laser2 endpoint (local.dummy.origin + ( local.cos2 local.sin2 4 ))
+		}
+		else
+		{
+			local.dummy.origin = self.origin
+			local.dummy.angle = self.angle
+			local.laser endpoint local.laser.origin
+			local.laser1.origin = local.laser.origin
+			local.laser1 endpoint local.laser.origin
+			local.laser2.origin = local.laser.origin
+			local.laser2 endpoint local.laser.origin
+		}
+
+		if(self.useheld == 1 && self.fireheld == 1 && self.placing_killstreak == 1)
+		{
+			self thread spawn local.dummy.origin local.dummy.angle local.laser1 local.laser2 local.laser1.origin
+			self.placing_killstreak = 0
+			ihuddraw_string self 150 ""
+			self thread useheld_fireheld
+			break
+		}
+		self.placing_killstreak_old = self.placing_killstreak
+		waitframe
+	}
+	local.dummy remove
+	local.laser remove
+
+	local.claymores--
+	if(local.claymores > 0 && isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator")
+	{
+		thread holding_claymores local.claymores
+		end
+	}
+
+	if(self != NULL) { self.killstreak_selected = 0 }
+
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator") { waitframe }
+
+	if(self != NULL) { self.killstreak_claymore = 0; ihuddraw_string self 150 "" }
+end
+
+spawn local.origin local.angle local.laser1 local.laser2 local.laserorigin:
+
+	local.claymore = spawn script_model
+	local.claymore model models/static/exp_crate3.tik
+	local.claymore.origin = local.origin
+	local.claymore.angle = local.angle
+	local.claymore.scale = level.claymore_scale
+	local.claymore notsolid
+	local.claymore playsound placedown_claymore
+
+	local.damagetrig = spawn trigger_multiple spawnflags 128 targetname "claymore"
+	local.damagetrig.origin = local.origin
+	local.damagetrig setsize ( -5 -5 0 ) ( 5 5 5 )
+	local.damagetrig.health = 9999999
+	local.damagetrig thread healthboost
+
+	local.claymore.damagetrig = local.damagetrig
+	local.damagetrig.claymore = local.claymore
+	local.damagetrig.player_owner = self
+
+	local.damagetrig setthread dead
+	local.claymore thread targetplayers self
+	local.claymore thread expired self
+
+	local.laser1.origin = local.laserorigin
+	local.laser2.origin = local.laserorigin
+	local.laser1 alpha 0.075
+	local.laser2 alpha 0.075
+
+	while(local.claymore != NULL) { waitframe }
+	local.laser1 remove
+	local.laser2 remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+targetplayers local.player_owner: // cannot use "local.owner" since it is a read-only variable
+
+	local.team = local.player_owner.dmteam
+	self.owner_in_danger = 0
+
+	while(self != NULL && self.damagetrig.health > 1 && $player.size >= 1 && local.player_owner != NULL && local.player_owner.dmteam == local.team)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.dist = vector_length(self.origin - $player[local.i].origin)
+
+			if(local.dist < level.claymore_radius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && self cansee $player[local.i] level.claymore_fov && $player[local.i].spectator_choseteam_notyetspawned != 1)
+			{
+				if($player[local.i] == local.player_owner) { self.owner_in_danger = 1 }
+
+				else if($player[local.i].dmteam != local.player_owner.dmteam || getcvar("g_gametype") == "1") { self.killplayers[local.i] = 1 }
+			}
+		}
+		if(self.killplayers.size >= 1)
+		{
+			killent self.damagetrig.entnum
+			end
+		}
+
+		self.owner_in_danger = 0
+		self.killplayers = NIL
+		waitframe
+	}
+end
+
+dead:
+
+	local.debris = spawn script_model
+	local.debris model "emitters/explosion_mine.tik" // this has its own explosion sound
+	local.debris.origin = self.origin
+	local.debris notsolid
+	local.debris.scale = 0.8
+	local.debris anim start
+
+	if(self.claymore.killplayers.size >= 1 && self.enemy_killer == NIL)
+	{
+		local.maxplayers = int(getcvar("sv_maxclients"))
+		for(local.i = 1; local.i <= local.maxplayers; local.i++)
+		{
+			if(self.claymore.killplayers[local.i] == 1 && isalive $player[local.i]) { $player[local.i] damage self.player_owner level.claymore_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		if(self.claymore.owner_in_danger == 1) { self.player_owner damage self.player_owner level.claymore_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	}
+	if(self.claymore.killplayers == NIL && self.enemy_killer == NIL) { radiusdamage self.origin level.claymore_damage level.claymore_radius }
+
+	if(self.enemy_killer != NIL)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.dist = vector_length(self.origin - $player[local.i].origin)
+
+			if(local.dist < level.claymore_radius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && self cansee $player[local.i] 360 && $player[local.i].spectator_choseteam_notyetspawned != 1 && ($player[local.i].dmteam != self.enemy_killer.dmteam || getcvar("g_gametype") == "1"))
+			{
+				$player[local.i] damage self.enemy_killer level.claymore_damage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+			}
+		}
+	}
+
+	self waitthread killstreaks/damagehandler.scr::chain_reaction
+
+	waitframe
+	local.debris remove
+	self.claymore remove
+	self remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+healthboost:
+
+	local.health = self.health
+	while(self != NULL && self.health > 1)
+	{
+		self.health = local.health
+		waitframe
+	}
+end
+
+expired local.player_owner:
+
+	local.team = local.player_owner.dmteam
+	while(self != NULL && self.damagetrig.health > 1 && local.player_owner != NULL && isalive local.player_owner && local.player_owner.dmteam == local.team) { waitframe }
+	while(self != NULL && self.damagetrig.health > 1 && local.player_owner != NULL && !isalive local.player_owner && local.player_owner.dmteam == local.team) { waitframe }
+
+	if(self != NULL && self.damagetrig.health > 1)
+	{
+		self.damagetrig remove
+		self remove
+	}
+end
+
+spawnlaser local.origin local.endpoint local.color local.scale local.alpha:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha local.alpha
+	local.laser alwaysdraw
+	local.laser activate	
+	local.laser scale local.scale
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
+
+////////////////////////////////////////////////////////////////////////
+
+killstreaks:
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].teamm == NIL) { $player[local.i].teamm = $player[local.i].dmteam } // .team is a read-only variable
+			if($player[local.i].kill_streak == NIL) { $player[local.i].kill_streak = 0 }
+			if($player[local.i].currentkills == NIL) { $player[local.i].currentkills = $player[local.i] getkills; $player[local.i] thread huddraw }
+
+			if(!isalive $player[local.i] || $player[local.i].dmteam != $player[local.i].teamm || $player[local.i].dmteam == "spectator")
+			{
+				$player[local.i].teamm = $player[local.i].dmteam
+				$player[local.i].kill_streak = 0
+				$player[local.i].currentkills = $player[local.i] getkills
+			}
+			else if($player[local.i] getkills > $player[local.i].currentkills) // if alive, same team, not spectator, and gets a kill
+			{
+				$player[local.i].kill_streak += ($player[local.i] getkills - $player[local.i].currentkills)
+				$player[local.i].currentkills = $player[local.i] getkills
+			}
+
+			if($player[local.i].dmteam == "spectator") { $player[local.i] thread spectator_choseteam_notyetspawned }
+		}
+		waitframe
+	}
+	thread killstreaks
+end
+
+spectator_choseteam_notyetspawned:
+
+	if(self.spectator_choseteam_notyetspawned == 1) { end }
+	self.spectator_choseteam_notyetspawned = 1
+
+	while(self != NULL && self.dmteam == "spectator") { waitframe }
+
+	while(self != NULL && self.dmteam != "spectator" && self.inventory.size < 1) { waitframe }
+
+	if(self != NULL && self.dmteam != "spectator") { self.spectator_choseteam_notyetspawned = 0 }
+end
+
+huddraw:
+
+	ihuddraw_alpha self 150 0
+	ihuddraw_virtualsize self 150 1
+	ihuddraw_alpha self 150 .8
+	ihuddraw_font self 150 "verdana-12"
+	ihuddraw_color self 150 .7 .7 0
+	ihuddraw_rect self 150 -200 212 200 14
+	ihuddraw_string self 150 ""
+end
+
+useheld_fireheld:
+
+	local.team = self.dmteam
+	self.placing_killstreak_old2 = 1
+
+	while(isalive self && self.dmteam == local.team == self.dmteam != "spectator" && self.useheld == 1 && self.fireheld == 1) { waitframe }
+
+	if(self != NULL)
+	{
+		self.placing_killstreak_old = 0
+		self.placing_killstreak_old2 = 0
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+
+	local.master aliascache placedown_claymore1 sound/items/Item_Bangaloredirt01.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps level.mapname
+	local.master aliascache placedown_claymore2 sound/items/Item_Bangaloredirt02.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps level.mapname
+end

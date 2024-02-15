@@ -1,0 +1,417 @@
+main local.origin:
+
+exec global/aliascache_triggersounds.scr jetpack
+
+////////////////////////////////////////////////////////////////////////
+	
+level.jetpack_max_fuel = 200 	// set max fuel
+level.fueltime_charge =  2.0	// how long while player is on the ground, until fuel increases by 1.
+level.fueltime_float = 	 0.5	// how long while player is floating in the air, until fuel decreases by 1.
+level.fueltime_thrust =  0.1	// how long while player is thrusting (holding USE offground), until fuel decreases by 1 (all 3 cannot be lower than 0.1 seconds).
+
+////////////////////////////////////////////////////////////////////////
+
+	level.fueltime_charge = level.fueltime_charge * 10
+	level.fueltime_float = level.fueltime_float * 10
+	level.fueltime_thrust = level.fueltime_thrust * 10
+
+	if(local.origin==NIL) { iprintlnbold ("ERROR: jetpack - no origin"); end }
+
+	local.airtank = spawn trigger_multiple
+	local.airtank model "static/static_airtank.tik" 
+	local.airtank.origin = local.origin + ( 0 0 15 )
+	local.airtank setsize ( -40 -40 -40 ) ( 40 40 40 ) 
+	local.airtank.scale = .75
+	local.airtank show
+	//local.airtank notsolid // notsolid and ghost don't work with setthreads. if the model is a spawned trigger, then it's notsolid by default.
+	//local.airtank ghost
+	//local.airtank light 1 1 0 125
+	local.airtank.wait = 1
+
+	local.airtank2 = spawn script_model
+	local.airtank2 model "static/static_airtank.tik" 
+	local.airtank2.origin = local.origin + ( 0 0 15 )
+	local.airtank2.scale = .75
+	local.airtank2 notsolid
+	//local.airtank2 light 1 0 0 50
+
+	local.airtank setthread fly
+	
+	level waittill spawn 
+
+	local.airtank.targetname = ("jetpacktrig" + local.airtank.entnum)
+	local.airtank2.targetname = (local.airtank.targetname + "_2")
+
+	exec global/flickerrotate.scr local.airtank.targetname ( .9 .9 0 ) 125 10 10 5
+	wait 1
+	exec global/flickerrotate.scr local.airtank2.targetname ( .9 0 0 ) 50 10 5 5 1
+end
+
+fly:
+	local.player = parm.other
+	
+	if(isalive local.player && local.player.dead != 1 && local.player.using_pack != 1 && local.player.isdog != 1 && local.player.OWNS != 1)
+	{
+		local.player waitthread airtank // Give the player an airtank
+		local.player thread jetpack // start the main loop, check for player stuff
+	}
+	else if(local.player.using_pack == 1)
+	{
+		local.player.jetpack.fuel = level.jetpack_max_fuel 
+		local.player stufftext ("set fuel " + level.jetpack_max_fuel )
+	}
+	else if(local.player.isdog == 1) { local.player iprint ("Dogs cannot carry jetpacks.") }
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+jetpack:
+
+	if(self == NULL || self.using_pack_already == 1)
+	{
+		end //already running the rest so go home.
+	}
+
+	self.using_pack_already = 1 //set them to using a jetpack in this script
+
+	self.jetpack.fuel = level.jetpack_max_fuel // set fuel at numbers.
+	
+	local.a = 0
+	local.b = 0
+	local.c = 0		
+	local.team = self.dmteam // Set team
+
+  	while(isalive self && self.jetpack.fuel > 0 && self.dmteam == local.team && self.dmteam != "spectator" && self.jetpack.smoke[1] != NIL && self.jetpack.smoke[1] != NULL) //start main loop 
+	{
+		wait 0.1
+		if(self == NULL) { end }
+		if(self.flying == 1 || self.missile != NIL || self.isdog == 1) { break } // if the player gets into a plane, or guided missile, or becomes a dog, remove the jetpack.
+
+		local.position = self getposition // these are found in global/mike_legs.st (moveposflags "movement" "position") 
+		local.movement = self getmovement // note: after jumping, position = crouching for about 0.25 seconds before position = offground.
+						  // it's fast enough, so "if player's z-origin is greater than old z-origin, then position = offground" is not needed.
+
+		if(self.useheld != 1 && local.position == offground)
+		{ 
+			self stoploopsound
+			self stopsound
+			self loopsound jetpack
+
+			self.jetpack.smoke[1] anim start
+			self.jetpack.smoke[2] anim start	
+			self.jetpack.smoke[1].scale = 0.2
+			self.jetpack.smoke[2].scale = 0.2
+			self gravity .2
+
+			if(local.b >= level.fueltime_float && self.jetpack.fuel > 0) { self.jetpack.fuel-- }
+		}
+		if(self.useheld == 1 && local.position == offground)
+		{ 
+			self stoploopsound
+			self thread jetpack_thrust
+
+			self.jetpack.smoke[1] anim start
+			self.jetpack.smoke[2] anim start	
+			self.jetpack.smoke[1].scale = 1.0 // some effect on smoke, make it big and puffy
+			self.jetpack.smoke[2].scale = 1.0
+
+			self.velocity += self.upvector * 27	   // if 20 or lower, player cannot fly upwards very well
+			self.velocity += self.forwardvector * 27   // if 35 or higher, player flies a bit too fast
+			self gravity .2				   // got rid of leftvector and rightvector, so player must rotate himself to change thrust direction.
+
+			if(local.c >= level.fueltime_thrust && self.jetpack.fuel > 0) { self.jetpack.fuel-- }
+		}	
+		if(local.position != offground)
+		{
+			self stoploopsound
+			self.jetpack.smoke[1] anim stop
+			self.jetpack.smoke[2] anim stop
+			self gravity 1
+
+			if(local.a >= level.fueltime_charge && self.jetpack.fuel < level.jetpack_max_fuel) { self.jetpack.fuel++ }
+		}
+
+		if(self.jetpack.fuel <= 0 ) { self stufftext ("set fuel Empty") }
+
+		if(self.jetpack.fuel >= 0 && self.jetpack.fuel <= level.jetpack_max_fuel ) { self stufftext ("set fuel " + self.jetpack.fuel) }
+		
+		if(local.a >= level.fueltime_charge) { local.a = 0 }
+		if(local.a < level.fueltime_charge) { local.a++ } // all timers are set here, 10x per second thanks to "wait 0.1".
+		if(local.b >= level.fueltime_float) { local.b = 0 }
+		if(local.b < level.fueltime_float) { local.b++ }
+		if(local.c >= level.fueltime_thrust) { local.c = 0 }
+		if(local.c < level.fueltime_thrust) { local.c++ }
+	}
+
+	self gravity 1
+	self stoploopsound
+
+	thread delete_tank // "self thread ..." not required when starting new threads, since "self" is already included in the "jetpack" thread.
+		
+	self.using_pack = 0
+	self.using_pack_already = 0
+
+	if(game.game == "AA") 	//hide the hud
+	{
+		self stufftext "hidemenu dday1"
+		self stufftext "hidemenu dday2"
+
+		//self stufftext "globalwidgetcommand credits1 virtualres 0" 
+		//self stufftext "globalwidgetcommand credits1 fullscreen 0" 
+		self stufftext "hidemenu credits1"
+		self stufftext "globalwidgetcommand credits2 name credits1"	
+	}
+	else
+	{
+		self stufftext "hidemenu bastogne2"
+		self stufftext "hidemenu bastogne1"
+
+		//self stufftext "globalwidgetcommand credits1 virtualres 0" 
+		//self stufftext "globalwidgetcommand credits1 fullscreen 0" 
+		self stufftext "hidemenu credits1"
+		self stufftext "globalwidgetcommand credits2 name credits1"	
+	}
+end
+
+jetpack_thrust: // play the thrust sound rapidly. much faster than playing every 0.1 seconds, and sounds better.
+	
+	if(self.thrusting == 1) { end }
+
+	local.temp = spawn script_model		  		// need a temp script model to spam playsound, but stopsound does not immediately stop the sound.
+	local.temp model "static/corona_util.tik" 		// since all these playsounds will be combining together, you don't want this model to be around long enough for anyone to hear that loud noise.
+	local.temp.origin = self gettagposition "Bip01 Spine"	// the model is deleted when thrusting is done, the only way to immediately stopsound. 
+	local.temp.scale = 0.001
+	local.temp notsolid
+	local.temp light 1 1 1 60
+	local.temp glue self
+
+	self.thrusting = 1
+	local.team = self.dmteam
+	local.position = self getposition
+	
+	while(isalive self && self.useheld == 1 && local.position == offground && self.using_pack == 1 && self.dmteam == local.team) 
+	{ 
+		local.position = self getposition
+		local.temp playsound jetpack_thrust
+		waitframe
+	}
+
+	local.temp remove
+	self.thrusting = 0
+end
+
+delete_tank:
+
+	self.jetpack.smoke[1] delete
+	self.jetpack.smoke[2] delete
+	self.jetpack.twin delete
+	self.jetpack delete
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+airtank:
+
+	if(self == NULL || self.using_pack == 1) { end }
+
+	self.using_pack = 1
+
+	self iprint "Slowly charge while grounded. Full recharge at the trigger."
+	self iprint "*** Jump + hold USE to use the jetpack. ***" //Inform them on how to use the damn thing
+
+	local.model = "models/static/static_airtank.tik" //think i whent a little bit over the top here(A)
+
+	self attachmodel local.model "Bip01 Spine" 0.5 ("Pairtank" + self.entnum ) 1 -1 -1 -1 -1 ( 25 -5 3 )
+	$("Pairtank" + self.entnum ).angles = ( 270 0 4 )
+      	
+	self attachmodel local.model "Bip01 Spine" 0.5 ("Pairtank2" + self.entnum ) 1 -1 -1 -1 -1 ( 25 -5 -4 )
+	$("Pairtank2" + self.entnum ).angles = ( 270 0 3 )
+
+	 	/* causes vertex error , looks gd but cant be bothered with spam
+		local.model = "models/static/switch2.tik"
+
+ 		self attachmodel local.model "Bip01 Spine" 0.5 "airswitch2" 1 -1 -1 -1 -1 ( 15 -5 -1 )
+		$airswitch2.angles = ( 180 90 90 )
+
+		local.model = "models/static/switch1.tik"	   
+
+ 		self attachmodel local.model "Bip01 Spine" 0.5 "airswitch" 1 -1 -1 -1 -1 ( 21 -7 -1 )
+		$airswitch.angles = ( 180 90 90 )
+		*/
+
+	local.model = "emitters/pipe_steam.tik"
+ 	self attachmodel local.model "Bip01 Spine" 0.1 ("tankemitter" + self.entnum ) 1 -1 -1 -1 -1 ( 0 -10 3 )
+	$("tankemitter" + self.entnum ).angles = ( -15 -180 0 )
+	$("tankemitter" + self.entnum ) anim stop
+										    
+	local.model = "emitters/pipe_steam.tik"
+ 	self attachmodel local.model "Bip01 Spine" 0.1 ("tankemitter2" + self.entnum ) 1 -1 -1 -1 -1 ( 0 -10 -4 )
+	$("tankemitter2" + self.entnum ).angles = ( 15 -180 0 )
+	$("tankemitter2" + self.entnum ) anim stop
+				 
+	local.smoke  = $("tankemitter" + self.entnum )
+	local.smoke2 = $("tankemitter2" + self.entnum )
+	$("Pairtank" + self.entnum ).smoke = ( local.smoke::local.smoke2 )
+	
+	//$Pairtank.switches = ( 	$airswitch2::$airswitch ) //associate these models with the tank so we can delete them all later
+	
+	$("Pairtank" + self.entnum ).twin = $("Pairtank2" + self.entnum ) //associate the second tank with first.
+	
+	self.jetpack = $("Pairtank" + self.entnum ) //associate these models with the player
+
+	thread display //display a widget statebar fuel hud
+		 
+end	
+
+display:
+
+	if(game.game != "AA") { thread display_sh; end }
+
+	self stufftext "globalwidgetcommand dday1 shader townhallwindow"
+	self stufftext "globalwidgetcommand dday1 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand dday1 bgcolor 0.50 0.50 0.50 0.00"
+	self stufftext "globalwidgetcommand dday1 fadein 0"
+	self stufftext "globalwidgetcommand dday1 menu dday1 640 480 NONE 0"
+	self stufftext "globalwidgetcommand dday1 virtualres 1" 
+	self stufftext "globalwidgetcommand dday1 fullscreen 1" 
+
+	self stufftext "globalwidgetcommand june6 borderstyle NONE"
+	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
+	self stufftext "globalwidgetcommand june6 rect 16 420 16 64"
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand june6 linkcvar fuel"
+	self stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.jetpack_max_fuel )
+	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
+	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
+
+	self stufftext "globalwidgetcommand dday2 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand dday2 bgcolor 0.50 0.50 0.50 0.00"
+	self stufftext "globalwidgetcommand dday2 fadein 0"
+	self stufftext "globalwidgetcommand dday2 menu dday2 640 480 NONE 0"
+	self stufftext "globalwidgetcommand dday2 virtualres 1" 
+	self stufftext "globalwidgetcommand dday2 fullscreen 1" 
+
+	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	self stufftext "globalwidgetcommand charliesector textalign left " 
+	self stufftext "globalwidgetcommand charliesector rect 40 470 150 20"
+	self stufftext "globalwidgetcommand charliesector fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand charliesector linkcvar fuel"
+	self stufftext "globalwidgetcommand charliesector font facfont-20"
+	self stufftext "globalwidgetcommand charliesector shader townhallwindow"
+
+	//clear things just incase
+	self stufftext "hidemenu credits1"
+	self stufftext "globalwidgetcommand credits2 name credits1"
+	//now we deal with credits1
+	waitframe
+	//setup credits to use the inner credits1
+	//first setup the credits1
+	self stufftext "globalwidgetcommand credits1 align left bottom" 
+	//self stufftext "globalwidgetcommand credits1 virtualres 1" 
+	//self stufftext "globalwidgetcommand credits1 fullscreen 1" 
+	//self stufftext "globalwidgetcommand credits1 rect 0 0 640 480"
+	//self stufftext "globalwidgetcommand credits1 fgcolor 0.00 0.00 0.00 0.00"
+	//self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	//change outer name to credits2
+	self stufftext "globalwidgetcommand credits1 name credits2"	
+
+	waitframe //now we can change the inner credits1
+
+	self stufftext "globalwidgetcommand credits1 fgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand credits1 shader townhallwindow"
+	self stufftext "globalwidgetcommand credits1 textalign left " 
+	self stufftext "globalwidgetcommand credits1 rect 10 270 150 20"
+	self stufftext "globalwidgetcommand credits1 fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand credits1 linkcvar fuel_message"
+	self stufftext "globalwidgetcommand credits1 font facfont-20"
+
+	self stufftext "showmenu dday2"
+	self stufftext "showmenu dday1"
+	self stufftext "showmenu credits1"
+					   
+	self stufftext ("set fuel_message Jetpack")
+	self stufftext ("set fuel " + level.jetpack_max_fuel )
+
+
+end
+
+display_sh:
+
+	self stufftext "globalwidgetcommand bastogne1 shader townhallwindow"
+	self stufftext "globalwidgetcommand bastogne1 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand bastogne1 bgcolor 0.50 0.50 0.50 0.00"
+	self stufftext "globalwidgetcommand bastogne1 fadein 0"
+	self stufftext "globalwidgetcommand bastogne1 menu bastogne1 640 480 NONE 0"
+	self stufftext "globalwidgetcommand bastogne1 virtualres 1" 
+	self stufftext "globalwidgetcommand bastogne1 fullscreen 1" 
+
+	self stufftext "globalwidgetcommand june6 borderstyle NONE"
+	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
+	self stufftext "globalwidgetcommand june6 rect 16 420 16 64"
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand june6 linkcvar fuel"
+	self stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.jetpack_max_fuel )
+	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
+	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
+
+	self stufftext "globalwidgetcommand bastogne2 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand bastogne2 bgcolor 0.50 0.50 0.50 0.00"
+	self stufftext "globalwidgetcommand bastogne2 fadein 0"
+	self stufftext "globalwidgetcommand bastogne2 menu dday2 640 480 NONE 0"
+	self stufftext "globalwidgetcommand bastogne2 virtualres 1" 
+	self stufftext "globalwidgetcommand bastogne2 fullscreen 1" 
+
+	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	self stufftext "globalwidgetcommand charliesector textalign left " 
+	self stufftext "globalwidgetcommand charliesector rect 40 470 150 20"
+	self stufftext "globalwidgetcommand charliesector fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand charliesector linkcvar fuel"
+	self stufftext "globalwidgetcommand charliesector font facfont-20"
+	self stufftext "globalwidgetcommand charliesector shader townhallwindow"			  
+				 
+	//clear things just incase
+	self stufftext "hidemenu credits1"
+	self stufftext "globalwidgetcommand credits2 name credits1"
+	//now we deal with credits1
+	waitframe
+	//setup credits to use the inner credits1
+	//first setup the credits1
+	self stufftext "globalwidgetcommand credits1 align left bottom" 
+	//self stufftext "globalwidgetcommand credits1 virtualres 1" 
+	//self stufftext "globalwidgetcommand credits1 fullscreen 1" 
+	//self stufftext "globalwidgetcommand credits1 rect 0 0 640 480"
+	//self stufftext "globalwidgetcommand credits1 fgcolor 0.00 0.00 0.00 0.00"
+	//self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	//change outer name to credits2
+	self stufftext "globalwidgetcommand credits1 name credits2"	
+
+	waitframe //now we can change the inner credits1
+
+	self stufftext "globalwidgetcommand credits1 fgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand credits1 shader townhallwindow"
+	self stufftext "globalwidgetcommand credits1 textalign left " 
+	self stufftext "globalwidgetcommand credits1 rect 10 270 150 20"
+	self stufftext "globalwidgetcommand credits1 fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand credits1 linkcvar fuel_message"
+	self stufftext "globalwidgetcommand credits1 font facfont-20"
+
+	self stufftext "showmenu bastogne2"
+	self stufftext "showmenu bastogne1"
+	self stufftext "showmenu credits1"
+					   
+	self stufftext ("set fuel_message Jetpack")
+	self stufftext ("set fuel " + level.jetpack_max_fuel )
+end
+
