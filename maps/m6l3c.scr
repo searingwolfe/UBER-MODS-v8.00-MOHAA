@@ -1,0 +1,1724 @@
+
+main:
+
+setcvar "g_obj_alliedtext1" "m6l3c" 
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "m6l3c"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "50"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "5000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills" 
+
+//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+
+if((getcvar("g_gametype") == "2"))
+{
+	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
+	setcvar "g_gametypestring" "Team-Match UBER"
+	setcvar "g_gametype" "2"
+	thread tdm_spawns	
+	spawn info_player_deathmatch "origin" "-1409 -2171 -560" "angle" "-136" // for spectators when joining game
+	spawn info_player_deathmatch "origin" "-2402 -2591 -546" "angle" "129"
+	spawn info_player_deathmatch "origin" "391 -254 -608" "angle" "-110"
+}
+else
+{
+	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+	setcvar "g_gametypestring" "Free-For-All UBER"
+	setcvar "g_gametype" "1"
+	thread ffa_spawns
+}
+
+waitthread setup
+
+level waittill prespawn
+
+//allies
+exec alienx/basebuild.scr::basebuild ( -1556.18 1540.88 -1023.88 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1556.18 1440.88 -1023.88 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -1556.18 1340.88 -1023.88 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1556.18 1240.88 -1023.88 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1556.18 1140.88 -1023.88 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -1556.18 1040.88 -1023.88 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( -1556.18 940.88 -1023.88 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1449.82 1440.88 -1023.88 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1449.82 1340.88 -1023.88 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1449.82 1240.88 -1023.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1449.82 1140.88 -1023.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1449.82 1040.88 -1023.88 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1449.82 940.88 -1023.88 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( -1449.82 840.88 -1023.88 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+//axis
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1235.13 -575.88 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1335.13 -575.88 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1435.13 -575.88 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1535.13 -575.88 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1635.13 -575.88 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1735.13 -575.88 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1835.13 -575.88 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -1935.13 -575.88 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -2035.13 -575.88 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -2135.13 -575.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4362.93 -2235.13 -575.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4255.13 -2135.13 -575.88 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4255.13 -2035.13 -575.88 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( -4247.13 -1235.13 -575.88 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1\
+
+exec global/dog.scr ( -944 689 -639 ) ( 0 0 0 ) 15 10
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m6l3c.scr
+	exec global/ambient.scr m6l3c
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+	exec global/bomber.scr
+
+	setcvar "r_fastsky" "0"
+	$world farplane 150000
+	$world farplane_color ( 0.04314 0.05882 0.16471 )
+
+exec map_triggers/grenade_ammo.scr ( -3091 -1423 -575 ) ( -2751 -2476 -575 ) ( -2490 -1943 -559 ) ( -1887 -2364 -579 ) ( -1547 -2543 -575 ) ( -443 -2303 -575 ) ( -847 -870 -623 ) ( -293 -351 -591 ) ( -111 671 -831 ) ( -756 633 -1023 )
+
+level waittill spawn
+
+	level.heavydoor1 = 0
+	level.heavydoor1moving = 0
+
+	waitthread blast_seq1_setup
+	thread blast_sequence_start
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+
+	removeclass actor
+	removeclass ammoentity
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1
+	level.panzer = 1 
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1
+end
+
+heavy_door_setup:
+end
+
+heavy_door1_start:
+
+
+	$heavy_door1_flywheel notsolid
+	$heavy_door1_flywheel_pulse hide
+	$heavy_door1_flywheel show
+
+	if (level.heavydoor1 == 0 && level.heavydoor1moving == 0)
+	{
+		level.heavydoor1 = 1
+		level.heavydoor1moving = 1
+
+		$heavy_door1 open $player
+		$heavy_door1 playsound door_vault_roll_open	
+		$heavy_door1_flywheel thread flywheel_z360_open
+		
+		wait 3
+		
+		level.heavydoor3moving = 0
+	}
+	else if (level.heavydoor1 == 1 && level.heavydoor1moving == 0)
+	{
+		level.heavydoor1 = 0
+		level.heavydoor1moving = 1
+
+		$heavy_door1 close
+		$heavy_door1 playsound door_vault_roll_close	
+		$heavy_door1_flywheel thread flywheel_z360_close
+		
+		wait 3
+		
+		level.heavydoor1moving = 0
+	}
+
+end
+
+heavy_door1_reverse:
+
+	if (level.heavydoor1 == 0 && level.heavydoor1moving == 0)
+	{
+		level.heavydoor1 = 1
+		level.heavydoor1moving = 1
+
+		$heavy_door1 open $player
+		$heavy_door1 playsound door_vault_roll_open
+		$heavy_door1_flywheel_reverse thread flywheel_x360_open
+		
+		wait 3
+		
+		level.heavydoor1moving = 0
+	}
+	else if (level.heavydoor1 == 1 && level.heavydoor1moving == 0)
+	{
+		level.heavydoor1 = 0
+		level.heavydoor1moving = 1
+
+		$heavy_door1 close
+		$heavy_door1 playsound door_vault_roll_close	
+		$heavy_door1_flywheel_reverse thread flywheel_x360_close
+		
+		wait 3
+		
+		level.heavydoor1moving = 0
+	}
+
+end
+
+flywheel_z360_open:
+
+	self time 3
+	self rotateZup 360
+	self playsound flywheel
+	self waitmove
+
+end
+
+flywheel_z360_close:
+
+	self time 3
+	self rotateZdown 360
+	self playsound flywheel
+	self waitmove
+
+end
+
+flywheel_x360_open:
+
+	self time 3
+	self rotateXup 360
+	self playsound flywheel
+	self waitmove
+
+end
+
+flywheel_x360_close:
+
+	self time 3
+	self rotateXdown 360
+	self playsound flywheel
+	self waitmove
+
+end
+
+
+hurt_5:
+end
+
+hurt_10:
+end
+
+hurt_20:
+end
+
+hurt_50:
+end
+
+hurt_500:
+end
+
+
+//*********************************************
+// Blast Sequence Countdown Timer
+//*********************************************
+blast_sequence_start:
+
+	
+	$blast_sequence_start nottriggerable
+
+	wait 5
+
+	local.messagetosay = "S T O P  A L L I E S  S E T T I N G  T H E  T I M E R S"
+	thread scrollMsg local.messagetosay
+
+	wait 700 // Make the last few mins HELL :P
+
+	local.messagetosay = "A L L I E S  H A V E  S E T  O F F  T H E  T I M E R S ! ! !"
+	thread scrollMsg local.messagetosay
+
+	$starting_elevator_cab playsound m6l3_explode_interior
+
+	wait 2
+
+	thread blast_seq1_start
+
+	$starting_elevator_cab playsound m6l3_explode_interior
+
+	wait 2
+
+	$starting_elevator_cab playsound m6l3_explode_interior
+
+end
+
+
+// hide some stuff etc
+blast_seq1_setup:
+
+	$starting_elevator_cab.origin = ( -2016 672 -884 ) // Stop peeps falling down the liftshaft
+	$blast_seq1_firedeath1 nottriggerable
+	$blast_seq1_hurt1 nottriggerable
+	$blast_seq1_model1 hide
+	$blast_seq1_trigger nottriggerable
+	$blast_seq2_firedeath1 nottriggerable
+	$blast_seq2_hurt1 nottriggerable
+	$blast_seq2_model1 hide
+	$blast_seq2_model2 hide
+	$blast_seq2_model3 hide
+	$blast_seq2_trigger nottriggerable
+	$blast_seq3_firedeath1 nottriggerable
+	$blast_seq3_hurt1 nottriggerable	
+	$blast_seq3_hurt2 nottriggerable
+	$blast_seq3_hurt3 nottriggerable
+	$blast_seq3_model1 hide
+	$blast_seq3_model2 hide
+	$blast_seq3_model3 hide
+	$blast_seq3_model4 hide
+	$blast_seq3_model5 hide
+	$blast_seq4_model1 hide
+	$blast_seq4_model2 hide	
+	$blast_seq5_model1 hide
+	$blast_seq5_hurt1 nottriggerable
+	$blast_seq5_firedeath1 nottriggerable
+	$blast_seq6_hurt1 nottriggerable
+	$blast_seq6_hurt2 nottriggerable
+	$blast_seq6_hurt3 nottriggerable
+	$blast_seq6_hurt4 nottriggerable
+	$blast_seq7_hurt1 nottriggerable
+	$blast_seq7_hurt2 nottriggerable
+	$blast_seq7_model1 hide
+	$blast_seq8_firedeath1 nottriggerable
+	$blast_seq8_hurt1 nottriggerable
+	$blast_seq8_hurt2 nottriggerable
+	$blast_seq8_hurt3 nottriggerable
+	$blast_seq8_model1 hide
+	$blast_seq8_model2 hide
+	$blast_seq8_model3 hide
+	$blast_seq9_firedeath1 nottriggerable
+	$blast_seq9_hurt1 nottriggerable
+	$blast_seq9_hurt2 nottriggerable
+	$blast_seq9_model1 hide
+	$blast_seq9_model2 hide
+	$blast_seq9_model3 hide
+	$blast_seq9_model4 hide
+	$blast_seq9_model5 hide
+	$blast_seq10_firedeath1 nottriggerable
+	$blast_seq10_model1 hide
+	$blast_seq10_model2 hide
+	$blast_seq11_firedeath1 nottriggerable
+	$blast_seq11_firedeath2 nottriggerable
+	$blast_seq11_firedeath3 nottriggerable
+	$blast_seq11_firedeath4 nottriggerable
+	$blast_seq11_model1 hide
+	$blast_seq11_model2 hide
+	$blast_seq11_model3 hide
+	$blast_seq11_model4 hide
+	$blast_seq11_model5 hide
+	$blast_seq11_model6 hide
+	$blast_seq12_hurt1 nottriggerable
+	$blast_seq12_blown_vent1 hide
+	$blast_seq12_blown_vent2 hide
+	$blast_seq12_blown_supports1 hide
+	$blast_seq12_blown_vent3 hide
+	$blast_seq12_blown_supports2 hide
+	$blast_seq12_blown_railing1 hide
+	$blast_seq12_blown_steps1 hide
+	$blast_seq12_pipe_blown_supports1 hide
+	$blast_seq13_model1 hide
+	$elevator_cab_destroyed hide
+	$elevator_cab_destroyed notsolid
+	$elevator_cab_drop time 1.25
+	$blast_seq15_firedeath1 nottriggerable
+	$blast_seq15_firedeath2 nottriggerable
+	$blast_seq15_hurt1 nottriggerable
+	$blast_seq15_hurt2 nottriggerable
+	$blast_seq15_model1 hide
+	$blast_seq15_model2 hide
+	$blast_seq15_model3 hide
+	$blast_seq15_model4 hide
+	$blast_seq15_model5 hide
+	$blast_seq16_firedeath1 nottriggerable
+	$blast_seq16_firedeath2 nottriggerable
+	$blast_seq16_hurt1 nottriggerable
+	$blast_seq16_model1 hide
+	$blast_seq16_model2 hide
+	$blast_seq16_model3 hide
+	$blast_seq17_firedeath1 nottriggerable
+	$blast_seq17_hurt1 nottriggerable
+	$blast_seq17_model1 hide
+	$blast_seq17_model2 hide
+	$blast_seq17_model3 hide
+	$blast_seq17_model4 hide
+	$blast_seq17_model5 hide
+
+end
+	
+
+blast_seq1_start: //lets Roll :P
+
+	thread jitter_medium 0
+
+	$blast_seq1_exploder1 anim start
+	//$blast_seq1_hurt1 triggerable
+	$blast_seq1_hurt1 thread move_object (0 -1376 0) 4.5
+
+	wait .5
+
+	$blast_seq1_exploder2 anim start
+	$blast_seq1_fire1 anim start
+
+	wait .5
+
+	$blast_seq1_exploder3 anim start
+	$blast_seq1_fire2 anim start
+
+	wait .5
+
+	thread jitter_large 0
+
+	$blast_seq1_exploder4 anim start
+	thread global/exploder.scr::explode 61
+	thread global/exploder.scr::explode 62
+	$blast_seq1_model1 show
+
+	wait .25
+
+	$blast_seq1_exploder5 anim start
+	$blast_seq1_fire3 anim start
+
+	wait 5
+
+	thread blast_seq2_start
+end
+
+
+//*********************************************
+// Blast Sequence 2 - Elevator Hallway
+//*********************************************
+blast_seq2_setup:
+end
+
+
+blast_seq2_start:
+
+	thread jitter_medium 0
+	
+	thread global/exploder.scr::explode 71
+	$blast_seq2_exploder1 anim start
+	//$blast_seq2_hurt1 triggerable
+	$blast_seq2_hurt1 thread move_object (1056 0 0) 4.5
+	//$blast_seq2_firedeath1 triggerable
+
+	wait 1
+
+	$blast_seq2_model1 show
+	$blast_seq2_exploder2 anim start
+
+	wait .5
+
+	$blast_seq2_model2 show
+	$blast_seq2_exploder3 anim start
+
+	wait 1
+
+	$blast_seq2_fire2 anim start
+	$blast_seq2_exploder4 anim start
+
+	wait 1
+
+	$blast_seq2_exploder5 anim start
+
+	wait .5
+
+	$blast_seq2_fire3 anim start
+	$blast_seq2_model3 show
+
+	wait 3
+
+	thread blast_seq3_start
+
+end
+
+
+//*********************************************
+// Blast Sequence 3 - Stairwell
+//*********************************************
+blast_seq3_setup:
+end
+
+
+
+blast_seq3_start:
+
+	thread jitter_medium 0
+
+	thread global/exploder.scr::explode 70
+	//$blast_seq3_firedeath1 triggerable
+	$blast_seq3_exploder1 anim start
+	$blast_seq3_dust1 anim start
+
+	wait .25
+
+	$blast_seq3_exploder2 anim start
+	$blast_seq3_model1 show
+	$blast_seq3_model2 show	
+	$blast_seq3_dust2 anim start
+	$blast_seq3_fire1 anim start
+	$blast_seq3_fire2 anim start
+	$blast_seq3_fire3 anim start		
+	$blast_seq3_fire4 anim start	
+	//$blast_seq3_hurt1 triggerable	
+
+	wait .25
+
+	$blast_seq3_exploder3 anim start
+	$blast_seq3_dust3 anim start
+
+	wait 8
+
+	$blast_seq3_exploder2 anim start
+
+	wait .5
+	
+	$blast_seq3_exploder3 anim start
+
+	wait .5
+
+	thread jitter_medium 0
+
+	$blast_seq3_exploder4 anim start
+	$blast_seq3_exploder5 anim start
+	//$blast_seq3_hurt2 triggerable
+
+	wait .5
+
+	$blast_seq3_exploder6 anim start
+	$blast_seq3_fire5 anim start
+	$blast_seq3_fire6 anim start
+
+ 	wait .5	
+
+	$blast_seq3_fire7 anim start
+	$blast_seq3_model3 show
+	$blast_seq3_model4 show
+	$blast_seq3_model5 show
+	//$blast_seq3_hurt3 triggerable
+
+	wait 7
+
+	thread blast_seq4_start
+
+end
+
+
+//*********************************************
+// Blast Sequence 4 - Furnace Room Part 1
+//*********************************************
+blast_seq4_setup:
+end
+
+
+blast_seq4_start:
+
+	thread jitter_large 0
+
+	$blast_seq4_exploder1 anim start
+	$blast_seq4_fire1 anim start
+	$blast_seq4_model1 show	
+
+	//thread e3_start	
+
+	wait .25
+
+	$blast_seq4_exploder2 anim start
+	$blast_seq4_fire2 anim start
+	$blast_seq4_model2 show
+
+	wait .5	
+
+	$blast_seq4_fire3 anim start	
+
+	wait .25
+
+	$blast_seq4_exploder3 anim start	
+
+	wait .5
+
+	thread global/exploder.scr::explode 50
+	$blast_seq4_fire3 anim start
+	$blast_seq4_exploder4 anim start	
+
+	wait 5
+
+	thread blast_seq5_start
+
+end
+
+
+//*********************************************
+// Blast Sequence 5 - Furnace Room Part 2
+//*********************************************
+blast_seq5_setup:
+end
+
+blast_seq5_start:
+
+	thread blast_seq5_furnaces 1 3 2 4	
+
+	$blast_seq5_exploder1 anim start
+	//$blast_seq5_hurt1 triggerable
+	$blast_seq5_hurt1 thread move_object (384 0 0) 5
+
+	wait .5
+
+	$blast_seq5_exploder2 anim start	
+	$blast_seq5_model1 show
+	$blast_seq5_model1 thread move_object (0 0 -172) .3
+	$blast_seq5_fire1 anim start
+	
+	wait 7
+
+	thread blast_seq6_start
+
+end
+
+blast_seq5_furnaces local.first local.second local.third local.fourth:
+
+	thread global/exploder.scr::explode local.first
+	$furnace1 playsound explode_tank
+
+	thread jitter_medium 0
+
+	wait .25
+
+	thread global/exploder.scr::explode local.second
+	$furnace2 playsound explode_tank
+
+	thread jitter_medium 0
+
+	wait .5
+
+	thread global/exploder.scr::explode local.third
+	$furnace3 playsound explode_tank
+
+	thread jitter_large 0
+
+	wait .25
+
+	thread global/exploder.scr::explode local.fourth
+	$furnace4 playsound explode_tank
+
+end
+
+
+//*********************************************
+// Blast Sequence 6 - Furnace Room Part 3
+//*********************************************
+blast_seq6_setup:
+end
+
+blast_seq6_start:
+
+	$blast_seq6_steam1 anim start
+
+	wait .5
+
+	//$blast_seq6_hurt2 triggerable
+	$blast_seq6_steam2 anim start
+
+	wait .5
+
+	//$blast_seq6_hurt3 triggerable
+	$blast_seq6_steam3 anim start
+
+	wait .5
+	
+	$blast_seq6_exploder1 anim start
+
+	thread jitter_medium 0	
+
+	wait .5
+
+	$blast_seq6_exploder2 anim start
+
+	wait .5
+
+	$blast_seq6_fire1 anim start
+	$blast_seq6_hurt4 triggerable
+
+	wait 3
+
+	thread blast_seq7_start
+
+end
+
+
+//*********************************************
+// Blast Sequence 7 - Triangle Hallway
+//*********************************************
+blast_seq7_setup:
+end
+
+blast_seq7_start:
+
+	$blast_seq7_exploder1 anim start
+	thread global/exploder.scr::explode 10001
+	//$blast_seq7_hurt1 triggerable
+	$blast_seq7_steam1 anim start	
+
+	thread jitter_large 0
+	
+	wait .25
+		
+	$blast_seq7_model1 show
+	$blast_seq7_exploder2 anim start
+	thread global/exploder.scr::explode 51
+	
+	wait .25	
+
+	$blast_seq7_fire1 anim start
+	//$blast_seq7_hurt2 triggerable
+	
+	wait .25
+
+	$blast_seq7_fire2 anim start
+	//$blast_seq7_hurt3 triggerable
+
+	wait 7
+
+	thread blast_seq8_start
+end
+
+
+//*********************************************
+// Blast Sequence 8 - Blue Pipe Hallway Part 1
+//*********************************************
+blast_seq8_setup:
+end
+
+blast_seq8_start:
+
+	thread blast_seq8_pipe_bursts
+
+	thread global/exploder.scr::explode 52
+	$blast_seq8_exploder1 anim start
+	$blast_seq8_fire1 anim start
+	//$blast_seq8_firedeath1 triggerable
+	$blast_seq8_model2 show
+
+	thread jitter_medium 0
+	
+	wait .25
+
+	$blast_seq8_fire2 anim start
+	//$blast_seq8_hurt1 triggerable
+
+	wait 1
+
+	$blast_seq8_exploder2 anim start
+	$blast_seq8_model1 show
+	//$blast_seq8_hurt2 triggerable
+	$blast_seq8_hurt2 thread move_object (512 0 0) 4
+
+	wait .5
+
+	$blast_seq8_exploder3 anim start
+	$blast_seq8_fire3 anim start
+
+	wait .5
+
+	$blast_seq8_exploder4 anim start	
+	$blast_seq8_fire4 anim start
+
+	thread jitter_medium 0
+
+	wait .5
+
+	$blast_seq8_exploder5 anim start
+	$blast_seq8_fire5 anim start
+
+	wait 7
+
+	thread blast_seq9_start
+
+end
+
+blast_seq8_pipe_bursts:
+
+	$blast_seq8_steam1 anim start
+
+	wait .5
+
+	$blast_seq8_steam2 anim start
+	thread global/exploder.scr::explode 53
+	
+	wait .5
+
+	$blast_seq8_steam3 anim start
+	thread global/exploder.scr::explode 54
+
+	wait .5
+
+	$blast_seq8_steam4 anim start
+	//$blast_seq8_hurt3 triggerable
+
+end
+
+//*********************************************
+// Blast Sequence 9 - Blue Pipe Hallway Part 2
+//*********************************************
+blast_seq9_setup:
+end
+
+blast_seq9_start:
+
+	thread jitter_medium 0
+
+	$blast_seq9_exploder1 anim start
+	
+	wait .5
+
+	$blast_seq9_exploder2 anim start
+	$blast_seq9_exploder5 anim start
+
+	wait .5
+
+	$blast_seq9_exploder3 anim start
+
+	wait .5
+
+	$blast_seq9_exploder4 anim start
+
+	wait 6
+
+	thread jitter_large 0
+
+	//$blast_seq9_hurt1 triggerable
+	$blast_seq9_hurt1 thread move_object (0 -680 0) 4
+	$blast_seq9_exploder6 anim start
+	$blast_seq9_fire1 anim start
+
+	wait 2
+
+	$blast_seq9_exploder7 anim start
+	$blast_seq9_fire2 anim start
+	//$blast_seq9_firedeath1 triggerable
+
+	wait 1
+
+	thread jitter_medium 0
+
+	//$blast_seq9_hurt2 triggerable
+	$blast_seq9_hurt2 thread move_object ( -680 0 0) 4
+	$blast_seq9_exploder8 anim start
+	$blast_seq9_fire3 anim start
+	
+	wait .5
+
+	thread global/exploder.scr::explode 55
+	thread global/exploder.scr::explode 56
+	$blast_seq9_fire4 anim start
+	$blast_seq9_model1 show
+
+	wait .5
+
+	thread global/exploder.scr::explode 59
+	$blast_seq9_exploder9 anim start
+	$blast_seq9_fire5 anim start
+	$blast_seq9_fire6 anim start
+	$blast_seq9_model2 show
+	
+	wait 1
+
+	$blast_seq9_exploder10 anim start
+	$blast_seq9_fire7 anim start
+	$blast_seq9_model3 show
+
+	wait .5	
+
+	$blast_seq9_fire8 anim start
+	$blast_seq9_model4 show
+	thread global/exploder.scr::explode 57
+	thread global/exploder.scr::explode 58
+
+	wait .25
+
+	thread global/exploder.scr::explode 60
+	$blast_seq9_model5 show
+
+	wait .7 
+
+	thread blast_seq10_start
+
+	$blast_seq9_fire9 anim start
+
+end
+
+
+//*********************************************
+// Blast Sequence 10 - Map Room
+//*********************************************
+blast_seq10_setup:
+end
+
+blast_seq10_start:
+
+	$blast_seq10_model1 show
+	$blast_seq10_model2 show
+
+	wait .25
+
+	$blast_seq10_exploder1 anim start
+	$blast_seq10_fire1 anim start
+
+	thread jitter_medium 0
+
+	wait .25
+
+	$blast_seq10_exploder2 anim start
+	//$blast_seq10_firedeath1 triggerable
+
+	wait 7 
+
+	thread blast_seq11_start
+end
+
+
+//*********************************************
+// Blast Sequence 11 - Angle Hallway
+//*********************************************
+blast_seq11_setup:
+end
+
+blast_seq11_start:
+
+	$blast_seq11_exploder1 anim start
+	$blast_seq11_steam1 anim start
+	$blast_seq11_fire1 anim start
+
+	thread jitter_medium 0
+
+	wait .25
+
+	$blast_seq11_exploder2 anim start
+	$blast_seq11_dust1 anim start
+	$blast_seq11_model1 show
+	$blast_seq11_fire2 anim start
+
+	wait 3
+
+	$blast_seq11_exploder3 anim start
+
+	thread jitter_large 0
+
+	wait .25
+
+	$blast_seq11_exploder4 anim start
+	$blast_seq11_firedeath1 triggerable
+
+	wait .5 
+
+	$blast_seq11_exploder5 anim start
+	$blast_seq11_fire3 anim start
+
+	wait .5
+
+	$blast_seq11_exploder6 anim start
+
+	wait .5
+
+	$blast_seq11_exploder7 anim start
+	//$blast_seq11_firedeath2 triggerable
+
+	thread jitter_medium 0
+
+	wait .5
+
+	$blast_seq11_exploder8 anim start
+	$blast_seq11_model2 show
+
+	wait .25
+
+	$blast_seq11_exploder8 anim start
+
+	wait .5
+	
+	$blast_seq11_exploder9 anim start
+
+	wait .25
+
+	$blast_seq11_exploder10 anim start
+
+	wait .25
+
+	$blast_seq11_exploder11 anim start
+
+	wait .5
+
+	$blast_seq11_exploder12 anim start
+	$blast_seq11_exploder13 anim start	
+
+	wait .25
+
+	$blast_seq11_exploder14 anim start
+	$blast_seq11_model3 show
+	$blast_seq11_fire4 anim start
+
+	wait .5
+
+	$blast_seq11_exploder15 anim start	
+	$blast_seq11_model4 show
+	$blast_seq11_fire5 anim start
+
+	wait .25
+
+	$blast_seq11_exploder16 anim start
+	$blast_seq11_fire6 anim start
+
+	wait .5	
+
+	$blast_seq11_exploder17 anim start
+	//$blast_seq11_firedeath3 triggerable
+	$blast_seq11_fire7 anim start
+
+	thread jitter_medium 0
+
+	wait .5
+
+	$blast_seq11_exploder18 anim start
+	$blast_seq11_fire8 anim start
+	$blast_seq11_fire9 anim start
+
+	wait .25
+
+	$blast_seq11_exploder19 anim start
+	$blast_seq11_exploder20 anim start
+	$blast_seq11_model5 show
+	$blast_seq11_fire10 anim start
+
+	wait .5
+
+	$blast_seq11_exploder21 anim start
+	//$blast_seq11_fire11 anim start
+
+	wait .5
+
+	$blast_seq11_exploder22 anim start
+	//$blast_seq11_firedeath4 triggerable
+	$blast_seq11_model6 show
+
+	wait 5
+
+	thread blast_seq12_start
+
+end
+
+
+//*********************************************
+// Blast Sequence 12 - Maintenance Stairwell
+//*********************************************
+blast_seq12_setup:
+end
+
+blast_seq12_start:
+
+	thread jitter_large 0
+
+	$blast_seq6_exploder1 anim start
+
+	wait .75
+
+	thread jitter_large 0
+
+	$blast_seq6_exploder2 anim start
+	$blast_seq12_vent1 remove
+	$blast_seq12_supports1 remove
+
+	$blast_seq12_blown_vent1 show
+	$blast_seq12_blown_vent2 show
+	$blast_seq12_blown_supports1 show
+
+	$blast_seq12_blown_vent2 time .6
+	$blast_seq12_blown_vent2 rotatexup 10
+	$blast_seq12_blown_vent2 waitmove
+
+	wait .3
+
+	thread jitter_large 0
+
+	$blast_seq12_exploder5 anim start
+
+	wait .5
+
+	thread jitter_large 0
+
+	$blast_seq12_exploder3 anim start
+
+	$blast_seq12_vent2 remove
+	$blast_seq12_supports2 remove
+
+	$blast_seq12_blown_vent3 show
+	$blast_seq12_blown_supports2 show
+
+	$blast_seq12_blown_vent2 time .8
+	$blast_seq12_blown_vent2 rotatexup 34
+	$blast_seq12_blown_vent2 rotateyup 5
+	$blast_seq12_blown_vent2 movenorth 12
+	$blast_seq12_blown_vent2 movedown 190
+
+	thread jitter_large 0
+
+	$blast_seq12_exploder6 anim start
+
+	thread blast_seq12_pipes
+
+	$blast_seq12_blown_vent2 waitmove
+
+	$blast_seq12_railing1 remove
+	$blast_seq12_steps1 remove
+	$blast_seq12_blown_railing1 show
+	$blast_seq12_blown_steps1 show
+
+	thread jitter_medium 0
+
+	$blast_seq12_exploder4 anim start
+
+	wait .5
+
+	thread jitter_large 0
+
+	$blast_seq12_exploder7 anim start
+
+	wait 7
+
+	thread blast_seq13_start
+
+end
+
+blast_seq12_pipes:
+
+	wait .3
+
+	$blast_seq12_pipes1 remove
+	$blast_seq12_pipe_supports1 remove
+	$blast_seq12_pipe_blown_supports1 show
+
+	$blast_seq12_pipes2 time .35
+	$blast_seq12_pipes3 time .3
+	$blast_seq12_pipes4 time .45
+	$blast_seq12_pipes5 time .35
+
+	$blast_seq12_pipes2 rotatexdown 44
+	$blast_seq12_pipes2 rotateyup 12
+
+	$blast_seq12_pipes3 rotatexdown 45
+	$blast_seq12_pipes3 rotateyup 6
+
+	$blast_seq12_pipes4 rotatezdown 38
+	$blast_seq12_pipes4 rotateydown 17
+
+	$blast_seq12_pipes5 rotatezdown 47
+	$blast_seq12_pipes5 rotateydown 7
+
+	$blast_seq12_pipes2 move
+
+	wait .1
+
+	$blast_seq12_pipes4 move
+
+	wait .1
+
+	$blast_seq12_pipes3 move
+
+	wait .1
+
+	$blast_seq12_pipes5 move
+
+end
+
+
+//*********************************************
+// Blast Sequence 13 - Elevator Drop
+//*********************************************
+blast_seq13_setup:
+end
+
+blast_seq13_start:
+
+	$blast_seq13_exploder6 anim start
+
+	thread jitter_medium 0
+
+	wait .5
+
+	$elevator_cab_destroyed playsound m6l3c_elevator_clang
+
+	wait 1
+
+	$elevator_cab_drop playsound m6l3c_elevator_fall
+
+	wait .5
+
+	thread blast_seq13_elevator
+	
+	thread jitter_medium 0
+	
+	$blast_seq13_dust1 anim start
+	
+	wait 1
+
+	$blast_seq13_exploder1 anim start
+	$blast_seq13_exploder2 anim start
+	$blast_seq13_exploder3 anim start
+
+	wait .25
+
+	//$blast_seq13_model1 show
+	$blast_seq13_exploder4 anim start
+	$blast_seq13_exploder5 anim start
+
+	wait 4
+
+	thread blast_seq15_start
+end
+
+blast_seq13_elevator:
+
+	$elevator_cab_drop movedown 570
+	$elevator_cab_drop waitmove
+	
+	thread jitter_medium 0
+	$elevator_cab_drop remove
+	$elevator_cab_destroyed show
+	
+end
+
+
+//*********************************************
+// Blast Sequence 14 - Elevator Room
+//*********************************************
+blast_seq14_setup:
+end
+
+
+//*********************************************
+// Blast Sequence 15 - Radio Room Hallway
+//*********************************************
+blast_seq15_setup:
+end
+
+blast_seq15_start:
+
+	$blast_seq15_exploder1 anim start
+	//$blast_seq15_hurt1 triggerable
+	$blast_seq15_hurt1 thread move_object (0 -448 0) 2.5
+
+	thread jitter_large 0
+
+	wait .25
+
+	$blast_seq15_exploder2 anim start
+	$blast_seq15_fire1 anim start
+	$blast_seq15_model1 show
+
+	wait .5
+
+	$blast_seq15_exploder3 anim start
+	$blast_seq15_fire2 anim start
+
+	wait .5	
+
+	thread jitter_medium 0
+
+	$blast_seq15_exploder3 anim start
+	$blast_seq15_fire3 anim start
+
+	wait .25
+
+	$blast_seq15_exploder4 anim start
+	$blast_seq15_fire4 anim start
+	$blast_seq15_model2 show
+
+	wait .5
+
+	$blast_seq15_exploder5 anim start
+
+	wait 1
+
+	$blast_seq15_exploder6 anim start
+	//$blast_seq15_hurt2 triggerable
+	$blast_seq15_hurt2 thread move_object (0 360 0) 1.5
+
+	thread jitter_large 0
+
+	wait .25
+
+	$blast_seq15_exploder7 anim start
+	$blast_seq15_fire5 anim start
+	$blast_seq15_model3 show
+
+	wait .5
+
+	$blast_seq15_exploder8 anim start
+	$blast_seq15_fire6 anim start
+
+	wait .25
+
+	$blast_seq15_exploder9 anim start
+	$blast_seq15_model4 show
+
+	wait .5
+
+	thread jitter_medium 0
+
+	$blast_seq15_exploder10 anim start
+	thread global/exploder.scr::explode 65
+	
+	wait .25
+
+	thread global/exploder.scr::explode 66
+
+	wait .25
+
+	thread global/exploder.scr::explode 67
+	$blast_seq15_model5 show
+
+	wait 4
+
+	thread blast_seq16_start
+	
+
+end
+
+
+//*********************************************
+// Blast Sequence 16 - Metal Gear Tunnel
+//*********************************************
+blast_seq16_setup:
+end
+
+blast_seq16_start:
+
+	thread global/exploder.scr::explode 10
+	$blast_seq16_exploder1 anim start
+	$blast_seq16_steam1 anim start
+
+	thread jitter_large 0
+
+	wait .5
+
+	thread global/exploder.scr::explode 11
+	$blast_seq16_exploder2 anim start
+	$blast_seq16_steam2 anim start
+
+	thread jitter_medium 0
+
+	wait .5
+
+	thread global/exploder.scr::explode 12
+	$blast_seq16_exploder3 anim start
+
+	wait .25
+
+	$blast_seq16_exploder4 anim start
+	$blast_seq16_steam3 anim start
+
+	wait .5
+
+	$blast_seq16_exploder5 anim start
+
+	thread jitter_medium 0
+
+	wait .5
+
+	thread global/exploder.scr::explode 13
+	$blast_seq16_exploder6 anim start
+	$blast_seq16_steam4 anim start
+
+	wait .25
+
+	$blast_seq16_exploder7 anim start
+	$blast_seq16_exploder8 anim start
+
+	wait .5
+
+	thread global/exploder.scr::explode 14
+	$blast_seq16_exploder9 anim start
+	$blast_seq16_steam5 anim start
+
+	thread jitter_medium 0
+
+	wait .25
+
+	$blast_seq16_exploder10 anim start	
+
+	wait 1
+
+	//$blast_seq16_hurt1 triggerable
+	$blast_seq16_hurt1 thread move_object ( -960 0 0) 2.5
+
+	wait 1
+
+	$blast_seq16_exploder11 anim start
+	$blast_seq16_model1 show
+	$blast_seq16_fire1 anim start
+
+	thread jitter_medium 0
+
+	wait 1
+
+	$blast_seq16_exploder12 anim start
+	//$blast_seq16_firedeath1 triggerable
+	$blast_seq16_model2 show
+	$blast_seq16_fire2 anim start
+
+	wait .25
+
+	$blast_seq16_exploder13 anim start
+	//$blast_seq16_firedeath2 triggerable
+	$blast_seq16_model3 show
+	$blast_seq16_fire3 anim start
+
+	thread blast_seq17_start
+
+end
+
+
+//*********************************************
+// Blast Sequence 17 - Heavy Door Hallway
+//*********************************************
+blast_seq17_setup:
+end
+
+blast_seq17_start:
+
+	wait 4
+
+	//$blast_seq17_hurt1 triggerable
+	$blast_seq17_hurt1 thread move_object (0 960 0) 6
+	$blast_seq17_exploder1 anim start
+
+	wait .5
+
+	$blast_seq17_exploder2 anim start
+	$blast_seq17_model1 show
+
+	wait .5
+
+	$blast_seq17_exploder3 anim start
+	$blast_seq17_fire1 anim start
+
+	wait .5
+
+	$blast_seq17_exploder4 anim start
+	$blast_seq17_model2 show
+
+	wait .5
+
+	$blast_seq17_exploder5 anim start
+
+	wait .5
+
+	$blast_seq17_exploder6 anim start
+	$blast_seq17_fire2 anim start
+
+	wait .5
+
+	$blast_seq17_exploder7 anim start
+	$blast_seq17_model3 show
+
+	wait .5
+
+	$blast_seq17_exploder8 anim start
+	$blast_seq17_fire3 anim start
+
+	wait .5
+
+	$blast_seq17_exploder9 anim start
+
+	wait .5
+
+	$blast_seq17_exploder10 anim start
+	$blast_seq17_model4 show
+
+	wait .5
+
+	$blast_seq17_exploder11 anim start
+
+	wait .5
+
+	$blast_seq17_exploder12 anim start
+	$blast_seq17_fire4 anim start
+
+	wait .5
+
+	$blast_seq17_exploder13 anim start
+
+	wait .5
+
+	$blast_seq17_exploder14 anim start
+
+	wait .5
+
+	$blast_seq17_exploder15 anim start
+
+	wait .5
+
+	$blast_seq17_exploder16 anim start
+	$blast_seq17_fire5 anim start
+
+	wait .5
+
+	$blast_seq17_exploder17 anim start
+
+	wait .5
+
+	$blast_seq17_exploder18 anim start
+	$blast_seq17_model5 show
+
+	wait .5
+
+	$blast_seq17_exploder19 anim start
+
+	wait .5
+
+	$blast_seq17_exploder20 anim start
+
+	wait 4
+
+	$blast_seq17_exploder21 anim start
+
+	wait .25
+
+	$blast_seq17_exploder22 anim start
+	$blast_seq17_exploder23 anim start
+	//$blast_seq17_firedeath1 triggerable
+
+end
+
+move_object local.distance local.time:
+
+	local.index = local.time / .05
+
+	local.move_distance_x = local.distance[0] / local.index
+	local.move_distance_y = local.distance[1] / local.index
+	local.move_distance_z = local.distance[2] / local.index
+
+	//local.self notsolid // stop player getting stuck
+	//local.self damage 1000
+
+	for (local.i = 0 ; local.i <= local.time ; local.i += .05)
+	{
+		local.newx = local.self.origin[0] + local.move_distance_x
+		local.newy = local.self.origin[1] + local.move_distance_y
+		local.newz = local.self.origin[2] + local.move_distance_z
+		
+		local.self.origin = (local.newx local.newy local.newz)
+		radiusdamage local.self 120 120
+
+		wait .05
+	}
+
+end
+
+firedeath:
+
+local.poorbastard = parm.other
+
+wait (randomfloat .5 + .5)
+
+if (local.poorbastard istouching self)
+{
+	//local.poorbastard playsound firetouch
+	local.ent = spawn script_model
+	local.ent model "animate/explosion_conflagration.tik"
+	local.ent.origin = local.poorbastard.origin
+	local.ent anim start
+
+	radiusdamage local.ent.origin .5 .5
+	
+	wait 1
+
+	local.ent remove
+}
+
+end
+
+
+jitter_medium local.time:
+
+	if (local.time)
+		wait local.time
+
+	waitexec global/earthquake.scr .23 .7 0 0
+
+	waitexec global/earthquake.scr .8 .6 0 0
+
+	waitexec global/earthquake.scr 1 .6 0 .5
+
+end
+
+jitter_large local.time:
+
+	if (local.time)
+		wait local.time
+
+	waitexec global/earthquake.scr .4 .9 0 0
+
+	waitexec global/earthquake.scr .7 .6 0 0
+
+	waitexec global/earthquake.scr 1 1 0 0
+
+	waitexec global/earthquake.scr 1 .5 0 .3
+
+end
+
+scrollMsg local.messagetosay:
+
+	huddraw_align 223 left center
+	huddraw_font 223 facfont-20
+	huddraw_alpha 223 1
+	huddraw_color 223 1 1 1
+	huddraw_rect 223 20 150 200 40
+	huddraw_string 223 local.messagetosay
+
+	for(local.i=1;local.i<=local.messagetosay.size;local.i++)
+	{
+	local.x = ""
+	for(local.z=1;local.z<=(local.messagetosay.size - local.i);local.z++)
+	{
+	local.x = (local.x + " ")
+	}
+	local.tmpstring4 = ""
+	for (local.o=0;local.o<local.i;local.o++) local.tmpstring4 = local.tmpstring4 + local.messagetosay[local.o]
+	huddraw_string 223 (local.x + local.tmpstring4)
+	wait .03
+	}
+	wait 3
+	for (local.o=1;local.o>0;local.o=local.o - 0.01)
+	{
+	huddraw_alpha 223 local.o
+	wait 0.05
+	}
+	huddraw_alpha 223 0 
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	// Stage 1 Axis
+	spawn info_player_axis "origin" "-1560.88 1478.05 -1023.88" "angle" "-85" "targetname" "X1"
+	spawn info_player_axis "origin" "-1407.13 1466.02 -1023.88" "angle" "-118" "targetname" "X2"
+	spawn info_player_axis "origin" "-1427.13 1360.50 -1023.88" "angle" "-124" "targetname" "X3"
+	spawn info_player_axis "origin" "-1560.88 1351.10 -1023.88" "angle" "-63" "targetname" "X4"
+	spawn info_player_axis "origin" "-1427.13 1240.86 -1023.88" "angle" "-124" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-1600.88 1135.27 -1023.88" "angle" "-53" "targetname" "X6" 
+	spawn info_player_axis "origin" "-1427.13 995.40 -1023.88" "angle" "-106" "targetname" "X7"
+	spawn info_player_axis "origin" "-1552.88 1035.46 -1023.88" "angle" "-83" "targetname" "X8"
+	spawn info_player_axis "origin" "-1580.87 935.12 -1023.88" "angle" "-74" "targetname" "X9"
+	spawn info_player_axis "origin" "-1427.14 933.45 -1023.88" "angle" "-119" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-1580.88 837.34 -1023.88" "angle" "-38" "targetname" "X11"
+	spawn info_player_axis "origin" "-1427.13 839.80 -1023.88" "angle" "-124" "targetname" "X12"
+	spawn info_player_axis "origin" "-1889.66 591.14 -1023.88" "angle" "15" "targetname" "X13"
+	spawn info_player_axis "origin" "-1899.28 685.06 -1023.88" "angle" "-1" "targetname" "X14"
+	spawn info_player_axis "origin" "-1864.20 752.86 -1023.88" "angle" "-35" "targetname" "X15"
+
+	// Stage 1 Allies
+	spawn info_player_allied "origin" "-3093.48 -1467.13 -575.88" "angle" "-115" "targetname" "A1" 
+	spawn info_player_allied "origin" "-3244.87 -1611.18 -575.88" "angle" "-88" "targetname" "A2"
+	spawn info_player_allied "origin" "-3091.13 -1858.01 -575.88" "angle" "-113" "targetname" "A3"
+	spawn info_player_allied "origin" "-3240.27 -2026.34 -575.88" "angle" "-45" "targetname" "A4"
+	spawn info_player_allied "origin" "-3194.88 -2212.77 -575.88" "angle" "-78" "targetname" "A5" 
+	
+	spawn info_player_allied "origin" "-3232.88 -2508.88 -575.88" "angle" "11" "targetname" "A6" 
+	spawn info_player_allied "origin" "-3244.88 -2368.35 -575.88" "angle" "-20" "targetname" "A7" 
+	spawn info_player_allied "origin" "-2947.59 -2355.13 -575.88" "angle" "-26" "targetname" "A8"
+	spawn info_player_allied "origin" "-2751.13 -2476.88 -575.88" "angle" "54" "targetname" "A9"
+	spawn info_player_allied "origin" "-2834.87 -2480.13 -559.88" "angle" "16" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-2351.14 -2230.15 -559.88" "angle" "-158" "targetname" "A11"
+	spawn info_player_allied "origin" "-2515.93 -2150.53 -575.88" "angle" "-84" "targetname" "A12"
+	spawn info_player_allied "origin" "-2640.88 -2118.09 -559.88" "angle" "-55" "targetname" "A13"
+	spawn info_player_allied "origin" "-2467.34 -2023.89 -575.88" "angle" "-92" "targetname" "A14" 
+	spawn info_player_allied "origin" "-2582.45 -2621.21 -575.88" "angle" "9" "targetname" "A15"
+end
+
+ffa_spawns:
+
+	spawn info_player_deathmatch "origin" "-1443.13 1540.87 -1023.88" "angle" "-103"
+	spawn info_player_deathmatch "origin" "-1428.26 1014.87 -1023.88" "angle" "-110"
+	spawn info_player_deathmatch "origin" "-1914.87 751.74 -1023.88" "angle" "-15"
+	spawn info_player_deathmatch "origin" "-940.87 924.87 -1023.88" "angle" "-33"
+	spawn info_player_deathmatch "origin" "-111.13 921.63 -831.88" "angle" "-136"
+
+	spawn info_player_deathmatch "origin" "-111.27 671.13 -831.88" "angle" "145"
+	spawn info_player_deathmatch "origin" "-944.87 671.15 -639.88" "angle" "13"
+	spawn info_player_deathmatch "origin" "-1116.88 556.88 -639.87" "angle" "-18"
+	spawn info_player_deathmatch "origin" "-1116.87 227.13 -639.88" "angle" "23"
+	spawn info_player_deathmatch "origin" "-707.13 227.13 -639.88" "angle" "115"
+
+	spawn info_player_deathmatch "origin" "-15.13 305.27 -639.88" "angle" "170"
+	spawn info_player_deathmatch "origin" "-304.87 -8.36 -639.88" "angle" "13"
+	spawn info_player_deathmatch "origin" "-314.73 -227.13 -639.88" "angle" "-35"
+	spawn info_player_deathmatch "origin" "303.98 -247.13 -639.88" "angle" "-83"
+	spawn info_player_deathmatch "origin" "440.87 -809.13 -639.88" "angle" "111"
+
+	spawn info_player_deathmatch "origin" "440.87 -1260.88 -639.88" "angle" "133"
+	spawn info_player_deathmatch "origin" "-384.87 -1107.13 -639.88" "angle" "-15"
+	spawn info_player_deathmatch "origin" "-847.30 -870.20 -623.88" "angle" "-65"
+	spawn info_player_deathmatch "origin" "-535.13 -983.74 -623.88" "angle" "-122"
+	spawn info_player_deathmatch "origin" "-594.00 -1718.61 -575.88" "angle" "91"
+
+	spawn info_player_deathmatch "origin" "-443.39 -2304.00 -575.88" "angle" "154"
+	spawn info_player_deathmatch "origin" "-1220.26 -2126.87 -575.88" "angle" "-142"
+	spawn info_player_deathmatch "origin" "-1548.87 -2541.30 -575.88" "angle" "67"
+	spawn info_player_deathmatch "origin" "-1708.86 -2163.13 -575.88" "angle" "-30"
+	spawn info_player_deathmatch "origin" "-2168.06 -2334.56 -579.88" "angle" "4"
+
+	spawn info_player_deathmatch "origin" "-2367.13 -2034.34 -575.88" "angle" "-132"
+	spawn info_player_deathmatch "origin" "-2841.31 -2481.74 -575.88" "angle" "26"
+	spawn info_player_deathmatch "origin" "-3244.88 -2496.87 -575.88" "angle" "13"
+	spawn info_player_deathmatch "origin" "-4359.96 -1246.12 -575.88" "angle" "-86"
+	spawn info_player_deathmatch "origin" "-3915.00 -1941.09 -577.88" "angle" "0"
+end
+
+e2_start:
+end
+e3_start:
+end
+e4_start:
+end
+e6_start:
+end
+e7_start:
+end
+change_level:
+end

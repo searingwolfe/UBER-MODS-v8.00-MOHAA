@@ -1,0 +1,401 @@
+
+main:
+
+setcvar "g_obj_alliedtext1" "m3l1b" 
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "m3l1b"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "50"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "5000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills" 
+
+//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+
+if((getcvar("g_gametype") == "2"))
+{
+	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
+	setcvar "g_gametypestring" "Team-Match UBER"
+	setcvar "g_gametype" "2"
+	thread tdm_spawns	
+	spawn info_player_deathmatch "origin" "944 -1537 340" "angle" "-98" // for spectators when joining game
+	spawn info_player_deathmatch "origin" "2567 -944 466" "angle" "170"
+	spawn info_player_deathmatch "origin" "1466 -1382 -50" "angle" "-70"
+}
+else
+{
+	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+	setcvar "g_gametypestring" "Free-For-All UBER"
+	setcvar "g_gametype" "1"
+	thread ffa_spawns
+}
+
+waitthread setup
+
+level waittill prespawn
+
+//allies
+exec alienx/basebuild.scr::basebuild ( 2959.45 -431.89 341.87 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -331.89 341.87 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -231.89 341.87 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -131.89 341.87 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -31.89 366 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 131.89 370 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -531.89 341.87 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -631.89 341.87 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -731.89 341.87 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -831.89 341.87 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -931.89 341.87 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -1031.89 341.87 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2959.45 -1131.89 341.87 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( 2959.45 -1231.89 300 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+
+//axis
+exec alienx/basebuild.scr::basebuild ( -1410.98 -866.17 427.95 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -766.17 427.95 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -666.17 427.95 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -566.17 427.95 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -466.17 427.95 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -366.17 427.95 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -266.17 427.95 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -166.17 450.95 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 -66.17 465.95 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1410.98 166.17 450.95 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1810.98 266.17 450.95 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1510.98 266.17 464 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1610.98 266.17 464 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( -1710.98 266.17 464 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+exec global/dog.scr ( 822 304 320 ) ( 0 0 0 ) 15 10
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m3l1b.scr
+	exec global/ambient.scr m3l1b
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+
+	setcvar "r_fastsky" "0"
+	$world farplane 150000
+	$world farplane_color ( 1 1 1 )
+
+exec map_triggers/grenade_ammo.scr ( 1431 -1855 320 ) ( 1934 -1321 312 ) ( 1471 -1430 88 ) ( 1425 -1798 152 ) ( 1934 -2104 114 ) ( 1924 -2158 -57 ) ( 1425 -1345 -79 ) ( 1934 -1542 -79 ) ( 1846 -889 256 ) ( 1439 -1216 248 )
+
+thread port1
+thread port2
+thread port3
+thread port4
+
+level waittill spawn
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+	
+	removeclass actor
+	
+	thread global/minefield.scr::minefield_setup
+	
+	$end_level_trigger remove
+	
+	$door_bunker_exit_lock remove
+	$door_bunker_exit time 1
+	$door_bunker_exit playsound metal_bunker_door_open
+	$door_bunker_exit rotateyup 90
+	$door_bunker_exit waitmove
+	$door_bunker_exit disconnect_paths
+
+	$door_bunker_entrance_lower time 1
+	$door_bunker_entrance_lower playsound metal_bunker_door_open
+	$door_bunker_entrance_lower rotateYup 90
+	$door_bunker_entrance_lower waitmove
+	
+	$door_floor_hatch1 time 1.3
+	$door_floor_hatch1 playsound metal_bunker_hatch_open
+	$door_floor_hatch1 rotateXup 90
+	$door_floor_hatch1 move
+
+	thread global/crate.scr::explosive_crate
+	thread global/barrel.scr::explosive_barrel
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1	
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1 
+
+	thread radio_bit
+	
+	spawn script_object "targetname" "blocker1" // stop em goin down to beach area
+	$blocker1.origin = ( -516.65 -1665.53 470.06 )
+	$blocker1 setsize ( -200 -1 -200 ) ( 200 1 50 )
+	$blocker1 solid
+	$blocker1 nodamage
+
+	//*** setup the two mg42s in the main bunker
+	$mg42_bunker_1 burstfiresettings 1 3 .2 .75
+	$mg42_bunker_1 firedelay .08
+	$mg42_bunker_1 tracerfrequency 4
+	$mg42_bunker_1 maxyawoffset 30
+	$mg42_bunker_1 pitchcaps (0 30 0)
+	$mg42_bunker_1 setplayerusable 1
+	$mg42_bunker_1 bulletspread 5 7
+	//$mg42_bunker_1 setaimtarget $mg42_bunker_target
+
+	$mg42_bunker_2 burstfiresettings 1 3 .2 .75
+	$mg42_bunker_2 firedelay .08
+	$mg42_bunker_2 tracerfrequency 4
+	$mg42_bunker_2 maxyawoffset 30
+	$mg42_bunker_2 pitchcaps (0 30 0)
+	$mg42_bunker_2 setplayerusable 1
+	$mg42_bunker_2 bulletspread 5 7
+	//$mg42_bunker_2 setaimtarget $mg42_bunker_target
+
+	$mg42_bunker_upper maxyawoffset 7
+	$mg42_bunker_upper bulletspread 5 7
+	$mg42_bunker_upper pitchcaps ( -1 10 0)
+
+	//*** setup the two mg42s in the middle
+	$mg42_middle1 burstfiresettings 1 3 .2 .75
+	$mg42_middle1 firedelay .08
+	$mg42_middle1 tracerfrequency 4
+	$mg42_middle1 maxyawoffset 30
+	$mg42_middle1 pitchcaps (0 30 0)
+	$mg42_middle1 setplayerusable 0
+	$mg42_middle1 bulletspread 5 7
+	$mg42_middle1 setaimtarget $mg42_middle1_target
+
+	$mg42_middle2 burstfiresettings 1 3 .2 .75
+	$mg42_middle2 firedelay .08
+	$mg42_middle2 tracerfrequency 4
+	$mg42_middle2 maxyawoffset 30
+	$mg42_middle2 pitchcaps (0 30 0)
+	$mg42_middle2 setplayerusable 0
+	$mg42_middle2 bulletspread 5 7
+	$mg42_middle2 setaimtarget $mg42_middle2_target
+end	
+
+radio_bit:
+while (1)
+{
+wait 5
+$bunker_radio loopsound m3l1b_radio2
+wait 30
+$bunker_radio stoploopsound
+wait 5
+$bunker_radio playsound den_scripted_M3L1_11d wait     //wiederstandnesten 72, we're under heavy...
+$bunker_radio waittill sounddone
+wait 4
+$bunker_radio playsound den_scripted_M3L1_13d wait    //the machineguns are overheating......
+$bunker_radio waittill sounddone
+wait 15
+}
+end
+
+door:
+
+	$door_bunker_entrance_lower time 1
+	$door_bunker_entrance_lower playsound metal_bunker_door_open
+	$door_bunker_entrance_lower rotateYup 90
+	$door_bunker_entrance_lower waitmove
+end
+
+
+door_metal_lock:
+
+	local.self playsound door_metal_locked
+end
+
+////////////////////////////////////////////////////////////////////////
+
+port1:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( 1556 -1206 256 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port1 
+local.trig.origin = ( 1556 -1206 256 ) // starting point
+local.trig setsize ( -30 -30 0 ) ( 30 30 80 )
+$port1 waittill trigger
+local.player = parm.other
+local.player tele ( 1670 -1300 250 ) // destination
+local.portlight remove
+$port1 remove
+wait 0
+thread port1
+end
+
+port2:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( 1670 -1300 256 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port2 
+local.trig.origin = ( 1670 -1300 256 ) // starting point
+local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
+$port2 waittill trigger
+local.player = parm.other
+local.player tele ( 1556 -1206 250 ) // destination
+local.portlight remove
+$port2 remove
+wait 0
+thread port2
+end
+
+port3:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( 1875 -1700 88 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port3
+local.trig.origin = ( 1875 -1700 88 ) // starting point
+local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
+$port3 waittill trigger
+local.player = parm.other
+local.player tele ( 1934 -1633 -79 ) // destination
+local.portlight remove
+$port3 remove
+wait 0
+thread port3
+end
+
+port4:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( 1860 -1697 -16 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port4
+local.trig.origin = ( 1860 -1697 -16 ) // starting point
+local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
+$port4 waittill trigger
+local.player = parm.other
+local.player tele ( 1761 -1692 88 ) // destination
+local.portlight remove
+$port4 remove
+wait 0
+thread port4
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	spawn info_player_axis "origin" "-1003.05 -58.82 440.13" "angle" "-10" "targetname" "X1"
+	spawn info_player_axis "origin" "-1074.14 316.15 384.13" "angle" "24" "targetname" "X2"
+	spawn info_player_axis "origin" "-1078.34 586.01 384.13" "angle" "-3" "targetname" "X3"
+	spawn info_player_axis "origin" "-654.37 382.78 384.13" "angle" "86" "targetname" "X4"
+	spawn info_player_axis "origin" "-674.96 287.85 384.13" "angle" "-175" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-813.07 132.38 384.13" "angle" "-86" "targetname" "X6" 
+	spawn info_player_axis "origin" "-899.21 -7.59 328.13" "angle" "-38" "targetname" "X7"
+	spawn info_player_axis "origin" "-872.26 -247.29 328.13" "angle" "-69" "targetname" "X8"
+	spawn info_player_axis "origin" "-992.87 -346.58 328.13" "angle" "-50" "targetname" "X9"
+	spawn info_player_axis "origin" "-639.13 -584.33 328.13" "angle" "-105" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-639.13 -518.42 328.13" "angle" "117" "targetname" "X11"
+	spawn info_player_axis "origin" "-1310.87 -1607.02 248.13" "angle" "11" "targetname" "X12"
+	spawn info_player_axis "origin" "-1216.73 -1519.13 248.13" "angle" "1" "targetname" "X13"
+	spawn info_player_axis "origin" "-1172.96 -1608.42 248.13" "angle" "13" "targetname" "X14"
+	spawn info_player_axis "origin" "-919.59 -1607.16 248.13" "angle" "89" "targetname" "X15"
+
+
+	spawn info_player_allied "origin" "1827.76 -1486.92 -79.88" "angle" "133" "targetname" "A1"
+	spawn info_player_allied "origin" "1459.13 -1367.67 -79.88" "angle" "-72" "targetname" "A2"
+	spawn info_player_allied "origin" "1680.05 -1661.13 -79.88" "angle" "-95" "targetname" "A3"
+	spawn info_player_allied "origin" "1485.41 -1985.19 -79.88" "angle" "40" "targetname" "A4"
+	spawn info_player_allied "origin" "1467.07 -1583.08 88.13" "angle" "4" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "1830.33 -2104.32 88.13" "angle" "121" "targetname" "A6"
+	spawn info_player_allied "origin" "1465.14 -2129.64 88.13" "angle" "49" "targetname" "A7"
+	spawn info_player_allied "origin" "1504.58 -1402.83 88.13" "angle" "-3" "targetname" "A8"
+	spawn info_player_allied "origin" "1904.87 -1688.16 256.13" "angle" "166" "targetname" "A9"
+	spawn info_player_allied "origin" "1627.69 -1964.74 256.13" "angle" "174" "targetname" "A10"
+
+	spawn info_player_allied "origin" "1673.11 -2232.87 272.13" "angle" "155" "targetname" "A11"
+	spawn info_player_allied "origin" "1901.56 -2069.82 290.13" "angle" "19" "targetname" "A12"
+	spawn info_player_allied "origin" "1918.04 -2224.56 272.13" "angle" "-66" "targetname" "A13"
+	spawn info_player_allied "origin" "1818.78 -2231.52 272.13" "angle" "-92" "targetname" "A14"
+	spawn info_player_allied "origin" "1476.52 -2232.87 272.13" "angle" "-117" "targetname" "A15"
+end
+
+ffa_spawns: 
+
+	spawn info_player_deathmatch "origin" "-1124.87 688.87 392.13" "angle" "-49"
+	spawn info_player_deathmatch "origin" "-904.87 2.61 328.13" "angle" "-20"
+	spawn info_player_deathmatch "origin" "-573.15 -1047.76 248.13" "angle" "48"
+	spawn info_player_deathmatch "origin" "-1310.87 -1607.03 248.13" "angle" "4"
+	spawn info_player_deathmatch "origin" "143.13 -950.47 353.44" "angle" "36"
+
+	spawn info_player_deathmatch "origin" "354.87 -48.87 328.13" "angle" "104"
+	spawn info_player_deathmatch "origin" "291.13 -476.87 256.13" "angle" "32"
+	spawn info_player_deathmatch "origin" "1254.79 -1395.56 281.82" "angle" "125"
+	spawn info_player_deathmatch "origin" "2095.13 -1572.88 265.32" "angle" "62"
+	spawn info_player_deathmatch "origin" "2864.87 -195.38 392.13" "angle" "160"
+
+	spawn info_player_deathmatch "origin" "1811.13 -659.13 256.13" "angle" "-54"
+	spawn info_player_deathmatch "origin" "1517.11 -1897.13 256.13" "angle" "-84"
+	spawn info_player_deathmatch "origin" "1471.13 -1357.26 88.13" "angle" "-22"
+	spawn info_player_deathmatch "origin" "1909.64 -1922.17 88.13" "angle" "-167"
+	spawn info_player_deathmatch "origin" "1878.87 -2158.88 -79.88" "angle" "129"
+end
+
+beach_scene_targeting:
+end
+beach_scene_targeting_loop:
+end
+beach_scene_mortar:
+end
+bunker_dust_trigger:
+end
+end_level_thread:
+end
+mg42_bunker_upper_fodder:
+end
+seq_flip_table:
+end
+close_door_floor_hatch1:
+end
+seq_bunker_entrance:
+end
+seq_open_lower_hatch:
+end
+seq_bunker_middle_radio:
+end
+seq_bunker_upper_start:
+end
+open_door_bunker_entrance_lower:
+end
+

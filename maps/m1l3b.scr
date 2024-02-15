@@ -1,0 +1,1180 @@
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/playerspawns.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "m1l3b"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "m1l3b"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "maxentities" "2000"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills"
+local.v = waitexec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1"; thread ffa_spawns }
+if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"; thread tdm_spawns
+						spawn info_player_deathmatch "origin" "-295 1134 35" "angle" "145" // for spectators when joining game
+						spawn info_player_deathmatch "origin" "-2109 2798 148" "angle" "84"
+						spawn info_player_deathmatch "origin" "778 4724 188" "angle" "-139"
+}
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread snd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+//level.basebuild_laserdist = 700
+}
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr airstrikes
+}
+if(getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr explode_building_small
+exec global/aliascache_triggersounds.scr explode_wood_small
+}
+exec global/aliascache_triggersounds.scr arty_exp_sand
+
+waitthread setup
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m1l3b.scr
+	exec global/ambient.scr m1l3b
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+
+	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 150000
+	$world farplane_color ( 0.04314 0.05882 0.16471 )
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( -1383 1896 -23 ) ( 0 135 0 ) 15 10
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+
+	thread UBER_mapextras
+	thread UBER_teleporters
+}
+
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( 64 943 576 )
+
+exec map_triggers/lightbomb.scr ( 3739 5401 355 ) ( -3439 5729 354 ) ( 2380 6218 243 ) ( -1078 7169 265 ) ( -7745 2639 357 ) ( -5377 1460 296 ) ( -116 1647 128 ) ( -1579 -878 368 ) ( -843 -880 376 ) ( 880 -4759 98 )
+exec map_triggers/bomb.scr ( 4290 5752 432 ) ( -3985 6090 432 ) ( 713 7686 608 ) ( -3206 7693 713 ) ( -6467 7107 787 ) ( -7123 498 722 ) ( -5532 2629 232 ) ( -3026 767 240 ) ( 3942 3017 232 ) ( -2413 -6794 712 )
+exec map_triggers/grenade_ammo.scr ( 2110 5442 -23 ) ( 2879 2882 -23 ) ( -708 6182 -23 ) ( -5313 5727 -23 ) ( -3774 2628 -23 ) ( -5104 880 -23 ) ( -3296 1776 -23 ) ( -5265 1212 -15 ) ( -1579 420 29 ) ( 355 -625 12 )
+exec map_triggers/rocket_ammo.scr ( 4737 5966 32 ) ( -4389 6344 32 ) ( -845 7053 49 ) ( 2017 6037 10 ) ( -5567 1871 -23 ) ( -5140 -796 240 ) ( -1178 -2277 296 ) ( 594 -1142 475 ) ( -1791 -5782 274 ) ( 356 561 125 )
+exec map_triggers/snowball_ammo.scr ( 1251 8022 843 ) ( -3978 8001 1089 ) ( -6612 7694 1194 ) ( -6891 -316 1182 ) ( -5661 969 136 ) ( -1313 2621 232 ) ( 409 3001 232 ) ( -815 -975 546 ) ( -1556 -788 540 ) ( -3031 -7215 752 )
+exec map_triggers/health.scr ( 3651 7830 358 ) ( 6839 6697 0 ) ( 6702 1615 -4 ) ( 2017 2160 -23 ) ( -2864 7199 -58 ) ( -8112 4439 121 ) ( -4578 2057 284 ) ( -1963 1582 284 ) ( -2132 -5967 480 ) ( -202 -6522 274 )
+
+exec map_triggers/led_trap.scr ( 2107 5647 239 ) led1 1
+exec map_triggers/led_trap.scr ( -723 6654 231 ) led2 1
+exec map_triggers/led_trap.scr ( -6063 6155 276 ) led3 1
+exec map_triggers/led_trap.scr ( 239 -2885 391 ) led4 2
+
+if(getcvar("g_ubergametype") != "bb")
+{
+	exec map_triggers/player_spotlight.scr ( 385 2877 288 ) ( 1 1 1 ) s0 9999 135 0 0 1		// white
+	exec map_triggers/player_spotlight.scr ( -3990 5711 432 ) ( 1 0 0 ) s1 9999 -90 0 0 1		// red
+	//exec map_triggers/player_spotlight.scr ( -1282 2494 288 ) ( 1 .5 0 ) s2 9999 45 0 0 1	// orange
+	exec map_triggers/player_spotlight.scr ( -520 7330 299 ) ( 1 1 0 ) s3 700 -90 0 0 1		// yellow
+	exec map_triggers/player_spotlight.scr ( 4286 5383 432 ) ( 0 1 0 ) s4 700 -90 0 0 1		// green
+	exec map_triggers/player_spotlight.scr ( -7568 2814 381 ) ( 0 1 1 ) s5 700 0 0 0 1		// teal
+	exec map_triggers/player_spotlight.scr ( -64 1599 288 ) ( 0 0 1 ) s6 700 135 0 0 1		// blue
+	exec map_triggers/player_spotlight.scr ( -912 -951 512 ) ( .5 0 1 ) s7 700 -90 2 0 1		// purple 
+	//exec map_triggers/player_spotlight.scr ( -1647 -807 503 ) ( 1 0 1 ) s8 700 90 2 0 1		// magenta 
+
+	exec map_triggers/spotlight_colorswitch.scr ( 417 2814 232 ) ( 0 -90 0 ) s0 rainbow
+}
+
+// Available playervehicle models:
+// bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
+// gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
+//
+// Vehicle speeds: trucks = 250, jeeps/euro_vehicles/mercedes = 400, bikes = 500, halftracks = 40
+//
+exec global/playervehicle.scr opel1 vehicles/opeltruckgreen_canopy.tik ( -4561 1480 -23 ) ( 0 0 0 ) 250 250 45 0	// allies side
+exec global/playervehicle.scr playerjeep vehicles/jeep.tik ( -513 -1882 133 ) ( 9 162 359 ) 250 400 45 1 // health, speed, reset time, headlights on (0 or 1), no headlights (0 or 1)
+exec global/playervehicle.scr sdkfz1 vehicles/sdkfz.tik ( -300 246 -23 ) ( 0 90 0 ) 250 40 45 1
+exec global/playervehicle.scr mercedes vehicles/mercedes.tik ( -1529 -6211 288 ) ( 356 49 0 ) 250 400 45 1
+exec global/playervehicle.scr sdkfz2 vehicles/sdkfz_afrika.tik ( 4320 6642 -23 ) ( 0 180 0 ) 250 40 45 1	// axis side
+exec global/playervehicle.scr bike1 vehicles/bmwbike.tik ( 1844 5531 -25 ) ( 0 270 0 ) 250 500 45 1
+exec global/playervehicle.scr bike2 vehicles/bmwbike.tik ( 2330 5522 -25 ) ( 0 225 0 ) 250 500 45 1
+exec global/playervehicle.scr opel2 vehicles/opeltruck.tik ( -2570 6500 -21 ) ( 0 -90 0 ) 250 250 45 1
+
+// Available playertank models:
+// kingtank, panzer_tank, panzer_tank_europe.
+//
+exec global/playertank.scr panzer1 vehicles/panzer_tank.tik ( -4430 100 -23 ) ( 0 90 0 ) 1000 45	// allies side
+exec global/playertank.scr panzer2 vehicles/panzer_tank_europe.tik ( -3790 100 -23 ) ( 0 90 0 ) 1000 45
+exec global/playertank.scr panzer3 vehicles/kingtank.tik ( -6694 4925 -23 ) ( 0 0 0 ) 1000 45		// axis side
+exec global/playertank.scr panzer4 vehicles/kingtank.tik ( 5337 4925 -23 ) ( 0 180 0 ) 1000 45
+
+exec global/playernebelwerfer.scr NIL 200 45 ( 98 1520 288 ) ( 0 90 0 )
+exec global/playerflak88.scr NIL 200 45 ( -2838 7020 192 ) ( 0 -90 0 ) 0 ( 0 45 0 )
+
+exec server_planes/trigger.scr ( -706 1346 -23 ) "allies" 1 0 ( -706 1346 977 )	// team (only 1 per modelpair), flying plane scale, modelpair, starting origin (default = origin + 500)
+exec server_planes/trigger.scr ( -1572 -6733 186 ) "allies" 1 2 ( -1572 -6733 1186 )	// Allies/Axis modelpair: 0 = p47/fockwulf, 1 = stuka_dsrt/stuka, 2 = c47 for both teams
+exec server_planes/trigger.scr ( -5829 4442 -23 ) "axis" 1 0 ( -5829 4442 977 )
+exec server_planes/trigger.scr ( 4410 4442 -23 ) "axis" 1 1 ( 4410 4442 977 )
+
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( 333 -2387 167 ) ( 0 -90 0 ) ( 388 -2387 169 ) ( 0 0 0 ) 500 1 1 8
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 3743 5706 -19 ) ( 0 0 0 ) ( 3743 5756 -19 ) ( 0 90 0 ) 500 1 1 8
+
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( -2832 6847 138 ) ( 60 -90 0 ) 100 0
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -2769 7039 51 ) ( 0 -90 0 ) bb1 60 450 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( -5152 1375 106 ) ( 60 0 0 ) 100 0
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( -5152 1111 106 ) ( 60 0 0 ) 100 0
+thread alarmswitch ( -5375 1243 40 ) ( 0 0 0 ) bb2 bb3 60 450 2
+
+	thread flak20mm
+	thread vehicles_undermap
+	thread splinepath
+	thread splinepath2
+	thread splinepath3
+	thread airstrikes_alternate
+}
+
+if(getcvar("g_ubermods") == "1")
+{
+	thread splinepath
+	thread splinepath2
+	thread splinepath3
+	thread airstrikes_alternate2
+}
+
+level waittill spawn
+
+	thread consoleprint
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
+
+	exec global/throwingknife.scr k1 ( -4509 5965 -19 ) ( 0 0 0 )
+	exec global/throwingknife.scr k2 ( 4713 5518 -19 ) ( 0 180 0 )
+	exec global/throwingknife.scr k3 ( -5115 959 -23 ) ( 0 90 0 )
+	exec global/throwingknife.scr k4 ( -135 1151 -23 ) ( 0 -90 0 )
+}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+
+	removeclass actor
+	removeclass ScriptOrigin
+	removeclass TriggerOnce
+	removeclass TurretGun
+	removeclass SplinePath
+	//removeclass Trigger // this will print "^~^~^ No dummy barrel for launcher barrel with set number: 1  - converting to normal exploder!!" errors.
+	//removeclass CrateObject // 48 entities, including explosive barrels
+
+if(getcvar("g_ubermods") == "2")
+{
+	for(local.i = 0; local.i <= 868; local.i++)
+	{
+		local.entity = getentity(local.i)	
+		if(local.entity != NULL)
+		{
+			if(local.entity.classname == ScriptSlave && local.entity.targetname != "explosive_barrel_launch_dummy" && local.entity.targetname != "stuka_mask" && local.entity.targetname != "fock_mask") { local.entity remove }
+		}
+	}
+
+	local.gun = $panzer1 QueryTurretSlotEntity 0; local.gun remove
+	local.gun = $panzer1 QueryTurretSlotEntity 1; local.gun remove
+	local.gun = $panzer2 QueryTurretSlotEntity 0; local.gun remove
+	local.gun = $panzer2 QueryTurretSlotEntity 1; local.gun remove
+	local.gun = $playerjeep QueryTurretSlotEntity 0; local.gun remove
+
+	// opel1, opel2, opel3, panzer1, panzer2, playerjeep
+	$opel1 remove // (-3315.709961, 187.139999, -25.375002), 210
+	$opel2 remove // (-1251.709961, -6684.859863, 202.865936), 30
+	$opel3 remove // (-8008.000000, 2537.000000, 89.245743), 90
+	$panzer1 remove // (-3592.040039, -479.359985, -24.748604), 150
+	$panzer2 remove // (-4440.000000, -412.000000, -24.464802), 90
+	$playerjeep remove // (352.474152, -4384.941406, -60.305428)
+	$bike1 remove // (1844.000000, 5531.000000, -25.375002), 270
+	$bike2 remove // (2330.425293, 5522.425293, -25.375002), 225
+	// 20mmflak = (-875.000000, 2157.000000, 8.000000), 45
+}
+
+if(getcvar("g_ubermods") != "2")
+{
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache tank_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps level.mapname
+
+	$opel1.origin = ( -305.18 2833.29 -23.88 ) 
+	$opel1.angle = -108
+	$opel2.origin = ( -716.95 3654.26 -23.88 ) 
+	$opel2.angle = -65
+	$opel3.origin = ( -1736.76 3748.89 -23.88 ) 
+	$opel3.angle = -18
+	$panzer1.origin = ( -2249.69 6256.13 -23.88 ) 
+	$panzer1.angle = -37
+	$panzer2.origin = ( 4221.68 4479.23 -23.88 ) 
+	$panzer2.angle = -142
+
+	// Leave the Trucks Destroyable for fun
+	$opel1 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+	$opel2 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+	$opel3 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+	$opel1 anim idlenolights
+	$opel1 notsolid
+	$opel2 anim idlenolights
+	$opel2 notsolid
+	$opel3 anim idlenolights
+	$opel3 notsolid
+	$panzer1.gun = $panzer1 QueryTurretSlotEntity 0
+	$panzer2.gun = $panzer2 QueryTurretSlotEntity 0
+	$panzer1.gun setaimtarget $opel2
+	$panzer2.gun setaimtarget $opel3
+	$panzer1 setcollisionentity $tank_mask
+	$panzer2 setcollisionentity $tank_mask
+	$panzer1 nodamage
+	$panzer2 nodamage
+	//$playerjeep remove
+}
+
+	$stuka7 remove
+	local.stuka = spawn vehicles/stuka-desert.tik targetname stuka7
+	local.stuka.origin = ( 2983.00 2792.00 -24.00 )
+	local.stuka.target = stuka_mask
+	local.stuka thread enemy_stuka_think
+
+	$level_end remove
+	$slowdown remove
+	$speedup remove
+	$stuka_strafe1 remove
+	$stuka_strafe2 remove
+	$stuka_takeoff_1 remove
+	$next_path_check1 remove
+	$next_path_check2 remove
+
+	//$stuka7 remove
+	//$stuka1_right_mg remove
+	//$stuka1_left_mg remove
+	//$stuka1_right_so remove
+	//$stuka1_left_so remove
+
+	$stuka1 thread enemy_stuka_think
+	$stuka2 thread enemy_stuka_think
+	$stuka3 thread enemy_stuka_think
+	$stuka4 thread enemy_stuka_think
+	$stuka5 thread enemy_stuka_think
+	$stuka6 thread enemy_stuka_think
+	$stuka8 thread enemy_stuka_think
+	$stuka9 thread enemy_stuka_think
+	$stuka10 thread enemy_stuka_think
+	$stuka11 thread enemy_stuka_think
+	$stuka12 thread enemy_stuka_think
+	$stuka13 thread enemy_stuka_think
+
+	thread cratesstuff static/static_cablespool_full.tik ( -5152 5492 -24 ) ( 0 0 0 ) 
+	thread cratesstuff static/static_cablespool_full.tik ( -5148 5488 24 ) ( 0 0 0 ) 
+	thread cratesstuff static/static_cablespool_full.tik ( -3764 5872 -20 ) ( 0 0 0 ) 
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1	
+	level.mp44 = 1		
+	level.shotgun = 1
+
+	thread zeroents_with_targetname_fix CrateObject
+end
+
+////////////////////////////////////////////////////////////////////////
+
+airstrikes_alternate:
+
+	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane.scr
+	level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
+	level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
+
+	while(1) //parameters: path targetname, team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { waitexec global/bomberplane.scr bomberpath axis 2 120 21 2.1 1 }
+		if(local.r == 1)
+		{
+			local.r2 = randomint(5)
+			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane.scr bomberpath2 allies 2 120 22 1.0 1 }
+			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane.scr bomberpath3 allies 2 120 22 1.0 1 }
+			if(local.r2 == 4) { waitexec global/bomberplane.scr bomberpath2 c47 2 120 22 1.0 1 }
+			if(local.r2 == 5) { waitexec global/bomberplane.scr bomberpath3 c47 2 120 22 1.0 1 }
+		}
+		waitframe
+	}
+end
+
+airstrikes_alternate2:
+
+	level.bomberplane_health = 200
+	level.bomberplane_bombspeed = 0.25
+	level.bomberplane_bombgravity = 2
+
+	while(1)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { waitexec global/bomberplane.scr bomberpath axis 2 120 }
+		if(local.r == 1)
+		{
+			local.r2 = randomint(5)
+			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane.scr bomberpath2 allies 2 120 }
+			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane.scr bomberpath3 allies 2 120 }
+			if(local.r2 == 4) { waitexec global/bomberplane.scr bomberpath2 c47 2 120 }
+			if(local.r2 == 5) { waitexec global/bomberplane.scr bomberpath3 c47 2 120 }
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+enemy_stuka_think:
+
+	self rendereffects "-shadow"
+	self solid
+	self.health = 200
+	self thread healthboost
+	self takedamage
+	self removeondeath 0 
+	if (self.target)
+	{
+	self.collisionent = self.target
+	}
+
+	self waittill death
+
+	thread plane_exploded
+end
+
+healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0) // prevent regular bullets from killing vehicles (depends on initial health; i.e. if 250 health, vehicle can still be killed by 2 grenades or a shotgun blast)
+	{
+		self.health = local.health
+		waitframe
+	}
+end
+
+stuka_fire local.i:
+	
+	wait 1
+	local.temp = spawn models/emitters/firegood
+	local.temp.scale = 1.5
+	local.tag = ("fire" + local.i)
+	//println "z:      local.tag " local.tag
+	local.temp.angles = (270 0 0)
+	local.temp.origin = self gettagposition local.tag
+	local.temp anim starts
+
+	for(local.c = 1.50; local.c > 0; local.c -= 0.01)
+	{
+		local.temp.scale = local.c
+		wait 0.1
+	}
+	local.temp delete
+end
+
+spawn_damaged local.model:
+
+	local.damaged = spawn script_model model local.model
+	local.damaged.origin = self.origin
+	local.damaged.angles = self.angles
+end local.damaged
+
+spawn_fx local.fx local.offset:
+
+	local.temp = spawn script_model model local.fx
+	if (local.offset)
+		local.temp.origin = (self.origin + local.offset)
+	else
+		local.temp.origin = self.origin
+	local.temp anim start
+	wait 5
+	local.temp remove
+end
+
+plane_exploded:
+
+	self show
+	self playsound explode_plane
+	exec global/earthquake.scr .2 4 0 0 // .35 2 0 0
+	
+	local.offset = (0 0 72)
+	
+	if (self.target == "fock_mask")
+	{
+		if (self.dont_explode != 1)
+		{
+			self thread spawn_fx models/fx/fx_stuka_explosion.tik local.offset
+			//wait .2
+		}
+		local.damaged = thread spawn_damaged models/vehicles/fockwulf_d.tik
+	}
+	else
+	{
+		if (self.dont_explode != 1)
+		{
+			self thread spawn_fx models/fx/fx_stuka_explosion.tik local.offset
+			//wait .2
+		}
+		local.damaged = thread spawn_damaged models/vehicles/stukadesrt_d.tik
+		local.damaged anim idle
+	}
+	for (local.i = 1; local.i <= 9; local.i++)
+	{
+		if ( (randomint 5) == 1)
+			local.damaged thread stuka_fire local.i
+	}
+//	if (self.crashed == 1)
+//		local.damaged thread plane_straighten
+	local.damaged notsolid
+	self remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+flak20mm:
+
+	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
+	{
+		local.entity = getentity(local.i)		
+		if(local.entity != NULL && local.entity.model == "models/statweapons/20mmflak.tik") { local.entity.targetname = "flak20mm" }
+	}
+	if($flak20mm == NULL) { end }
+
+	local.trig = spawn trigger_use
+	local.trig.origin = $flak20mm.origin
+	local.trig setsize ( -125 -125 -5 ) ( 125 125 75 )
+	local.trig setthread flak20mm_use
+	local.trig.flak = $flak20mm
+	local.trig.inc = 0
+	local.trig.up = 1
+
+	local.damagetrig = spawn trigger_multiple spawnflags 128
+	local.damagetrig.origin = $flak20mm.origin
+	local.damagetrig setsize ( -125 -125 -5 ) ( 125 125 75 )
+	local.damagetrig.health = 200
+	local.damagetrig thread healthboost
+	local.damagetrig setthread flak20mm_d
+	local.damagetrig.usetrig = local.trig
+	local.damagetrig.flak = $flak20mm
+
+	local.master = spawn scriptmaster
+	local.master aliascache flakshift1 sound/vehicle/veh_tank_shift2.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache flakshift2 sound/vehicle/veh_tank_shift3.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+end
+
+flak20mm_use:
+
+	self playsound flakshift
+	if(self.up == 0) { self.inc-- }
+	else { self.inc++ }
+
+	if(self.inc > 2) { self.inc = 1; self.up = 0 }
+	if(self.inc < 0) { self.inc = 1; self.up = 1 }
+
+	if(self.inc == 0) { self.flak anim 00degrees }
+	if(self.inc == 1) { self.flak anim 30degrees }
+	if(self.inc == 2) { self.flak anim 60degrees }
+end
+
+flak20mm_d:
+
+	$flak20mm.model = models/statweapons/20mmflak_d.tik
+	self.usetrig remove
+	self.flak playsound explode_truck
+	exec global/earthquake.scr .35 2 0 0
+	radiusdamage $flak20mm.origin 500 600
+
+	local.boom = spawn script_model
+	local.boom model "models/emitters/mortar_higgins.tik"
+	local.boom.origin = $flak20mm.origin
+	local.boom.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.boom.scale = 0.5
+	local.boom anim start
+	local.boom notsolid
+
+	local.debris = spawn script_model
+	local.debris model "emitters/mortar_dirt_nosound.tik" 
+	local.debris.origin = $flak20mm.origin
+	local.debris.scale = 0.8
+	local.debris anim start
+	local.debris notsolid
+	waitframe
+	local.boom remove
+	local.debris remove
+	self remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+alarmswitch local.switchorigin local.switchangles local.name local.name2 local.offtime local.damageradius local.pulsatingoff:
+
+exec global/aliascache_triggersounds.scr alarm_switch
+
+local.switch = spawn script_model
+local.switch model "animate/alarmswitch.tik"
+local.switch.origin = local.switchorigin
+local.switch.angles = local.switchangles
+local.switch notsolid
+
+local.switchtrig = spawn trigger_use
+local.switchtrig.origin = local.switch.origin
+local.switchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.switchtrig waittill trigger
+local.switchtrig nottriggerable
+local.switch anim turnon
+local.switch playsound alarmswitch
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Blowing up a bangalore. ***")
+	local.r = randomint(2)
+
+	if(local.r == 0) { thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff }
+	if(local.r == 1) { thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name2 local.offtime local.damageradius local.pulsatingoff }
+	wait (randomint(15) / 10.000)
+	if(local.r == 0) { waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name2 local.offtime local.damageradius local.pulsatingoff }
+	if(local.r == 1) { waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff }
+
+local.switch anim turnoff
+wait 1
+local.switch remove
+local.switchtrig remove
+
+thread alarmswitch local.switchorigin local.switchangles local.name local.name2 local.offtime local.damageradius local.pulsatingoff
+end
+
+////////////////////////////////////////////////////////////////////////
+
+vehicles_undermap:
+
+	local.a = 0
+	for(local.e = 0; local.e <= 868; local.e++)
+	{
+		local.entity = getentity(local.e)
+		if(local.entity != NULL && (local.entity.classname == VehicleTank || local.entity.classname == DrivableVehicle))
+		{
+			local.vehicles[local.a] = local.entity.targetname
+			local.a++
+		}
+		if(local.e % 14 == 0) { waitframe }
+	}
+	if(local.vehicles.size < 1) { end }
+
+	while(1)
+	{
+		for(local.a = 0; local.a <= local.vehicles.size; local.a++)
+		{
+			for(local.s = 1; $(local.vehicles[local.a]) != NULL && local.s <= $(local.vehicles[local.a]).size; local.s++)
+			{
+				if($(local.vehicles[local.a])[local.s].origin[2] >= 1000 || $(local.vehicles[local.a])[local.s].origin[2] <= -94)
+				{
+					$(local.vehicles[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+zeroents_with_targetname_fix local.class: // fixing the console errors below
+
+	// 0 entities with targetname 'g1p1'. You are using a command that requires exactly one.
+
+	local.targetnames = makeArray // these arrays start at [1][1], not [0] or [0][1]
+		g1p1
+	endArray
+
+	local.a = 1
+	for(local.i = 0; local.i <= 868; local.i++)
+	{
+		local.entity = getentity(local.i)
+		if(local.a <= local.targetnames.size && local.entity != NULL && local.entity.classname == local.class && local.entity.targetname == "")
+		{
+			local.entity.targetname = local.targetnames[local.a][1]
+			local.a++
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+// plane angles = ( pitch, yaw, roll )
+// +pitch = nose down, -pitch = nose up
+// +roll = raise left wing, -roll = raise right wing
+// yaw = "coord" player angles: ( 0 yaw 0 )
+
+splinepath:
+
+	spawn info_splinepath targetname bomberpath
+	$bomberpath.origin = ( -8612 5123 1736 ) // z - 40 below skybox ceiling
+	$bomberpath.angles = ( -5 -27 0 )
+	$bomberpath speed 3
+
+	spawn info_splinepath targetname a0
+	$a0.origin = ( -8112 4923 1736 )
+	$a0.angles = ( -5 -27 20 )
+	$a0 speed 1.5
+
+	spawn info_splinepath targetname a1
+	$a1.origin = ( -6080 3900 1736 )
+	$a1.angles = ( -5 -43 30 )
+	$a1 speed 1.0
+
+	spawn info_splinepath targetname a2
+	$a2.origin = ( -3263 1345 1736 )
+	$a2.angles = ( -5 -48 45 )
+	$a2 speed 1.0
+
+	spawn info_splinepath targetname a3
+	$a3.origin = ( -1202 -875 1736 )
+	$a3.angles = ( -5 -64 65 )
+	$a3 speed 1.0
+
+	spawn info_splinepath targetname a4
+	$a4.origin = ( 0 -3229 1736 )
+	$a4.angles = ( -5 -79 65 )
+	$a4 speed 1.1
+
+	spawn info_splinepath targetname a5
+	$a5.origin = ( 80 -5557 1736 )
+	$a5.angles = ( -5 -106 65 )
+	$a5 speed 1.2
+
+	spawn info_splinepath targetname a6
+	$a6.origin = ( -557 -6920 1736 )
+	$a6.angles = ( -5 -150 65 )
+	$a6 speed 0.8
+
+	spawn info_splinepath targetname a7
+	$a7.origin = ( -3520 -8016 1736 )
+	$a7.angles = ( -5 -160 45 )
+	$a7 speed 0.8
+
+	spawn info_splinepath targetname a8
+	$a8.origin = ( -4020 -8516 1736 )
+	$a8.angles = ( -5 -160 45 )
+	$a8 speed 3
+
+	$bomberpath.target = $a0
+	$a0.target = $a1
+	$a1.target = $a2
+	$a2.target = $a3
+	$a3.target = $a4
+	$a4.target = $a5
+	$a5.target = $a6
+	$a6.target = $a7
+	$a7.target = $a8
+end
+
+splinepath2:
+
+	spawn info_splinepath targetname bomberpath2
+	$bomberpath2.origin = ( -8612 4923 1736 ) // z - 40 below skybox ceiling
+	$bomberpath2.angles = ( -5 0 0 )
+	$bomberpath2 speed 2
+
+	spawn info_splinepath targetname b0
+	$b0.origin = ( -8112 4923 1736 )
+	$b0.angles = ( -5 0 0 )
+	$b0 speed 0.1
+
+	spawn info_splinepath targetname b1
+	$b1.origin = ( 8112 4923 1736 )
+	$b1.angles = ( -5 0 0 )
+	$b1 speed 0.1
+
+	spawn info_splinepath targetname b2
+	$b2.origin = ( 8612 4923 1736 )
+	$b2.angles = ( -5 0 0 )
+	$b2 speed 3
+
+	$bomberpath2.target = $b0
+	$b0.target = $b1
+	$b1.target = $b2
+end
+
+splinepath3:
+
+	spawn info_splinepath targetname bomberpath3
+	$bomberpath3.origin = ( 8612 3900 1736 ) // z - 40 below skybox ceiling
+	$bomberpath3.angles = ( -5 180 0 )
+	$bomberpath3 speed 2
+
+	spawn info_splinepath targetname c0
+	$c0.origin = ( 8112 3900 1736 )
+	$c0.angles = ( -5 180 0 )
+	$c0 speed 0.1
+
+	spawn info_splinepath targetname c1
+	$c1.origin = ( -8112 3900 1736 )
+	$c1.angles = ( -5 180 0 )
+	$c1 speed 0.1
+
+	spawn info_splinepath targetname c2
+	$c2.origin = ( -8612 3900 1736 )
+	$c2.angles = ( -5 180 0 )
+	$c2 speed 3
+
+	$bomberpath3.target = $c0
+	$c0.target = $c1
+	$c1.target = $c2
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	spawn info_player_axis "origin" "3748.222 6098.342 -19.875" "angle" "-52" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "4928.303 6027.579 -23.875" "angle" "-62" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "3608.102 7611.242 232.272" "angle" "-127" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "5325.634 2614.310 144.383" "angle" "135" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2595.717 6538.357 36.143" "angle" "-161" "targetname" "axis_spawn"
+
+	spawn info_player_axis "origin" "548.488 7387.227 129.612" "angle" "-127" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2263.660 2239.127 -23.875" "angle" "111" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "447.126 2619.702 -23.875" "angle" "38" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-1175.633 7439.021 103.592" "angle" "-135" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-2848.875 7024.875 -9.875" "angle" "-83" "targetname" "axis_spawn"
+
+	spawn info_player_axis "origin" "-3829.207 6532.683 -23.875" "angle" "1" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-3439.127 6439.708 -19.875" "angle" "-130" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-5363.271 6655.440 -5.447" "angle" "-88" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-7917.139 5825.554 209.969" "angle" "-34" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-7993.955 3164.622 49.073" "angle" "-32" "targetname" "axis_spawn"
+
+	spawn info_player_allied "origin" "1081.316 -4657.999 119.277" "angle" "121" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-668.880 -4095.178 -23.883" "angle" "51" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "912.359 -1674.269 0.910" "angle" "-131" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-903.368 -2457.800 83.699" "angle" "76" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "448.334 -685.001 -9.937" "angle" "148" "targetname" "allied_spawn"
+
+	spawn info_player_allied "origin" "-2106.148 -1438.801 -23.875" "angle" "63" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-2932.651 -437.464 -18.796" "angle" "53" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "370.515 723.476 54.271" "angle" "137" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-1560.587 1787.007 -23.875" "angle" "-39" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-2471.437 1791.929 -23.875" "angle" "-142" "targetname" "allied_spawn"
+
+	spawn info_player_allied "origin" "-3008.875 675.709 -23.875" "angle" "-4" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-3138.800 -749.411 24.792" "angle" "126" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-4424.620 -1049.552 117.994" "angle" "80" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-5120.875 727.991 -23.875" "angle" "17" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-2816.442 -1001.545 32.584" "angle" "47" "targetname" "allied_spawn"
+end
+
+ffa_spawns:
+	
+	spawn info_player_deathmatch "origin" "-44.68 162.03 -23.88" "angle" "133" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-2367.68 307.80 -23.88" "angle" "42" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-4506.49 832.94 -23.88" "angle" "12" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-5704.24 2907.26 -23.88" "angle" "10" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-2752.47 2500.90 -23.88" "angle" "60" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "-906.77 2452.46 -13.99" "angle" "-91" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "510.27 2306.56 -23.88" "angle" "53" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "4140.81 3063.94 -23.88" "angle" "110" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "4943.82 5754.75 -23.88" "angle" "-97" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2975.57 6146.42 76.96" "angle" "-120" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "1024.64 6671.99 -10.34" "angle" "-130" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-920.64 6059.73 -23.76" "angle" "-116" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-2848.88 6897.84 -9.88" "angle" "-72" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3558.02 6373.46 -19.88" "angle" "-108" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-5434.73 5726.56 -23.88" "angle" "-51" "targetname" "deathmatch_spawn"
+end
+
+////////////////////////////////////////////////////////////////////////
+
+UBER_teleporters:
+
+	exec map_triggers/undermap.scr ( 0 0 -104 ) ( -8200 -8200 -300 ) ( 8200 8200 10 ) undermap_tele1
+	exec map_triggers/undermap.scr ( 1500 1647 -104 ) ( 0 -8000 -300 ) ( 3953 0 100 ) undermap_tele2
+
+if(getcvar("g_ubergametype") != "bb")
+{ 
+	exec map_triggers/tele.scr ( -2381 -6945 236 ) ( -2441 -6945 704 ) 1
+	exec map_triggers/tele.scr ( -2199 -7055 261 ) ( -2183 -7126 360 ) 0
+	exec map_triggers/tele.scr ( -964 -2221 80 ) ( -1137 -2248 299 ) 0
+	exec map_triggers/tele.scr ( 456 986 35 ) ( 573 1111 235 ) 0
+	exec map_triggers/tele.scr ( 496 2239 -23 ) ( 495 2176 -23 ) 1
+	exec map_triggers/tele.scr ( 399 1562 -22 ) ( 281 1563 128 ) 0
+	exec map_triggers/tele.scr ( -3008 -890 130 ) ( -3071 -890 118 ) 1
+	exec map_triggers/tele.scr ( -976 -741 -14 ) ( -976 -741 376 ) 1
+	exec map_triggers/tele.scr ( -1714 -743 -23 ) ( -1714 -743 368 ) 1
+	exec map_triggers/tele.scr ( -1712 -934 368 ) ( -1712 -934 558 ) 1
+	exec map_triggers/tele.scr ( -976 -934 376 ) ( -976 -934 566 ) 1
+	exec map_triggers/tele.scr ( -85 -1805 187 ) ( -16 -1704 309 ) 0
+	exec map_triggers/tele.scr ( -5335 7134 270 ) ( -5346 7728 991 ) 1
+	exec map_triggers/tele.scr ( -6045 240 173 ) ( -6423 -303 1083 ) 1
+
+	exec map_triggers/tele.scr ( -5567 2299 -23 ) ( -5504 2302 -23 ) 1
+	exec map_triggers/tele.scr ( -2943 1800 -23 ) ( -2944 1847 -23 ) 1
+	exec map_triggers/tele.scr ( -3993 6487 -23 ) ( -3993 6447 432 ) 1
+	exec map_triggers/tele.scr ( 4287 6159 -23 ) ( 4287 6127 432 ) 1
+	exec map_triggers/tele.scr ( -7691 3179 61 ) ( -7672 3093 233 ) 0
+	exec map_triggers/tele.scr ( -368 7458 238 ) ( -524 7909 651 ) 1
+	exec map_triggers/tele.scr ( -2825 7787 904 ) ( -2804 7321 192 ) 1
+
+	exec map_triggers/tele.scr ( -1310 1776 -23 ) ( -1310 1820 288 ) 0
+	exec map_triggers/tele.scr ( -3038 975 -23 ) ( -3038 931 296 ) 0
+	exec map_triggers/tele.scr ( -5535 2831 -23 ) ( -5534 2784 288 ) 0
+	exec map_triggers/tele.scr ( -1312 2831 -23 ) ( -1312 2793 288 ) 0
+	exec map_triggers/tele.scr ( 414 3215 -23 ) ( 414 3166 288 ) 0
+	exec map_triggers/tele.scr ( 3935 3215 -23 ) ( 3936 3162 288 ) 0
+}
+end
+
+UBER_mapextras:
+
+	thread solidclip ( -2946 -7324 514 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -85
+	thread solidclip ( -2533 -7238 844 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -89
+	thread solidclip ( -2100 -7241 438 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -90
+	thread solidclip ( -1711 -7255 337 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -88
+	thread solidclip ( -1294 -7240 307 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -85
+	thread solidclip ( -1074 -7190 319 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -63
+	thread solidclip ( -698 -7032 275 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -71
+	thread solidclip ( -292 -6896 356 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -65
+	thread solidclip ( 81 -6703 338 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -50
+	thread solidclip ( 348 -6412 252 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -23
+	thread solidclip ( 540 -6021 257 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -25
+	thread solidclip ( 733 -5647 202 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -26
+	thread solidclip ( 936 -5275 191 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -28
+	thread solidclip ( 1132 -4881 244 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -28
+	thread solidclip ( 1322 -4473 547 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -14
+	thread solidclip ( 1458 -4070 542 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -14
+	thread solidclip ( 1526 -3684 415 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 1
+	thread solidclip ( 1487 -3327 69 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 14
+	thread solidclip ( 1383 -2896 58 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 12
+	thread solidclip ( 1299 -2476 14 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 12
+	thread solidclip ( 1200 -2061 87 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 10
+	thread solidclip ( 1129 -1629 431 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 12
+	thread solidclip ( 1047 -1251 614 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 32
+	thread solidclip ( 862 -900 544 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 43
+	thread solidclip ( 557 -561 206 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 10
+	thread solidclip ( 474 -141 229 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 10
+	thread solidclip ( 395 243 105 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -5
+	thread solidclip ( 468 667 84 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -19
+	thread solidclip ( 632 942 189 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -39
+	thread solidclip ( 943 1193 206 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -79
+	thread solidclip ( 1366 1265 177 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -81
+	thread solidclip ( 1784 1304 159 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -92
+	thread solidclip ( 2210 1282 191 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -92
+	thread solidclip ( 2635 1260 206 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -91
+	thread solidclip ( 3061 1249 211 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -90
+	thread solidclip ( 3486 1231 217 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -98
+	thread solidclip ( 3906 1166 237 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -101
+	thread solidclip ( 4320 1079 252 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -102
+	thread solidclip ( 4741 984 252 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -104
+	thread solidclip ( 5154 856 245 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -107
+	thread solidclip ( 5569 735 224 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -105
+	thread solidclip ( 5982 627 231 ) ( -45 -125 -1000 ) ( 45 3000 3000 ) -104
+
+	thread solidclip ( -1834 -5714 267 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -63
+	thread solidclip ( -1485 -5493 279 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -47
+	thread solidclip ( -1208 -5180 273 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -32
+	thread solidclip ( -970 -4831 203 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -23
+	thread solidclip ( -826 -4456 298 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -7
+	thread solidclip ( -766 -4028 277 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -3
+	//thread solidclip ( -707 -3609 173 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -1
+	//thread solidclip ( -664 -3193 118 ) ( -45 -125 -1000 ) ( 45 325 3000 ) -2
+	thread solidclip ( -688 -2771 134 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 47
+	thread solidclip ( -1027 -2494 199 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 48
+	thread solidclip ( -1365 -2205 246 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 49
+	thread solidclip ( -1689 -1944 193 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 53
+	thread solidclip ( -2029 -1692 220 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 49
+	thread solidclip ( -2224 -1453 34 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 45
+	thread solidclip ( -2548 -1187 38 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 67
+	thread solidclip ( -2957 -1052 69 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 86
+	thread solidclip ( -3381 -1016 62 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 99
+	thread solidclip ( -3772 -1101 87 ) ( -45 -125 -1000 ) ( 45 325 3000 ) 105
+	thread solidclip ( -4185 -1178 243 ) ( -3000 -125 -1000 ) ( 45 325 3000 ) 83
+	thread solidclip ( -4610 -1101 441 ) ( -3000 -125 -1000 ) ( 200 400 3000 ) 78
+
+	thread solidclip ( -5184 -838 191 ) ( -45 -125 -1000 ) ( 45 125 500 ) 46
+
+	thread solidclip ( 2531 7588 100 ) ( -3000 -125 -1000 ) ( 45 325 258 ) -92
+	thread solidclip ( 2940 7597 100 ) ( -3000 -125 -1000 ) ( 45 325 258 ) -75
+	thread solidclip ( 3351 7725 100 ) ( -3000 -125 -1000 ) ( 45 325 258 ) -70
+
+	thread solidclip ( -641 7553 170 ) ( -3000 -125 -1000 ) ( 45 400 355 ) -97
+
+	thread solidclip ( -2800 7567 520 ) ( -3000 -125 -1000 ) ( 45 600 350 ) -104
+	thread solidclip ( -4857 7510 610 ) ( -3000 -125 -1000 ) ( 45 700 375 ) -90
+
+	thread solidclip ( 6716 2007 26 ) ( -45 -125 -1000 ) ( 45 325 0 ) -178
+	thread solidclip ( 6521 2225 136 ) ( -45 -125 -1000 ) ( 45 325 0 ) -20
+	thread solidclip ( 6592 2109 87 ) ( -45 -125 -1000 ) ( 45 125 0 ) -89
+	thread solidclip ( 6705 2610 93 ) ( -45 -125 -1000 ) ( 45 325 0 ) -43
+	thread solidclip ( 7037 3048 12 ) ( -45 -125 -1000 ) ( 45 325 0 ) -4
+	thread solidclip ( 6975 2884 18 ) ( -45 -125 -1000 ) ( 45 125 0 ) -45
+	thread solidclip ( 7154 3444 51 ) ( -45 -125 -1000 ) ( 45 125 0 ) -43
+	thread solidclip ( 7229 3628 37 ) ( -45 -125 -1000 ) ( 45 325 0 ) 0
+	thread solidclip ( 7235 4062 16 ) ( -45 -125 -1000 ) ( 45 325 0 ) -16
+	thread solidclip ( 7347 4493 42 ) ( -45 -125 -1000 ) ( 45 325 0 ) -6
+	thread solidclip ( 7403 4938 57 ) ( -45 -125 -1000 ) ( 45 325 0 ) -4
+	thread solidclip ( 7420 5381 73 ) ( -45 -125 -1000 ) ( 45 325 0 ) 0
+	thread solidclip ( 7402 5807 32 ) ( -45 -125 -1000 ) ( 45 325 0 ) 17
+	thread solidclip ( 7237 6201 7 ) ( -45 -125 -1000 ) ( 45 325 0 ) 29
+	thread solidclip ( 7067 6496 -10 ) ( -45 -125 -1000 ) ( 45 325 0 ) 46
+	thread solidclip ( 6716 6709 -1 ) ( -45 -125 -1000 ) ( 45 325 0 ) 87
+	thread solidclip ( 6296 6785 -2 ) ( -200 -125 -1000 ) ( 45 325 0 ) 47
+
+	thread solidclip ( -8121 5938 106 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -37
+	thread solidclip ( -7959 6209 320 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -47
+	thread solidclip ( -7752 6444 414 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -52
+	thread solidclip ( -7500 6654 521 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -48
+	thread solidclip ( -7283 6889 627 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -35
+	thread solidclip ( -7067 7255 857 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -39
+	thread solidclip ( -6841 7562 1027 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -42
+	thread solidclip ( -6530 7829 1003 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -66
+	thread solidclip ( -6176 7965 1019 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -75
+	thread solidclip ( -5779 8060 988 ) ( -45 -125 -2000 ) ( 45 325 2000 ) -78
+	thread solidclip ( -5285 -1603 1218 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 46
+	thread solidclip ( -5564 -1359 1213 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 56
+	thread solidclip ( -5930 -1126 1215 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 57
+	thread solidclip ( -6309 -836 1258 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 50
+	thread solidclip ( -6718 -546 1284 ) ( -45 -200 -2000 ) ( 45 325 2000 ) 59
+	thread solidclip ( -7026 -331 1027 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 40
+	thread solidclip ( -7297 4 956 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 36
+	thread solidclip ( -7527 336 757 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 35
+	thread solidclip ( -7765 668 622 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 45
+	thread solidclip ( -8008 963 435 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 25
+	thread solidclip ( -8078 1195 308 ) ( -45 -125 -2000 ) ( 45 325 2000 ) 14
+
+if(getcvar("g_ubergametype") != "bb")
+{
+	thread cratesstuff static/indycrate.tik ( 219 1320 185 ) ( 0 89 0 )
+	thread cratesstuff static/indycrate.tik ( 219 1273 130 ) ( 0 89 0 )
+	thread cratesstuff static/indycrate.tik ( 219 1130 37 ) ( 0 89 0 )
+	thread cratesstuff static/indycrate.tik ( 219 1083 -18 ) ( 0 89 0 )
+
+	thread cratesstuff static/indycrate.tik ( -5225 1365 196 ) ( 0 180 0 )
+	thread cratesstuff static/indycrate.tik ( -5225 1436 144 ) ( 0 180 0 )
+
+	thread cratesstuff static/indycrate.tik ( -5493 1558 39 ) ( 0 90 0 )
+	thread cratesstuff static/indycrate.tik ( -5493 1605 -18 ) ( 0 90 0 )
+	thread cratesstuff static/indycrate.tik ( -5579 1558 39 ) ( 0 90 0 )
+	thread cratesstuff static/indycrate.tik ( -5579 1605 -18 ) ( 0 90 0 )
+
+	thread cratesstuff static/indycrate.tik ( -5171 -740 171 ) ( 0 0 0 )
+	thread cratesstuff static/indycrate.tik ( -5112 -740 151 ) ( 0 180 0 )
+
+	thread cratesstuff static/indycrate.tik ( -2497 7240 119 ) ( 0 180 0 )
+	thread cratesstuff static/indycrate.tik ( -3095 7240 119 ) ( 0 180 0 )
+	thread cratesstuff static/indycrate.tik ( -3142 7240 62 ) ( 0 180 0 )
+
+	thread cratesstuff static/banquet_table.tik ( -2600 6910 -103 ) ( 0 180 0 )
+	thread cratesstuff static/banquet_table.tik ( -2800 6910 -103 ) ( 0 180 0 )
+	thread cratesstuff static/banquet_table.tik ( -2600 7002 -103 ) ( 0 180 0 )
+	thread cratesstuff static/banquet_table.tik ( -2800 7002 -103 ) ( 0 180 0 )
+	thread cratesstuff static/banquet_table.tik ( -2600 7094 -103 ) ( 0 180 0 )
+	thread cratesstuff static/banquet_table.tik ( -2800 7094 -103 ) ( 0 180 0 )
+	thread cratesstuff static/banquet_table.tik ( -2600 7186 -103 ) ( 0 180 0 )
+	thread cratesstuff static/banquet_table.tik ( -2800 7186 -103 ) ( 0 180 0 )
+}
+end
+
+cratesstuff local.model local.origin local.angles local.hide local.scale local.targetname:
+
+	local.ent = spawn script_model
+	local.ent model local.model
+	local.ent.origin = local.origin
+	if(local.angles[2] != NIL) { local.ent.angles = local.angles }
+	if(local.hide == 1) { local.ent hide }
+	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
+	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
+end
+
+solidclip local.origin local.setsize1 local.setsize2 local.angle local.angles:
+
+	local.clip = spawn script_object
+	local.clip.origin = local.origin
+	local.clip setsize local.setsize1 local.setsize2
+	if(local.angle != NIL) { local.clip.angle = local.angle }
+	if(local.angle == NIL && local.angles != NIL) { local.clip.angles = local.angles }
+	local.clip solid
+	local.clip nodamage
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cyb:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.keepsamesides = 1
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2492 7021 86 ) 0 axis    // for cyber attack only
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2979 -32 -23 ) 0 allies
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -582 2750 -23 ) 0
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+snd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -4895 1763 -23 ) -90    // for search & destroy only, team parameter doesn't matter
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1056 2268 -23 ) 90
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( -1520 -292 41 ) 180 ( -1989 6692 -25 ) 0 ( 0 0 0 ) 0
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+//Allies
+exec alienx/basebuild.scr::basebuild ( -465 1104 -23 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -665 1104 -23 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -865 1104 -23 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1065 1104 -23 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1265 1104 -23 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( -1465 1104 -23 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( -1665 1104 -23 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1865 1104 -23 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2065 1104 -23 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2265 1104 -23 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2465 1104 -23 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2665 1104 -23 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2865 1104 -23 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+exec alienx/basebuild.scr::basebuild ( -3065 1104 -23 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+
+//Axis
+exec alienx/basebuild.scr::basebuild ( -2000 5150 -23 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2200 5150 -23 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2400 5150 -23 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2600 5150 -23 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2800 5150 -23 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( -3000 5150 -23 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( -3200 5150 -23 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -3400 5150 -23 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -3600 5150 -23 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -3800 5150 -23 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4000 5150 -23 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4200 5150 -23 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4400 5150 -23 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4600 5150 -23 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+consoleprint:
+
+	wait 1
+	if(level.objectlimit != NIL && level.build_number != NIL) { end }
+
+	local.maxclients = int(getcvar(sv_maxclients))
+	local.nullent = 0
+	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
+	{
+		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
+
+		local.entity = getentity(local.i) // $player[1] = entity 0		
+		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
+		//if(local.entity != NULL && local.entity.model == "models/statweapons/20mmflak.tik") { local.entity remove; local.nullent++ }
+		if(local.entity != NULL && local.i >= 725) { local.warning = 1 }
+	}
+	if(local.entity == NULL) // if entity 868 = NULL
+	{
+		println("----- Entities in map: " + (1024 - local.nullent - 155) + " / 1024")
+		println("----- Entities remaining: " + (local.nullent + 155))
+	}
+	if(local.entity != NULL)
+	{
+		println("----- Entities in map: " + "more than 869" + " / 1024")
+		println("----- Entities remaining: less than 155 entities.")
+	}
+	if(local.warning == 1)
+	{
+		wait 1
+		println("----- WARNING: Keep below 725 entities on SP maps for Reborn servers!")
+		println("----- Players may soon be unable to join! (stuck connecting to sever)")
+	}
+end
+
+start_opel3:
+end
+passing_time:
+end
+scene5:
+end
+stop_at_end:
+end
+friendly_message1:
+end
+barrel_opel:
+end
+barrel_panzer1:
+end
+barrel_panzer2:
+end
+barrel_noise:
+end

@@ -1,0 +1,853 @@
+
+main:
+
+setcvar "g_obj_alliedtext1" "m6l3e" 
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "m6l3e"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "50"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "5000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills" 
+
+//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+
+if((getcvar("g_gametype") == "2"))
+{
+	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
+	setcvar "g_gametypestring" "Team-Match UBER"
+	setcvar "g_gametype" "2"
+	thread tdm_spawns	
+	spawn info_player_deathmatch "origin" "-6966 -2306 -249" "angle" "37" // for spectators when joining game
+	spawn info_player_deathmatch "origin" "-4717 -1737 -552" "angle" "151"
+	spawn info_player_deathmatch "origin" "-5677 -1062 -334" "angle" "-92"
+}
+else
+{
+	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+	setcvar "g_gametypestring" "Free-For-All UBER"
+	setcvar "g_gametype" "1"
+	thread ffa_spawns
+}
+
+waitthread setup
+
+level waittill prespawn
+
+//allies 
+exec alienx/basebuild.scr::basebuild ( -5199 -2360 -545 ) "static/indycrate.tik" 1 1 0 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5299 -2360 -545 ) "statweapons/mg42_gun.tik" 1 0 1 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5399 -2360 -545 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5499 -2360 -545 ) "static/sandbag_longsegment.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5599 -2360 -545 ) "static/barbwire.tik" 1 0 1 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5699 -2360 -545 ) "static/bunkertable.tik" 1 .5 0 .5 90 .3 0 1 1
+exec alienx/basebuild.scr::basebuild ( -5799 -2360 -545 ) "static/cabinet_large.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5899 -2360 -545 ) "static/bookcase.tik" 1 0 1 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5999 -2360 -545 ) "static/static_naziflag1.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6099 -2360 -545 ) "static/banquet_table.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6199 -2360 -545 ) "static/indycrate.tik" 1 .5 0 .5 90 .3 1 0 1
+exec alienx/basebuild.scr::basebuild ( -6299 -2360 -545 ) "static/bush_full.tik" 1 .5 0 .5 90 .3 0 0 1end
+exec alienx/basebuild.scr::basebuild ( -6299 -2260 -545 ) "static/bodies_tarp.tik" 1 .5 0 .5 90 .3 1 0 1
+exec alienx/basebuild.scr::basebuild ( -6299 -2160 -545 ) "static/bodies_tarp.tik" 1 1 1 1 90 .3 0 0 1
+
+//axis    
+exec alienx/basebuild.scr::basebuild ( -6597 -4680 -574 ) "static/indycrate.tik" 1 1 0 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -4580 -574 ) "statweapons/mg42_gun.tik" 1 0 1 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -4480 -574 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -4380 -574 ) "static/sandbag_longsegment.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -4280 -574 ) "static/barbwire.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -4180 -574 ) "static/bunkertable.tik" 1 0 0 1 90 .3 0 1 1
+exec alienx/basebuild.scr::basebuild ( -6597 -4080 -574 ) "static/cabinet_large.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -3980 -574 ) "static/bodies_tarp.tik" 1 .5 0 .5 90 .3 1 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -3880 -574 ) "static/bodies_tarp.tik" 1 1 1 1 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -3780 -574 ) "static/bookcase.tik" 1 .5 0 .5 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -3680 -574 ) "static/static_naziflag1.tik" 1 .5 0 .3 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -3580 -574 ) "static/bush_full.tik" 1 .5 0 .5 90 .3 0 0 1end
+exec alienx/basebuild.scr::basebuild ( -6597 -3480 -574 ) "static/banquet_table.tik" 1 .5 0 .3 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -6597 -3380 -574 ) "static/indycrate.tik" 1 .5 0 .5 90 .3 0 0 1
+
+exec global/dog.scr ( -5341 -2403 -572 ) ( 0 0 0 ) 15 10
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m6l3e.scr
+	exec global/ambient.scr m6l3e
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+	exec global/bomber.scr
+
+	setcvar "r_fastsky" "0"
+	$world farplane 150000
+	$world farplane_color ( 0.04314 0.05882 0.16471 )
+
+exec map_triggers/grenade_ammo.scr ( -4764 -983 -575 ) ( -4764 -840 -575 ) ( -4764 -687 -575 ) ( -4764 -545 -575 ) ( -4764 -399 -575 ) ( -4579 -983 -575 ) ( -4579 -840 -575 ) ( -4579 -687 -575 ) ( -4579 -545 -575 ) ( -4579 -399 -575 )
+
+level waittill spawn
+
+	$train_engine.origin = "-6435.00 -2448.33 -563.14"
+	$train_cars.origin = "-6432.02 -3580.62 -445"
+	$train_cars_door remove
+	$t240.origin = $train_cars.origin
+	$train_cars bind $train_engine_clip
+	$train_engine bind $train_engine_clip
+	$t240 bind $train_cars
+	$train_engine_clip notsolid
+	$ranger1_anchor remove
+	$ranger2_anchor remove
+	$ranger3_anchor remove
+	thread endbit
+	thread Map_Guard
+	thread blast_seq1_setup
+	thread blast_seq2_setup
+	thread blast_seq3_setup
+	thread blast_seq4_setup
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+
+	removeclass actor
+	removeclass ammoentity
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1
+	level.panzer = 1 
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1
+end
+
+//*********************************************
+// Heavy Flywheel Door
+//*********************************************
+heavy_door_setup:
+
+	$heavy_door1 thread moveYup48
+	$heavy_door2 thread moveYdown48
+	$flywheel notsolid
+	$flywheel thread flywheel_x360_close
+end
+
+moveYup48:
+
+	self time 3
+	self playsound door_vault_roll_close
+	self moveNorth 48
+	self waitmove
+end
+
+moveYdown48:
+
+	self time 3
+	self moveSouth 48
+	self waitmove
+end
+
+flywheel_x360_close:
+
+	self time 3
+	self rotateXdown 360
+	self playsound flywheel
+	self waitmove
+end
+
+//*********************************************
+// Blast Sequence 1 - Heavy Door Closing
+//*********************************************
+blast_seq1_setup:
+
+	$blast_seq1_model1 hide
+	$blast_seq1_model2 hide
+
+end
+
+blast_seq1:
+
+	$blast_seq1_exploder1 anim start
+	$blast_seq1_fire1 anim start
+	thread jitter_large 0	
+
+	wait .5
+
+	$blast_seq1_exploder2 anim start
+	$blast_seq1_model1 anim start
+	$blast_seq1_fire2 anim start
+
+	wait .25
+
+	$blast_seq1_exploder3 anim start
+	$blast_seq1_fire3 anim start
+
+	wait .5
+
+	$blast_seq1_exploder4 anim start
+
+	wait .25
+
+	$blast_seq1_exploder5 anim start
+	$blast_seq1_model2 anim start
+end
+
+//*********************************************
+// Blast Sequence 2 - Cell Block
+//*********************************************
+blast_seq2_setup:
+
+	$blast_seq2_hurt1 nottriggerable
+	$blast_seq2_model1 hide
+	$blast_seq2_model2 hide
+	$blast_seq2_model3 hide
+
+end
+
+blast_seq2:
+
+	wait 1.5
+
+	$blast_seq2_exploder1 anim start
+
+	wait .5
+
+	$blast_seq2_exploder2 anim start
+	$blast_seq2_fire1 anim start
+
+	wait 1
+
+	$blast_seq2_exploder3 anim start
+	thread jitter_large 0
+
+	wait .5
+
+	$blast_seq2_exploder4 anim start
+
+	wait .5
+
+	$blast_seq2_exploder5 anim start
+
+	wait .5
+
+	$blast_seq2_exploder6 anim start
+
+	wait .5
+
+	$blast_seq2_exploder7 anim start
+
+	wait .5
+
+	$blast_seq2_exploder8 anim start
+	$blast_seq2_fire2 anim start
+
+	wait .5
+
+	$blast_seq2_exploder9 anim start
+	$blast_seq2_fire3 anim start
+
+	wait .5
+
+	$blast_seq2_exploder10 anim start
+	thread global/exploder.scr::explode 1
+
+	wait .25
+
+	$blast_seq2_exploder11 anim start
+	$blast_seq2_fire4 anim start
+	$blast_seq2_model2 show
+
+	wait .25
+
+	$blast_seq2_exploder12 anim start
+	$blast_seq2_fire5 anim start
+	thread global/exploder.scr::explode 2
+	thread global/exploder.scr::explode 3
+	$blast_seq2_exploder15 anim start
+	//$blast_seq2_hurt1 triggerable
+	
+	wait .25
+
+	$blast_seq2_exploder13 anim start
+	$blast_seq2_fire5 anim start
+
+	wait .25
+
+	$blast_seq2_exploder14 anim start
+end
+
+//*********************************************
+// Blast Sequence 3 - Armory Room
+//*********************************************
+blast_seq3_setup:
+
+	$blast_seq3_firedeath1 nottriggerable
+
+end
+
+blast_seq3:
+
+	wait 2
+
+	$blast_seq3_firedeath1 triggerable
+	$blast_seq3_exploder1 anim start
+	$blast_seq3_fire1 anim start
+	thread jitter_large 0
+
+	wait .5
+
+	$blast_seq3_exploder2 anim start
+
+	wait .5
+
+	$blast_seq3_exploder3 anim start
+
+	wait .5
+
+	$blast_seq3_exploder4 anim start
+
+	wait .5
+
+	$blast_seq3_exploder5 anim start
+
+	wait .5
+
+	$blast_seq3_exploder6 anim start
+
+	wait .5
+
+	$blast_seq3_exploder7 anim start
+end
+
+//*********************************************
+// Blast Sequence 4 - Exit Room
+//*********************************************
+blast_seq4_setup:
+
+	$blast_seq4_firedeath1 nottriggerable
+	$blast_seq4_hurt1 nottriggerable
+	$blast_seq4_hurt2 nottriggerable
+	$blast_seq4_hurt3 nottriggerable
+	$blast_seq4_hurt4 nottriggerable
+	$blast_seq4_hurt5 nottriggerable
+	$blast_seq4_model1 hide
+	$blast_seq4_model2 hide
+	$blast_seq4_model3 hide
+	$blast_seq4_model4 hide
+
+end
+
+blast_seq4:
+
+	wait 5
+
+	$blast_seq4_exploder1 anim start
+	thread jitter_large 0
+
+	wait .5
+
+	//$blast_seq4_hurt1 triggerable
+	$blast_seq4_exploder2 anim start
+	$blast_seq4_fire1 anim start
+
+	wait .5
+
+	$blast_seq4_exploder3 anim start
+	$blast_seq4_fire2 anim start
+	$blast_seq4_model1 show
+
+	wait 1
+
+	//$blast_seq4_hurt2 triggerable
+	$blast_seq4_exploder4 anim start
+	$blast_seq4_fire3 anim start
+	$blast_seq4_fire4 anim start
+
+	wait .5
+
+	$blast_seq4_exploder5 anim start
+	$blast_seq4_fire5 anim start
+	$blast_seq4_model2 show
+
+	wait .5
+
+	//$blast_seq4_hurt3 triggerable
+	$blast_seq4_exploder6 anim start
+	$blast_seq4_fire6 anim start
+
+	wait 1
+
+	//$blast_seq4_hurt4 triggerable
+	$blast_seq4_exploder7 anim start
+	$blast_seq4_fire7 anim start
+	$blast_seq4_fire8 anim start
+	
+	//$guy1 exec global/bullethit.scr (0 -1 0) 1000 0 0
+
+	$blast_seq4_model3 show
+	thread jitter_large 0
+
+	wait .5
+
+	//$blast_seq4_hurt5 triggerable
+	$blast_seq4_exploder8 anim start
+	$blast_seq4_fire9 anim start
+	$blast_seq4_fire10 anim start
+
+	wait 1
+
+	$blast_seq4_exploder9 anim start
+	$blast_seq4_fire11 anim start
+	thread jitter_large 0
+
+	wait .5
+
+	$blast_seq4_exploder10 anim start
+	$blast_seq4_fire12 anim start
+
+	wait .5
+
+	$blast_seq4_exploder11 anim start
+	$blast_seq4_model4 show
+
+	//$guy2 exec global/bullethit.scr (0 -1 0) 1000 0 0
+
+	//wait 2
+
+	//$blast_seq4_firedeath1 triggerable
+
+end
+
+//*********************************************
+// Blast Sequence 5 - Exterior 1
+//*********************************************
+blast_seq5:
+
+	$blast_seq5_exploder1 anim start
+	thread jitter_medium 0
+
+	wait 1
+
+	$blast_seq5_exploder2 anim start
+
+	wait 1
+
+	$blast_seq5_exploder3 anim start
+
+	wait 2
+
+	$blast_seq5_exploder4 anim start
+	thread jitter_large 0
+
+	wait 2
+
+	$blast_seq5_exploder5 anim start
+
+	wait 1
+
+	$blast_seq5_exploder6 anim start
+	thread jitter_medium 0
+
+	wait 1
+
+	$blast_seq5_exploder7 anim start
+
+	wait 2
+
+	$blast_seq5_exploder8 anim start
+	thread jitter_large 0
+
+	wait 1
+
+	$blast_seq5_exploder9 anim start
+
+	wait 1
+	thread jitter_medium 0
+
+	$blast_seq5_exploder10 anim start
+
+	wait 2
+
+	$blast_seq5_exploder11 anim start
+	thread jitter_large 0
+
+	wait 1
+
+	$blast_seq5_exploder12 anim start
+
+	wait 1
+
+	$blast_seq5_exploder13 anim start
+
+	wait 2
+
+	$blast_seq5_exploder14 anim start
+	thread jitter_large 0
+
+	wait 1
+
+	$blast_seq5_exploder15 anim start
+
+	wait 2	
+
+	$blast_seq5_exploder16 anim start
+
+	wait 1
+
+	$blast_seq5_exploder17 anim start
+
+	wait 2
+
+	$blast_seq5_exploder18 anim start
+
+	wait 2
+
+	$blast_seq5_exploder19 anim start
+
+	wait 1
+
+	$blast_seq5_exploder20 anim start
+
+end
+
+//*********************************************
+// Blast Sequence 6 - Exterior 2
+//*********************************************
+blast_seq6:
+
+	$blast_seq6_exploder1 anim start
+
+	wait 2
+
+	$blast_seq6_exploder2 anim start
+	thread jitter_medium 0
+
+	wait 2
+
+	$blast_seq6_exploder3 anim start
+
+	wait 2
+
+	$blast_seq6_exploder4 anim start
+	thread jitter_medium 0
+
+	wait 2
+
+	$blast_seq6_exploder5 anim start
+
+	wait 2
+
+	$blast_seq6_exploder6 anim start
+	thread jitter_medium 0
+
+end
+
+//*********************************************
+// Screen Shake Effects
+//*********************************************
+jitter_medium local.time:
+
+	if (local.time)
+		wait local.time
+
+	waitexec global/earthquake.scr .23 .7 0 0
+
+	waitexec global/earthquake.scr .8 .6 0 0
+
+	waitexec global/earthquake.scr 1 .6 0 .5
+
+end
+
+jitter_large local.time:
+
+	if (local.time)
+		wait local.time
+
+	waitexec global/earthquake.scr .4 .9 0 0
+
+	waitexec global/earthquake.scr .7 .6 0 0
+
+	waitexec global/earthquake.scr 1 1 0 0
+
+	waitexec global/earthquake.scr 1 .5 0 .3
+
+end
+
+//*********************************************
+// Move Object - move_object <distance to move to|vector> <time to take>
+//*********************************************
+move_object local.distance local.time:
+
+	local.index = local.time / .05
+
+	local.move_distance_x = local.distance[0] / local.index
+	local.move_distance_y = local.distance[1] / local.index
+	local.move_distance_z = local.distance[2] / local.index
+
+	for (local.i = 0 ; local.i <= local.time ; local.i += .05)
+	{
+		local.newx = local.self.origin[0] + local.move_distance_x
+		local.newy = local.self.origin[1] + local.move_distance_y
+		local.newz = local.self.origin[2] + local.move_distance_z
+		
+		local.self.origin = (local.newx local.newy local.newz)
+
+		//if (vector_length(local.self.origin - $player.origin) < 125)
+			//$player exec global/bullethit.scr (0 0 250) 500 25 1
+
+		wait .05
+	}
+end
+
+endbit:
+
+	wait 835
+	drawhud 0 
+	freezeplayer
+	$player nodamage
+	$player hide
+	letterbox 0.5 
+	spawn func_camera "targetname" "endcamA"
+	$endcamA.origin = ( -5001.43 -1705.32 -520.72 )
+	$endcamA.angles = ( 2.88 48.27 0.00 )
+	cuecamera $endcamA
+	thread blast_seq1
+	wait 1
+	thread blast_seq2
+	wait 1
+	thread blast_seq3
+	wait 1
+	thread blast_seq4
+	wait 10
+	$endcamA remove
+	spawn func_camera "targetname" "endcamB"
+	$endcamB.origin = ( -6887.93 -1686.86 -99.75 )
+	$endcamB.angles = ( 10.66 -2.02 0.00 )
+	cuecamera $endcamB
+	wait 1
+	thread blast_seq5
+	wait 1
+	thread blast_seq6
+	
+	level.section_xpos = 150     
+	level.header_xpos = 150       
+	level.body_xpos = 340         
+	level.credits_section_blue = 1
+	level.credits_sub_section_green = 1
+	level.credits_entry_header_red = 1
+	level.credits_entry_body_red = .2
+	level.credits_section_font = "handle-23"
+	level.credits_sub_section_font = "handle-22"
+	level.credits_entry_header_font = "handle-18"
+	level.credits_entry_body_font = "handle-18"
+	level.credits_scrolltime = 17
+
+	waitthread global/credits2.scr::credits_setup
+	waitthread global/credits2.scr::credits_add "entry" "SP-MP Conversions:" "Cobra {sfx}"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "entry" "Webby:" "www.Mods-R-us.net"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "sub_section" "Dedicated to my wife and kids without whose patience these conversions wouldnt have been possible, also a big thanks for the Modders + Players support @ M-R-U ;)"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "entry" "You can download the complete MohAA Sp-Mp map list ..." 
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "sub_section" "m1l1 m1l2a m1l2b m1l3a m1l3b m1l3c m2l1 m2l2a m2l2b m2l2c m2l3 m3l1a m3l1b m3l2 m3l3 m4l0 m4l1 m4l2 m4l3 m5l1a m5l1b m5l2a m5l2b m5l3 m6l1a m6l1b m6l1c m6l2a m6l2b m6l3a m6l3b m6l3c m6l3d m6l3e training"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "entry" "... from www.Mods-R-us.net"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "pause"
+	waitthread global/credits2.scr::credits_add "sub_section" "I hope you all enjoy playing them as much as i did converting them :)"
+
+	$player loopsound credits1 
+	waitthread global/credits_data.scr::credits_start
+
+	wait 10
+	thread traincam
+end
+
+traincam:
+	spawn func_camera "targetname" "endcam2"
+	$endcam2.origin = ( -5958.76 -1004.03 66.67 )
+	$endcam2.angles = ( 28.61 -94.38 0.00 )
+	cuecamera $endcam2
+
+	$train_engine notsolid
+	$train_engine_clip notsolid
+	$train_engine bind $train_engine_clip
+
+	local.trainspeed = 30		//initial speed of train (original 128)
+	local.nodenumbers = 16		//number of script_origins on tracks
+	local.stepspeed = 2		//increment speed by this amount at each script_origin 'node'
+	local.stageupnode1 = 2.2		//first acceleration tweak at this 'node'
+	local.stageupnode2 = 2.5		//second acceleration tweak at this 'node'
+	local.stageupspeed1 = 2.9	//new acceleration step size at first tweak
+	local.stageupspeed2 = 20 
+	//new acceleration step size at second tweak
+	$player notsolid
+
+	$endcam2 loopsound armoredtrain_rolling
+	$train_engine_clip loopsound armoredtrain_rolling
+
+	for (local.i=1;local.i<local.nodenumbers+1;local.i++)
+	{
+		local.trainspeed = local.trainspeed + local.stepspeed
+
+		if (local.i == local.startsoundnode)
+		{
+			$train_engine_clip loopsound armoredtrain_rolling
+		}
+		if (local.i == local.stageupnode1)
+		{
+			local.stepspeed = local.stageupspeed1
+		}
+
+		if (local.i == local.stageupnode2)
+		{
+			local.stepspeed = local.stageupspeed2
+		}
+
+		//println "TRAINSPEED IS " local.trainspeed		
+		//println "CURRENT NODE IS " local.i
+
+		$train_engine_clip moveto $("trainnode" + local.i).origin
+		$train_engine_clip speed local.trainspeed
+		$train_engine_clip waitmove
+	
+	}
+	$player stoploopsound 
+	$endcam2 stoploopsound
+	$train_engine_clip remove
+	$train_engine remove
+	$train_cars remove
+	$t240 remove
+	drawhud 1 
+	$player solid
+	cueplayer
+	releaseplayer
+	$player takedamage
+	$player show
+	clearletterbox 
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	// Stage 1 Axis
+	spawn info_player_axis "origin" "-6097.91 1211.04 -575.88" "angle" "-102" "targetname" "X1"
+	spawn info_player_axis "origin" "-6273.10 1160.28 -575.88" "angle" "-106" "targetname" "X2"
+	spawn info_player_axis "origin" "-6103.48 906.67 -575.88" "angle" "-108" "targetname" "X3"
+	spawn info_player_axis "origin" "-6076.99 624.00 -575.88" "angle" "-112" "targetname" "X4"
+	spawn info_player_axis "origin" "-6056.66 364.66 -575.88" "angle" "-116" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-6898.17 990.59 -575.88" "angle" "-77" "targetname" "X6" 
+	spawn info_player_axis "origin" "-6777.16 1124.99 -575.88" "angle" "-83" "targetname" "X7"
+	spawn info_player_axis "origin" "-6861.84 1287.89 -575.88" "angle" "-85" "targetname" "X8"
+	spawn info_player_axis "origin" "-6777.81 1471.26 -575.88" "angle" "-81" "targetname" "X9"
+	spawn info_player_axis "origin" "-6734.11 1673.41 -575.88" "angle" "-81" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-6978.31 -4534.35 -555.90" "angle" "68" "targetname" "X11"
+	spawn info_player_axis "origin" "-6746.10 -4591.93 -565.68" "angle" "78" "targetname" "X12"
+	spawn info_player_axis "origin" "-6140.06 -4614.29 -558.00" "angle" "96" "targetname" "X13"
+	spawn info_player_axis "origin" "-6270.43 -4456.42 -569.40" "angle" "79" "targetname" "X14"
+	spawn info_player_axis "origin" "-6425.34 -4062.98 -316.78" "angle" "84" "targetname" "X15"
+
+	// Stage 1 Allies
+	spawn info_player_allied "origin" "-4463.13 -1551.13 -559.88" "angle" "-139" "targetname" "A1" 
+	spawn info_player_allied "origin" "-4599.54 -1551.13 -559.88" "angle" "-92" "targetname" "A2"
+	spawn info_player_allied "origin" "-4475.14 -1649.86 -575.88" "angle" "171" "targetname" "A3"
+	spawn info_player_allied "origin" "-4465.20 -1760.87 -559.88" "angle" "144" "targetname" "A4"
+	spawn info_player_allied "origin" "-4522.70 -1635.95 -575.88" "angle" "-157" "targetname" "A5" 
+	
+	spawn info_player_allied "origin" "-4992.88 -1411.66 -559.88" "angle" "-41" "targetname" "A6" 
+	spawn info_player_allied "origin" "-4992.88 -1341.47 -559.88" "angle" "-43" "targetname" "A7" 
+	spawn info_player_allied "origin" "-4847.99 -1287.13 -559.88" "angle" "-103" "targetname" "A8"
+	spawn info_player_allied "origin" "-4703.73 -1279.13 -575.88" "angle" "-136" "targetname" "A9"
+	spawn info_player_allied "origin" "-4703.13 -1468.21 -575.88" "angle" "-158" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-4649.06 -1335.59 -575.88" "angle" "-144" "targetname" "A11"
+	spawn info_player_allied "origin" "-4539.99 -1390.39 -575.88" "angle" "-170" "targetname" "A12"
+	spawn info_player_allied "origin" "-4493.13 -1291.13 -559.88" "angle" "-158" "targetname" "A13"
+	spawn info_player_allied "origin" "-4475.13 -1432.88 -575.88" "angle" "163" "targetname" "A14" 
+	spawn info_player_allied "origin" "-4984.57 -1535.13 -575.88" "angle" "-69" "targetname" "A15"
+end
+
+ffa_spawns:
+
+	spawn info_player_deathmatch "origin" "-7037.63 -909.83 -31.88" "angle" "3"
+	spawn info_player_deathmatch "origin" "-5839.23 -963.32 -31.88" "angle" "-149"
+	spawn info_player_deathmatch "origin" "-5778.62 -940.02 -549.15" "angle" "-70"
+	spawn info_player_deathmatch "origin" "-5076.61 -911.13 -533.57" "angle" "-165"
+	spawn info_player_deathmatch "origin" "-5127.25 -1254.14 -556.43" "angle" "-160"
+
+	spawn info_player_deathmatch "origin" "-5303.13 -1615.13 -570.79" "angle" "-170"
+	spawn info_player_deathmatch "origin" "-4468.78 -1551.14 -559.88" "angle" "-135"
+	spawn info_player_deathmatch "origin" "-4618.22 -1582.25 -575.88" "angle" "-83"
+	spawn info_player_deathmatch "origin" "-4687.13 -1530.93 -559.88" "angle" "-160"
+	spawn info_player_deathmatch "origin" "-4983.77 -1535.74 -575.88" "angle" "-60"
+
+	spawn info_player_deathmatch "origin" "-4878.96 -1302.17 -575.88" "angle" "-64"
+	spawn info_player_deathmatch "origin" "-4494.10 -1420.87 -575.88" "angle" "162"
+	spawn info_player_deathmatch "origin" "-5646.54 -1776.53 -572.64" "angle" "141"
+	spawn info_player_deathmatch "origin" "-5199.13 -2335.23 -550.55" "angle" "151"
+	spawn info_player_deathmatch "origin" "-6215.16 -2376.88 -568.48" "angle" "69"
+
+	
+	spawn info_player_deathmatch "origin" "-6640.06 -2356.10 -565.99" "angle" "72"
+	spawn info_player_deathmatch "origin" "-6288.59 -692.26 -575.88" "angle" "177"
+	spawn info_player_deathmatch "origin" "-6926.13 383.92 -575.88" "angle" "-70"
+	spawn info_player_deathmatch "origin" "-6087.39 1526.75 -575.88" "angle" "-104"
+	spawn info_player_deathmatch "origin" "-7020.25 -2575.43 -541.87" "angle" "-30"
+
+	spawn info_player_deathmatch "origin" "-5247.13 -2880.87 -527.88" "angle" "133"
+	spawn info_player_deathmatch "origin" "-5297.99 -3333.60 -479.88" "angle" "160"
+	spawn info_player_deathmatch "origin" "-5989.23 -3847.14 -479.88" "angle" "114"
+	spawn info_player_deathmatch "origin" "-6091.26 -4683.79 -562.74" "angle" "108"
+	spawn info_player_deathmatch "origin" "-6425.34 -4062.98 -316.78" "angle" "84"
+
+	spawn info_player_deathmatch "origin" "-6891.55 -3407.06 -567.33" "angle" "81"
+	spawn info_player_deathmatch "origin" "-6900.76 -3471.41 -183.88" "angle" "42"
+	spawn info_player_deathmatch "origin" "-5848.08 -4815.86 -31.88" "angle" "106"
+	spawn info_player_deathmatch "origin" "-6997.63 -4755.63 -31.88" "angle" "60"
+	spawn info_player_deathmatch "origin" "-5786.01 -2246.79 -183.88" "angle" "-117"
+end
+
+train_open:
+end
+runners_start:
+end
+ranger_talks:
+end
+die:
+end
+firedeath:
+end
+hurt_5:
+end
+hurt_10:
+end
+hurt_20:
+end
+hurt_50:
+end
+hurt_500:
+end
+train_move:
+end
+roll_credits:
+end

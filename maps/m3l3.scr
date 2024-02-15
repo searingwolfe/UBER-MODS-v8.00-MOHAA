@@ -1,0 +1,1925 @@
+main:
+
+setcvar "g_obj_alliedtext1" "m3l3" 
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "m3l3"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "50"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "5000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills" 
+
+//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+
+if((getcvar("g_gametype") == "2"))
+{
+	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
+	setcvar "g_gametypestring" "Team-Match UBER"
+	setcvar "g_gametype" "2"
+	thread tdm_spawns	
+	spawn info_player_deathmatch "origin" "3937 -3203 82" "angle" "137" // for spectators when joining game
+	spawn info_player_deathmatch "origin" "5291 3440 -137" "angle" "-162"
+	spawn info_player_deathmatch "origin" "-2075 -2848 250" "angle" "-117"
+}
+else
+{
+	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+	setcvar "g_gametypestring" "Free-For-All UBER"
+	setcvar "g_gametype" "1"
+	thread ffa_spawns
+}
+
+waitthread setup
+thread barbwire
+
+level waittill prespawn
+
+//axis
+exec alienx/basebuild.scr::basebuild ( 579 -1721 -313 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 679 -1721 -313 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 779 -1721 -313 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 879 -1721 -313 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 979 -1721 -313 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 1079 -1721 -313 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 1179 -1721 -313 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1279 -1721 -313 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1379 -1721 -313 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1479 -1721 -313 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1579 -1721 -313 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1679 -1721 -313 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1779 -1721 -313 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( 1879 -1721 -313 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+
+//allies
+exec alienx/basebuild.scr::basebuild ( 2593 3556 -255 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2693 3556 -255 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 2793 3556 -255 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2893 3556 -255 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2993 3556 -255 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 3093 3556 -255 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 3193 3556 -255 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3293 3556 -255 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3393 3556 -255 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3493 3556 -255 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3593 3556 -255 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3693 3556 -255 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3793 3556 -255 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( 3893 3556 -255 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+exec global/dog.scr ( 4008 2300 -269 ) ( 0 0 0 ) 15 10
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m3l3.scr
+	exec global/ambient.scr m3l3
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+
+	setcvar "r_fastsky" "0"
+	$world farplane 150000
+	$world farplane_color ( 1 1 1 )
+
+exec map_triggers/grenade_ammo.scr ( 2357 -2594 -182 ) ( 4986 -431 -347 ) ( 3096 183 -113 ) ( 4311 769 -167 ) ( 3332 1181 -234 ) ( 5655 1574 -303 ) ( 3166 4147 8 ) ( 2893 3130 -199 ) ( 2706 4024 -210 ) ( 1176 3791 -213 )
+       
+level waittill spawn
+
+thread crates
+thread tank
+thread wall_bomb
+end
+
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+
+local.master= spawn scriptmaster
+local.master aliascache explode_tank1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 0.9 0.2 0.8 0.2 1500 9000 weapon loaded maps "m m1l1 m3l3 dm obj""
+
+removeclass actor
+$scene7_nebelwerfer1 remove
+$scene7_nebelwerfer2 remove
+$scene7_nebelwerfer3 remove
+$scene7_nebelwerfer4 remove
+$scene7_nebelwerfer1_destroyed remove
+$scene7_nebelwerfer2_destroyed remove
+$scene7_nebelwerfer3_destroyed remove
+$scene7_nebelwerfer4_destroyed remove
+$scene7_nebelwerfer1_weaponmask remove
+$scene7_nebelwerfer2_weaponmask remove
+$scene7_nebelwerfer3_weaponmask remove
+$scene7_nebelwerfer4_weaponmask remove
+$scene7_nebelwerfer1_weaponmask_destroyed remove
+$scene7_nebelwerfer2_weaponmask_destroyed remove
+$scene7_nebelwerfer3_weaponmask_destroyed remove
+$scene7_nebelwerfer4_weaponmask_destroyed remove
+$scene7_solid_bombpoint1 remove
+$scene7_solid_bombpoint2 remove
+$scene7_solid_bombpoint3 remove
+$scene7_solid_bombpoint4 remove
+$scene7_glowing_bombpoint1 remove
+$scene7_glowing_bombpoint2 remove
+$scene7_glowing_bombpoint3 remove
+$scene7_glowing_bombpoint4 remove
+$scene7_neb1_blast3 remove
+$scene7_nebelwerfer1_exploder remove
+$scene7_nebelwerfer2_exploder remove
+$scene7_nebelwerfer3_exploder remove
+$scene7_nebelwerfer4_exploder remove
+$scene7_neb1_detector remove
+$scene7_neb2_detector remove
+$scene7_neb3_detector remove
+$scene7_neb4_detector remove
+$scene7_mgspawndetector1 remove
+$scene7_mgspawndetector2 remove
+$scene7_mgspawndetector3 remove
+$scene7_mgspawndetector4 remove
+$scene7_mgspawndetector5 remove
+$scene7_mgspawndetector1_spawner1 remove
+$scene7_mgspawndetector2_spawner1 remove
+$scene7_mgspawndetector3_spawner1 remove
+$scene7_mgspawndetector4_spawner1 remove
+$scene7_mgspawndetector5_spawner1 remove
+$scene7_spawndetector1 remove
+$scene7_spawndetector2 remove
+$scene7_spawndetector3 remove
+$scene7_spawndetector1_spawner1 remove
+$scene7_spawndetector1_spawner2 remove
+$scene7_spawndetector1_spawner3 remove
+$scene7_spawndetector2_spawner1 remove
+$scene7_spawndetector2_spawner2 remove
+$scene7_spawndetector2_spawner3 remove
+$scene7_spawndetector3_spawner1 remove
+$scene7_spawndetector3_spawner2 remove
+$scene7_spawndetector3_spawner3 remove
+$scene7_neb4_damage6 remove
+$scene7_neb4_damage5 remove
+$scene7_neb4_damage4 remove
+$scene7_neb4_damage3 remove
+$scene7_neb4_damage2 remove
+$scene7_neb4_damage1 remove
+$scene7_neb3_damage6 remove
+$scene7_neb3_damage5 remove
+$scene7_neb3_damage4 remove
+$scene7_neb3_damage3 remove
+$scene7_neb3_damage2 remove
+$scene7_neb3_damage1 remove
+$scene7_neb2_damage6 remove
+$scene7_neb2_damage5 remove
+$scene7_neb2_damage4 remove
+$scene7_neb2_damage3 remove
+$scene7_neb2_damage2 remove
+$scene7_neb2_damage1 remove
+$scene7_neb1_damage6 remove
+$scene7_neb1_damage5 remove
+$scene7_neb1_damage4 remove
+$scene7_neb1_damage3 remove
+$scene7_neb1_damage2 remove
+$scene7_neb1_damage1 remove
+$scene7_neb1_tube1 remove
+$scene7_neb1_tube2 remove
+$scene7_neb1_tube3 remove
+$scene7_neb1_tube4 remove
+$scene7_neb1_tube5 remove
+$scene7_neb1_tube6 remove
+$scene7_neb2_tube1 remove
+$scene7_neb2_tube2 remove
+$scene7_neb2_tube3 remove
+$scene7_neb2_tube4 remove
+$scene7_neb2_tube5 remove
+$scene7_neb2_tube6 remove
+$scene7_neb3_tube1 remove
+$scene7_neb3_tube2 remove
+$scene7_neb3_tube3 remove
+$scene7_neb3_tube4 remove
+$scene7_neb3_tube5 remove
+$scene7_neb3_tube6 remove
+$scene7_neb4_tube1 remove
+$scene7_neb4_tube2 remove
+$scene7_neb4_tube3 remove
+$scene7_neb4_tube4 remove
+$scene7_neb4_tube5 remove
+$scene7_neb4_tube6 remove
+$scene7_finaldefender1_spawn remove
+$scene7_finaldefender2_spawn remove
+$scene7_finaldefender3_spawn remove
+$scene7_finaldefender4_spawn remove
+$scene7_finaldefender5_spawn remove
+$scene7_finaldefender6_spawn remove
+$mg42 remove
+end
+
+
+
+crates:
+
+//crates #3
+	local.crate = spawn script_model "targetname" "cs13"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1675 -298 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs14"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1675 -250 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs15"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1675 -202 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs16"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1626 -298 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs17"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1626 -250 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs18"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1580 -298 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+
+//crates #5
+	local.crate = spawn script_model "targetname" "cs25"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2720 -271 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs26"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2720 -223 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs27"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2720 -175 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs28"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2671 -271 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs36"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2671 -223 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs29"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2622 -271 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+end
+
+crates2:
+//set #1 to get over wall
+	local.crate = spawn script_model "targetname" "cs1"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3095 -1617 -344.11 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs2"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3095 -1546 -344.11 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs3"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3095 -1546 -298.11 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs4"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3095 -1475 -344.11 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs5"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3095 -1475 -298.11 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs6"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3095 -1475 -252.11 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+
+//crates #4
+	local.crate = spawn script_model "targetname" "cs19"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1752 -298 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs20"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1752 -250 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs21"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1752 -202 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs22"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1801 -298 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs23"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1801 -250 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs24"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 4718 1850 -298 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+
+
+
+
+//crates #6
+	local.crate = spawn script_model "targetname" "cs30"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2790 -271 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs31"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2790 -223 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs32"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2790 -175 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs33"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2839 -271 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs34"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2839 -223 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+	local.crate = spawn script_model "targetname" "cs35"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3513 2888 -271 )
+	local.crate.angles = ( 0 90 0 )
+	local.crate nodamage
+	local.crate solid
+
+end
+
+
+
+crates3:// add this for stage4_setup
+	
+
+
+
+//set #2 to get over wall	
+	local.crate = spawn script_model "targetname" "cs7"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3016 -1571 -346.48 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs8"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3016 -1571 -300.48 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs9"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3016 -1571 -254.48 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs10"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3016 -1500 -346.48 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs11"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3016 -1500 -300.48 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+	
+	local.crate = spawn script_model "targetname" "cs12"
+	local.crate model "static/indycrate.tik"
+	local.crate.origin = ( 3016 -1429 -346.48 )
+	local.crate.angles = ( 0 0 0 )
+	local.crate nodamage
+	local.crate solid
+
+
+
+end	
+
+
+cratesremove2:
+$cs1 remove
+$cs2 remove
+$cs3 remove
+$cs4 remove
+$cs5 remove
+$cs6 remove
+$cs7 remove
+$cs8 remove
+$cs9 remove
+$cs10 remove
+$cs11 remove
+$cs12 remove
+$cs13 remove
+$cs14 remove
+$cs15 remove
+$cs16 remove
+$cs17 remove
+$cs18 remove
+$cs25 remove
+$cs26 remove
+$cs27 remove
+$cs36 remove
+$cs29 remove
+$cs28 remove
+$cs19 remove
+$cs20 remove
+$cs21 remove
+$cs22 remove
+$cs23 remove
+$cs24 remove
+$cs30 remove
+$cs31 remove
+$cs32 remove
+$cs33 remove
+$cs34 remove
+$cs35 remove
+end
+
+cratesremove:
+$cs13 remove
+$cs14 remove
+$cs15 remove
+$cs16 remove
+$cs17 remove
+$cs18 remove
+$cs25 remove
+$cs26 remove
+$cs27 remove
+$cs36 remove
+$cs29 remove
+$cs28 remove
+$cs19 remove
+$cs20 remove
+$cs21 remove
+$cs22 remove
+$cs23 remove
+$cs24 remove
+$cs30 remove
+$cs31 remove
+$cs32 remove
+$cs33 remove
+$cs34 remove
+$cs35 remove
+
+end
+
+
+
+
+tanks:
+
+	local.static = spawn script_model
+	local.static model "static/vehicle_shermantank_dead.tik"
+	local.static.origin = ( -3442 -4004 -159.88 )
+	local.static.angles = (0 -169 0)
+	local.static solid
+
+	local.static = spawn script_model
+	local.static model "vehicles/tigertank_d.tik"
+	local.static.origin = ( -5580 -4210 -159.88 )
+	local.static.angles = (0 0 0)
+	local.static solid
+
+end
+
+sandbags:
+//long sandbag
+
+	local.static = spawn script_model
+	local.static model "static/sandbag_longsegment.tik"
+	local.static.origin = ( -3864 -3688 -145.97 )
+	local.static.angles = ( 0 90 0 )
+	local.static solid
+
+//shortsandbag further toward axis side
+
+	local.static = spawn script_model
+	local.static model "static/sandbag_link_topcap.tik"
+	local.static.origin = ( -5177.85 -3790 -153.93 )
+	local.static.angles = ( 0 90 0 )
+	local.static solid
+
+	local.static = spawn script_model
+	local.static model "static/sandbag_link_main.tik"
+	local.static.origin = ( -5100 -3790 -153.93 )
+	local.static.angles = ( 0 90 0 )
+	local.static solid
+
+	local.static = spawn script_model
+	local.static model "static/sandbag_link_bottomcap.tik"
+	local.static.origin = ( -5022.15 -3790 -153.93 )
+	local.static.angles = ( 0 90 0 )
+	local.static solid
+
+//shortsandbag closest to allied side
+
+	local.static = spawn script_model
+	local.static model "static/sandbag_link_topcap.tik"
+	local.static.origin = ( -4614.85 -2836 -166.15 )
+	local.static.angles = ( 0 90 0 )
+	local.static solid
+
+	local.static = spawn script_model
+	local.static model "static/sandbag_link_main.tik"
+	local.static.origin = ( -4537 -2836 -166.15 )
+	local.static.angles = ( 0 90 0 )
+	local.static solid
+
+	local.static = spawn script_model
+	local.static model "static/sandbag_link_bottomcap.tik"
+	local.static.origin = ( -4459.15 -2836 -166.15 )
+	local.static.angles = ( 0 90 0 )
+	local.static solid
+
+end
+
+mg42s:
+//on long sandbags
+
+    local.static = spawn models/statweapons/mg42_gun.tik
+	local.static.origin = ( -3864 -3673 -79.97 )
+	local.static.angle = -90
+    local.static yawCenter -90
+    local.static maxyawoffset 50
+	local.static = spawn script_model
+	local.static model "statweapons/mg42_bipod.tik"
+	local.static.origin = ( -3864 -3673 -79.97 )
+	local.static.angles = ( 0 -90 0)
+ 	local.static solid
+
+//on short sandbags closer to axis side
+
+    local.static = spawn models/statweapons/mg42_gun.tik
+	local.static.origin = ( -5100 -3775 -87.93 )
+	local.static.angle = -90
+    local.static yawCenter -90
+    local.static maxyawoffset 50
+	local.static = spawn script_model
+	local.static model "statweapons/mg42_bipod.tik"
+	local.static.origin = ( -5100 -3775 -87.93 )
+	local.static.angles = ( 0 -90 0)
+ 	local.static solid
+
+//on the axis bunker wall
+
+    local.static = spawn models/statweapons/mg42_gun.tik
+	local.static.origin = ( -2631 -5626 40.13 )
+	local.static.angle = 180
+    local.static yawCenter 180
+    local.static maxyawoffset 50
+	local.static = spawn script_model
+	local.static model "statweapons/mg42_bipod.tik"
+	local.static.origin = ( -2631 -5626 40.13 )
+	local.static.angles = ( 0 180 0)
+ 	local.static solid
+
+//on short sandbags closest to allied side
+
+    local.static = spawn models/statweapons/mg42_gun.tik
+	local.static.origin = ( -4537 -2821 -100.15 )
+	local.static.angle = -90
+    local.static yawCenter -90
+    local.static maxyawoffset 50
+	local.static = spawn script_model
+	local.static model "statweapons/mg42_bipod.tik"
+	local.static.origin = ( -4537 -2821 -100.15 )
+	local.static.angles = ( 0 -90 0)
+ 	local.static solid
+
+end
+
+otherstuff:
+
+	local.static = spawn script_model
+	local.static model "static/bmw_destroyed.tik"
+	local.static.origin = $scene7_nebelwerfer1.origin
+	local.static.angles = ( 0 180 0 )
+	local.static solid
+
+	local.static = spawn script_model
+	local.static model "static/indycrate.tik"
+	local.static.origin = $scene7_nebelwerfer2.origin
+	local.static.angles = ( 0 180 0 )
+	local.static solid
+
+	local.static = spawn script_model
+	local.static model "static/indycrate.tik"
+	local.static.origin = $scene7_nebelwerfer3.origin
+	local.static.angles = ( 0 180 0 )
+	local.static solid
+
+//jeep on axis side
+
+	local.static = spawn script_model
+	local.static model "static/vehicle_jeep.tik"
+	local.static.origin = $scene7_nebelwerfer4.origin
+	local.static.angles = ( 0 130 0 )
+	local.static solid
+
+//jeep on allied side
+
+	local.static = spawn script_model
+	local.static model "static/vehicle_jeep.tik"
+	local.static.origin = ( -4842 -3057 -174.85 )
+	local.static.angles = ( 0 -40 0 )
+	local.static solid
+
+//nadeboxes
+
+	spawn models/items/item_grenade_ammobox.tik targetname "nadebox1"
+	$nadebox1.origin = ( -5045 -3580 -232.22)
+	$nadebox1.angles = ( 0 -100 0 )
+
+	spawn models/items/item_grenade_ammobox.tik targetname "nadebox2"
+	$nadebox2.origin = ( -2017 -2969 -245.04 )
+	$nadebox2.angles = ( 0 -84 0 )
+
+	spawn models/items/item_grenade_ammobox.tik targetname "nadebox3"
+	$nadebox3.origin = ( -3752 -3628 -153.97 )
+	$nadebox3.angles = ( 0 80 0 )
+
+	spawn models/items/item_grenade_ammobox.tik targetname "nadebox4"
+	$nadebox4.origin = ( -2340 -5263 -103.88 )
+	$nadebox4.angles = ( 0 0 0 )
+
+	spawn models/items/item_grenade_ammobox.tik targetname "nadebox5"
+	$nadebox5.origin = ( -5918 -5357 -79.88 )
+	$nadebox5.angles = ( 0 180 0 )
+
+	spawn models/items/item_grenade_ammobox.tik targetname "nadebox6"
+	$nadebox6.origin = ( -5224 -6571 -135.88 )
+	$nadebox6.angles = ( 0 40 0 )
+
+end
+
+
+barbwire:
+// barbwire at axis end
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_long_two_post.tik"
+	local.fence.origin = ( -524.37 5562.20 -163.75 )
+	local.fence.angles = ( 0 20 0 )
+	local.block.scale = .000001
+	local.block solid
+	local.block immune bullet
+	local.block immune fast_bullet
+	local.block immune bash
+
+	// barbwire at allied end
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_long_two_post.tik"
+	local.fence.origin = ( -529.39 -625.17 -271.78 )
+	local.fence.angles = ( 0 0 0 )
+	local.block.scale = .000001
+	local.block solid
+	local.block immune bullet
+	local.block immune fast_bullet
+	local.block immune bash
+
+//barbed wire to prevent sharking
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_long_two_post.tik"
+	local.fence.origin = ( 4761 996 -135 )
+	local.fence.angles = ( 0 0 0 )
+	local.block.scale = .000001
+	local.block solid
+	local.block immune bullet
+	local.block immune fast_bullet
+	local.block immune bash
+
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_long_two_post.tik"
+	local.fence.origin = ( 4761 996 -115 )
+	local.fence.angles = ( 0 0 0 )
+	local.block.scale = .000001
+	local.block solid
+	local.block immune bullet
+	local.block immune fast_bullet
+	local.block immune bash
+end
+
+////////////////////////////////////////////////////////////////////////
+
+wall_bomb:
+
+spawn models/items/pulse_explosive.tik "targetname" "Bombplant1"
+$Bombplant1.origin = ( 4039.13 1869.86 -201.88 )
+$Bombplant1.angle = 180
+
+spawn trigger_use "targetname" "wallBomb1"
+$wallBomb1.origin = ( 4039.13 1869.86 -201.88 )
+$wallBomb1 setsize ( -20 -20 -20 ) ( 20 20 20 )
+$wallBomb1 waittill trigger
+//IPRINTLN "TRIGGERED"
+thread stage_2_setup
+wait .5
+$wallBomb1 remove
+end
+
+
+stage_2_setup:
+
+//IPRINTLN "MESSAGE RECEIVED"
+$Bombplant1 remove
+
+spawn func_camera "targetname" "wallcam"
+$wallcam.origin = ( 5046.25 1839.77 845.11 )
+$wallcam.angles = ( 33.51 177.40 0.00 )
+//IPRINTLN "CAM SPAWNED"
+drawhud 0 
+freezeplayer
+$player nodamage
+$player hide
+letterbox 0.5 
+thread blow_em_up
+cuecamera $wallcam
+$speaker stoploopsound
+
+
+// Church
+// Allies Stage 1 Set
+$Al_1 disablespawn
+$Al_2 disablespawn
+$Al_3 disablespawn
+$Al_4 disablespawn
+$Al_5 disablespawn
+$Al_6 disablespawn
+$Al_7 disablespawn
+$Al_8 disablespawn
+$Al_9 disablespawn
+$Al_10 disablespawn
+//iprintln " Cobra - Allied Stage-1 Set Disabled"
+
+// Axis Stage 1 Set
+$Ax_1 disablespawn
+$Ax_2 disablespawn
+$Ax_3 disablespawn
+$Ax_4 disablespawn
+$Ax_5 disablespawn
+$Ax_6 disablespawn
+$Ax_7 disablespawn
+$Ax_8 disablespawn
+$Ax_9 disablespawn
+$Ax_10 disablespawn
+//iprintln " Cobra - Axis Stage 1 Set Disabled"
+
+// Allies Stage 2 Set
+$Al_11 enablespawn
+$Al_12 enablespawn
+$Al_13 enablespawn
+$Al_14 enablespawn
+$Al_15 enablespawn
+$Al_16 enablespawn
+$Al_17 enablespawn
+$Al_18 enablespawn
+$Al_19 enablespawn
+$Al_20 enablespawn
+//iprintln " Cobra - Allied Stage 2 Set Enabled"
+
+
+
+// Axis Stage 2 Set
+$Ax_11 enablespawn
+$Ax_12 enablespawn
+$Ax_13 enablespawn
+$Ax_14 enablespawn
+$Ax_15 enablespawn
+$Ax_16 enablespawn
+$Ax_17 enablespawn
+$Ax_18 enablespawn
+$Ax_19 enablespawn
+$Ax_20 enablespawn
+//iprintln " Cobra - Axis Stage 2 Set Enabled"
+
+
+
+// Allies stage 3 Set
+$Al_21 disablespawn
+$Al_22 disablespawn
+$Al_23 disablespawn
+$Al_24 disablespawn
+$Al_25 disablespawn
+$Al_26 disablespawn
+$Al_27 disablespawn
+$Al_28 disablespawn
+$Al_29 disablespawn
+$Al_30 disablespawn
+//iprintln " Cobra - Allied Street Set Disabled"
+
+// Axis stage 3 Set
+$Ax_21 disablespawn
+$Ax_22 disablespawn
+$Ax_23 disablespawn
+$Ax_24 disablespawn
+$Ax_25 disablespawn
+$Ax_26 disablespawn
+$Ax_27 disablespawn
+$Ax_28 disablespawn
+$Ax_29 disablespawn
+$Ax_30 disablespawn
+//iprintln " Cobra - Axis Street Set Disabled"
+
+// Allies stage 4 Set
+$Al_31 disablespawn
+$Al_32 disablespawn
+$Al_33 disablespawn
+$Al_34 disablespawn
+$Al_35 disablespawn
+$Al_36 disablespawn
+$Al_37 disablespawn
+$Al_38 disablespawn
+$Al_39 disablespawn
+$Al_40 disablespawn
+
+//iprintln " Cobra - Allies Flak Set Disabled"
+
+// Axis stage 4 set
+$Ax_31 disablespawn
+$Ax_32 disablespawn
+$Ax_33 disablespawn
+$Ax_34 disablespawn
+$Ax_35 disablespawn
+$Ax_36 disablespawn
+$Ax_37 disablespawn
+$Ax_38 disablespawn
+$Ax_39 disablespawn
+$Ax_40 disablespawn
+
+//iprintln " Cobra - Axis Flak Set Disabled"
+
+wait 5
+clearletterbox
+thread shark
+thread panza
+thread crates2
+iprintln "The Wall Has Been Breached!!! "
+wait 1.3
+$player show
+cueplayer
+drawhud 1
+releaseplayer
+$player respawn
+$player takedamage
+end
+
+blow_em_up:
+wait 1
+thread global/exploder.scr::explode 1
+thread global/exploder.scr::explode 2
+thread global/exploder.scr::explode 3
+thread global/exploder.scr::explode 4
+wait 5
+$exploder remove
+$exploderchunk remove
+end
+
+
+
+
+
+
+panza:
+
+spawn vehicles/panzer_tank.tik "targetname" "panza"
+$panza.origin = ( 3740.91 -400.69 -343.88 )
+$panza.angle = 90
+$panza solid
+$panza immune bullet
+$panza immune fast_bullet
+$panza immune bash
+$panza immune mg
+
+
+
+spawn models/fx/dummy.tik "targetname" "panza_bomb"
+$panza_bomb.origin = ( 3736.56 -246.38 -275 )
+$panza_bomb.angle = 0
+$panza_bomb hide
+$panza_bomb scale 0.01
+$panza_bomb notsolid
+
+spawn models/items/pulse_explosive.tik "targetname" "panza_bomb1"
+$panza_bomb1.origin = ( 3736.56 -246.38 -275 )
+$panza_bomb1.angle = 0
+
+
+spawn trigger_use targetname "panza_trig"
+$panza_trig.origin = $panza_bomb1.origin
+$panza_trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+$panza_trig setthread stage_3_setup
+$panza_trig waittill trigger
+$panza_trig delay 0
+$panza_trig wait .1
+
+//Add speaker
+spawn script_models "model" "fx/dummy.tik" "targetname" "speaker"
+$speaker.origin = ( 3736.56 -246.38 -275 )//edit this to where you wish it played
+$speaker notsolid
+
+//IPRINTLN "TRIGGERED"
+
+wait .5
+$panza_bomb1 remove
+end
+
+tankfix:
+
+local.fake_panza = spawn script_model "targetname" "panza"
+local.fake_panza model "models/static/vehicle_panzer_iv_europe.tik"
+local.fake_panza.origin = ( 3740.91 -400.69 -343.88 )
+local.fake_panza.angle = 90
+local.fake_panza solid
+local.fake_panza immune bullet
+local.fake_panza immune fast_bullet
+local.fake_panra immune bash
+local.fake_panza immune mg
+local.fake_panza hide
+end
+
+stage_3_setup:
+$panza_bomb1 nottriggerable
+//IPRINTLN "MESSAGE RECEIVED"
+ 
+
+
+panza_cam:
+fadein 3 0 0 0 1
+	wait .5
+spawn func_camera "targetname" "panza_cam"
+$panza_cam.origin = ( 3722.67 678.54 96.69 )
+$panza_cam.angles = ( 36.25 -94.60 0.00 )
+//IPRINTLN "CAM SPAWNED"
+drawhud 0
+freezeplayer
+$player nodamage
+$player hide
+letterbox 0.5 
+thread blow_em_up2
+thread scene4_tank_death
+cuecamera $panza_cam
+
+
+
+
+
+
+
+
+// Allies neb Set
+$Al_21 enablespawn
+$Al_22 enablespawn
+$Al_23 enablespawn
+$Al_24 enablespawn
+$Al_25 enablespawn
+$Al_26 enablespawn
+$Al_27 enablespawn
+$Al_28 enablespawn
+$Al_29 enablespawn
+$Al_30 enablespawn
+
+
+// Axis neb set
+$Ax_21 enablespawn
+$Ax_22 enablespawn
+$Ax_23 enablespawn
+$Ax_24 enablespawn
+$Ax_25 enablespawn
+$Ax_26 enablespawn
+$Ax_27 enablespawn
+$Ax_28 enablespawn
+$Ax_29 enablespawn
+$Ax_30 enablespawn
+
+
+// Allies Stage 1 Set
+$Al_1 disablespawn
+$Al_2 disablespawn
+$Al_3 disablespawn
+$Al_4 disablespawn
+$Al_5 disablespawn
+$Al_6 disablespawn
+$Al_7 disablespawn
+$Al_8 disablespawn
+$Al_9 disablespawn
+$Al_10 disablespawn
+//iprintln " Cobra - Allied stage 1 Set Disabled"
+
+// Axis Stage 1 Set
+$Ax_1 disablespawn
+$Ax_2 disablespawn
+$Ax_3 disablespawn
+$Ax_4 disablespawn
+$Ax_5 disablespawn
+$Ax_6 disablespawn
+$Ax_7 disablespawn
+$Ax_8 disablespawn
+$Ax_9 disablespawn
+$Ax_10 disablespawn
+//iprintln " Cobra - Axis stage 1 Set Disabled"
+
+// Allies wall Set
+$Al_11 disablespawn
+$Al_12 disablespawn
+$Al_13 disablespawn
+$Al_14 disablespawn
+$Al_15 disablespawn
+$Al_16 disablespawn
+$Al_17 disablespawn
+$Al_18 disablespawn
+$Al_19 disablespawn
+$Al_20 disablespawn
+//iprintln " Cobra - Axis wall Set Disabled"
+
+// Axis church Set
+$Ax_11 disablespawn
+$Ax_12 disablespawn
+$Ax_13 disablespawn
+$Ax_14 disablespawn
+$Ax_15 disablespawn
+$Ax_16 disablespawn
+$Ax_17 disablespawn
+$Ax_18 disablespawn
+$Ax_19 disablespawn
+$Ax_20 disablespawn
+//iprintln " Cobra - Axis church Set Disabled"
+
+// Allies stage 4 Set
+$Al_31 disablespawn
+$Al_32 disablespawn
+$Al_33 disablespawn
+$Al_34 disablespawn
+$Al_35 disablespawn
+$Al_36 disablespawn
+$Al_37 disablespawn
+$Al_38 disablespawn
+$Al_39 disablespawn
+$Al_40 disablespawn
+
+//iprintln " Cobra - Allies Flak Set Disabled"
+
+// Axis stage 4 set
+$Ax_31 disablespawn
+$Ax_32 disablespawn
+$Ax_33 disablespawn
+$Ax_34 disablespawn
+$Ax_35 disablespawn
+$Ax_36 disablespawn
+$Ax_37 disablespawn
+$Ax_38 disablespawn
+$Ax_39 disablespawn
+$Ax_40 disablespawn
+
+//iprintln " Cobra - Axis Flak Set Disabled"
+
+wait 5
+clearletterbox
+thread flak
+thread crates2
+thread crates3
+thread shark
+iprintln "The Panza Has Been Destroyed!!! "
+wait 1.3
+$player show
+cueplayer
+drawhud 1
+releaseplayer
+$player respawn
+$player takedamage
+end
+
+blow_em_up2:
+wait 1
+scene4_tank_death:
+$speaker loopsound explode_tank1
+
+
+
+
+spawn static model "vehicles/panzer_iv_d.tik" "origin" "3740.91 -400.69 -343.88" "angle" "90"
+wait 5
+$speaker stoploopsound
+end
+flak:
+
+//FLAK 1 BOTTOM----------------------------------------------------------
+	local.flak88base = spawn script_model
+	local.flak88base model "statweapons/flak88base.tik"
+	local.flak88base.origin = ( 1232.12 -3560.02 -353.58 )
+	local.flak88base.angles = ( 0 0 0)
+	local.flak88base solid
+	
+	
+
+
+//FLAK 1 TOP----------------------------------------------------------
+		local.flak88 = spawn script_model
+	local.flak88 model "statweapons/flak88turret.tik" 
+	local.flak88.origin = ( 1232.12 -3560.02 -305.58 )
+	local.flak88.angles = ( 0 0 0)
+	local.flak88 solid
+	local.flak88.targetname = "flak88"
+
+spawn models/fx/dummy.tik "targetname" "flak88_bomb"
+$flak88_bomba.origin = ( 1229.46 -3643.53 -333.69 )
+$flak88_bomba.angle = 0
+$flak88_bomba hide
+$flak88_bomba scale 0.01
+$flak88_bomba notsolid
+
+spawn models/items/pulse_explosive.tik "targetname" "flak88_bomb2"
+$flak88_bomb2.origin = ( 1229.46 -3643.53 -333.69 )
+$flak88_bomb2.angle = 0
+
+//Add speaker
+spawn script_models "model" "fx/dummy.tik" "targetname" "speaker1"
+$speaker1.origin = ( 1229.46 -3643.53 -333.69 )//edit this to where you wish it played
+$speaker1 notsolid
+
+spawn trigger_use targetname "flak88_trig"
+$flak88_trig.origin = $flak88_bomb2.origin
+$flak88_trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+$flak88_trig setthread stage_4_setup
+$flak88_trig waittill trigger
+$flak88_trig delay 0
+$flak88_trig wait .1
+//IPRINTLN "TRIGGERED"
+
+wait .5
+$flak88_bomb1 remove
+end
+
+
+stage_4_setup:
+
+//IPRINTLN "MESSAGE RECEIVED"
+$flak88_bomb1 remove
+
+
+
+flak88_cam:
+fadein 3 0 0 0 1
+	wait .5
+
+spawn func_camera "targetname" "flak88_cam"
+$flak88_cam.origin = ( 1229.81 -4152.73 11.98 )
+$flak88_cam.angles = ( 13.06 81.23 0.00 )
+//IPRINTLN "CAM SPAWNED"
+drawhud 0 
+freezeplayer
+$player nodamage
+$player hide
+letterbox 0.5 
+thread blow_em_up3
+cuecamera $flak88_cam
+$speaker stoploopsound
+
+
+// Allies flak Set
+$Al_31 enablespawn
+$Al_32 enablespawn
+$Al_33 enablespawn
+$Al_34 enablespawn
+$Al_35 enablespawn
+$Al_36 enablespawn
+$Al_37 enablespawn
+$Al_38 enablespawn
+$Al_39 enablespawn
+$Al_40 enablespawn
+
+
+// Axis flak Set
+$Ax_31 enablespawn
+$Ax_32 enablespawn
+$Ax_33 enablespawn
+$Ax_34 enablespawn
+$Ax_35 enablespawn
+$Ax_36 enablespawn
+$Ax_37 enablespawn
+$Ax_38 enablespawn
+$Ax_39 enablespawn
+$Ax_40 enablespawn
+
+// Allies Stage 1 Set
+$Al_1 disablespawn
+$Al_2 disablespawn
+$Al_3 disablespawn
+$Al_4 disablespawn
+$Al_5 disablespawn
+$Al_6 disablespawn
+$Al_7 disablespawn
+$Al_8 disablespawn
+$Al_9 disablespawn
+$Al_10 disablespawn
+//iprintln " Cobra - Allied stage 1 Set Disabled"
+
+// Axis Stage 1 Set
+$Ax_1 disablespawn
+$Ax_2 disablespawn
+$Ax_3 disablespawn
+$Ax_4 disablespawn
+$Ax_5 disablespawn
+$Ax_6 disablespawn
+$Ax_7 disablespawn
+$Ax_8 disablespawn
+$Ax_9 disablespawn
+$Ax_10 disablespawn
+//iprintln " Cobra - Axis stage 1 Set Disabled"
+
+// Allies wall Set
+$Al_11 disablespawn
+$Al_12 disablespawn
+$Al_13 disablespawn
+$Al_14 disablespawn
+$Al_15 disablespawn
+$Al_16 disablespawn
+$Al_17 disablespawn
+$Al_18 disablespawn
+$Al_19 disablespawn
+$Al_20 disablespawn
+//iprintln " Cobra - Axis wall Set Disabled"
+
+// Axis church Set
+$Ax_11 disablespawn
+$Ax_12 disablespawn
+$Ax_13 disablespawn
+$Ax_14 disablespawn
+$Ax_15 disablespawn
+$Ax_16 disablespawn
+$Ax_17 disablespawn
+$Ax_18 disablespawn
+$Ax_19 disablespawn
+$Ax_20 disablespawn
+//iprintln " Cobra - Axis church Set Disabled"
+
+
+// Allies neb Set
+$Al_21 disablespawn
+$Al_22 disablespawn
+$Al_23 disablespawn
+$Al_24 disablespawn
+$Al_25 disablespawn
+$Al_26 disablespawn
+$Al_27 disablespawn
+$Al_28 disablespawn
+$Al_29 disablespawn
+$Al_30 disablespawn
+//iprintln " Cobra - Axis neb Set Disabled"
+
+// Axis neb set
+$Ax_21 disablespawn
+$Ax_22 disablespawn
+$Ax_23 disablespawn
+$Ax_24 disablespawn
+$Ax_25 disablespawn
+$Ax_26 disablespawn
+$Ax_27 disablespawn
+$Ax_28 disablespawn
+$Ax_29 disablespawn
+$Ax_30 disablespawn
+//iprintln " Cobra - Axis neb Set Disabled"
+
+
+
+
+wait 5
+clearletterbox
+thread spawns3
+thread cratesremove
+thread cratesremove2
+thread mg42s
+thread tanks
+thread sandbags
+thread otherstuff
+iprintln "The Flak88 Has Been Destroyed!!! "
+wait 1.3
+$player show
+cueplayer
+drawhud 1
+releaseplayer
+$player respawn
+$player takedamage
+end
+
+blow_em_up3:
+wait 1
+$speaker1 loopsound explode_tank1
+
+
+		local.flak88 = spawn script_model
+	local.flak88 model "statweapons/flak88_d.tik" 
+	local.flak88.origin = ( 1232.12 -3560.02 -305.58 )
+	local.flak88.angles = ( 0 0 0)
+	local.flak88 solid
+	local.flak88.targetname = "flak88"
+wait 5
+$speaker1 stoploopsound
+$flak88 remove
+end
+
+
+
+
+
+
+spawns3:
+// Allies neb Set
+$Al_21 disablespawn
+$Al_22 disablespawn
+$Al_23 disablespawn
+$Al_24 disablespawn
+$Al_25 disablespawn
+$Al_26 disablespawn
+$Al_27 disablespawn
+$Al_28 disablespawn
+$Al_29 disablespawn
+$Al_30 disablespawn
+//iprintln " Cobra - Allied neb Set Enabled"
+
+// Axis neb set
+$Ax_21 disablespawn
+$Ax_22 disablespawn
+$Ax_23 disablespawn
+$Ax_24 disablespawn
+$Ax_25 disablespawn
+$Ax_26 disablespawn
+$Ax_27 disablespawn
+$Ax_28 disablespawn
+$Ax_29 disablespawn
+$Ax_30 disablespawn
+//iprintln " Cobra - Axis neb Set Enabled"
+
+// Allies Stage 1 Set
+$Al_1 disablespawn
+$Al_2 disablespawn
+$Al_3 disablespawn
+$Al_4 disablespawn
+$Al_5 disablespawn
+$Al_6 disablespawn
+$Al_7 disablespawn
+$Al_8 disablespawn
+$Al_9 disablespawn
+$Al_10 disablespawn
+//iprintln " Cobra - Allied stage 1 Set Disabled"
+
+// Axis Stage 1 Set
+$Ax_1 disablespawn
+$Ax_2 disablespawn
+$Ax_3 disablespawn
+$Ax_4 disablespawn
+$Ax_5 disablespawn
+$Ax_6 disablespawn
+$Ax_7 disablespawn
+$Ax_8 disablespawn
+$Ax_9 disablespawn
+$Ax_10 disablespawn
+//iprintln " Cobra - Axis stage 1 Set Disabled"
+
+// Allies wall Set
+$Al_11 disablespawn
+$Al_12 disablespawn
+$Al_13 disablespawn
+$Al_14 disablespawn
+$Al_15 disablespawn
+$Al_16 disablespawn
+$Al_17 disablespawn
+$Al_18 disablespawn
+$Al_19 disablespawn
+$Al_20 disablespawn
+//iprintln " Cobra - Axis wall Set Disabled"
+
+// Axis church Set
+$Ax_11 disablespawn
+$Ax_12 disablespawn
+$Ax_13 disablespawn
+$Ax_14 disablespawn
+$Ax_15 disablespawn
+$Ax_16 disablespawn
+$Ax_17 disablespawn
+$Ax_18 disablespawn
+$Ax_19 disablespawn
+$Ax_20 disablespawn
+//iprintln " Cobra - Axis church Set Disabled"
+
+
+// Allies stage 4 Set
+$Al_31 enablespawn
+$Al_32 enablespawn
+$Al_33 enablespawn
+$Al_34 enablespawn
+$Al_35 enablespawn
+$Al_36 enablespawn
+$Al_37 enablespawn
+$Al_38 enablespawn
+$Al_39 enablespawn
+$Al_40 enablespawn
+
+//iprintln " Cobra - Allies Flak Set Disabled"
+
+// Axis stage 4 set
+$Ax_31 enablespawn
+$Ax_32 enablespawn
+$Ax_33 enablespawn
+$Ax_34 enablespawn
+$Ax_35 enablespawn
+$Ax_36 enablespawn
+$Ax_37 enablespawn
+$Ax_38 enablespawn
+$Ax_39 enablespawn
+$Ax_40 enablespawn
+
+//iprintln " Cobra - Axis Flak Set Disabled"
+
+tank:
+
+$scene4_tank.origin = $t250.origin
+$scene4_tank.angles = ( 0 60 0 )
+
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+// *********************** Axis - Tank set 1 *****************************
+spawn info_player_axis "origin" "3389 1113 -282" "angle" "60" "targetname" "Ax_1"
+spawn info_player_axis "origin" "3494 737 -343" "angle" "136" "targetname" "Ax_2"
+spawn info_player_axis "origin" "2697 1228 -313" "angle" "60" "targetname" "Ax_3"
+spawn info_player_axis "origin" "3034 452 -336" "angle" "28" "targetname" "Ax_4"
+spawn info_player_axis "origin" "3156 1871 -249" "angle" "75" "targetname" "Ax_5"
+spawn info_player_axis "origin" "3770 1134 -254" "angle" "10" "targetname" "Ax_6"
+spawn info_player_axis "origin" "4567 797 -334" "angle" "82" "targetname" "Ax_7"
+spawn info_player_axis "origin" "3066 2389 -261" "angle" "13" "targetname" "Ax_8"
+spawn info_player_axis "origin" "3606 1255 -282" "angle" "125" "targetname" "Ax_9"
+spawn info_player_axis "origin" "3134 137 -327" "angle" "88" "targetname" "Ax_10"
+
+
+// ********************** Allied - Road set 1 *******************************
+spawn info_player_allied "origin" "151 5677 -179" "angle" "-10" "targetname" "Al_1"
+spawn info_player_allied "origin" "525 5942 -190" "angle" "-10" "targetname" "Al_2"
+spawn info_player_allied "origin" "533 5639 -191" "angle" "-10" "targetname" "Al_3"
+spawn info_player_allied "origin" "964 5695 -201" "angle" "-10" "targetname" "Al_4"
+spawn info_player_allied "origin" "828 5412 -200" "angle" "-10" "targetname" "Al_5"
+spawn info_player_allied "origin" "1254 4990 -217" "angle" "-10" "targetname" "Al_6"
+spawn info_player_allied "origin" "1284 5316 -211" "angle" "-10" "targetname" "Al_7"
+spawn info_player_allied "origin" "1099 5203 -209" "angle" "-10" "targetname" "Al_8"
+spawn info_player_allied "origin" "684 5736 -195" "angle" "-10" "targetname" "Al_9"
+spawn info_player_allied "origin" "876 5496 -200" "angle" "-10" "targetname" "Al_10"
+
+// *********************** Allied - wall(set 2) ********************************
+spawn info_player_allied "origin" "5528.86 2341.86 -291.45" "angle" "-165" "targetname" "Al_11"
+spawn info_player_allied "origin" "5416.92 2632.69 -327.58" "angle" "-147" "targetname" "Al_12"
+spawn info_player_allied "origin" "5744.90 1981.18 -303.88" "angle" "-127" "targetname" "Al_13"
+spawn info_player_allied "origin" "5718.57 1616.82 -303.88" "angle" "174" "targetname" "Al_14"
+spawn info_player_allied "origin" "5230.55 1028.67 -318.68" "angle" "120" "targetname" "Al_15"
+spawn info_player_allied "origin" "5298.84 2948.30 -339.38" "angle" "-140" "targetname" "Al_16"
+spawn info_player_allied "origin" "4435.81 2668.11 -255.88" "angle" "-69" "targetname" "Al_17"
+spawn info_player_allied "origin" "4391.55 3591.37 -288.50" "angle" "-46" "targetname" "Al_18"
+spawn info_player_allied "origin" "3774.84 3414.78 -223.88" "angle" "-27" "targetname" "Al_19"
+spawn info_player_allied "origin" "4071.54 3289.76 -266.31" "angle" "-16" "targetname" "Al_20"
+
+// ************************* Axis church(set 2) ***************************************
+spawn info_player_axis "origin" "3306.41 -2925.97 -298.90" "angle" "102" "targetname" "Ax_11"
+spawn info_player_axis "origin" "2306.45 -3100.99 -346.53" "angle" "68" "targetname" "Ax_12"
+spawn info_player_axis "origin" "1543.93 -1619.17 -312.98" "angle" "11" "targetname" "Ax_13"
+spawn info_player_axis "origin" "1468.51 -2148.51 -279.88" "angle" "-94" "targetname" "Ax_14"
+spawn info_player_axis "origin" "1472.08 -2789.85 -279.88" "angle" "20" "targetname" "Ax_15"
+spawn info_player_axis "origin" "1839.81 -2417.89 -279.88" "angle" "0" "targetname" "Ax_16"
+spawn info_player_axis "origin" "922.68 -3463.48 -357.67" "angle" "8" "targetname" "Ax_17"
+spawn info_player_axis "origin" "1663.61 -4029.63 -353.86" "angle" "57" "targetname" "Ax_18"
+spawn info_player_axis "origin" "119.09 -2357.36 -342.66" "angle" "38" "targetname" "Ax_19"
+spawn info_player_axis "origin" "119.09 -2357.36 -342.66" "angle" "-15" "targetname" "Ax_20"
+
+// *********************** Allied - flak Battle (set 3) ********************************
+spawn info_player_allied "origin" "4194.58 -455.68 -343.88" "angle" "-119" "targetname" "Al_21"
+spawn info_player_allied "origin" "4321.96 -585.00 -276.72" "angle" "-111" "targetname" "Al_22"
+spawn info_player_allied "origin" "3358.95 -354.38 -339.99" "angle" "-100" "targetname" "Al_23"
+spawn info_player_allied "origin" "4082.39 225.98 -347.97" "angle" "-100" "targetname" "Al_24"
+spawn info_player_allied "origin" "4635.64 -506.98 -347.88" "angle" "-100" "targetname" "Al_25"
+spawn info_player_allied "origin" "4553.15 -755.70 -351.88" "angle" "114" "targetname" "Al_26"
+spawn info_player_allied "origin" "4825.40 -527.14 -347.88" "angle" "-103" "targetname" "Al_27"
+spawn info_player_allied "origin" "2598.85 -350.79 -324.12" "angle" "-97" "targetname" "Al_28"
+spawn info_player_allied "origin" "2916.43 -272.85 -328.75" "angle" "-108" "targetname" "Al_29"
+spawn info_player_allied "origin" "5145.18 -718.73 -400.69" "angle" "-111" "targetname" "Al_30"
+
+// ************************* Axis - flak Battle (set 3) *********************************
+spawn info_player_axis "origin" "1557.43 -2038.70 -279.88" "angle" "90" "targetname" "Ax_21"
+spawn info_player_axis "origin" "1385.05 -2019.77 -271.88" "angle" "60" "targetname" "Ax_22"
+spawn info_player_axis "origin" "1404.57 -2816.37 -279.88" "angle" "98" "targetname" "Ax_23"
+spawn info_player_axis "origin" "1823.17 -2394.78 -279.88" "angle" "40" "targetname" "Ax_24"
+spawn info_player_axis "origin" "1211.35 -2771.69 -273.00" "angle" "113" "targetname" "Ax_25"
+spawn info_player_axis "origin" "384.22 -3065.24 -351.53" "angle" "110" "targetname" "Ax_26"
+spawn info_player_axis "origin" "215.33 -2480.63 -337.08" "angle" "110" "targetname" "Ax_27"
+spawn info_player_axis "origin" "2886.11 -4099.43 -371.17" "angle" "112" "targetname" "Ax_28"
+spawn info_player_axis "origin" "2632.08 -3108.04 -351.78" "angle" "56" "targetname" "Ax_29"
+spawn info_player_axis "origin" "2621.82 -2521.15 -320.96" "angle" "116" "targetname" "Ax_30"
+
+
+// *********************** Allied - neb Battle (set 4) ********************************
+spawn info_player_allied "origin" "-1253.28 -884.77 -239.10" "angle" "-119" "targetname" "Al_31"
+spawn info_player_allied "origin" "-1615.02 -1043.60 -224.83" "angle" "-111" "targetname" "Al_32"
+spawn info_player_allied "origin" "-1850.43 -1333.67 -211.50" "angle" "-100" "targetname" "Al_33"
+spawn info_player_allied "origin" "-3854 -1747 -243.81" "angle" "-100" "targetname" "Al_34"
+spawn info_player_allied "origin" "-4039 -1725 -241.12" "angle" "-100" "targetname" "Al_35"
+spawn info_player_allied "origin" "-4112 -1469 -155.88" "angle" "114" "targetname" "Al_36"
+spawn info_player_allied "origin" "-4295 -1742 -226.45" "angle" "-103" "targetname" "Al_37"
+spawn info_player_allied "origin" "-4521 -1762 -226.56" "angle" "-97" "targetname" "Al_38"
+spawn info_player_allied "origin" "-3672 -1562 -159.05" "angle" "-108" "targetname" "Al_39"
+spawn info_player_allied "origin" "-3286 -1674 -156.59" "angle" "-111" "targetname" "Al_40"
+
+// ************************* Axis - neb Battle (set 4) *********************************
+spawn info_player_axis "origin" "-6269 -7007 -115.88" "angle" "90" "targetname" "Ax_31"
+spawn info_player_axis "origin" "-6392 -6914 -115.88" "angle" "60" "targetname" "Ax_32"
+spawn info_player_axis "origin" "-6170 -6872 -115.88" "angle" "98" "targetname" "Ax_33"
+spawn info_player_axis "origin" "-6586 -6673 -115.88" "angle" "40" "targetname" "Ax_34"
+spawn info_player_axis "origin" "-2120 -7039 -88.14" "angle" "113" "targetname" "Ax_35"
+spawn info_player_axis "origin" "-2388 -6961 -63.44" "angle" "110" "targetname" "Ax_36"
+spawn info_player_axis "origin" "-2205 -6774 -49.50" "angle" "110" "targetname" "Ax_37"
+spawn info_player_axis "origin" "-1947 -6495 -43.78" "angle" "112" "targetname" "Ax_38"
+spawn info_player_axis "origin" "-6387 -6673 -115.88" "angle" "56" "targetname" "Ax_39"
+spawn info_player_axis "origin" "-1950 -7034 -113.18" "angle" "116" "targetname" "Ax_40"
+
+
+// Allies wall Set
+$Al_11 disablespawn
+$Al_12 disablespawn
+$Al_13 disablespawn
+$Al_14 disablespawn
+$Al_15 disablespawn
+$Al_16 disablespawn
+$Al_17 disablespawn
+$Al_18 disablespawn
+$Al_19 disablespawn
+$Al_20 disablespawn
+
+
+// Axis church Set
+$Ax_11 disablespawn
+$Ax_12 disablespawn
+$Ax_13 disablespawn
+$Ax_14 disablespawn
+$Ax_15 disablespawn
+$Ax_16 disablespawn
+$Ax_17 disablespawn
+$Ax_18 disablespawn
+$Ax_19 disablespawn
+$Ax_20 disablespawn
+
+
+// Allies neb Set
+$Al_21 disablespawn
+$Al_22 disablespawn
+$Al_23 disablespawn
+$Al_24 disablespawn
+$Al_25 disablespawn
+$Al_26 disablespawn
+$Al_27 disablespawn
+$Al_28 disablespawn
+$Al_29 disablespawn
+$Al_30 disablespawn
+
+
+// Axis neb set
+$Ax_21 disablespawn
+$Ax_22 disablespawn
+$Ax_23 disablespawn
+$Ax_24 disablespawn
+$Ax_25 disablespawn
+$Ax_26 disablespawn
+$Ax_27 disablespawn
+$Ax_28 disablespawn
+$Ax_29 disablespawn
+$Ax_30 disablespawn
+
+// Allies stage 4 Set
+$Al_31 disablespawn
+$Al_32 disablespawn
+$Al_33 disablespawn
+$Al_34 disablespawn
+$Al_35 disablespawn
+$Al_36 disablespawn
+$Al_37 disablespawn
+$Al_38 disablespawn
+$Al_39 disablespawn
+$Al_40 disablespawn
+
+//iprintln " Cobra - Allies Flak Set Disabled"
+
+// Axis stage 4 set
+$Ax_31 disablespawn
+$Ax_32 disablespawn
+$Ax_33 disablespawn
+$Ax_34 disablespawn
+$Ax_35 disablespawn
+$Ax_36 disablespawn
+$Ax_37 disablespawn
+$Ax_38 disablespawn
+$Ax_39 disablespawn
+$Ax_40 disablespawn
+
+//iprintln " Cobra - Axis Flak Set Disabled"
+end
+
+ffa_spawns:
+
+// *********************** Axis - Tank set 1 *****************************
+spawn info_player_deathmatch "origin" "3389 1113 -282" "angle" "60" "targetname" "Ax_1"
+spawn info_player_deathmatch "origin" "3494 737 -343" "angle" "136" "targetname" "Ax_2"
+spawn info_player_deathmatch "origin" "2697 1228 -313" "angle" "60" "targetname" "Ax_3"
+spawn info_player_deathmatch "origin" "3034 452 -336" "angle" "28" "targetname" "Ax_4"
+spawn info_player_deathmatch "origin" "3156 1871 -249" "angle" "75" "targetname" "Ax_5"
+spawn info_player_deathmatch "origin" "3770 1134 -254" "angle" "10" "targetname" "Ax_6"
+spawn info_player_deathmatch "origin" "4567 797 -334" "angle" "82" "targetname" "Ax_7"
+spawn info_player_deathmatch "origin" "3066 2389 -261" "angle" "13" "targetname" "Ax_8"
+spawn info_player_deathmatch "origin" "3606 1255 -282" "angle" "125" "targetname" "Ax_9"
+spawn info_player_deathmatch "origin" "3134 137 -327" "angle" "88" "targetname" "Ax_10"
+
+
+// ********************** Allied - Road set 1 *******************************
+spawn info_player_deathmatch "origin" "151 5677 -179" "angle" "-10" "targetname" "Al_1"
+spawn info_player_deathmatch "origin" "525 5942 -190" "angle" "-10" "targetname" "Al_2"
+spawn info_player_deathmatch "origin" "533 5639 -191" "angle" "-10" "targetname" "Al_3"
+spawn info_player_deathmatch "origin" "964 5695 -201" "angle" "-10" "targetname" "Al_4"
+spawn info_player_deathmatch "origin" "828 5412 -200" "angle" "-10" "targetname" "Al_5"
+spawn info_player_deathmatch "origin" "1254 4990 -217" "angle" "-10" "targetname" "Al_6"
+spawn info_player_deathmatch "origin" "1284 5316 -211" "angle" "-10" "targetname" "Al_7"
+spawn info_player_deathmatch "origin" "1099 5203 -209" "angle" "-10" "targetname" "Al_8"
+spawn info_player_deathmatch "origin" "684 5736 -195" "angle" "-10" "targetname" "Al_9"
+spawn info_player_deathmatch "origin" "876 5496 -200" "angle" "-10" "targetname" "Al_10"
+
+// *********************** Allied - wall(set 2) ********************************
+spawn info_player_deathmatch "origin" "5528.86 2341.86 -291.45" "angle" "-165" "targetname" "Al_11"
+spawn info_player_deathmatch "origin" "5416.92 2632.69 -327.58" "angle" "-147" "targetname" "Al_12"
+spawn info_player_deathmatch "origin" "5744.90 1981.18 -303.88" "angle" "-127" "targetname" "Al_13"
+spawn info_player_deathmatch "origin" "5718.57 1616.82 -303.88" "angle" "174" "targetname" "Al_14"
+spawn info_player_deathmatch "origin" "5230.55 1028.67 -318.68" "angle" "120" "targetname" "Al_15"
+spawn info_player_deathmatch "origin" "5298.84 2948.30 -339.38" "angle" "-140" "targetname" "Al_16"
+spawn info_player_deathmatch "origin" "4435.81 2668.11 -255.88" "angle" "-69" "targetname" "Al_17"
+spawn info_player_deathmatch "origin" "4391.55 3591.37 -288.50" "angle" "-46" "targetname" "Al_18"
+spawn info_player_deathmatch "origin" "3774.84 3414.78 -223.88" "angle" "-27" "targetname" "Al_19"
+spawn info_player_deathmatch "origin" "4071.54 3289.76 -266.31" "angle" "-16" "targetname" "Al_20"
+
+// ************************* Axis church(set 2) ***************************************
+spawn info_player_deathmatch "origin" "3306.41 -2925.97 -298.90" "angle" "102" "targetname" "Ax_11"
+spawn info_player_deathmatch "origin" "2306.45 -3100.99 -346.53" "angle" "68" "targetname" "Ax_12"
+spawn info_player_deathmatch "origin" "1543.93 -1619.17 -312.98" "angle" "11" "targetname" "Ax_13"
+spawn info_player_deathmatch "origin" "1468.51 -2148.51 -279.88" "angle" "-94" "targetname" "Ax_14"
+spawn info_player_deathmatch "origin" "1472.08 -2789.85 -279.88" "angle" "20" "targetname" "Ax_15"
+spawn info_player_deathmatch "origin" "1839.81 -2417.89 -279.88" "angle" "0" "targetname" "Ax_16"
+spawn info_player_deathmatch "origin" "922.68 -3463.48 -357.67" "angle" "8" "targetname" "Ax_17"
+spawn info_player_deathmatch "origin" "1663.61 -4029.63 -353.86" "angle" "57" "targetname" "Ax_18"
+spawn info_player_deathmatch "origin" "119.09 -2357.36 -342.66" "angle" "38" "targetname" "Ax_19"
+spawn info_player_deathmatch "origin" "119.09 -2357.36 -342.66" "angle" "-15" "targetname" "Ax_20"
+
+// *********************** Allied - flak Battle (set 3) ********************************
+spawn info_player_deathmatch "origin" "4194.58 -455.68 -343.88" "angle" "-119" "targetname" "Al_21"
+spawn info_player_deathmatch "origin" "4321.96 -585.00 -276.72" "angle" "-111" "targetname" "Al_22"
+spawn info_player_deathmatch "origin" "3358.95 -354.38 -339.99" "angle" "-100" "targetname" "Al_23"
+spawn info_player_deathmatch "origin" "4082.39 225.98 -347.97" "angle" "-100" "targetname" "Al_24"
+spawn info_player_deathmatch "origin" "4635.64 -506.98 -347.88" "angle" "-100" "targetname" "Al_25"
+spawn info_player_deathmatch "origin" "4553.15 -755.70 -351.88" "angle" "114" "targetname" "Al_26"
+spawn info_player_deathmatch "origin" "4825.40 -527.14 -347.88" "angle" "-103" "targetname" "Al_27"
+spawn info_player_deathmatch "origin" "2598.85 -350.79 -324.12" "angle" "-97" "targetname" "Al_28"
+spawn info_player_deathmatch "origin" "2916.43 -272.85 -328.75" "angle" "-108" "targetname" "Al_29"
+spawn info_player_deathmatch "origin" "5145.18 -718.73 -400.69" "angle" "-111" "targetname" "Al_30"
+
+// ************************* Axis - flak Battle (set 3) *********************************
+spawn info_player_deathmatch "origin" "1557.43 -2038.70 -279.88" "angle" "90" "targetname" "Ax_21"
+spawn info_player_deathmatch "origin" "1385.05 -2019.77 -271.88" "angle" "60" "targetname" "Ax_22"
+spawn info_player_deathmatch "origin" "1404.57 -2816.37 -279.88" "angle" "98" "targetname" "Ax_23"
+spawn info_player_deathmatch "origin" "1823.17 -2394.78 -279.88" "angle" "40" "targetname" "Ax_24"
+spawn info_player_deathmatch "origin" "1211.35 -2771.69 -273.00" "angle" "113" "targetname" "Ax_25"
+spawn info_player_deathmatch "origin" "384.22 -3065.24 -351.53" "angle" "110" "targetname" "Ax_26"
+spawn info_player_deathmatch "origin" "215.33 -2480.63 -337.08" "angle" "110" "targetname" "Ax_27"
+spawn info_player_deathmatch "origin" "2886.11 -4099.43 -371.17" "angle" "112" "targetname" "Ax_28"
+spawn info_player_deathmatch "origin" "2632.08 -3108.04 -351.78" "angle" "56" "targetname" "Ax_29"
+spawn info_player_deathmatch "origin" "2621.82 -2521.15 -320.96" "angle" "116" "targetname" "Ax_30"
+
+
+// *********************** Allied - neb Battle (set 4) ********************************
+spawn info_player_deathmatch "origin" "-1253.28 -884.77 -239.10" "angle" "-119" "targetname" "Al_31"
+spawn info_player_deathmatch "origin" "-1615.02 -1043.60 -224.83" "angle" "-111" "targetname" "Al_32"
+spawn info_player_deathmatch "origin" "-1850.43 -1333.67 -211.50" "angle" "-100" "targetname" "Al_33"
+spawn info_player_deathmatch "origin" "-3854 -1747 -243.81" "angle" "-100" "targetname" "Al_34"
+spawn info_player_deathmatch "origin" "-4039 -1725 -241.12" "angle" "-100" "targetname" "Al_35"
+spawn info_player_deathmatch "origin" "-4112 -1469 -155.88" "angle" "114" "targetname" "Al_36"
+spawn info_player_deathmatch "origin" "-4295 -1742 -226.45" "angle" "-103" "targetname" "Al_37"
+spawn info_player_deathmatch "origin" "-4521 -1762 -226.56" "angle" "-97" "targetname" "Al_38"
+spawn info_player_deathmatch "origin" "-3672 -1562 -159.05" "angle" "-108" "targetname" "Al_39"
+spawn info_player_deathmatch "origin" "-3286 -1674 -156.59" "angle" "-111" "targetname" "Al_40"
+
+// ************************* Axis - neb Battle (set 4) *********************************
+spawn info_player_deathmatch "origin" "-6269 -7007 -115.88" "angle" "90" "targetname" "Ax_31"
+spawn info_player_deathmatch "origin" "-6392 -6914 -115.88" "angle" "60" "targetname" "Ax_32"
+spawn info_player_deathmatch "origin" "-6170 -6872 -115.88" "angle" "98" "targetname" "Ax_33"
+spawn info_player_deathmatch "origin" "-6586 -6673 -115.88" "angle" "40" "targetname" "Ax_34"
+spawn info_player_deathmatch "origin" "-2120 -7039 -88.14" "angle" "113" "targetname" "Ax_35"
+spawn info_player_deathmatch "origin" "-2388 -6961 -63.44" "angle" "110" "targetname" "Ax_36"
+spawn info_player_deathmatch "origin" "-2205 -6774 -49.50" "angle" "110" "targetname" "Ax_37"
+spawn info_player_deathmatch "origin" "-1947 -6495 -43.78" "angle" "112" "targetname" "Ax_38"
+spawn info_player_deathmatch "origin" "-6387 -6673 -115.88" "angle" "56" "targetname" "Ax_39"
+spawn info_player_deathmatch "origin" "-1950 -7034 -113.18" "angle" "116" "targetname" "Ax_40"
+end
+
+scene0_panzerschreck_trigger:
+end
+scene1:
+end
+scene1_waveterminate_trigger:
+end
+scene3:
+end
+scene3_spawn1_terminate:
+end
+scene3_spawn2_terminate:
+end
+scene3_spawn3_terminate:
+end
+scene3_spawn4_terminate:
+end
+scene3_spawn5_terminate:
+end
+scene3_sniperboardspawn:
+end
+scene4_spawn1_terminate:
+end
+scene4_spawn2_terminate:
+end 
+scene4_spawn3_terminate:
+end
+scene4_spawn4_terminate:
+end
+scene4_panzerschreck_trigger:
+end
+scene4:
+end
+scene4_mgfodderspawn_deactivate:
+end
+scene4_team_regroup:
+end
+scene6:
+end
+scene6_mgspawn1_terminate:
+end
+scene6_mgspawn2_terminate:
+end
+scene6_mgspawn3_terminate:
+end
+scene6_spawn1_terminate:
+end
+scene6_spawn2_terminate:
+end
+scene7_spawn1_terminate:
+end
+scene7_spawn2_terminate:
+end
+scene7_spawn3_terminate:
+end
+scene7_mgspawn1_terminate: 
+end
+scene7_mgspawn2_terminate:
+end
+scene7_mgspawn3_terminate:
+end 
+scene7_mgspawn4_terminate: 
+end
+scene7_mgspawn5_terminate: 
+end
+scene7_neb1_terminate: 
+end
+scene7_neb2_terminate: 
+end
+scene7_neb3_terminate:
+end
+scene7_neb4_terminate: 
+end
+scene7_bombplant1:
+end
+scene7_bombplant2:
+end
+scene7_bombplant3: 
+end
+scene7_bombplant4:
+end 
+scene7:
+end
+scene7_defender_spawn1:
+end
+trigger_bomber:
+end 
+farplane_far:
+end
+farplane_near:
+end
+scene4_tank_sequence:
+end

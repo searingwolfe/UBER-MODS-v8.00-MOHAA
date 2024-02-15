@@ -1,0 +1,246 @@
+
+
+main:
+
+setcvar "g_obj_alliedtext1" "m2l2b" 
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "m2l2b"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "50"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "5000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills" 
+
+//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+
+if((getcvar("g_gametype") == "2"))
+{
+	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
+	setcvar "g_gametypestring" "Team-Match UBER"
+	setcvar "g_gametype" "2"
+	thread tdm_spawns	
+	spawn info_player_deathmatch "origin" "-1823 -6699 -310" "angle" "113" // for spectators when joining game
+	spawn info_player_deathmatch "origin" "5397 -6693 0" "angle" "0"
+	spawn info_player_deathmatch "origin" "5252 -6788 1" "angle" "155"
+}
+else
+{
+	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+	setcvar "g_gametypestring" "Free-For-All UBER"
+	setcvar "g_gametype" "1"
+	thread ffa_spawns
+}
+
+waitthread setup
+
+level waittill prespawn
+
+//both sides
+exec alienx/basebuild.scr::basebuild ( -2320.87 -7208.87 -511.88 ) "static/indycrate.tik" 1 0 1 0 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2220.87 -7208.87 -511.88 ) "static/indycrate.tik" 1 1 0 1 90 .2 1 0 1
+exec alienx/basebuild.scr::basebuild ( -2120.87 -7208.87 -511.88 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2020.87 -7208.87 -511.88 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1920.87 -7208.87 -511.88 ) "static/bodies_tarp.tik" 1 1 0 1 90 .2 1 0 1
+exec alienx/basebuild.scr::basebuild ( -1820.87 -7208.87 -511.88 ) "static/bunkertable.tik" 1 1 1 0 90 .2 0 1 1
+exec alienx/basebuild.scr::basebuild ( -1720.87 -7208.87 -511.88 ) "static/barbwire.tik" 1 0 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1647.54 -6960.87 -511.88 ) "static/cabinet_large.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1647.54 -6860.87 -511.88 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .1 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1647.54 -6760.87 -511.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1647.54 -6660.87 -511.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1647.54 -6560.87 -511.88 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1647.54 -6460.87 -511.88 ) "static/bush_full.tik" 1 0 1 1 90 .2 0 0 1end
+exec alienx/basebuild.scr::basebuild ( -1647.54 -6360.87 -511.88 ) "static/banquet_table.tik" 1 1 0 0 90 .2 0 0 1
+
+exec global/dog.scr ( -2704 -4469 -447 ) ( 0 0 0 ) 15 10
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m2l2b.scr
+	exec global/ambient.scr m2l2b
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+
+	setcvar "r_fastsky" "0"
+	$world farplane 150000
+	$world farplane_color ( 1 1 1 )
+
+exec map_triggers/grenade_ammo.scr ( 6666 -6728 31 ) ( 5913 -6646 46 ) ( 5606 -6800 26 ) ( 5373 -6801 31 ) ( 5274 -6824 31 ) ( 4764 -6826 48 ) ( 4503 -6617 0 ) ( 4323 -6702 72 ) ( 4170 -6666 44 ) ( 3583 -6826 40 )
+
+thread port1
+thread port2
+thread port3
+thread port4
+
+level waittill spawn
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+	
+	removeclass actor
+
+	$world northyaw -90
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1	
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1 // crashes on my server
+end	
+
+spray:
+
+	self anim start
+	wait 1 
+	self anim stop
+end
+
+////////////////////////////////////////////////////////////////////////
+
+port1:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( -2303 -4014 -449 ) // starting point
+local.portlight.scale = 3
+
+local.trig = spawn trigger_use
+local.trig targetname port1 
+local.trig.origin = ( -2303 -4014 -449 ) // starting point
+local.trig setsize ( -30 -30 0 ) ( 30 30 80 )
+$port1 waittill trigger
+local.player = parm.other
+local.player tele ( 5025 -6714 0 ) // destination
+local.portlight remove
+$port1 remove
+wait 0
+thread port1
+end
+
+port2:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( 5053 -6764 58 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port2 
+local.trig.origin = ( 5053 -6764 58 ) // starting point
+local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
+$port2 waittill trigger
+local.player = parm.other
+local.player tele ( -2291 -3923 -448 ) // destination
+local.portlight remove
+$port2 remove
+wait 0
+thread port2
+end
+
+port3:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( -2382 -4789 -545 ) // starting point
+local.portlight.scale = 3
+
+local.trig = spawn trigger_use
+local.trig targetname port3
+local.trig.origin = ( -2382 -4789 -545 ) // starting point
+local.trig setsize ( -30 -30 0 ) ( 30 30 80 )
+$port3 waittill trigger
+local.player = parm.other
+local.player tele ( -2652 -5008 -511 ) // destination
+local.portlight remove
+$port3 remove
+wait 0
+thread port3
+end
+
+port4:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( -2639 -4783 -507 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port4
+local.trig.origin = ( -2639 -4783 -507 ) // starting point
+local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
+$port4 waittill trigger
+local.player = parm.other
+local.player tele ( -2257 -4543 -545 ) // destination
+local.portlight remove
+$port4 remove
+wait 0
+thread port4
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	spawn info_player_axis "origin" "3550.38 -6737.54 0.12" "angle" "0" "targetname" "X3"
+	spawn info_player_axis "origin" "3610.03 -6802.88 0.12" "angle" "45" "targetname" "X4"
+	spawn info_player_axis "origin" "3592.04 -6621.13 0.12" "angle" "-60" "targetname" "X5"
+
+	spawn info_player_axis "origin" "4171.13 -6826.88 0.12" "angle" "14" "targetname" "X6" 
+	spawn info_player_axis "origin" "4262.87 -6673.13 0.12" "angle" "-100" "targetname" "X7"
+	spawn info_player_axis "origin" "4373.13 -6615.47 0.12" "angle" "-85" "targetname" "X8"
+	spawn info_player_axis "origin" "4503.13 -6617.13 0.12" "angle" "-68" "targetname" "X9"
+	spawn info_player_axis "origin" "4403.39 -6800.88 44.13" "angle" "85" "targetname" "X10"
+
+	spawn info_player_axis "origin" "4170.20 -6666.13 44.12" "angle" "-58" "targetname" "X11"
+	spawn info_player_axis "origin" "4001.52 -6714.16 0.31" "angle" "-9" "targetname" "X12"
+	
+	spawn info_player_allied "origin" "6730.82 -6750.88 0.13" "angle" "175" "targetname" "A3"
+	spawn info_player_allied "origin" "6587.69 -6695.13 0.13" "angle" "-179" "targetname" "A4"
+	spawn info_player_allied "origin" "6456.91 -6760.88 0.13" "angle" "165" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "6106.07 -6786.88 0.13" "angle" "96" "targetname" "A6"
+	spawn info_player_allied "origin" "5994.87 -6776.88 0.13" "angle" "153" "targetname" "A7"
+	spawn info_player_allied "origin" "5914.42 -6776.88 0.13" "angle" "92" "targetname" "A8"
+	spawn info_player_allied "origin" "5790.88 -6802.88 0.13" "angle" "127" "targetname" "A9"
+	spawn info_player_allied "origin" "5713.16 -6802.88 0.13" "angle" "92" "targetname" "A10"
+
+	spawn info_player_allied "origin" "5588.18 -6800.87 0.13" "angle" "98" "targetname" "A11"
+	spawn info_player_allied "origin" "5405.92 -6808.24 0.13" "angle" "60" "targetname" "A12"
+
+ffa_spawns: 
+
+	spawn info_player_deathmatch "origin" "6641.62 -6651.30 -7.87" "angle" "-159"
+	spawn info_player_deathmatch "origin" "5994.88 -6776.88 0.12" "angle" "123"
+	spawn info_player_deathmatch "origin" "5713.13 -6802.88 0.12" "angle" "47"
+	spawn info_player_deathmatch "origin" "5410.38 -6808.24 0.12" "angle" "116"
+	spawn info_player_deathmatch "origin" "4797.13 -6826.88 0.12" "angle" "30"
+
+	spawn info_player_deathmatch "origin" "4528.88 -6617.13 0.12" "angle" "-118"
+	spawn info_player_deathmatch "origin" "4175.03 -6826.88 0.12" "angle" "51"
+	spawn info_player_deathmatch "origin" "3597.89 -6621.13 0.12" "angle" "-66"
+	spawn info_player_deathmatch "origin" "3985.17 -6733.32 0.12" "angle" "0"
+	spawn info_player_deathmatch "origin" "4373.13 -6615.47 0.12" "angle" "-84"
+end
+
+plantthebomb:
+end
+plantthebomb2:
+end

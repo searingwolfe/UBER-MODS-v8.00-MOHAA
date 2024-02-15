@@ -1,0 +1,1154 @@
+
+main:
+
+setcvar "g_obj_alliedtext1" "m3l1a" 
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "m3l1a"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "50"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "5000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills" 
+
+//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+
+if((getcvar("g_gametype") == "2"))
+{
+	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
+	setcvar "g_gametypestring" "Team-Match UBER"
+	setcvar "g_gametype" "2"
+	thread tdm_spawns	
+	spawn info_player_deathmatch "origin" "-1256 3514 -169" "angle" "51" // for spectators when joining game
+	spawn info_player_deathmatch "origin" "480 3027 -201" "angle" "-93"
+	spawn info_player_deathmatch "origin" "352 -7440 -463" "angle" "90"
+}
+else
+{
+	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+	setcvar "g_gametypestring" "Free-For-All UBER"
+	setcvar "g_gametype" "1"
+	thread ffa_spawns
+}
+
+waitthread setup
+
+level waittill prespawn
+
+//allies
+exec alienx/basebuild.scr::basebuild ( 2168.00 -672.00 -464.00 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 -572.00 -464.00 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 -472.00 -464.00 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 -372.00 -464.00 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 -272.00 -464.00 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 -172.00 -464.00 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 -72.00 -464.00 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 172.00 -464.00 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 272.00 -464.00 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 372.00 -464.00 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 472.00 -464.00 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 572.00 -464.00 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 672.00 -464.00 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( 2168.00 772.00 -464.00 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+
+//axis
+exec alienx/basebuild.scr::basebuild ( 2568.00 3936.00 -310.00 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2468.00 3936.00 -310.00 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 2368.00 3936.00 -310.00 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2268.00 3936.00 -310.00 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2168.00 3936.00 -310.00 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 2068.00 3936.00 -310.00 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 1968.00 3936.00 -310.00 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1868.00 3936.00 -310.00 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1768.00 3936.00 -310.00 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1668.00 3936.00 -310.00 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1568.00 3936.00 -310.00 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1468.00 3936.00 -310.00 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1368.00 3936.00 -310.00 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( 1268.00 3936.00 -310.00 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+exec global/dog.scr ( 180 2018 -423 ) ( 0 0 0 ) 15 10
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m3l1a.scr
+	exec global/ambient.scr m3l1a
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+
+	setcvar "r_fastsky" "0"
+	$world farplane 150000
+	$world farplane_color ( 1 1 1 )
+
+exec map_triggers/grenade_ammo.scr ( 67 4012 -343 ) ( -1020 4160 -372 ) ( -442 4603 -392 ) ( 56 5125 -478 ) ( 1585 1548 -517 ) ( 552 2072 -517 ) ( 63 1531 -516 ) ( -1504 2061 -506 ) ( 45 3088 -361 ) ( 554 4657 -497 )
+
+thread port1
+thread port2
+thread port3
+
+level waittill spawn
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+	
+	local.master = spawn scriptmaster
+	local.master aliascache arty_leadin5 sound/weapons/explo/Exp_LeadIn_13.wav soundparms 0.5 0.2 0.7 0.5 160 1600 auto loaded maps "m dm obj"
+	local.master aliascache sdkfz_snd_idle sound/vehicle/veh_track_idle.wav soundparms 2.5 1.0 1.0 0.0 1200 5000 auto loaded maps "m dm obj"	
+
+	removeclass actor
+	
+	$playerweapon_springfield remove
+
+	$mg42_right2 setplayerusable 0
+	$mg42_right1 setplayerusable 0
+
+	$minefield remove
+	
+	$ocean_wavy hide
+	thread setup_higgins
+
+	//$barbwire_fence1 remove
+	//$barbwire_fence3 remove
+
+	$bangalore1.origin = ( -1749.10 -1021.91 -503.61 ) 
+	$bangalore2.origin = ( -204.23 -967.25 -498.49 ) 
+	$bangalore3.origin = ( 1325.54 -947.31 -496.62 ) 
+
+	$bangalore1 notsolid
+	$bangalore2 notsolid
+	$bangalore3 notsolid
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1	
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1
+
+	thread main_boat_ride_go
+
+	thread Map_Guard
+	thread lifesaver
+	thread lifesaver2
+	//$sequence_12_playerclip1.origin = ( 1534.49 4958.64 -358.00 ) //remove
+	//$sequence_12_playerclip2.origin = ( 1466.24 4782.88 -393.88 ) //remove
+	thread removebarbedwirebit
+	$progress_player remove
+
+	//Block gameplay in with a new MineField
+	spawn trigger_multipleall "origin" "4442.26 -28.67 -428.15" "targetname" "minefield"
+
+	spawn trigger_multipleall "origin" "-4950 439 -442" "targetname" "minefield"
+
+	$minefield setsize ( -500 -5000 -500 ) ( 500 5000 350 )
+
+	// These 2 clips make the Trench un-usable (stops players falling in and getting stuck)
+	//spawn script_object "targetname" "ditch_block"
+	//$ditch_block.origin = ( 2493.70 4859.71 -393.88 )
+	//$ditch_block setsize ( -950 -350 -10 ) ( 250 350 100 )
+	//$ditch_block solid
+	//$ditch_block nodamage
+
+	//spawn script_object "targetname" "ditch_block2"
+	//$ditch_block2.origin = ( 1375.18 4421.77 -334.73 )
+	//$ditch_block2 setsize ( -150 -300 -10 ) ( 150 350 150 )
+	//$ditch_block2 solid
+	//$ditch_block2 nodamage
+	
+end	
+
+setup_higgins:
+	for (local.i = 1 ; local.i <= 6 ; local.i ++)
+	{
+		waitthread higgins_boat_bind $("higgins" + local.i) $("higgins" + local.i + "_model") $("higgins" + local.i + "_clip") $("higgins" + local.i + "_move") $("higgins" + local.i + "_move2") $("higgins" + local.i + "_door") $("higgins" + local.i + "_door_origin") $("higgins" + local.i + "_door_clip") $("higgins" + local.i + "_spray_left") $("higgins" + local.i + "_spray_right")
+	}
+
+	//*** bind the coxswain spot to the players boat
+	$higgins1_coxswain_spot bind $higgins1_clip
+	$higgins1_coxswain_spot movedown 96
+	$higgins1_coxswain_spot move
+
+	//*** bind the playerspot to higgins1
+	$higgins1_playerspot bind $higgins1_clip
+
+	//*** bind the player pusher to higgins1
+	$higgins1_clip_player bind $higgins1_clip
+
+	//*** bind the mortar fx to the higgins2
+	$higgins2_mortar bind $higgins2
+
+	
+	//*** position the boats into the fleet arrangement
+	$higgins2_move2 movenorth 384
+	$higgins3_move2 movenorth 512
+	$higgins4_move2 movenorth 768
+	$higgins5_move2 movenorth 448
+	$higgins6_move2 movenorth 384
+
+	($higgins2_move2::$higgins3_move2::$higgins4_move2::$higgins5_move2::$higgins6_move2) waitmove
+
+	
+	thread main_boat_ride_go
+
+	//*** higgins boats wavy motions
+	for (local.l = 1 ; local.l <= 6 ; local.l ++)
+	{
+		$("higgins" + local.l) thread higgins_wave_motions local.l
+	}
+
+	//*** higgins boats forwards and backwards motions
+	for (local.m = 2 ; local.m <= 6 ; local.m ++)
+	{
+		$("higgins" + local.m + "_move") thread higgins_forward_motions
+	}
+	
+end
+
+
+main_boat_ride_go:
+
+	//*** move the higgins fleet to first point
+	// original fleet time here should be 20
+
+	fadein 3.5 0 0 0 1
+	showmenu dday1
+	wait 3.25
+	showmenu dday2
+	wait 3
+	hidemenu dday1
+	hidemenu dday2
+
+	thread higgins_runup_mortar6
+	thread higgins_runup_mortar5
+	thread higgins_runup_mortar4
+	thread higgins_runup_mortar3
+	thread higgins_runup_mortar2
+	thread higgins_runup_mortar1
+	$higgins_fleet loopsound sdkfz_snd_idle
+	$higgins_fleet time 20
+	$higgins_fleet movenorth 1800
+	$higgins_fleet waitmove
+
+	$higgins2_move.stop_forward_motion = 1
+	$higgins3_move.stop_forward_motion = 1
+	$higgins4_move.stop_forward_motion = 1
+	$higgins5_move.stop_forward_motion = 1
+	$higgins6_move.stop_forward_motion = 1
+
+	//println "MAINRIDE: blowing the second higgins boat"
+
+	//stop and blow the higgins boat
+	$higgins2.stop = 1
+	thread higgins2_blow
+
+	//println "MAINRIDE: moving after the second higgins boat"
+
+	// original fleet time should be 10 here
+	//thread boat_blah
+	$higgins_fleet time 10
+	$higgins_fleet movenorth 600
+	$higgins_fleet waitmove
+
+	//println "MAINRIDE: DONE moving after the second higgins boat"
+
+	//*** land the higgin's boats
+	thread higgins1_landing
+	thread higgins3_landing
+	thread higgins4_landing
+	thread higgins5_landing
+	thread higgins6_landing
+
+	wait 5
+
+	$ocean_wavy show
+	$ocean_calm hide
+end
+
+boat_blah:
+	wait 15
+	$higgins1_coxswain say dfr_scripted_m3l1_002i  //*** clear the ramp
+	$higgins1_coxswain waittill saydone
+	wait .5
+	$higgins1_coxswain say dfr_scripted_m3l1_001i  //*** 30 seconds
+	$higgins1_coxswain waittill saydone
+	wait 1
+	$higgins1_ranger10 say streamed_dfr_scripted_M3L1_005a  //*** alright men
+	$higgins1_ranger10 waittill saydone
+	wait .5
+	$higgins1_ranger10 say streamed_dfr_scripted_M3L1_006a  //*** port side, your with powell
+	$higgins1_ranger10 waittill saydone
+	wait .5
+	$higgins1_ranger10 say streamed_dfr_scripted_M3L1_007a
+	$higgins1_ranger10 waittill saydone
+end
+
+//*****************************
+//*****************************
+//*** higgins boat 1 landing
+higgins1_landing:
+
+	//println "MAINRIDE: higgins1 starting it's landing"
+
+	$higgins1_move2 time 3
+	$higgins1_move2 rotatexup 15
+	$higgins1_move2 rotateydown 5
+	$higgins1_move2 moveeast 48
+	$higgins1_move2 movenorth 32
+	$higgins1_move2 waitmove
+
+	$higgins1_move2 time 2
+	$higgins1_move2 rotatexdown 15
+	$higgins1_move2 rotateyup 5
+	$higgins1_move2 moveeast 24
+	$higgins1_move2 movenorth 160
+	$higgins1_move2 waitmove
+
+	$higgins1_move2 time 10
+	$higgins1_move2 rotateydown 7
+	$higgins1_move2 movenorth 1224
+	$higgins1_move2 moveeast 32
+	$higgins1_move2 waitmove
+
+	$higgins1_move2 time 6
+	$higgins1_move2 rotateyup 7
+	$higgins1_move2 movenorth 368
+	$higgins1_move2 moveeast 32
+	$higgins1_move2 waitmove
+
+	$higgins1.stop = 1
+
+	$higgins1_move2 time 7
+	$higgins1_move2 movenorth 300
+	$higgins1_move2 waitmove
+
+	//thread jitter_mg_cover
+	$higgins1 time 2
+	$higgins1 rotatezup 2
+	$higgins1 movedown 8
+	$higgins1 waitmove
+
+	$higgins_fleet stoploopsound
+
+	$higgins1_door playsound higgins_whistle
+
+	wait 2
+	$higgins1_door playsound higgins_door_opening
+
+	wait 2.3
+	
+
+	$higgins1_door_origin time .65
+	$higgins1_door_origin rotatezdown 90
+	$higgins1_door_origin move
+	wait .6
+	$higgins1_door playsound higgins_bullet_hits
+	$higgins1_model anim removeguys
+	$higgins1_coxswain_spot playsound higgins_guys_rush
+end
+
+
+//*************************************************
+//*************************************************
+//  Binding the Higgins boats and get them moving
+higgins_boat_bind local.higgins_origin local.higgins_model local.higgins_clip local.higgins_move local.higgins_move2 local.higgins_door local.higgins_door_origin local.higgins_door_clip local.higgins_spray_left local.higgins_spray_right:
+
+	local.higgins_model bind local.higgins_origin
+	local.higgins_model notsolid
+
+	local.higgins_door notsolid
+	local.higgins_door bind local.higgins_door_origin
+	local.higgins_door_clip bind local.higgins_door_origin
+	local.higgins_door_origin bind local.higgins_origin
+
+	local.higgins_spray_left bind local.higgins_origin
+	local.higgins_spray_right bind local.higgins_origin
+
+	local.higgins_origin bind local.higgins_move
+
+	if (local.higgins_origin.targetname == "higgins1")
+	{
+		local.higgins_clip bind local.higgins_origin
+	}
+	else
+	{
+		local.higgins_clip bind local.higgins_move2
+	}
+
+	local.higgins_move bind local.higgins_move2
+	local.higgins_move2 bind $higgins_fleet
+
+	for (local.i = 1 ; local.i <= local.higgins_clip.number_of_guys ; local.i ++ )
+	{
+		$(local.higgins_origin.targetname + "_ranger" + local.i + "_spot") bind local.higgins_clip
+		
+	}
+
+	local.higgins_clip hide
+	local.higgins_door_clip hide
+	local.higgins_move2 time .1
+	local.higgins_move time .1
+	local.higgins_origin time .1
+	local.higgins_origin rotatezdown 1.5
+	local.higgins_origin movedown 20
+	local.higgins_origin waitmove
+
+end
+
+
+	//*************************************************
+	//*************************************************
+	//  Higgins boat waving motions
+higgins_wave_motions local.higgins_number:
+
+	self.stop = 0
+	local.flip = 0
+	self time 1
+	local.first_test = 1
+
+	local.random = randomfloat 3
+	wait local.random
+
+	while (self.stop == 0 )
+	{
+		if (local.first_test == 1)
+		{
+			if (local.higgins_number == 1)
+			{
+	//			println "starting higgins1 guys animating"
+				//thread higgins_ai_set_anim
+				local.first_test = 0
+			}
+		}
+		if (local.flip == 0)
+		{
+			self rotatexup 1
+		}
+		else
+		{
+			self rotatexdown 1
+		}
+		
+		$("higgins" + local.higgins_number + "_spray_right") anim start
+		if (local.higgins_number == 1)
+		{
+			//$higgins1_spray_right playsound "sound/environment/m3l1/amb_wave_01.wav" 0 2.5 256
+			$higgins1_spray_right playsound wave_crash
+		}
+		
+		self movedown 6
+		self waitmove
+			
+		$("higgins" + local.higgins_number + "_spray_right") anim stop
+			
+		if (local.flip == 0)
+		{
+			self rotatexup 1.5
+		}
+		else
+		{
+			self rotatexdown 1.5
+		}
+		
+		$("higgins" + local.higgins_number + "_spray_left") anim start
+		if (local.higgins_number == 1)
+		{
+			//$higgins1_spray_left playsound "sound/environment/m3l1/amb_wave_01.wav" 0 2.5 256
+			$higgins1_spray_left playsound wave_crash
+		}
+				
+		self rotatezup 1.5
+		self movedown 3
+		self waitmove
+				
+		$("higgins" + local.higgins_number + "_spray_left") anim stop
+					
+		if (local.flip == 0)
+		{
+			self rotatexup 1.5
+		}
+		else
+		{
+			self rotatexdown 1.5
+		}
+						
+		self rotatezup 1.5
+		self moveup 3
+		self waitmove
+						
+		if (local.flip == 0)
+		{
+			self rotatexup 1
+		}
+		else
+		{
+			self rotatexdown 1
+		}
+							
+		self moveup 6
+		self waitmove
+
+		if (local.flip == 0)
+		{
+			self rotatexdown 2.5
+		}
+		else
+		{
+			self rotatexup 2.5
+		}								
+		
+		self rotatezdown 1.5
+		self moveup 3
+		self waitmove
+			
+		if (local.flip == 0)
+		{
+			self rotatexdown 2.5
+		}
+		else
+		{
+			self rotatexup 2.5
+		}
+								
+		self rotatezdown 1.5
+		self movedown 3
+		self waitmove
+								
+		if (local.flip == 0)
+		{
+			local.flip = 1
+		}
+		else
+		{
+			local.flip = 0
+		}								
+	} 
+
+end
+
+
+	//*************************************************
+	//*************************************************
+	//  Higgins boat forward / backward motions
+higgins_forward_motions:
+	self.stop_forward_motion = 0
+
+	while (self.stop_forward_motion == 0 )
+	{
+		local.random_time = (randomint 3 + 4)
+		self time local.random_time
+		local.move_distance = (randomint 48 + 96)
+			
+		self movenorth local.move_distance
+		self waitmove
+			
+		local.random_time = randomint 2
+		wait local.random_time
+			
+		self movesouth local.move_distance
+		self waitmove
+			
+		wait local.random_time
+	} 
+
+end
+
+
+higgins3_landing:
+
+	wait 1.5
+
+	$higgins3_move2 time 3
+	$higgins3_move2 rotatexdown 12
+	$higgins3_move2 rotateyup 5
+	$higgins3_move2 movewest 24
+	$higgins3_move2 movenorth 32
+	$higgins3_move2 waitmove
+
+	$higgins3_move2 time 2
+	$higgins3_move2 rotatexup 12
+	$higgins3_move2 rotateydown 5
+	$higgins3_move2 movewest 12
+	$higgins3_move2 movenorth 128
+	$higgins3_move2 waitmove
+
+	$higgins3_move2 time 13
+	$higgins3_move2 rotateydown 7
+	$higgins3_move2 movenorth 1100
+	$higgins3_move2 moveeast 120
+	$higgins3_move2 waitmove
+
+	$higgins3_move2 time 5
+	$higgins3_move2 rotateyup 7
+	$higgins3_move2 movenorth 300
+	$higgins3_move2 moveeast 90
+	$higgins3_move2 waitmove
+
+	$higgins3.stop = 1
+
+	$higgins3_move2 time 6
+	$higgins3_move2 movenorth 250
+	$higgins3_move2 waitmove
+
+	$higgins3 time 2
+	$higgins3 rotatezup 2
+	$higgins3 moveup 8
+	$higgins3 waitmove
+
+	wait 2
+
+	$higgins3_door_origin time .75
+	$higgins3_door_origin rotatezdown 90
+	$higgins3_door_origin waitmove
+
+	//$higgins3_model anim removesoldiers
+	$higgins3_model anim removeguys
+	
+
+end
+
+
+//*****************************
+//*****************************
+//*** higgins boat 4 landing
+higgins4_landing:
+
+	wait 2.5
+
+	$higgins4_move2 time 13
+	$higgins4_move2 rotateyup 24
+	$higgins4_move2 movewest 512
+	$higgins4_move2 movenorth 900
+	$higgins4_move2 waitmove
+
+	$higgins4_move2 time 8
+	$higgins4_move2 rotateydown 24
+	$higgins4_move2 movewest 448
+	$higgins4_move2 movenorth 600
+	$higgins4_move2 waitmove
+
+	$higgins4.stop = 1
+
+	$higgins4_move2 time 7
+	$higgins4_move2 movenorth 350
+	$higgins4_move2 waitmove
+
+	$higgins4 time 2
+	$higgins4 rotatezup 2
+	$higgins4 moveup 8
+	$higgins4 waitmove
+
+	wait 2
+
+	$higgins4_door_origin time .75
+	$higgins4_door_origin rotatezdown 90
+	$higgins4_door_origin waitmove
+
+	//$higgins4_model anim removesoldiers
+	$higgins4_model anim removeguys
+	end
+
+
+//*****************************
+//*****************************
+//*** higgins boat 5 landing
+higgins5_landing:
+
+	wait 1.5
+
+	$higgins5_move2 time 3
+	$higgins5_move2 rotatexup 12
+	$higgins5_move2 rotateydown 5
+	$higgins5_move2 moveeast 24
+	$higgins5_move2 movenorth 32
+	$higgins5_move2 waitmove
+
+	$higgins5_move2 time 2
+	$higgins5_move2 rotatexdown 12
+	$higgins5_move2 rotateyup 5
+	$higgins5_move2 moveeast 12
+	$higgins5_move2 movenorth 128
+	$higgins5_move2 waitmove
+
+	$higgins5_move2 time 15
+	$higgins5_move2 rotateydown 11
+	$higgins5_move2 movenorth 1424
+	$higgins5_move2 moveeast 160
+	$higgins5_move2 waitmove
+
+	$higgins5_move2 time 7
+	$higgins5_move2 rotateyup 11
+	$higgins5_move2 movenorth 400
+	$higgins5_move2 moveeast 110
+	$higgins5_move2 waitmove
+
+	$higgins5.stop = 1
+
+	$higgins5_move2 time 6
+	$higgins5_move2 movenorth 250
+	$higgins5_move2 waitmove
+
+	$higgins5 time 2
+	$higgins5 rotatezup 2
+	$higgins5 moveup 8
+	$higgins5 waitmove
+
+	wait 2
+
+	$higgins5_door_origin time .75
+	$higgins5_door_origin rotatezdown 90
+	$higgins5_door_origin move
+
+	//$higgins5_model anim removesoldiers	
+	$higgins5_model anim removeguys
+end
+
+//*****************************
+//*****************************
+//*** higgins boat 6 landing
+higgins6_landing:
+
+	wait 2.5
+
+	$higgins6_move2 time 16
+	$higgins6_move2 rotateydown 24
+	$higgins6_move2 moveeast 512
+	$higgins6_move2 movenorth 1300
+	$higgins6_move2 waitmove
+
+	$higgins6_move2 time 10
+	$higgins6_move2 rotateyup 24
+	$higgins6_move2 moveeast 448
+	$higgins6_move2 movenorth 900
+	$higgins6_move2 waitmove
+
+	$higgins6.stop = 1
+
+	$higgins6_move2 time 8.5
+	$higgins6_move2 movenorth 400
+	$higgins6_move2 waitmove
+
+	$higgins6 time 2
+	$higgins6 rotatezup 2
+	$higgins6 moveup 8
+	$higgins6 waitmove
+
+	wait 2
+
+	$higgins6_door_origin time .75
+	$higgins6_door_origin rotatezdown 90
+	$higgins6_door_origin waitmove
+
+	//$higgins6_model anim removesoldiers
+	$higgins6_model anim removeguys
+
+end
+
+higgins2_blow:
+
+	//println "MAINRIDE: higgins2 blowup thread start"
+
+	wait 6
+
+	//println "MAINRIDE: higgins2 blowup mortar leadin"
+
+	$higgins1_coxswain_spot playsound arty_leadin7
+
+	wait 1.1
+	$higgins2_mortar anim start
+	$higgins2 playsound higgins_explosion
+	$higgins2 playsound higgins_blowup_guys
+	$higgins2_model model "vehicles/higgins_damage.tik"
+
+	$higgins2 playsound snd_step_equipment
+	wait .6
+	$higgins2 playsound snd_step_equipment
+
+	wait 2
+	$higgins2 time 15
+	$higgins2 rotatezup 7
+	$higgins2 movedown 96
+	$higgins2 movenorth 96
+	$higgins2 waitmove
+
+	$higgins2 unbind
+	$higgins2 remove
+	$higgins2_move unbind
+	$higgins2_move remove
+	$higgins2_move2 unbind
+	$higgins2_move2 remove
+	$higgins2_door_origin unbind
+	$higgins2_door_origin remove
+	$higgins2_door_clip unbind
+	$higgins2_door_clip remove
+	$higgins2_spray_left unbind
+	$higgins2_spray_left remove
+	$higgins2_spray_right unbind
+	$higgins2_spray_right remove
+
+end
+
+
+
+
+//*****************************
+//*****************************
+//*** higgins runup mortars
+//*****************************
+//******** mortar 1 ***********
+
+higgins_runup_mortar1:
+
+	$higgins_runup_mortar1 waitthread mortar_call
+
+end
+
+
+//*****************************
+//******** mortar 2 ***********
+
+higgins_runup_mortar2:
+
+	$higgins_runup_mortar2 thread mortar_call
+
+end
+
+
+//*****************************
+//******** mortar 3 ***********
+higgins_runup_mortar3:
+
+	$higgins_runup_mortar3 thread mortar_call
+
+end
+
+
+//*****************************
+//******** mortar 4 ***********
+higgins_runup_mortar4:
+
+	$higgins_runup_mortar4 thread mortar_call
+
+end
+
+
+//*****************************
+//******** mortar 5 ***********
+higgins_runup_mortar5:
+
+	$higgins_runup_mortar5 thread mortar_call
+
+end
+
+
+//*****************************
+//******** mortar 6 ***********
+higgins_runup_mortar6:
+
+	$higgins_runup_mortar6 thread mortar_call
+
+end
+
+
+//*****************************************************
+//  mortar call in
+// <mortar> mortar_call [play leadin sound| any value for no]
+//*****************************************************
+mortar_call local.leadin:
+
+	if (local.leadin == NIL)
+	{
+		self playsound arty_leadin wait
+		self waittill sounddone
+	}
+
+	self anim start
+
+	radiusdamage self.origin 1000 192
+
+end
+
+removebarbedwirebit:
+
+	
+	wait 7
+	$bangalore_explosion1b playsound artyleadin7
+	wait 1
+	$bangalore_explosion1a anim start
+	$bangalore_explosion1b anim start
+	$bangalore_explosion1b playsound exp_shingle
+	radiusdamage $bangalore_explosion1a 2000 192 
+	wait .3
+	$bangalore_explosion2a anim start
+	$bangalore_explosion2b anim start
+	$bangalore_explosion2b playsound exp_shingle
+	radiusdamage $bangalore_explosion1a 2000 192 
+	wait .5
+	$bangalore_explosion3a anim start
+	$bangalore_explosion3b anim start
+	$bangalore_explosion3b playsound exp_shingle
+	$bangalore_explosion3a playsound arty_exp_sand
+	$barbwire_fence1 remove
+	$barbwire_fence2 remove
+	$barbwire_fence3 remove
+	$barbwire_fence_collision remove
+	$barbwire_fence_collision_player remove
+end
+
+
+// airspawn over sea
+lifesaver:
+	spawn trigger_multipleall "targetname" "savah"
+	$savah.origin = ( 352 -7440 -494 )
+	$savah setsize ( -300 -300 -500 ) ( 300 300 5 )
+	$savah setthread sortemout
+end
+
+
+// airspawn by bunkers
+lifesaver2:
+	spawn trigger_multipleall "targetname" "savah2"
+	$savah2.origin = ( -1031.92 5127.28 -680.88 )
+	$savah2 setsize ( -300 -300 -500 ) ( 300 300 5 )
+	$savah2 setthread sortemout
+end
+
+
+sortemout:
+	self waittill trigger
+	local.player = parm.other
+	if (local.player.dmteam == "allies")
+	{
+		local.player tele 2096.49 -2273.19 -316.66
+	}
+	else
+	{
+		local.player tele -990.89 4629.72 19.14
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+port1:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( -13 3358 -278 ) // starting point
+local.portlight.scale = 3
+
+local.trig = spawn trigger_use
+local.trig targetname port1 
+local.trig.origin = ( -13 3358 -278 ) // starting point
+local.trig setsize ( -30 -30 0 ) ( 30 30 80 )
+$port1 waittill trigger
+local.player = parm.other
+local.player tele ( 217 3173 -273 ) // destination
+local.portlight remove
+$port1 remove
+wait 0
+thread port1
+end
+
+port2:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( -12 3269 -264 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port2 
+local.trig.origin = ( -12 3269 -264 ) // starting point
+local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
+$port2 waittill trigger
+local.player = parm.other
+local.player tele ( 165 3353 -274 ) // destination
+local.portlight remove
+$port2 remove
+wait 0
+thread port2
+end
+
+port3:
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( 1663 4890 -503 ) // starting point
+local.portlight.scale = 3
+local.portlight ghost
+
+local.trig = spawn trigger_use
+local.trig targetname port3
+local.trig.origin = ( 1663 4890 -503 ) // starting point
+local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
+$port3 waittill trigger
+local.player = parm.other
+local.player tele ( 1484 4873 -388 ) // destination
+local.portlight remove
+$port3 remove
+wait 0
+thread port3
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	spawn info_player_axis "origin" "-809.53 4678.20 -229.82" "angle" "-84" "targetname" "X1"
+	spawn info_player_axis "origin" "-283.42 4807.30 -310.37" "angle" "-108" "targetname" "X2"
+	spawn info_player_axis "origin" "487.16 4859.21 -365.87" "angle" "-177" "targetname" "X3"
+	spawn info_player_axis "origin" "-1078.51 4359.55 -292.51" "angle" "-79" "targetname" "X4"
+	spawn info_player_axis "origin" "-542.50 3598.35 -393.88" "angle" "-124" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-287.07 3540.95 -370.42" "angle" "-118" "targetname" "X6" 
+	spawn info_player_axis "origin" "-233.66 3723.71 -370.20" "angle" "-130" "targetname" "X7"
+	spawn info_player_axis "origin" "2265.49 3688.93 -330.09" "angle" "-128" "targetname" "X8"
+	spawn info_player_axis "origin" "1951.82 3668.73 -328.72" "angle" "-128" "targetname" "X9"
+	spawn info_player_axis "origin" "1616.32 3655.74 -312.48" "angle" "-119" "targetname" "X10"
+
+	spawn info_player_axis "origin" "1381.17 3677.64 -283.88" "angle" "-99" "targetname" "X11"
+	spawn info_player_axis "origin" "3186.31 3698.26 -157.80" "angle" "-115" "targetname" "X12"
+	spawn info_player_axis "origin" "157.93 3752.42 -325.15" "angle" "-90" "targetname" "X13"
+	spawn info_player_axis "origin" "3892.79 2322.38 -410.82" "angle" "-129" "targetname" "X14"
+	spawn info_player_axis "origin" "-1459.21 3537.00 -284.17" "angle" "-49" "targetname" "X15"
+
+
+	spawn info_player_allied "origin" "$higgins1_playerspot" "angle" "90" "targetname" "A1"
+	spawn info_player_allied "origin" "$higgins1_ranger1_spot" "angle" "170" "targetname" "A2"
+	spawn info_player_allied "origin" "$higgins1_ranger2_spot" "angle" "178" "targetname" "A3"
+	spawn info_player_allied "origin" "$higgins1_ranger6_spot" "angle" "-165" "targetname" "A4"
+	spawn info_player_allied "origin" "$higgins1_ranger7_spot" "angle" "-138" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "$higgins1_ranger5_spot" "angle" "-105" "targetname" "A6"
+	spawn info_player_allied "origin" "-673.34 -1983.54 -575.88" "angle" "74" "targetname" "A7"
+	spawn info_player_allied "origin" "-1040.87 5135.13 -255.88" "angle" "94" "targetname" "A8"
+	spawn info_player_allied "origin" "69.74 -1815.54 -575.88" "angle" "81" "targetname" "A9"
+	spawn info_player_allied "origin" "491.76 -1950.57 -575.88" "angle" "96" "targetname" "A10"
+
+	spawn info_player_allied "origin" "693.63 -1972.53 -575.88" "angle" "113" "targetname" "A11"
+	spawn info_player_allied "origin" "1071.73 -1935.21 -575.88" "angle" "97" "targetname" "A12"
+	spawn info_player_allied "origin" "1207.19 -1953.39 -575.88" "angle" "107" "targetname" "A13"
+	spawn info_player_allied "origin" "-1141.15 -1846.74 -575.88" "angle" "71" "targetname" "A14"
+	spawn info_player_allied "origin" "-1507.60 -2154.49 -575.88" "angle" "58" "targetname" "A15"
+	
+	thread spawnupdater
+
+end
+
+spawnupdater:
+while (1)
+{
+$A1.origin = $higgins1_playerspot.origin + ( 0 0 10 )
+$A2.origin = $higgins1_ranger1_spot.origin + ( 0 0 10 )
+$A3.origin = $higgins1_ranger2_spot.origin + ( 0 0 10 )
+$A4.origin = $higgins1_ranger6_spot.origin + ( 0 0 10 )
+$A5.origin = $higgins1_ranger7_spot.origin + ( 0 0 10 )
+$A6.origin = $higgins1_ranger5_spot.origin + ( 0 0 10 )
+waitframe
+}
+end
+
+ffa_spawns: 
+
+	spawn info_player_deathmatch "origin" "-4011.47 -740.96 -479.56" "angle" "10"
+	spawn info_player_deathmatch "origin" "-2670.53 2846.48 -373.63" "angle" "-58"
+	spawn info_player_deathmatch "origin" "-2189.60 -1006.55 -502.17" "angle" "70"
+	spawn info_player_deathmatch "origin" "-700.90 -1933.75 -575.88" "angle" "59"
+	spawn info_player_deathmatch "origin" "365.76 -2736.88 -575.88" "angle" "101"
+
+	spawn info_player_deathmatch "origin" "1426.48 -2265.21 -575.88" "angle" "79"
+	spawn info_player_deathmatch "origin" "2260.16 -987.20 -500.36" "angle" "92"
+	spawn info_player_deathmatch "origin" "3945.38 444.03 -465.67" "angle" "151"
+	spawn info_player_deathmatch "origin" "4227.58 3370.51 -177.05" "angle" "-126"
+	spawn info_player_deathmatch "origin" "2673.08 3660.29 -299.15" "angle" "-161"
+
+	spawn info_player_deathmatch "origin" "723.16 3450.08 -332.77" "angle" "117"
+	spawn info_player_deathmatch "origin" "1180.48 5058.56 -368.33" "angle" "-116"
+	spawn info_player_deathmatch "origin" "-1134.21 4908.70 272.13" "angle" "-65"
+	spawn info_player_deathmatch "origin" "1702.08 5265.25 272.13" "angle" "-98"
+	spawn info_player_deathmatch "origin" "250.33 553.58 -464.39" "angle" "-116"
+end
+
+enter_trench:
+end
+sequence_11_shelf_run:
+end
+player_sequence_8_right:
+end
+player_sequence_8_center:
+end
+player_sequence_8_left:
+end
+player_sequence_7_center:
+end
+player_sequence_7_right:
+end
+player_sequence_7_left:
+end
+player_sequence_6_right:
+end
+player_sequence_6_left:
+end
+player_sequence_5_right:
+end
+player_sequence_5_center:
+end
+player_sequence_5_left:
+end
+player_sequence_4_right:
+end
+player_sequence_4_center:
+end
+player_sequence_4_left:
+end
+player_sequence_3_right:
+end
+player_sequence_3_left:
+end
+player_sequence_3_center:
+end
+player_sequence_2_right:
+end
+player_sequence_1_center:
+end
+playeritem_bangalore_give:
+end
+bunker_dust_trigger:
+end
+sequence_9_shingle_start:
+end
+mg42_bunker:
+end
+mg42_crater_puzzle_start:
+end
+playerweapon_springfield_give:
+end
+player_sequence_2_center:
+end
+player_sequence_2_left:
+end
+end_level:
+end
+dragging_guys_blow:
+end
+higgins1_opening_sequence:
+end
+spawnrangelinked:
+end
+
