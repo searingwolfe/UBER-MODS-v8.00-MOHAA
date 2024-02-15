@@ -1,0 +1,93 @@
+main:
+
+	if(getcvar("g_ubermods") == "") { setcvar "g_ubermods" "2" }
+	if(getcvar("g_throwingknives") == "") { setcvar "g_throwingknives" "1" }
+
+	thread ubergametype
+	thread ubermods
+	thread throwingknives
+end
+
+ubergametype:
+
+	local.cvar = getcvar("g_ubergametype")
+	while(getcvar("g_ubergametype") == local.cvar) { waitframe }
+
+	if(getcvar("g_ubergametype") == "bb")
+	{
+		println("----- UBER gametype: Base-Builder.")
+		println("g_ubergametype will be changed upon restarting.")
+	}
+	if(getcvar("g_ubergametype") == "cyb")
+	{
+		println("----- UBER gametype: Cyber Attack.")
+		println("g_ubergametype will be changed upon restarting.")
+	}
+	if(getcvar("g_ubergametype") == "snd")
+	{
+		println("----- UBER gametype: Search & Destroy.")
+		println("g_ubergametype will be changed upon restarting.")
+	}
+	if(getcvar("g_ubergametype") == "ft")
+	{
+		println("----- UBER gametype: Freeze Tag.")
+		println("g_ubergametype will be changed upon restarting.")
+	}
+	if(getcvar("g_ubergametype") == "0" || getcvar("g_ubergametype") == "")
+	{
+		if(getcvar("g_gametype") == "1") { println("----- UBER gametype: None. Regular FFA") }
+		if(getcvar("g_gametype") != "1") { println("----- UBER gametype: None. Regular TDM") }
+		println("g_ubergametype will be changed upon restarting.")
+	}
+	thread ubergametype
+end
+
+ubermods:
+
+	waitframe
+	local.cvar = getcvar("g_ubermods")
+	while(getcvar("g_ubermods") == local.cvar) { waitframe }
+
+	if(getcvar("g_ubermods") == "2")
+	{
+		println("----- UBER mods: All enabled.")
+		println("g_ubermods will be changed upon restarting.")
+	}
+	if(getcvar("g_ubermods") == "1")
+	{
+		println("----- UBER mods: No crates or teles, fewer triggers. MP maps.")
+		println("----- UBER mods: crates & teles, but no extra mods. SP maps.")
+		println("g_ubermods will be changed upon restarting.")
+	}
+	if(getcvar("g_ubermods") == "0")
+	{
+		println("----- UBER mods: All disabled.")
+		println("g_ubermods will be changed upon restarting.")
+	}
+	if(getcvar("g_ubermods") == "")
+	{
+		setcvar "g_ubermods" "0"
+		println("----- UBER mods: All disabled.")
+		println("g_ubermods will be changed upon restarting.")
+	}
+	thread ubermods
+end
+
+throwingknives:
+
+	waitframe
+	local.cvar = getcvar("g_throwingknives")
+	while(getcvar("g_throwingknives") == local.cvar) { waitframe }
+
+	if(getcvar("g_throwingknives") == "1")
+	{
+		println("----- UBER throwing knives: Enabled.")
+		println("g_throwingknives will be changed upon restarting.")
+	}
+	if(getcvar("g_throwingknives") == "0")
+	{
+		println("----- UBER throwing knives: Disabled.")
+		println("g_throwingknives will be changed upon restarting.")
+	}
+	thread throwingknives
+end

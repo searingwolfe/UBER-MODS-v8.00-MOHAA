@@ -1,0 +1,72 @@
+// "entities 1" = wait 4 seconds to print # of entities & remaining entities until maxentities (1024) is reached.
+// "entities 2" = print all entities & their targetnames (or NULL) from 1 to maxentities.
+// "entities 3" = print all entities & their targetnames, but print slower.
+// "entities 4" = print only non-NULL entities ($player entities do not print for "entities" 4, 5, 6, 7).
+// "entities 5" = print only non-NULL entities that have targetnames.
+// "entities 6" = print only non-NULL entities that do not have targetnames (targetnames = "").
+// "entities 7" = print only non-NULL entities, and print their classnames.
+
+main:
+
+	while(int(getcvar("entities")) != 1 && int(getcvar("entities")) != 2 && int(getcvar("entities")) != 3 && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7) { waitframe }
+
+	local.maxclients = int(getcvar(sv_maxclients))
+	local.nullent = 0
+	local.j = 0
+	
+	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
+	{
+		if(local.i % 14 == 0 || int(getcvar("entities")) == 3) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
+
+		if(int(getcvar("entities")) != 1 && int(getcvar("entities")) != 2 && int(getcvar("entities")) != 3 && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7) { break }
+
+		local.entity = getentity(local.i) // $player[1] = entity 0		
+		if(local.i == 0) { println("----- Note: This can only count up to 869 entities (0 to 868).") }
+		if(local.i == 0) { println("----- Counting entities. Please wait...") }
+
+		if(int(getcvar("entities")) == 1 && local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
+		if(int(getcvar("entities")) == 2 || int(getcvar("entities")) == 3 || int(getcvar("entities")) == 4 || int(getcvar("entities")) == 5 || int(getcvar("entities")) == 6 || int(getcvar("entities")) == 7)
+		{
+			if(local.i < local.maxclients && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7)
+			{
+				if(local.entity == NULL) { println("$player[" + (local.i + 1) + "] = NULL"); local.j++ }
+				if(local.entity != NULL) { println("$player[" + (local.i + 1) + "] = " + (netname $player[local.i + 1 - local.j])) }
+			}
+			if(local.i >= local.maxclients)
+			{
+				if(local.entity == NULL)
+				{
+					if(int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7) { println(local.i + ": NULL") }
+					local.nullent++
+				}
+				if(local.entity != NULL)
+				{
+					if((int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6) || (int(getcvar("entities")) == 5 && local.entity.targetname != "") || (int(getcvar("entities")) == 6 && local.entity.targetname == ""))
+					{
+						if(int(getcvar("entities")) != 7) { println(local.i + ": " + local.entity) }
+						if(int(getcvar("entities")) == 7) { println(local.i + ": " + local.entity.classname) }
+					}
+				}
+			}
+		}
+	}
+	if(int(getcvar("entities")) != 0) { setcvar "entities" "0" }
+	if(local.i < 868)
+	{
+		println("----- Counting was stopped.")
+		println("----- Entities counted in map: " + (1024 - local.nullent - (1024 - local.i)) + " / 1024")
+		thread main
+		end
+	}
+	if(local.entity == NULL) // if entity 868 = NULL
+	{
+		println("----- Entities in map: " + (1024 - local.nullent - 155) + " / 1024")
+		println("----- Entities remaining: " + (local.nullent + 155))
+	}
+	if(local.entity != NULL)
+	{
+		println("----- Entities in map: " + "more than 869" + " / 1024")
+		println("----- Entities remaining: less than 155 entities.")
+	}		
+	thread main
+end

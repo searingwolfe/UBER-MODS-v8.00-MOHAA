@@ -1,0 +1,27 @@
+main: // findmodel.scr. Run "exec global/findmodel.scr" in any map script to use the "findmodel [models/...tik]" cvar.
+
+	while(string(getcvar("findmodel")) == "") { waitframe }
+	local.model = string(getcvar("findmodel"))
+	local.entcount = 0
+
+	if(local.model[0] != "m" && local.model[1] != "o" && local.model[2] != "d" && local.model[3] != "e" && local.model[4] != "l" && local.model[5] != "s")
+	{
+		local.model = "models/" + local.model
+	}
+	
+	for(local.i = 0; local.i <= 868; local.i++)
+	{
+		if(local.i % 14 == 0) { waitframe }
+
+		local.entity = getentity(local.i) // $player[1] = entity 0		
+		if(local.i == 0) { println("----- Note: This can only count up to 869 entities (0 to 868).") }
+		if(local.i == 0) { println("----- Counting entities. Please wait...") }
+
+		if(local.entity != NULL && local.entity.model == local.model) { println(local.i + ": " + local.entity.targetname); local.entcount++ }
+	}
+	if(local.entcount == 0) { println("----- ERROR. There are no entities with the model: " + local.model) }
+	if(local.entcount > 0) { println("----- " + local.model + " entities found: " + local.entcount) }
+
+	if(local.classname != "") { setcvar "findmodel" "" }
+  	thread main
+end

@@ -1,0 +1,38 @@
+main:
+
+	while(int(getcvar("track")) != 1 && int(getcvar("track")) != 2) { waitframe }
+	println("----- Coords & angle tracking for all players ENABLED." )
+
+  	while((int(getcvar("track")) == 1 || int(getcvar("track")) == 2) && $player.size < 1) { waitframe }
+	if($player.size >= 1) { $player iprint ("----- Coords & angle tracking for all players ENABLED.") }
+
+	local.w = 0
+  	while((int(getcvar("track")) == 1 || int(getcvar("track")) == 2) && $player.size >= 1)
+  	{
+		wait 0.5
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			wait (0.50 + local.w)
+			if(local.i <= $player.size && isalive $player[local.i]) 
+			{
+				local.tempstr = "( "
+				local.tempstr = local.tempstr + string(int($player[local.i].origin[0])) + " " 
+				local.tempstr = local.tempstr + string(int($player[local.i].origin[1])) + " "
+				local.tempstr = local.tempstr + string(int($player[local.i].origin[2])) + " ) "
+
+				local.angle = int($player[local.i].angles[1])
+				if(local.angle > 180) { local.angle = local.angle - 360 }
+				local.tempstr = local.tempstr + string(local.angle)
+
+				$player[local.i] iprint local.tempstr
+				
+				if(int(getcvar("track")) == 2) { local.w = 1.25; println("----- $player[" + local.i + "]: " + local.tempstr) }
+				wait (0.50 + local.w)
+			}
+		}
+ 	}
+	if(int(getcvar("track")) != 0) { setcvar "track" "0" }
+	println("----- Coords & angle tracking DISABLED." )
+	if($player.size >= 1) { $player iprint ("----- Coords & angle tracking DISABLED.") }
+  	thread main
+end

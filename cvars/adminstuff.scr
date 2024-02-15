@@ -1,0 +1,836 @@
+main:
+
+	if(level.check_player_IPs != 1) { thread IP_addresses }
+	level.check_player_IPs = 1
+
+	thread samename_fix
+
+	setcvar "votekick" "0"
+	thread votekick
+
+	thread hacker_kill
+	thread hacker_takeall
+	thread spectator
+	setcvar "hacker_kill" "0"
+	setcvar "hacker_takeall" "0"
+	setcvar "spectator" "0"
+
+	thread anti_hacks
+
+	thread coord2
+
+	thread noclip2
+	thread wuss2
+
+	thread nodamage
+	thread takedamage
+	thread show2
+	thread hide2
+
+	thread addkills
+	thread adddeaths
+
+	local.result = registerev connected cvars/adminstuff.scr::check_player_stufftexts
+end
+
+////////////////////////////////////////////////////////////////////////
+
+samename_fix:
+
+	local.admin_IPs = makeArray	// do not include :port extensions
+		10.1.10.250 		// LAN ip admins
+		10.1.10.251
+		73.196.169.239 	// not-LAN ip admins
+		// add
+		// more
+		// IPs
+		// here
+	endArray
+
+	while($player.size < 2) { waitframe }
+	while($player.size >= 2)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			for(local.p = 1; local.p <= local.admin_IPs.size; local.p++)
+			{
+				if($player[local.i].IP_address_init == local.admin_IPs[local.p][1] || $player[local.i] isadmin == 1)
+				{
+					$player[local.i].admin_name_priority = 1
+				}
+			}
+
+			for(local.j = 1; local.j <= $player.size; local.j++)
+			{
+				if(local.i != local.j && netname $player[local.i] == netname $player[local.j] && $player[local.j].admin_name_priority != 1 && $player[local.j].checking_stufftexts != 1)
+				{
+					local.name = netname $player[local.j]
+					local.name2 = ""
+					local.clientnum = string($player[local.j].entnum + 1)
+
+					if(local.name[local.name.size - 2] != "_" && local.name[local.name.size - 1] != local.clientnum)
+					{
+						$player[local.j] stufftext ("name " + netname $player[local.j] + "_" + local.j)
+						local.name2 = ""
+					}
+					else
+					{
+						for(local.n = 0; local.n < local.name.size - 2; local.n++) { local.name2 += local.name[local.n] }
+						$player[local.j] stufftext ("name " + local.name2)
+						local.name = ""
+					}
+					wait 0.15
+					if(local.j <= $player.size && $player[local.j] != NULL) { $player[local.j] thread cprint local.j local.name local.name2 }
+				}
+			}
+		}
+		wait 0.15 // keeping the loop slow enough so console doesn't print 2 or 3 times.
+	}
+	thread samename_fix
+end
+
+cprint local.i:
+
+	if(self == NULL || self getconnstate == 1 || netname self == local.name || netname self == local.name2) { end }
+
+	if(self.adminstuff_namefix == NIL) { self.adminstuff_namefix = 0 }
+	self.adminstuff_namefix++
+
+	println("----- NAME FIX: $player[" + local.i + "]: " + netname self + ": " + self.adminstuff_namefix)
+	local.attempts = 20
+
+	if(self.adminstuff_namefix > 3) { self iprint ("SAME NAME FIX - Attempts remaining: " + (local.attempts - self.adminstuff_namefix)) 1 }
+	if(self.adminstuff_namefix >= local.attempts)
+	{
+		iprintlnbold("Banning " + netname self + " for changing names to another player's name too many times.")
+		stuffsrv("banip " + self.IP_address_init)
+	}
+end
+
+IP_addresses: // removing the port extension from players' IP addresses
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].IP_address_init == NIL)
+			{ 
+				local.userinfo = string(getip $player[local.i]) // string characters start at [0]
+				local.ip = ""
+				for(local.u = 0; local.u < local.userinfo.size; local.u++) // save only the IP address into local.ip
+				{
+					if(local.userinfo[local.u] == ":") { local.host = 0; break }
+					local.ip += local.userinfo[local.u]
+				}
+				if(local.host != 0) { local.ip = "localhost" }
+				$player[local.i].IP_address_init = local.ip
+			}
+		}
+		waitframe
+	}
+	thread IP_addresses
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
+
+	local.player.checking_stufftexts = 1
+	local.name = netname local.player
+	local.n = 0
+
+	while(local.player != NULL && netname local.player == local.name && local.n <= 20)
+	{
+		local.player stufftext ("name " + local.name + "_" + getclientnum local.player)
+		local.n++
+		wait 0.15
+	}
+	if(local.player != NULL)
+	{
+		if(netname local.player == local.name)
+		{
+			iprintlnbold("Auto-kicked " + netname local.player + " for joining with stufftext hacks.")
+			stuffsrv("clientkickr " + (getclientnum local.player) + " \"Auto-kicked for joining with stufftext hacks.\"")
+			end
+		}
+		else { local.player stufftext ("name " + local.name) }
+	}
+
+	wait 0.15
+	if(local.player != NULL)
+	{
+		local.player.checking_stufftexts = 0
+		if(netname local.player != local.name) { local.player stufftext ("name " + local.name) }
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+votekick:
+
+	local.cvar = getcvar("votekick")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(local.cvar == netname $player[local.i] || int(local.cvar) == local.i)
+		{
+			local.on = 1
+			println("----- Admin started VOTE-TO-KICK poll for: $player[" + (local.i) + "] = " + netname $player[local.i] + " IP: " + $player[local.i].IP_address_init)
+			iprintlnbold("*** ADMIN HAS STARTED A VOTE-TO-KICK POLL: ***")
+			iprintlnbold("Kick ***" + netname $player[local.i] + " from the server?")
+			iprintlnbold("USE Key + Lean Left = NO. --- USE Key + Lean Right = YES.")
+			$player[local.i] thread votekick_hud
+			level.votekick_hud = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		else
+		{
+			if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+			if(local.start == 1 && (local.cvar.size <= 0 || local.cvar == "0")) { println("----- VOTE TO KICK: Disabled") }
+		}
+	}
+
+	while(getcvar("votekick") == local.cvar)
+	{
+		if(level.votekick_hud == 1)
+		{
+			local.vote_no = 0
+			local.vote_yes = 0
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].votetokick != 1) { local.vote_no++ }
+				if($player[local.i].votetokick == 1) { local.vote_yes++ }
+			}
+			if(local.vote_yes > local.vote_no) { level.votedtokick = 1 } // add multipliers to local.vote_no if, for example, 2/3 of the players need to vote yes.
+			else { level.votedtokick = 0 }
+		}
+		waitframe
+	}
+
+	level.votekick_hud = 0
+	thread votekick
+end
+
+votekick_hud:
+
+	if(level.votekick_hud == 1) { end }
+	level.votekick_hud = 1
+
+	level.votekick_time = 30 // seconds until the player is kicked
+
+	self thread playervote_hud
+	huddraw_virtualsize 254 1
+	huddraw_alpha 254 1
+	huddraw_font 254 "facfont-10"
+	huddraw_color 254 1 1 1
+	huddraw_rect 254 100 -230 600 20
+	huddraw_string 254 ("*** VOTE TO KICK: " + netname self + "  from the server? --- " + int(level.votekick_time) + " ***")
+	local.name = netname self
+	local.cvar = getcvar("votekick")
+
+	while(level.votekick_hud == 1 && level.votekick_time > 0 && self != NULL)
+	{
+		huddraw_string 254 ("*** VOTE TO KICK: " + netname self + "  from the server? --- " + int(level.votekick_time) + " ***")
+		level.votekick_time--
+		wait 1
+	}
+
+	if(self == NULL && level.votekick_hud == 1)
+	{
+		println("----- VOTE TO KICK: Ended. " + local.name + " already left the server.")
+		huddraw_string 254 ("*** VOTE TO KICK: Ended. " + local.name + " already left the server. ***")
+	}
+	if(level.votekick_hud != 1 && getcvar("votekick") != local.cvar)
+	{
+		println("----- VOTE TO KICK: Ended by the admin.")
+		huddraw_string 254 ("*** VOTE TO KICK: Ended by the admin. ***")
+	}
+	if(self != NULL && getcvar("votekick") == local.cvar)
+	{
+		if(level.votedtokick != 1)
+		{
+			println("----- VOTE TO KICK: Failed.  Not enough votes.")
+			huddraw_string 254 ("*** VOTE TO KICK: Failed.  Not enough votes. ***")
+		}
+		if(level.votedtokick == 1)
+		{
+			println("----- VOTE TO KICK: " + local.name + " was kicked.")
+			huddraw_string 254 ("*** VOTE TO KICK: " + local.name + " was kicked. ***")
+			self iprint ("*** You were vote-kicked from the server. ***") 1
+			wait 1
+			if(self != NULL)
+			{
+				println("----- Banning IP: " + self.IP_address_init)
+				stuffsrv("banip " + self.IP_address_init)
+			}
+		}
+	}
+
+	setcvar "votekick" "0"
+	wait 3
+	huddraw_string 254 ""
+end
+
+playervote_hud:
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		ihuddraw_virtualsize $player[local.i] 255 1
+		ihuddraw_alpha $player[local.i] 255 1
+		ihuddraw_font $player[local.i] 255 "facfont-10"
+		ihuddraw_color $player[local.i] 255 1 0 0
+		ihuddraw_rect $player[local.i] 255 100 -215 600 20
+		ihuddraw_string $player[local.i] 255 ("Your Vote: --- NO ---")
+		$player[local.i].votetokick = 0
+	}
+	while(level.votekick_hud == 1 && level.votekick_time > 0 && self != NULL)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].leanleftheld == 1 && $player[local.i].useheld == 1 && $player[local.i].votetokick == 1)
+			{
+				ihuddraw_string $player[local.i] 255 ("Your Vote: --- NO ---")
+				ihuddraw_color $player[local.i] 255 1 0 0
+				$player[local.i].votetokick = 0
+			}
+			if($player[local.i].leanrightheld == 1 && $player[local.i].useheld == 1 && $player[local.i].votetokick != 1)
+			{
+				ihuddraw_string $player[local.i] 255 ("Your Vote: --- YES ---")
+				ihuddraw_color $player[local.i] 255 0 1 0
+				$player[local.i].votetokick = 1
+			}
+		}
+		wait 1
+	}
+	huddraw_string 255 "" // works for all players
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+hacker_kill local.start:
+
+	local.cvar = getcvar("hacker_kill")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(local.cvar == netname $player[local.i] || int(local.cvar) == local.i)
+		{
+			local.on = 1
+			println("----- Killing " + netname $player[local.i] + " for HACKING!")
+			iprintlnbold("Killing " + netname $player[local.i] + " for HACKING!")
+			$player[local.i] thread hacker_leftgame
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		else
+		{
+			if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+			if(local.start == 1 && (local.cvar.size <= 0 || local.cvar == "0")) { println("----- Hacker spam-killing: Disabled") } // if hacker_kill "" or hacker_kill 0 into console, then turn off spam-killing
+		}
+	}
+
+	while(getcvar("hacker_kill") == local.cvar)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(local.cvar == netname $player[local.i] || int(local.cvar) == local.i) // do stuff to the hacker in here
+			{
+				if(isalive $player[local.i])
+				{
+					killent $player[local.i].entnum
+					$player[local.i] iprint "You are being killed for HACKING!"
+				}
+			}
+		}
+		waitframe
+	}
+	thread hacker_kill 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+hacker_takeall local.start:
+
+	local.cvar = getcvar("hacker_takeall")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(local.cvar == netname $player[local.i] || int(local.cvar) == local.i)
+		{
+			local.on = 1
+			println("----- Taking all " + netname $player[local.i] + "'s weapons for HACKING!")
+			iprintlnbold("Taking all " + netname $player[local.i] + "'s weapons for HACKING!")
+			$player[local.i] thread hacker_leftgame
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		else
+		{
+			if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+			if(local.start == 1 && (local.cvar.size <= 0 || local.cvar == "0")) { println("----- Hacker spam-takeall: Disabled") } // if hacker_takeall "" or hacker_takeall 0 into console, then turn off spam-weapon-taking
+		}
+	}
+
+	while(getcvar("hacker_takeall") == local.cvar)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(local.cvar == netname $player[local.i] || int(local.cvar) == local.i) // do stuff to the hacker in here
+			{
+				if(isalive $player[local.i] && $player[local.i].inventory.size > 0)
+				{
+					$player[local.i] takeall
+					$player[local.i] iprint "Your weapons are being taken for HACKING!"
+				}
+			}
+		}
+		waitframe
+	}
+	thread hacker_takeall 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+spectator local.start:
+
+	local.cvar = getcvar("spectator")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(local.cvar == netname $player[local.i] || int(local.cvar) == local.i)
+		{
+			local.on = 1
+			println("----- Forcing " + netname $player[local.i] + " into spectator.")
+			$player[local.i] thread hacker_leftgame
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		else
+		{
+			if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+			if(local.start == 1 && (local.cvar.size <= 0 || local.cvar == "0")) { println("----- Force-spectate: Disabled") } // if spectator "" or spectator 0 into console, then turn off force-spectate
+		}
+	}
+
+	while(getcvar("spectator") == local.cvar)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(local.cvar == netname $player[local.i] || int(local.cvar) == local.i) // do stuff in here
+			{
+				if($player[local.i].dmteam != "spectator")
+				{
+					$player[local.i] spectator
+					println("----- Moving $player[" + local.i + "] to spectator.")
+				}
+			}
+		}
+		waitframe
+	}
+	thread spectator 1
+end
+
+hacker_leftgame:
+
+	if(self.adminstuff_hacker == 1) { end }
+	self.adminstuff_hacker = 1
+
+	while(self != NULL && (getcvar("hacker_kill") != "0" || getcvar("hacker_takeall") != "0" || getcvar("spectator") != "0")) { waitframe }
+
+	setcvar "hacker_kill" "0"
+	setcvar "hacker_takeall" "0"
+	setcvar "spectator" "0"
+
+	if(self != NULL) { self.adminstuff_hacker = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks" cvar phrases, auto-kick them for joining with preloaded hacks
+
+	local.hacks = makeArray // add more if needed
+		te_dietouch
+		f0rc3m0d3l
+		ib_wallhack
+		ib_doshoot
+		ib_doaim
+		ib_esp
+		ib_hud
+		dis4_chams
+		r_picmap
+		r_p1cm1p
+		r_p1cmap
+		as_forcemodel
+		cg_3rd_perzon
+		cg_forcefucka
+		xx_forcemodel
+		xx_3rd_person
+		e_Zoom
+		e_Chams
+		e_WESP
+		e_Glow
+		e_NoFog
+		e_TriggerBot
+		e_WireChams
+		e_Tr
+		doaim
+		aimsetting
+		wallhack
+		chams
+		wb_
+		cr_
+	endArray
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			for(local.c = 0; local.c < $player[local.i].userinfo.size; local.c++)
+			{
+				for(local.h = 1; local.h <= local.hacks.size; local.h++)
+				{
+					if($player[local.i].userinfo[local.c] == local.hacks[local.h][1][0]) // simulate a strstr() function to see if one string exists inside of another.
+					{
+						local.kick = 1
+						for(local.s = 0; local.s < local.hacks[local.h][1].size; local.s++)
+						{
+							if(local.c + local.s >= $player[local.i].userinfo.size || $player[local.i].userinfo[local.c + local.s] != local.hacks[local.h][1][local.s])
+							{
+								local.kick = 0
+								break
+							}
+						}
+					}
+					if(local.kick == 1 && $player[local.i] != NULL)
+					{
+						iprintlnbold("Auto-kicked " + netname $player[local.i] + " for joining with cvar hacks.")
+						stuffsrv("clientkickr " + (local.i - 1) + " \"Auto-kicked for joining with cvar hacks.\"")
+						local.break = 1
+						break
+					}
+				}
+			if(local.break == 1) { break }
+			}			
+		}
+		waitframe
+	}
+	thread anti_hacks
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+coord2:
+
+	while(getcvar("coord2") != "1" && getcvar("coord2") != "entity" && getcvar("coord2") != "trigger" && getcvar("coord2") != "spawn") { waitframe }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.angle = int($player[local.i].angles[1])
+		if(local.angle > 180) { local.angle = local.angle - 360 }
+
+		if(getcvar("coord2") != "spawn")
+		{ 
+			local.tempstr = "( "
+			local.tempstr = local.tempstr + string(int($player[local.i].origin[0])) + " " 
+			local.tempstr = local.tempstr + string(int($player[local.i].origin[1])) + " "
+			local.tempstr = local.tempstr + string(int($player[local.i].origin[2])) + " ) "
+
+			if(getcvar("coord2") == "entity" || getcvar("coord2") == "1")
+			{
+				local.angle = "( 0 " + local.angle + " 0 )"
+				local.tempstr = local.tempstr + string(local.angle)
+			}
+		}
+		else
+		{
+			local.tempstr = "\"" + string($player[local.i].origin[0]) + " " 
+			local.tempstr = local.tempstr + string($player[local.i].origin[1]) + " "
+			local.tempstr = local.tempstr + string($player[local.i].origin[2]) + "\""
+			local.tempstr = local.tempstr + " \"angle\" \"" + local.angle + "\""
+		}
+
+		local.file = fopen "main/cvars/coords.txt" "a+"
+		local.return = fseek local.file 0 2
+		if(getcvar("coord2") == "trigger") { local.result = fputs local.file local.tempstr }
+		else { local.result = fputs local.file (local.tempstr + "\n") }
+		local.result = fclose local.file
+
+		$player[local.i] iprint local.tempstr
+		println("----- $player[" + local.i + "]: " + local.tempstr)
+	}
+	if(getcvar("coord2") != "0") { setcvar "coord2" "0" }
+  	thread coord2
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+noclip2:
+
+	while(getcvar("noclip2") == "0" || getcvar("noclip2") == "") { waitframe }
+
+	local.cvar = getcvar("noclip2")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] noclip
+				println("----- $player[" + local.i + "] noclip2")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be noclipped right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("noclip2") != "0") { setcvar "noclip2" "0" }
+	thread noclip2
+end
+
+wuss2:
+
+	while(getcvar("wuss2") == "0" || getcvar("wuss2") == "") { waitframe }
+
+	local.cvar = getcvar("wuss2")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] wuss
+				println("----- $player[" + local.i + "] wuss2")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be given weapons right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("wuss2") != "0") { setcvar "wuss2" "0" }
+	thread wuss2
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+nodamage:
+
+	while(getcvar("nodamage") == "0" || getcvar("nodamage") == "") { waitframe }
+
+	local.cvar = getcvar("nodamage")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] nodamage
+				println("----- $player[" + local.i + "] nodamage")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot get 'nodamage' right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("nodamage") != "0") { setcvar "nodamage" "0" }
+	thread nodamage
+end
+
+takedamage:
+
+	while(getcvar("takedamage") == "0" || getcvar("takedamage") == "") { waitframe }
+
+	local.cvar = getcvar("takedamage")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] takedamage
+				println("----- $player[" + local.i + "] takedamage")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot get 'takedamage' right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("takedamage") != "0") { setcvar "takedamage" "0" }
+	thread takedamage
+end
+
+////////////////////////////////////////////////////////////////////////
+
+show2:
+
+	while(getcvar("show") == "0" || getcvar("show") == "") { waitframe }
+
+	local.cvar = getcvar("show")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] show
+				println("----- $player[" + local.i + "] show")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be shown right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("show") != "0") { setcvar "show" "0" }
+	thread show2
+end
+
+hide2:
+
+	while(getcvar("hide") == "0" || getcvar("hide") == "") { waitframe }
+
+	local.cvar = getcvar("hide")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] hide
+				println("----- $player[" + local.i + "] hide")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be hidden right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("hide") != "0") { setcvar "hide" "0" }
+	thread hide2
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+addkills:
+
+	while(getcvar("addkills") == "0" || getcvar("addkills") == "") { waitframe }
+
+	local.cvar = getcvar("addkills")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			$player[local.i] addkills 1
+			$player[local.i] iprint ("----- Admin is adding 1 kill to your score.")
+			println("----- Adding 1 kill to $player[" + local.i + "]'s score.")
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("addkills") != "0") { setcvar "addkills" "0" }
+	thread addkills
+end
+
+adddeaths:
+
+	while(getcvar("adddeaths") == "0" || getcvar("adddeaths") == "") { waitframe }
+
+	local.cvar = getcvar("adddeaths")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			$player[local.i] adddeaths 1
+			$player[local.i] iprint ("----- Admin is adding 1 death to your score.")
+			println("----- Adding 1 death to $player[" + local.i + "]'s score.")
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("adddeaths") != "0") { setcvar "adddeaths" "0" }
+	thread adddeaths
+end
