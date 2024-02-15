@@ -1,0 +1,69 @@
+TIKI
+setup
+{
+	scale 0.52			// Set default scale to 16/30.5 since world is in 16 units per foot and model is in cm's
+	path models/vehicles/gmc/
+	skelmodel gmctruck.skd
+	surface gmcwindow shader gmcwindow
+	surface gmc_tred shader gmc_tred
+	surface gmc_hub1 shader gmc_hub
+	surface gmc_hub7 shader gmc_hub
+	surface gmc_hub8 shader gmc_hub
+	surface gmctruck4 shader gmctruck
+	surface gmctruck5 shader gmctruck
+	surface gmctruck6 shader gmctruck
+}
+
+init
+{
+	server
+	{
+		classname drivablevehicle //Animate
+		setsize "-160 -56 0" "160 56 69" //setsize "-60 -40 0" "60 40 128"
+      		seatoffset "60 14.5 -15" // ( +forward -backward, +left -right, +up -down )
+		vehicleWheelCorners "180 112 78" "0 0 -1.5"
+		vehicleinit jeep.tik
+		vehiclespeed 1000
+		vehiclemass 1500 // not used
+		vehicletread 10 // not used
+		vehicleradius 0.33
+		vehiclerollingresistance 0.5 // not used
+		vehicledrag 0.00001
+		vehiclebouncy 0.2
+		vehiclespringy 0.8
+		//vehicleYaw -10 10
+		//vehicleRoll -10 10
+		//vehicleZ -5 10
+		mass 1000
+
+			AnimationSet "opeltruck_"
+			SoundSet "opeltruck_"
+
+			//////////////////////////////////////////
+			// Pitch-Mod Sound for vehicles by speed
+			//
+			// Linearly Interpolates from the minimum pitch when the vehicle is at the minimum speed to 
+			// the maximum pitch when the vehicle is at the maximum speed.
+			//
+			// Speed is in World Units.
+			//
+			//
+			//                 +--------------- Minimum Speed
+			//                 |  +------------ Minimum Pitch
+			//                 |  |
+			//                 |  |      +----- Maximum Speed
+			//                 |  |      |  +-- Maximum Pitch
+			//                 V  V      V  V
+			setsoundparameters 0 0.95   200 1	
+
+	}
+}
+
+animations
+{
+	idle     gmctruck.skc
+}
+
+/*QUAKED vehicle_allied_gmctruck (0.5 .25 0.25) (-32 -32 0) (32 32 128)
+GMC Truck
+*/

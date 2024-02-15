@@ -1,0 +1,66 @@
+TIKI
+setup
+{
+	scale 0.52				// Set default scale to 16/30.5 since world is in 16 units per foot and model is in cm's
+	path models/vehicles/car
+	skelmodel car.skd
+	surface carwindow shader carwindow
+	surface car3 shader car
+	surface car2 shader car
+}
+
+init
+{
+	server
+	{
+		classname drivablevehicle
+		setsize "-115 -40 0" "110 40 100"
+      		seatoffset "-10 17 -50" // ( +forward -backward, +left -right, +up -down )
+		vehicleWheelCorners "136 80 78" "-12 0 -1.5"
+		vehicleinit jeep.tik
+		vehiclespeed 1000
+		vehiclemass 1500 // not used
+		vehicletread 10 // not used
+		vehicleradius 0.33
+		vehiclerollingresistance 0.5 // not used
+		vehicledrag 0.00001
+		vehiclebouncy 0.2
+		vehiclespringy 0.8
+		mass 1000
+
+		AnimationSet "jeep_"
+		SoundSet "jeep_"
+
+
+			//////////////////////////////////////////
+			// Pitch-Mod Sound for vehicles by speed
+			//
+			// Linearly Interpolates from the minimum pitch when the vehicle is at the minimum speed to 
+			// the maximum pitch when the vehicle is at the maximum speed.
+			//
+			// Speed is in World Units.
+			//
+			//
+			//                  +--------------- Minimum Speed
+			//                  |  +------------ Minimum Pitch
+			//                  |  |
+			//                  |  |      +----- Maximum Speed
+			//                  |  |      |  +-- Maximum Pitch
+			//                  V  V      V  V
+			setsoundparameters  0  0.2   200 1.2
+			setvolumeparameters 0  1     200 1.5
+
+	}
+	client
+	{
+	}
+}
+
+animations
+{
+	idle     car.skc
+}
+
+/*QUAKED vehicle_europe_car-grey (0.5 .25 0.25) (-32 -32 0) (32 32 128)
+Grey European Car
+*/
