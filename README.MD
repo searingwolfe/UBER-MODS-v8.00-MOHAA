@@ -66,7 +66,6 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 | exec cvars/playercount.scr      | "players 1" | print to console the # of players in-game (type these into the server's console window). |
 |       | "players 2" | print to console the # of players in-game & their usernames. |
 |       | "players 3" | see which players in $player array are NULL. |
-
 | exec cvars/entitycount.scr      | "entities 1" | wait 4 seconds to print # of entities & remaining entities until maxentities (1024) is reached. |
 |       | "entities 2" | print to console the # of players in-game & their usernames. |
 |       | "entities 3" | print all entities & their targetnames, but print slower. |
@@ -74,7 +73,6 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "entities 5" | print only non-NULL entities that have targetnames. |
 |       | "entities 6" | print only non-NULL entities that do not have targetnames (targetnames = ""). |
 |       | "entities 7" | print only non-NULL entities, and print their classnames. |
-
 | exec cvars/track.scr      | "track 1" | iprint each players' coords & angle to their own screens.  |
 |       | "track 2" | iprint and print to console each players' coords & angles once every 3 seconds. |
 |       | "track 0" | turn off tracking. |
@@ -91,6 +89,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "check_snowball 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
 |       | "check_snowball 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
 |       | "check 0" | make all "check_[trigger]" cvars "0". |
+
 | exec cvars/find.scr      | "entities 3" |  |
 |       | "entities 3" |  |
 |       | "entities 3" |  |
