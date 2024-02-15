@@ -34,14 +34,14 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 
 - basebuild.scr::main (parameters) --->
 
-	build start time in seconds (ex: 800)
-	object limit (ex: 1000)
-	player speed while building (ex: >= 280, 250 is default)
-	take weapons while building (0 for no)
-	fall damage while building (1 for yes)
-	hide 70-sec countdown hud (1 for yes)
-	hide bottom hud text (1 for yes)
-	print object-placed origin, angles, model (1 for yes)
+		build start time in seconds (ex: 800)
+		object limit (ex: 1000)
+		player speed while building (ex: >= 280, 250 is default)
+		take weapons while building (0 for no)
+		fall damage while building (1 for yes)
+		hide 70-sec countdown hud (1 for yes)
+		hide bottom hud text (1 for yes)
+		print object-placed origin, angles, model (1 for yes)
 
 - BASEBUILDER CONSOLE COMMANDS:
 
