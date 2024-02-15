@@ -28,6 +28,59 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 
 #
 
+# In-Game Menu Skin
+
+- This highly modded menu skin (Press "Esc" in-game to open), adds monitor resolution related options and in-game display options, along with some scripting developer-only options. 
+
+- IMPORTANT : If you don't normally type in the console "set rconpassword PWORD" upon starting a server, or if an rconpassword isn't already set yet,
+	- change the rconpassword stuffcommand within zzzIn-game Menu Skin.pk3.
+	- Inside the file, go to the "ui" folder and open "mapswitch.urc" file.
+	- Scroll down a few lines to see "MAPS MENU (sets rconpassword) [Click This First]" and change the rconpassword in the stuffcommand "set rconpassword ...".
+
+- All non-cheat buttons/sliders on outermost menu:
+	- Join Allies, Join Axis, Kill Yourself, Spectator,
+	- Volume (must apply & close when done), Brightness (apply & close), Mouse Speed (apply & close),
+	- Disconnect, Choose Team, Main Menu, Quit Mohaa, Choose Weapon, MP Options,
+	- Toggle FPS, Toggle HUD, MP3 Menu, Lagometer, Change Servers, MAPS Menu,
+	- 1920 x 1080, 3840 x 2160, Fullscreen, Windowed, Disable All, Apply And Close. 
+
+- All developer-only buttons on outermost menu (DO NOT USE THESE ON PUBLIC SERVERS!):
+	- 3rd Person (must apply & close when done), Show Entity Nums (must apply & close when done),
+	- Clay Mode On (r_picmip 10, to see through trees when developing), Clay Mode Off (r_picmip 0), 
+	- Fullbright On, Fullbright Off, Toggle Developer (on/off), Lod Spawnlist.
+	- Make sure cheats = 1 and thereisnomonkey = 1 before using these buttons.
+	- There are 9 empty options next to "3rd Person" as well, in case you wants to add more features to the In-game Menu Skin. For any added options with orange 'X's, you must click "Apply And Close" after selecting them.
+
+- All buttons/sliders within the "MP3 Menu":
+	- Music Volume, Volume General, STOP, and 20 different music buttons.
+	- Clicking any of these, after turning up the Music Volume slider, will play music only for you while also playing MOHAA.
+
+- All buttons within the "MAPS Menu":
+	- "MAPS MENU (sets rconpassword) [Click This First]",
+	- Allow RBM, Allow TDM, Allow OBJ, Allow FFA, and 26 different maps buttons (10 are still empty).
+	- If an rconpassword is not already set, then choosing a map will not work unless you click the [Click This First] button (once set, you won't need to click it again).
+	- The 4 yellow "Allow" buttons change the g_gametype of the server.
+	- These must be clicked before switching a map if you need to change the g_gametype first.
+	- For example: in a TDM match on mohdm1, you cannot switch to obj_team3 without first clicking "Allow OBJ". Sometimes, you may need to click these buttons twice to get MOHAA to switch maps.
+
+#
+
+# Elgan's Admin Pro Menu
+
+- The UBER FFA/TDM also comes with the Admin Pro mod.
+	- A hotkey must be set in MOHAA's Options --> Controls --> Keyboard, and scroll up to see the "Admin Menu" Action above Primary and Secondary Attack. 
+
+- IMPORTANT: Inside the UBER V7.0 FFA TDM.pk3 file,
+	- go to the "Admin_menu" folder and open "rconpassword.cfg".
+	- Change the rconpassword to your desired server admin password.
+
+- Once opened in-game with the "Admin Menu" hotkey,
+	- go to Client Section --> Controls to see even more options for keyboard controls.
+	- The most useful one, "Editscript" allows the developer to open the map's .scr script in-game, editing and saving it without Alt-Tabbing back and forth between the desktop's Notepad and MOHAA.
+	- For all other features, see Elgan's readme on his Admin Pro menu mod.
+
+#
+
 # Essential UBER BASEBUILDER Info
 
 - exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
@@ -467,59 +520,6 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 		Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new one), health, reset time, new nebel origin, new nebel angles<br>
 		Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60<br>
 		Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
-
-#
-
-# In-Game Menu Skin
-
-- This highly modded menu skin (Press "Esc" in-game to open), adds monitor resolution related options and in-game display options, along with some scripting developer-only options. 
-
-- IMPORTANT : If you don't normally type in the console "set rconpassword PWORD" upon starting a server, or if an rconpassword isn't already set yet,
-	- change the rconpassword stuffcommand within zzzIn-game Menu Skin.pk3.
-	- Inside the file, go to the "ui" folder and open "mapswitch.urc" file.
-	- Scroll down a few lines to see "MAPS MENU (sets rconpassword) [Click This First]" and change the rconpassword in the stuffcommand "set rconpassword ...".
-
-- All non-cheat buttons/sliders on outermost menu:
-	- Join Allies, Join Axis, Kill Yourself, Spectator,
-	- Volume (must apply & close when done), Brightness (apply & close), Mouse Speed (apply & close),
-	- Disconnect, Choose Team, Main Menu, Quit Mohaa, Choose Weapon, MP Options,
-	- Toggle FPS, Toggle HUD, MP3 Menu, Lagometer, Change Servers, MAPS Menu,
-	- 1920 x 1080, 3840 x 2160, Fullscreen, Windowed, Disable All, Apply And Close. 
-
-- All developer-only buttons on outermost menu (DO NOT USE THESE ON PUBLIC SERVERS!):
-	- 3rd Person (must apply & close when done), Show Entity Nums (must apply & close when done),
-	- Clay Mode On (r_picmip 10, to see through trees when developing), Clay Mode Off (r_picmip 0), 
-	- Fullbright On, Fullbright Off, Toggle Developer (on/off), Lod Spawnlist.
-	- Make sure cheats = 1 and thereisnomonkey = 1 before using these buttons.
-	- There are 9 empty options next to "3rd Person" as well, in case you wants to add more features to the In-game Menu Skin. For any added options with orange 'X's, you must click "Apply And Close" after selecting them.
-
-- All buttons/sliders within the "MP3 Menu":
-	- Music Volume, Volume General, STOP, and 20 different music buttons.
-	- Clicking any of these, after turning up the Music Volume slider, will play music only for you while also playing MOHAA.
-
-- All buttons within the "MAPS Menu":
-	- "MAPS MENU (sets rconpassword) [Click This First]",
-	- Allow RBM, Allow TDM, Allow OBJ, Allow FFA, and 26 different maps buttons (10 are still empty).
-	- If an rconpassword is not already set, then choosing a map will not work unless you click the [Click This First] button (once set, you won't need to click it again).
-	- The 4 yellow "Allow" buttons change the g_gametype of the server.
-	- These must be clicked before switching a map if you need to change the g_gametype first.
-	- For example: in a TDM match on mohdm1, you cannot switch to obj_team3 without first clicking "Allow OBJ". Sometimes, you may need to click these buttons twice to get MOHAA to switch maps.
-
-#
-
-# Elgan's Admin Pro Menu
-
-- The UBER FFA/TDM also comes with the Admin Pro mod.
-	- A hotkey must be set in MOHAA's Options --> Controls --> Keyboard, and scroll up to see the "Admin Menu" Action above Primary and Secondary Attack. 
-
-- IMPORTANT: Inside the UBER V7.0 FFA TDM.pk3 file,
-	- go to the "Admin_menu" folder and open "rconpassword.cfg".
-	- Change the rconpassword to your desired server admin password.
-
-- Once opened in-game with the "Admin Menu" hotkey,
-	- go to Client Section --> Controls to see even more options for keyboard controls.
-	- The most useful one, "Editscript" allows the developer to open the map's .scr script in-game, editing and saving it without Alt-Tabbing back and forth between the desktop's Notepad and MOHAA.
-	- For all other features, see Elgan's readme on his Admin Pro menu mod.
 
 #
 
