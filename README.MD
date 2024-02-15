@@ -6,9 +6,9 @@ Uninstall by deleting the .pk3 mod files from the "main" folder.
 
 This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run in a dedicated server.
 
-<><><> <><><>
+#
 
-<><><> Essential CVARS for UBER MODS Servers <><><>
+# Essential CVARS for UBER MODS Servers
 
 This new CVAR allows for switching between the current 3 uber game modes (besides FFA or TDM) before loading a new map.<br>
 Place one of these lines into your server.cfg file, or add one of these lines to an .scr map script (before level waittill prespawn):
