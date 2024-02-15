@@ -428,7 +428,7 @@ Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1.
 
 ---------------
 
@@ -445,11 +445,13 @@ Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M
 The green opeltruck cannot be destroyed or driven (hold USE near driver door for 3 secs to turn on truck, then hold USE for 1 sec to honk horn).
 - Regular opeltruck explodes before parking near the tan building. The panzer_tank_europe's turret looks at the explosion while turning to the left, before rotating the turret back forward, parking, and becoming a 2nd drivable tank.
 
-For m1l1, m1l2a, m1l2b, and training:
+For all modded maps so far:
+- Player spawns added and distributed more widely across the Allies/Axis spawns.
 - Invisible solid walls added to prevent players from hiding inside walls and shooting players through them in common camping spots.
 - Fell-under-map teles added at all areas where players can get trapped or walk under parts of the map.
-- Cyber Attack / Search & Destroy mods added, as well as mini-flak88 flamethrower build-objects added for UBER BASEBUILDER.
-- Most teleporters and objects are removed for UBER BASEBUILDER to minimize maxentities & maximize number of build-objects that can be placed.
+- Cyber Attack and Search & Destroy bombs and bombsites added to the map. Base-Builder objects reorganized. Mini-flak88 flamethrower build-objects added for UBER BASEBUILDER; build-objects reorganized.
+- Most teleporters, objects, and spotlights are removed for UBER BASEBUILDER to minimize maxentities & maximize number of build-objects that can be placed.
+- For some large maps: bombsites in Search & Destroy will move closer to defending team's spawn each time the gamemode changes sides (when "level.changesides" changes).
 
 ---------------
 
@@ -532,11 +534,8 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - All parked planes are destructible. The black 20mm Flak cannon's angles can be moved from 0, 30, 60 degrees by pressing USE near it, or blow it up with 2+ grenades.
 - Teles allow players to walk along the entire Axis-side cliff, or on the Allies-side cliff near the back airstrip-side corner.
 
-- Player spawns added and distributed more widely across the Allies/Axis spawns.
-- Invisible walls block prevent any players or projectiles from going under the map or going behind rock cliffs and shooting through them.
 - Some teles allow players to stand on rock cliffs or platforms on top of large rocks, to shoot players from high above them.
 - Alarm switches in the dead-end halls behind the openable doors each blow up a bangalore outside the door.
-- Cyber Attack and Search & Destroy bombs and bombsites added to the map. Base-Builder Allies/Axis labels fixed in the map script.
 
 ---------------
 
@@ -549,7 +548,6 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - The light house fence has a vehicle teleporter allowing vehicles to go through the fence. Be careful not to drive facing the cliff edge.
 - Any vehicles that accidentally fall off the cliff will be destroyed.
 
-- Elevator script reworked to operate much faster. Teles added above and below the elevator to escape if trapped in the shaft.
 - Minen (entmint) bombs on the top-floor Allies spawn can be blown up with grenades.
 - Looping sounds added to all transformers and the red HVAC machine in Allies spawn; transformers can also be destroyed.
 - Toilets can be flushed in Allies spawn, and the dripping water spigot (bucket near it) can be turned on/off.
@@ -557,11 +555,8 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - Static opeltrucks in the bottom-floor Allies spawn can be turned on/off. While on, hold USE for 1 second to honk horn; hold USE for 1-2 seconds to turn on/off headlights.
 - The lighthouse can be turned on/off with the train switch in Axis spawn.
 
-- Player spawns added and distributed more widely across the Allies/Axis spawns.
-- Invisible walls block prevent any players or projectiles from going under the map or going behind rock cliffs and shooting through them.
+- Elevator script reworked to operate much faster. Teles added above and below the elevator to escape if trapped in the shaft.
 - Some teles allow players to stand on rock cliffs or platforms on top of large rocks, to shoot players from high above them.
-- Cyber Attack and Search & Destroy bombs and bombsites added to the map. Base-Builder objects reorganized.
-- Bombsites in Search & Destroy will move closer to defending team's spawn each time the gamemode changes sides (when "level.changesides" changes).
 
 ---------------
 
@@ -579,8 +574,6 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 - Various looping sounds added inside the buildings for airvents, humming transformers, etc. The paper documents can be blown up with a grenade. 
 - The large generator in the 2nd floor main building can be turned on/off with a nearby electrical switch. 3 radios across the map can also be turned on/off to play static or music.
-- Player spawns added and distributed more widely across the Allies/Axis spawns. Invisible walls block prevent any players or projectiles from going under the map or going behind rock cliffs and shooting through them.
-- Bombsites in Search & Destroy will move closer to defending team's spawn each time the gamemode changes sides (when "level.changesides" changes).
 
 ---------------
 
