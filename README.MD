@@ -151,6 +151,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 The popular Cyber Attack and Search & Destroy game modes from Call of Duty: Modern Warfare 2 (2022) have been ported into MOHAA for 2023.<br>
 The gameplay, rules, and conditions to win/lose in this mod are almost identical to the originals.<br>
 Both game modes use "g_gametype 2" or team deathmatch, but killed players go to team-only spectator instead of respawning.<br>
+
 In Cyber Attack, dead players are frozen like in Freeze Tag and other teammates can revive them (there are no long-range melt lasers in Cyber Attack).<br>
 In Search & Destroy, dead players cannot be revived. Bombsites and an explosive are also on the map, allowing a team to blow up the other team's bombsite to win the round.<br>
 Teams in both game modes have a specified amount of rounds to win (5 by default) before the map ends or until the map time limit runs out. Specific rules below.
