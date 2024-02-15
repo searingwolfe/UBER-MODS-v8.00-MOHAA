@@ -30,7 +30,7 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 
 <><><> Essential UBER BASEBUILDER Info <><><>
 
-exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
+- exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
 
 basebuild.scr::main (parameters) --->
 
