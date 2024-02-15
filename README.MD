@@ -30,28 +30,28 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 
 <><><> Essential UBER BASEBUILDER Info <><><>
 
-	exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
+- exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
 
-	// basebuild.scr::main (parameters) --->
-	// 	build start time in seconds (ex: 800),
-	// 	object limit (ex: 1000),
-	// 	player speed while building (ex: >= 280, 250 is default).
-	// 	take weapons while building (0 for no),
-	// 	fall damage while building (1 for yes),
-	// 	hide 70-sec countdown hud (1 for yes),
-	// 	hide bottom hud text (1 for yes),
-	// 	print object-placed origin, angles, model (1 for yes).
+- basebuild.scr::main (parameters) --->
+	build start time in seconds (ex: 800),
+	object limit (ex: 1000),
+	player speed while building (ex: >= 280, 250 is default).
+	take weapons while building (0 for no),
+	fall damage while building (1 for yes),
+	hide 70-sec countdown hud (1 for yes),
+	hide bottom hud text (1 for yes),
+	print object-placed origin, angles, model (1 for yes).
 
-	// BASEBUILDER CONSOLE COMMANDS:
-	//	alx_basebuild 0 (turn off basebuilding immediately, respawns everyone)
-	//	alx_timeboost 120 (increase build time limit by 120 seconds, or any # of seconds)
-	//	alx_timedown 120 (decrease build time limit by 120 seconds, or any # of seconds)
-	//	alx_objectlimitboost 200 (increase basebuild object limit by 200, or any # of objects)
-	//	alx_objectlimitdown 200 (decrease basebuild object limit by 200, or any # of objects)
+- BASEBUILDER CONSOLE COMMANDS:
+	alx_basebuild 0 (turn off basebuilding immediately, respawns everyone)
+	alx_timeboost 120 (increase build time limit by 120 seconds, or any # of seconds)
+	alx_timedown 120 (decrease build time limit by 120 seconds, or any # of seconds)
+	alx_objectlimitboost 200 (increase basebuild object limit by 200, or any # of objects)
+	alx_objectlimitdown 200 (decrease basebuild object limit by 200, or any # of objects)
 
-	While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.
-	Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.
-	Mini-flak88 objects act as flamethrowers, killing players within 5 hits. 
+While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.
+Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.
+Mini-flak88 objects act as flamethrowers, killing players within 5 hits. 
 
 <><><> <><><>
 
@@ -180,16 +180,16 @@ The "team" parameter only applies to Cyber Attack, since "level.changesides" wil
 Both teams in Cyber Attack can have more than 1 bombsite if desired, but make sure they have at least 1 bombsite. Search & Destroy can also have 1, 2, or more bombsites since team parameter is ignored.
 Run "exec global/cyberattack_searchdestroy.scr" after level waittill spawn and after all cyberattack_searchdestroy.scr threads run. Example below:
 
-	- waitthread global/cyberattack_searchdestroy.scr::bombsite ( -1210 485 168 ) -90 axis // team parameters can be removed for search & destroy.
-	- waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1297 2461 672 ) 90 allies
+	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -1210 485 168 ) -90 axis // team parameters can be removed for search & destroy.
+	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1297 2461 672 ) 90 allies
 
 - bomb: Parameters: Allies origin, Allies origin, Axis origin, Axis angle, central origin, central angle. Both Allies and Axis origins/angles are for Search & Destroy only.
 The central origin/angle is for Cyber Attack only. The bomb color is always blue when Allies are planting, and red when Axis are planting in Search & Destroy. Only spawn in one bomb per map.
 If only using Cyber Attack, for example, then don't forget the other parameters (just keep them 0). Examples below:
 
-	- thread global/cyberattack_searchdestroy.scr::bomb ( -153 1445 96 ) 180 ( -153 1445 96 ) 180 ( -153 1445 96 ) -90 	// cyb & snd
-	- thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -153 1445 96 ) -90 			// cyber attack only
-	- thread global/cyberattack_searchdestroy.scr::bomb ( -153 1445 96 ) 180 ( -153 1445 96 ) 180 ( 0 0 0 ) 0 		// search & destroy only only
+	thread global/cyberattack_searchdestroy.scr::bomb ( -153 1445 96 ) 180 ( -153 1445 96 ) 180 ( -153 1445 96 ) -90 	// cyb & snd
+	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -153 1445 96 ) -90 			// cyber attack only
+	thread global/cyberattack_searchdestroy.scr::bomb ( -153 1445 96 ) 180 ( -153 1445 96 ) 180 ( 0 0 0 ) 0 		// search & destroy only only
 
 ---------------
 
@@ -226,96 +226,201 @@ This = 1 by default for Freeze Tag only, unless specified as level.meltrespawn =
 // Example threads for adding the UBER gametypes to a new map script.
 // For adding Freeze Tag UBER, simply run the "cyb" or "snd" thread before "level waittill spawn", and the script will ignore the "bombsite" and "bomb" threads automatically.
 
-cyb:
+	cyb:
 
-level waittill spawn
+	level waittill spawn
 
-	level.round_starttime = 8
-	level.rounds_towin = 6
- 	level.changesides = 0
-	level.keepsamesides = 1
-	level.bombcamera = 1
+		level.round_starttime = 8
+		level.rounds_towin = 6
+ 		level.changesides = 0
+		level.keepsamesides = 1
+		level.bombcamera = 1
 
-  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2492 7021 86 ) 0 axis    // for cyber attack only
-  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2979 -32 -23 ) 0 allies
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2492 7021 86 ) 0 axis    // for cyber attack only
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2979 -32 -23 ) 0 allies
 
-  	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -582 2750 -23 ) 0
+  		thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -582 2750 -23 ) 0
 									
-	exec global/cyberattack_searchdestroy.scr
-end
+		exec global/cyberattack_searchdestroy.scr
+	end
 
-snd:
+	snd:
 
-level waittill spawn
+	level waittill spawn
 
-	level.round_starttime = 8
-	level.rounds_towin = 6
- 	level.changesides = 0
-	level.bombcamera = 1
+		level.round_starttime = 8
+		level.rounds_towin = 6
+ 		level.changesides = 0
+		level.bombcamera = 1
 
-  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -4895 1763 -23 ) -90    // for search & destroy only, team parameter doesn't matter
-  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1056 2268 -23 ) 90
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( -4895 1763 -23 ) -90    // for search & destroy only, team parameter doesn't matter
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1056 2268 -23 ) 90
 
-  	thread global/cyberattack_searchdestroy.scr::bomb ( -1520 -292 41 ) 180 ( -1989 6692 -25 ) 0 ( 0 0 0 ) 0
+  		thread global/cyberattack_searchdestroy.scr::bomb ( -1520 -292 41 ) 180 ( -1989 6692 -25 ) 0 ( 0 0 0 ) 0
 									
-	exec global/cyberattack_searchdestroy.scr
-end
+		exec global/cyberattack_searchdestroy.scr
+	end
 
 ---------------
 
 // When Search & Destroy games changes sides (every 3 rounds), the bombsites' origins do not normally change.
 // This example thread below for "snd" moves both bombsites to new origins each time "level.changesides" changes (so both bombsites are closer to defending team's spawn).
 
-snd:
+	snd:
 
-level waittill spawn
+	level waittill spawn
 
-	level.round_starttime = 8
-	level.rounds_towin = 6
- 	level.changesides = 0
-	level.bombcamera = 1
-	//level.cameradistance = 200 // this can be changed for each "changesides" if a bombsite is inside a small room, so the camera is not inside of a wall
+		level.round_starttime = 8
+		level.rounds_towin = 6
+	 	level.changesides = 0
+		level.bombcamera = 1
+		//level.cameradistance = 200 // this can be changed for each "changesides" if a bombsite is inside a small room, so the camera is not inside of a wall
 
-	if(level.changesides == 0) // allies are planting (axis bombsite origins)
-	{
-  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1556 7363 -31 ) -90		// for search & destroy only, team parameter doesn't matter
-  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 3299 1118 474 ) 180		// make sure to include initial bombsites before the while-loop begins.
-	}
-	if(level.changesides == 1) // xis are planting (allies bombsite origins)
-	{
-  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2454 -2732 452 ) 0
-  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 737 622 489 ) 90
-	}
-
-  	thread global/cyberattack_searchdestroy.scr::bomb ( -2342 -2934 488 ) 90 ( 3389 6515 -63 ) 180 ( 0 0 0 ) 0
-	exec global/cyberattack_searchdestroy.scr // begin the main script
-
-//-----------------------------------------------------------------------------
-
-	local.sides = level.changesides	// when the sides change each 3 rounds, old bombsites are removed and 2 ones are added closer to the defending team's spawn.
-	while(1)
-	{
-		if(level.changesides != local.sides)
+		if(level.changesides == 0) // allies are planting (axis bombsite origins)
 		{
-			waitthread global/cyberattack_searchdestroy.scr::bombsites_remove
-
-			if(level.changesides == 0)
-			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1556 7363 -31 ) -90
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 3299 1118 474 ) 180
-				//level.cameradistance = 150
-			}
-			if(level.changesides == 1)
-			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2454 -2732 452 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 737 622 489 ) 90
-				//level.cameradistance = 200
-			}
-			local.sides = level.changesides
+	  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1556 7363 -31 ) -90		// for search & destroy only, team parameter doesn't matter
+  			waitthread global/cyberattack_searchdestroy.scr::bombsite ( 3299 1118 474 ) 180		// make sure to include initial bombsites before the while-loop begins.
 		}
-		waitframe
-	}
-end
+		if(level.changesides == 1) // xis are planting (allies bombsite origins)
+		{
+  			waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2454 -2732 452 ) 0
+  			waitthread global/cyberattack_searchdestroy.scr::bombsite ( 737 622 489 ) 90
+		}
+
+  		thread global/cyberattack_searchdestroy.scr::bomb ( -2342 -2934 488 ) 90 ( 3389 6515 -63 ) 180 ( 0 0 0 ) 0
+		exec global/cyberattack_searchdestroy.scr // begin the main script
+
+	//-----------------------------------------------------------------------------
+
+		local.sides = level.changesides	// when the sides change each 3 rounds, old bombsites are removed and 2 ones are added closer to the defending team's spawn.
+		while(1)
+		{
+			if(level.changesides != local.sides)
+			{
+				waitthread global/cyberattack_searchdestroy.scr::bombsites_remove
+
+				if(level.changesides == 0)
+				{
+  					waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1556 7363 -31 ) -90
+  					waitthread global/cyberattack_searchdestroy.scr::bombsite ( 3299 1118 474 ) 180
+					//level.cameradistance = 150
+				}
+				if(level.changesides == 1)
+				{
+  					waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2454 -2732 452 ) 0
+  					waitthread global/cyberattack_searchdestroy.scr::bombsite ( 737 622 489 ) 90
+					//level.cameradistance = 200
+				}
+				local.sides = level.changesides
+			}
+			waitframe
+		}
+	end
+
+<><><> <><><>
+
+<><><> Killstreak Rewards <><><>
+
+- Killstreak count increases as a player gains kills without dying. Whenever a player dies or changes teams, their killstreak count reverts to 0 again.
+- Killstreak damage handler ensures that scorepoints are properly given to killstreak owners, or to enemies that destroy the killstreaks and kill other players.
+- Scorepoints are also properly given during chain-reaction explosions, such as a mine destroying another mine before killing an enemy player.
+- If a players' killstreak still exists and that player changes teams or leaves the game, the killstreak is removed immediately.
+
+- 4 killstreaks added, more coming soon: 2 claymores (3 kills), airstrike (5 kills), cluster mine (7 kills), sentry turret (9 kills).
+- To use killstreaks: hold USE(e) + lean left/right to show the killstreak and begin placing.
+- To place killstreaks: hold USE(e) + FIRE(right click) to place down the killstreak.
+
+- Claymores: Lasers point toward enemies. All enemy players (including the claymore-owner, but not his allies) that run too close to a claymore will be killed within 150 degrees from forward.
+If an enemy shoots the claymore, the claymore-owner and his allies standing too close can be killed within all 360 degrees.
+Claymores remain on the map after the player_owner dies, but disappear after the player_owner respawns.
+
+- Sentry Turret: Rotates continuously. The closest enemy player to the turret will be locked-on (within 120 degrees) for 1 second before firing until the enemy player goes out of sight or dies.
+Enemies can destroy the sentry turret with explosions, grenades or rockets (bullets do not deal damage).
+Sentry Turrets stay on the map after the player_owner dies and respawns. These will disappear after 180 seconds if not destroyed.
+
+- Cluster Mine: 5 additional mines fly out from center. Similar to claymores, but without lasers and capable of killing enemies within all 360 degrees. These can also be shot and destroyed.
+Cluster mines stay on the map after the player_owner dies and respawns.
+
+- Airstrike: Mark the center-point location and the direction of the airstrike's bombing run, before launching the airstrike.
+Laser arrows indicate the direction that airstrike planes will follow. Bombs drop from the planes continuously (traveling -8200 to 8200 units from player's origin, 16400 units total).
+Dropped bombs that kill players count as scoreponts and cannot damage teammates (but can kill them if driving vehicles).
+The airplanes can only be shot down by enemy players after shooting them 8+ times. Any crashing planes can kill any players.
+
+---------------
+
+- Place any script examples before "level waittill spawn". Change "kills" parameter as needed (number of kills in a killstreak, without dying or changing teams).
+- Additional level parameters such as "damage", "radius" (radius of damage and distance to trigger explosions), triggering field-of-view in degrees, scale of claymore/mine, 
+velocity of additional mines spawned, bullet damage for sentry turrets, turret lock-on delay in frames, and maximum lock-on distance, can be edited at the top of each killstreak script.
+
+Claymores Parameters: number of kills, number of claymores given (max = 5).
+Claymores Example: exec killstreaks/claymores.scr 3 2
+
+Sentry Turret Parameters: number of kills, time until sentry turret dies.
+Sentry Turret Example: exec killstreaks/sentry_turret.scr 6 90
+
+Cluster Mine Parameters: number of kills, number of additional mines spawned (max = 15).
+Cluster Mine Example: exec killstreaks/cluster_mines.scr 9 5
+
+Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).
+Airstrike Example: exec killstreaks/airstrikes.scr 5 8
+
+<><><> <><><>
+
+<><><> Drivable Vehicles / Usable Statweapons <><><>
+
+- global/playerboat.scr & global/playertank.scr & global/playervehicle.scr.
+- Place any script examples before "level waittill spawn". Change coords & angles as needed.
+
+- Available drivable tanks: kingtank, panzer_tank, panzer_tank_europe. (tigertank & tigertankdsrt cannot be driven, since turret model completely blocks player's screen).
+- Available drivable boats: higginsxtrahull (higgins boats).
+- Available drivable vehicles: bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
+gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
+
+- Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All):
+- 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats.
+
+- For drivable vehicles: Hold FIRE = look behind, Hold USE for 1 second = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
+- For drivable tanks: Press FIRE = shoot turret, Hold USE for 1 second = exit.
+- For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Hold USE for 1 second = exit.
+
+- Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
+- Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
+
+Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time
+Tank Example: exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -680 2788 -257 ) ( 0 270 0 ) 1000 60
+
+Vehicle Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, initial headlights (0 = off, 1 = on), no headlights (1 = keep them off).
+Vehicle Example: exec global/playervehicle.scr jeep vehicles/jeep.tik ( -2541 2297 -255 ) ( 0 40 0 ) 250 400 45 1
+
+Boat Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time.
+Boat Example: exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( -6415 -3016 -380 ) ( 0 173.5 0 ) 250 250 45
+
+---------------
+
+- global/playerflak88.scr & global/playernebelwerfer.scr
+- Place any script examples before "level waittill spawn". Change coords & angles as needed.
+
+- With these two global scripts, players can now get into, rotate, and shoot with the flak88s & nebelwerfers (mainly for Allied Assault).
+- The flak88s shoots one shell before waiting 5 seconds to reload. Player is invisible and cannot be killed unless the flak88 is destroyed.
+
+- The nebelwerfers shoot 6 rockets before waiting 6 seconds to reload. Player is visible and can be shot or killed without destroying the nebelwerfer, or killed after it is destroyed.
+- The nebelwerfers cannot reload until all 6 rockets are fired, and it keeps reloading even if the player leaves.
+- After a specified amount of reset time, both scripts reset the destroyed turrets back to their initial states.
+
+- The flak88s' shells do not count as kills / scorepoints, but nebelwerfer rockets do count as kills (rockets do not kill teammates).
+- Firing the nebelwerfer rockets too close to the nebelwerfer could blow it up and kill the turret player.
+
+- To prevent the turrets from ever resetting, set the reset time to 99999.
+- Ideally, health should be 250, so only two grenades or a direct shotgun blast can destroy the turrets (damage scale below):
+shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage.
+
+Flak88 Parameters: existing flak88 targetname (NIL, if spawning a new one), health, reset time, new flak88 origin, new flak88 angles, remove turret base (0 = no, 1 = yes), turret base angles (if NIL, default = flak88 angles)
+Flak88 Example (a): exec global/playerflak88.scr $flak88_weapon1 250 60
+Flak88 Example (b): exec global/playerflak88.scr NIL 250 60 ( 2150 3700 -253 ) ( 0 0 0 ) 0 ( 0 90 0 )
+
+Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new one), health, reset time, new nebel origin, new nebel angles
+Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60
+Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
 
 <><><> <><><>
 
@@ -492,111 +597,6 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 ---------------
 
 - All singleplayer maps will eventually be modded: M1 and M2 (v7.95), M3 and M4 (v7.97), M5 and M6 + final version edits (v8.00).
-
-<><><> <><><>
-
-<><><> Killstreak Rewards <><><>
-
-- Killstreak count increases as a player gains kills without dying. Whenever a player dies or changes teams, their killstreak count reverts to 0 again.
-- Killstreak damage handler ensures that scorepoints are properly given to killstreak owners, or to enemies that destroy the killstreaks and kill other players.
-- Scorepoints are also properly given during chain-reaction explosions, such as a mine destroying another mine before killing an enemy player.
-- If a players' killstreak still exists and that player changes teams or leaves the game, the killstreak is removed immediately.
-
-- 4 killstreaks added, more coming soon: 2 claymores (3 kills), airstrike (5 kills), cluster mine (7 kills), sentry turret (9 kills).
-- To use killstreaks: hold USE(e) + lean left/right to show the killstreak and begin placing.
-- To place killstreaks: hold USE(e) + FIRE(right click) to place down the killstreak.
-
-- Claymores: Lasers point toward enemies. All enemy players (including the claymore-owner, but not his allies) that run too close to a claymore will be killed within 150 degrees from forward.
-If an enemy shoots the claymore, the claymore-owner and his allies standing too close can be killed within all 360 degrees.
-Claymores remain on the map after the player_owner dies, but disappear after the player_owner respawns.
-
-- Sentry Turret: Rotates continuously. The closest enemy player to the turret will be locked-on (within 120 degrees) for 1 second before firing until the enemy player goes out of sight or dies.
-Enemies can destroy the sentry turret with explosions, grenades or rockets (bullets do not deal damage).
-Sentry Turrets stay on the map after the player_owner dies and respawns. These will disappear after 180 seconds if not destroyed.
-
-- Cluster Mine: 5 additional mines fly out from center. Similar to claymores, but without lasers and capable of killing enemies within all 360 degrees. These can also be shot and destroyed.
-Cluster mines stay on the map after the player_owner dies and respawns.
-
-- Airstrike: Mark the center-point location and the direction of the airstrike's bombing run, before launching the airstrike.
-Laser arrows indicate the direction that airstrike planes will follow. Bombs drop from the planes continuously (traveling -8200 to 8200 units from player's origin, 16400 units total).
-Dropped bombs that kill players count as scoreponts and cannot damage teammates (but can kill them if driving vehicles).
-The airplanes can only be shot down by enemy players after shooting them 8+ times. Any crashing planes can kill any players.
-
----------------
-
-- Place any script examples before "level waittill spawn". Change "kills" parameter as needed (number of kills in a killstreak, without dying or changing teams).
-- Additional level parameters such as "damage", "radius" (radius of damage and distance to trigger explosions), triggering field-of-view in degrees, scale of claymore/mine, 
-velocity of additional mines spawned, bullet damage for sentry turrets, turret lock-on delay in frames, and maximum lock-on distance, can be edited at the top of each killstreak script.
-
-Claymores Parameters: number of kills, number of claymores given (max = 5).
-Claymores Example: exec killstreaks/claymores.scr 3 2
-
-Sentry Turret Parameters: number of kills, time until sentry turret dies.
-Sentry Turret Example: exec killstreaks/sentry_turret.scr 6 90
-
-Cluster Mine Parameters: number of kills, number of additional mines spawned (max = 15).
-Cluster Mine Example: exec killstreaks/cluster_mines.scr 9 5
-
-Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).
-Airstrike Example: exec killstreaks/airstrikes.scr 5 8
-
-<><><> <><><>
-
-<><><> Drivable Vehicles / Usable Statweapons <><><>
-
-- global/playerboat.scr & global/playertank.scr & global/playervehicle.scr.
-- Place any script examples before "level waittill spawn". Change coords & angles as needed.
-
-- Available drivable tanks: kingtank, panzer_tank, panzer_tank_europe. (tigertank & tigertankdsrt cannot be driven, since turret model completely blocks player's screen).
-- Available drivable boats: higginsxtrahull (higgins boats).
-- Available drivable vehicles: bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
-gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
-
-- Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All):
-- 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats.
-
-- For drivable vehicles: Hold FIRE = look behind, Hold USE for 1 second = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
-- For drivable tanks: Press FIRE = shoot turret, Hold USE for 1 second = exit.
-- For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Hold USE for 1 second = exit.
-
-- Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
-- Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
-
-Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time
-Tank Example: exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -680 2788 -257 ) ( 0 270 0 ) 1000 60
-
-Vehicle Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, initial headlights (0 = off, 1 = on), no headlights (1 = keep them off).
-Vehicle Example: exec global/playervehicle.scr jeep vehicles/jeep.tik ( -2541 2297 -255 ) ( 0 40 0 ) 250 400 45 1
-
-Boat Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time.
-Boat Example: exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( -6415 -3016 -380 ) ( 0 173.5 0 ) 250 250 45
-
----------------
-
-- global/playerflak88.scr & global/playernebelwerfer.scr
-- Place any script examples before "level waittill spawn". Change coords & angles as needed.
-
-- With these two global scripts, players can now get into, rotate, and shoot with the flak88s & nebelwerfers (mainly for Allied Assault).
-- The flak88s shoots one shell before waiting 5 seconds to reload. Player is invisible and cannot be killed unless the flak88 is destroyed.
-
-- The nebelwerfers shoot 6 rockets before waiting 6 seconds to reload. Player is visible and can be shot or killed without destroying the nebelwerfer, or killed after it is destroyed.
-- The nebelwerfers cannot reload until all 6 rockets are fired, and it keeps reloading even if the player leaves.
-- After a specified amount of reset time, both scripts reset the destroyed turrets back to their initial states.
-
-- The flak88s' shells do not count as kills / scorepoints, but nebelwerfer rockets do count as kills (rockets do not kill teammates).
-- Firing the nebelwerfer rockets too close to the nebelwerfer could blow it up and kill the turret player.
-
-- To prevent the turrets from ever resetting, set the reset time to 99999.
-- Ideally, health should be 250, so only two grenades or a direct shotgun blast can destroy the turrets (damage scale below):
-shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage.
-
-Flak88 Parameters: existing flak88 targetname (NIL, if spawning a new one), health, reset time, new flak88 origin, new flak88 angles, remove turret base (0 = no, 1 = yes), turret base angles (if NIL, default = flak88 angles)
-Flak88 Example (a): exec global/playerflak88.scr $flak88_weapon1 250 60
-Flak88 Example (b): exec global/playerflak88.scr NIL 250 60 ( 2150 3700 -253 ) ( 0 0 0 ) 0 ( 0 90 0 )
-
-Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new one), health, reset time, new nebel origin, new nebel angles
-Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60
-Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
 
 <><><> <><><>
 
