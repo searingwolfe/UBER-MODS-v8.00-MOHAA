@@ -1,4 +1,4 @@
-A*cat*meow
+*Current Version: 7.93 - Updated: 1/26/2024*
 
 # How To Install / Uninstall
 
