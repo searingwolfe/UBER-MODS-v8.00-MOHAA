@@ -30,20 +30,20 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 
 <><><> Essential UBER BASEBUILDER Info <><><>
 
-- exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
+exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
 
-- basebuild.scr::main (parameters) --->
+basebuild.scr::main (parameters) --->
 
-		build start time in seconds (ex: 800)
-		object limit (ex: 1000)
-		player speed while building (ex: >= 280, 250 is default)
-		take weapons while building (0 for no)
-		fall damage while building (1 for yes)
-		hide 70-sec countdown hud (1 for yes)
-		hide bottom hud text (1 for yes)
-		print object-placed origin, angles, model (1 for yes)
+	build start time in seconds (ex: 800)
+	object limit (ex: 1000)
+	player speed while building (ex: >= 280, 250 is default)
+	take weapons while building (0 for no)
+	fall damage while building (1 for yes)
+	hide 70-sec countdown hud (1 for yes)
+	hide bottom hud text (1 for yes)
+	print object-placed origin, angles, model (1 for yes)
 
-- BASEBUILDER CONSOLE COMMANDS:
+BASEBUILDER CONSOLE COMMANDS:
 
 	alx_basebuild 0 (turn off basebuilding immediately, respawns everyone)
 	alx_timeboost 120 (increase build time limit by 120 seconds, or any # of seconds)
