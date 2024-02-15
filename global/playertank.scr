@@ -1,0 +1,796 @@
+main local.name local.model local.origin local.angles local.health local.resettime local.gotout local.groundtarget:
+
+	if(local.model == NIL) { wait 1; println("----- ERROR playertank.scr: 'model' parameter is missing!"); end }
+	if(local.model[0] != "m" && local.model[1] != "o" && local.model[2] != "d" && local.model[3] != "e" && local.model[4] != "l" && local.model[5] != "s")
+	{
+		local.model = "models/" + local.model
+		if(level.tankscriptmaster[local.model] != 1) { cache local.model }
+	}
+
+	if($(local.name) != NULL) 
+	{
+		waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe } } } }
+		if($(local.name) != NULL)
+		{
+			if(level.tankscriptmaster[local.model] != 1) { wait 1; println("----- ERROR playertank.scr: $" + local.name + " must be removed before spawning a drivable tank.") }
+			end
+		}
+	}
+
+	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.tankscriptmaster[local.model] != 1)) { wait 1; println("----- ERROR playertank.scr: health must be greater than 0."); end }
+	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.tankscriptmaster[local.model] == 1)) { end } // end when in rare cases, a 2nd tank with local.health = 0 could spawn after getting destroyed
+
+	if(local.model == "models/vehicles/kingtank.tik")
+	{
+		local.turretmodel = models/vehicles/kingcannon.tik
+		local.desmodel = models/vehicles/kingtank_all_d.tik
+		if(level.tankscriptmaster[local.model] != 1) { cache models/vehicles/kingcannon.tik }
+	}
+	if(local.model == "models/vehicles/panzer_tank.tik")
+	{
+		local.turretmodel = models/vehicles/panzer_cannon.tik
+		local.desmodel = models/vehicles/panzer_iv_d.tik
+		if(level.tankscriptmaster[local.model] != 1) { cache models/vehicles/panzer_cannon.tik }
+	}
+	if(local.model == "models/vehicles/panzer_tank_europe.tik")
+	{
+		local.turretmodel = models/vehicles/panzer_cannon_europe.tik
+		local.desmodel = models/vehicles/panzer_iv_eud.tik
+		if(level.tankscriptmaster[local.model] != 1) { cache models/vehicles/panzer_cannon_europe.tik }
+	}
+	if(local.model == "models/vehicles/tigertank.tik" || local.model == "models/vehicles/tigertankdsrt.tik")
+	{
+		local.turretmodel = models/vehicles/tigercannon.tik
+		local.desmodel = models/vehicles/tigertank_d.tik
+		if(level.tankscriptmaster[local.model] != 1) { cache models/vehicles/tigercannon.tik }
+	}
+	if(level.tankscriptmaster2 != 1) { cache models/vehicles/jeep_30cal_viewmodel.tik } //{ cache models/vehicles/sdkfz_mg42_viewmodel.tik }
+
+	local.tank = spawn local.model targetname (local.name) // scriptmasters are already added in ubersound.scr
+	local.tank.name = local.name
+	local.tank.origin = local.origin
+	local.tank.originold = local.origin
+	local.tank.angles = local.angles
+	local.tank.turretmodel = local.turretmodel
+	local.tank.desmodel = local.desmodel
+	local.tank.health = local.health
+	//local.tank.vehiclespeed = local.vehiclespeed // tank speed parameter still does not work, since tank's velocity takes forever to fully reach ( 0 0 0 ), even after the tank has stopped
+	local.tank.resettime = local.resettime
+
+	if(local.tank.classname != "VehicleTank") { local.tank remove; wait 1; println("----- ERROR playertank.scr: .tik model is not a VehicleTank."); end }
+
+	if(local.gotout == 1)
+	{
+		if(local.tank.model == "models/vehicles/kingtank.tik") { local.tank playsound king_snd_stop }
+		else { local.tank playsound tank_snd_stop }
+	}
+
+	local.tank thread tankreset local.groundtarget
+	local.tank thread tankdamage
+	local.tank thread tankdeath
+	local.tank thread tanktrigger
+
+	if(level.mef_weaponclasses == NIL) { level.mef_weaponclasses = waitthread global/get_player_weaponclass.scr::setup_weapon_classes } // set up weaponclasses for "weaponfix" thread.
+
+	if(level.tank_initorigin[local.name] == NIL) { level.tank_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
+	if(level.tank_initangles[local.name] == NIL) { level.tank_initangles[local.name] = local.angles }
+
+	if(level.tankscriptmaster[local.tank.model] != 1) // this only runs once
+	{
+		cache local.desmodel
+		cache models/emitters/mortar_higgins.tik
+		cache models/emitters/mortar_dirt_nosound.tik
+		cache models/projectiles/tigercannonshell.tik
+		cache models/fx/fx_cannonsmoke.tik
+		thread scriptmaster local.tank.model
+		level.tankscriptmaster[local.tank.model] = 1
+		level.tankscriptmaster[local.model] = 1
+		level.tankscriptmaster2 = 1
+	}
+
+	if(level.remove_viewmodels != 1) { thread remove_viewmodels }
+	level.remove_viewmodels = 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tankreset local.groundtarget: // tank turret must be reset each time a new tank spawns (after player exits), otherwise turret will not shoot projectiles.
+
+	self fullstop
+	self anim idle // doesn't stop tank treads from moving server-side, only client-side.
+
+	self.gun = self queryturretslotentity 0
+	if(self.gun == NIL || self.gun == NULL) { self spawnturret 0 self.turretmodel }
+	self.gun = self queryturretslotentity 0
+	self.gun notsolid
+	self.gun2 = self queryturretslotentity 1
+	if(self.gun2 != NIL && self.gun2 != NULL)
+	{
+		if(self.gun2.model != "models/vehicles/jeep_30cal.tik")
+		{
+			self.gun2 remove
+			self spawnturret 1 "models/vehicles/jeep_30cal.tik"
+			self.gun2 = self queryturretslotentity 1
+		}
+		self.gun2 notsolid
+		self.gun2 pitchcaps ( -60 35 0 )
+		self.gun2.scale = 0.5
+	}
+	self.gun dmprojectile projectiles/tigercannonshell.tik // keep this before any waitframes, otherwise it won't work
+	
+	if(local.groundtarget == NIL || local.groundtarget == NULL) { wait 1 } // only wait after map initially loads, for turret to get attached to tank after level waittill spawn.
+	local.fwd_vec = angles_toforward self.angles
+	local.groundtarget_gun2 = spawn script_origin
+	local.gun2origin = self gettagposition "turret0"
+	local.groundtarget_gun2.origin = trace (local.gun2origin + local.fwd_vec * 56) (local.gun2origin + local.fwd_vec * 10240) 0
+
+	waitframe // need this for setaimtarget to work properly
+	if(self != NULL)
+	{
+		if(local.groundtarget != NIL && local.groundtarget != NULL)
+		{
+			self.gun turnspeed 9999
+			self.gun setaimtarget local.groundtarget
+		}
+		if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 setaimtarget local.groundtarget_gun2 }
+	}
+
+	waitframe
+	if(self != NULL && self.gun != NIL && self.gun != NULL && local.groundtarget != NIL && local.groundtarget != NULL)
+	{
+		if(self.gun != NIL && self.gun != NULL) { self.gun turnspeed 50 }
+		local.groundtarget remove
+	}
+	local.groundtarget_gun2 remove
+	removeclass Camera // when exiting any drivable tanks, a "Camera" entity is left behind (likely from the VehicleTurretGun); remove this to prevent Camera entities from building up over time.
+end
+
+tanktrigger:
+
+	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
+	local.trig = spawn trigger_use targetname (self.name + "_trig")
+	local.trig.origin = self.origin
+	if(self.model != vehicles/kingtank.tik && self.model != models/vehicles/kingtank.tik) { local.trig setsize ( -100 -100 -5 ) ( 100 100 100 ) }
+	if(self.model == vehicles/kingtank.tik || self.model == models/vehicles/kingtank.tik) { local.trig setsize ( -130 -130 -5 ) ( 130 130 100 ) }
+	local.trig.tank = self
+	local.trig setthread triggered
+
+	while(self != NULL && local.trig != NULL) // sometimes a high-velocity object (non-projectile) pushes the tank away from its trigger.
+	{
+		if(self.origin[0] != local.trig.origin[0] && self.origin[1] != local.trig.origin[1]) { local.trig.origin = self.origin } // keep the tank and its trigger together.
+		waitframe
+	}
+end
+
+triggered:
+
+	self nottriggerable
+	local.player = parm.other
+	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { self triggerable; end }
+	if(local.player.isdog == 1)
+	{
+		local.player iprint ("Dogs cannot drive tanks.") // set other exceptions here
+		self triggerable
+		end
+	}
+	if(self.tank != NULL && (self.tank.turretplayer == NIL || self.tank.turretplayer == NULL))
+	{
+		if(self.tank.driver != NIL && self.tank.driver != NULL && self.tank.gun2 != NIL && self.tank.gun2 != NULL) { self.tank thread turretslot_2nd local.player }
+		if(self.tank.driver == NIL || self.tank.driver == NULL) { self.tank thread playergetin }
+	}
+	self triggerable
+end
+
+playergetin:
+
+	local.player = parm.other
+	local.team = local.player.dmteam
+
+	local.player.mef_weaponclass = thread global/get_player_weaponclass.scr::main local.player // thread instead of waitthread, but mef_weaponclass should still update in time.
+	local.player safeholster 1
+	wait 1
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1) { end }
+	self.driver = local.player
+	self.driver.driving = 1
+	local.driver = self.driver
+
+	self.driver forcelegsstate STAND
+	self.driver hide
+	self.driver nodamage
+	self.driver notsolid
+	self.driver iprint ("*** Hold USE for 1 second to exit the tank.*** ")
+
+	self attachdriverslot 0 self.driver
+	self thread dummyavatar
+	local.groundtarget = spawn script_origin
+
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	{
+		local.holdtime = 0
+		//if(self.velocity != ( 0 0 0 )) { self.velocity = self.velocity + self.forwardvector * self.vehiclespeed } // does not work properly, so speed increase was removed
+
+		local.fwd_vec = angles_toforward self.driver.viewangles
+		local.start = self.driver gettagposition "Bip01 Head"
+		local.range = 10240
+		local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * local.range) 0
+
+		while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.useheld == 1 && self.driver.dead != 1 && level.change_team_score != 1)
+		{
+			if(local.holdtime >= 20) // hold USE for 1 second.
+			{
+				self thread driverreset
+				self thread tankreset local.groundtarget
+				self.driver thread wallstuck_fix
+				self.driver = NIL
+				break
+			}
+			local.holdtime++
+			waitframe
+		}
+		if(self != NULL && isalive self.driver && self.driver.fireheld == 1 && self.firingshell != 1)
+		{
+			self thread fire_tank_sound
+		}
+		waitframe
+	}
+
+	if(self != NULL) // spawn in the new tank and remove the old one.
+	{
+		thread main self.name self.model self.origin self.angles self.health self.resettime 1 local.groundtarget
+
+		if(self.driver != NIL && self.driver != NULL)
+		{
+			if(self.driver.dmteam != local.team) { local.newteam = 1 }
+			self thread driverreset 0 local.newteam level.change_team_score
+			self thread tankreset local.groundtarget
+		}
+		if(self.turretplayer != NIL && self.turretplayer != NULL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer }
+
+		self.driver = NIL // the old tank must be properly removed, otherwise the server will crash if anyone driving the tank leaves the game (becomes NULL).
+		if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 remove }
+		self.gun remove
+		self remove
+	}
+	waitframe
+	if(local.driver != NULL) { local.driver.driving = 0 }
+end
+
+driverreset local.death local.newteam local.changescore:
+
+	if(self.driver == NIL) { end } // if the tank blew up with nobody driving it, end this thread.
+
+	if(local.death != 1) { cueplayer } 				// reattaches camera to player's head
+	local.driver = self.driver
+
+	self detachdriverslot 0 self.driver
+	if(local.changescore != 1) { self.driver thread weaponfix local.newteam } // player's weapon is invisible when they exit the tank. auto-switch their weapons to make them visible again (wait until they're alive)
+	if(local.changescore == 1) { self.driver thread weaponfix2 }
+
+	if(self.driver.dmteam != spectator)
+	{
+		self.driver show
+		self.driver solid
+		self.driver takedamage
+		if(local.death != 1 && local.changescore != 1)
+		{
+			if(local.newteam != 1) { self.driver.origin = self.origin + ( 0 0 200 ) }
+			self.driver.viewangles = ( self.angles[0] self.angles[1] 0 )
+		}
+	}
+	waitframe
+	if(local.driver != NULL) { local.driver.viewangles = ( 0 local.driver.viewangles[1] 0 ) } // make sure player's camera is horizontal (in case they left while tank was on a sloped terrain.
+end
+
+fire_tank_sound:
+
+	if(self.model == "models/vehicles/kingtank.tik")
+	{
+		if(level.mapname != "m5l3") { self playsound king_snd_fire2 } // firing sound
+		if(level.mapname != "m5l2a" && level.mapname != "m5l2b") { self.driver playsound king_snd_fire1 } // reloading sound
+	}
+	else
+	{
+		if(level.mapname != "m3l3" && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3") { self.driver playsound tank_snd_fire }
+		if(level.mapname != "m5l2a" && level.mapname != "m5l2b") { self playsound tank_snd_reload }
+	}
+	self.firingshell = 1
+
+	self.tanksmokecount = 0
+	if(self.tanksmoking != 1) { self thread smokey }
+	wait 5
+	if(self != NULL) { self.firingshell = 0 }
+end
+
+smokey:
+
+	self.tanksmoking = 1
+	local.targetname = self.targetname
+
+	local.smoke = spawn script_model
+	local.smoke model "fx/fx_cannonsmoke.tik"
+	self.gun = self QueryTurretSlotEntity 0
+	local.smoke.origin = self.gun gettagposition "tag_barrel"
+
+	while(self != NULL && self.tanksmokecount < 120)
+	{
+		local.smoke.origin = self.gun gettagposition "tag_barrel"
+		self.tanksmokecount++
+		local.tanksmokecount = self.tanksmokecount
+		waitframe
+	}
+
+	local.c = 0
+	while($(local.targetname) == NULL) // tank is always removed after a player exits the tank, wait for the tank to respawn before continuing smokecount
+	{
+		if(local.c >= 10) // remove the smoke sooner if the tank was destroyed
+		{
+			if(local.smoke != NULL) { local.smoke remove }
+			end
+		}
+		local.c++
+		waitframe
+	}
+
+	$(local.targetname).tanksmoking = 1
+	$(local.targetname).tanksmokecount = local.tanksmokecount
+	$(local.targetname).gun = $(local.targetname) QueryTurretSlotEntity 0
+
+	while($(local.targetname) != NULL && $(local.targetname).gun != NULL && $(local.targetname).tanksmokecount < 120)
+	{
+		local.smoke.origin = $(local.targetname).gun gettagposition "tag_barrel"
+		$(local.targetname).tanksmokecount++
+		waitframe	
+	}
+
+	if(local.smoke != NULL) { local.smoke remove }
+	if($(local.targetname) != NULL) { $(local.targetname).tanksmoking = 0; $(local.targetname).tanksmokecount = 0 }
+end
+
+tankdamage:
+
+	local.c = 0
+	while(self != NULL && self.health > 0)
+	{
+		if(self != NULL)
+		{
+			local.previoushealth = self.health
+			if(local.c > 0) { local.c-- }
+		}
+		waitframe
+		if(self != NULL && local.previoushealth > self.health)
+		{
+			local.c = local.c + 2
+			self playsound damage_tank
+			//if(local.c == 2) { exec global/earthquake.scr .2 3 0 0 } // if tank is getting constantly damaged per frame, stop earthquake from spamming. (removed, since it was still getting annoying)
+		}
+	}
+end
+
+tankdeath:
+
+	self waittill death // when waiting until "death", tank is not NULL yet
+	self playsound explode_tank
+
+	local.destank = spawn script_model
+	local.destank model self.desmodel
+	local.destank.origin = self.origin
+	local.destank.angles = self.angles
+	local.destank.scale = self.scale
+
+	self thread driverreset 1 		// local.death = 1
+	self thread mainreset local.destank	// waiting self.resettime seconds until a new tank is spawned in
+
+	if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
+	self.driver = NIL
+
+	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer } // ensures that the turretplayer is alaways detached after tank dies
+
+	if(self.gun != NIL && self.gun != NULL) { self.gun remove }
+	if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 remove }
+	self remove
+	exec global/earthquake.scr .5 3 0 0
+	radiusdamage local.destank.origin 500 750
+
+	local.boom = spawn script_model
+	local.boom model "models/emitters/mortar_higgins.tik"
+	local.boom.origin = local.destank.origin
+	local.boom.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.boom.scale = 1.5
+	local.boom anim start
+	local.boom notsolid
+
+	local.debris = spawn script_model
+	local.debris model "emitters/mortar_dirt_nosound.tik" 
+	local.debris.origin = local.destank.origin
+	local.debris.scale = 1.0
+	local.debris anim start
+	local.debris notsolid
+	waitframe
+	local.boom remove
+	local.debris remove
+end
+
+mainreset local.destank:
+
+	if(self.resettime == NIL || self.resettime <= 0) { end }
+
+	local.name = self.name
+	local.model = self.model
+	local.turretmodel = self.turretmodel
+	local.desmodel = self.desmodel
+	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
+	local.angles = self.angles
+	local.health = self.max_health
+	local.vehiclespeed = self.vehiclespeed
+	local.resettime = self.resettime
+
+	while(self != NULL) { waitframe }
+	wait local.resettime
+
+	local.destank remove
+	thread main local.name local.model level.tank_initorigin[local.name] level.tank_initangles[local.name] local.health local.resettime
+end
+
+////////////////////////////////////////////////////////////////////////
+
+turretslot_2nd local.player:
+
+	if(local.player == self.driver || local.player.passenger == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+
+	if(local.player.isdog == 1) { local.player iprint ("Dogs cannot use vehicle turrets."); end }
+
+	if(local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
+	{
+		local.player iprint ("An enemy player is driving this vehicle!")
+		end
+	}
+	self.turretplayer = local.player
+	//self.turretplayer hide
+	self.turretplayer.scale = 0.5
+	self.turretplayer.passenger = 1
+	self.turretplayer.remove_viewmodel = 0
+	self unlock
+	self.gun unlock
+	self.gun2 unlock
+	self.gun2 douse local.player
+	self attachturretslot 1 local.player
+	self.gun2 lock
+	self.gun lock
+	self lock
+	self.gun2 show
+
+	local.driver = self.driver
+	local.team = local.player.dmteam
+
+	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1)
+	{
+		if(local.player.fireheld == 1) { self.gun2 playsound tankfire30cal }
+		local.holdtime = 0
+		while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.useheld == 1 && local.player.dead != 1 && level.change_team_score != 1)
+		{
+			if(local.player.fireheld == 1) { self.gun2 playsound tankfire30cal }
+			if(local.holdtime >= 20)
+			{
+				self waitthread turretplayer_reset local.team local.player
+				end
+			}
+			local.origin = self.origin
+			local.holdtime++
+			waitframe
+		}
+		if(self != NULL) { local.origin = self.origin }
+		waitframe
+	}
+	if(self != NULL) { self waitthread turretplayer_reset local.team local.player }
+
+	if(local.player != NULL)
+	{
+		local.player.passenger = 0
+		local.player.remove_viewmodel = 1
+		local.player.scale = 1
+		//local.player show
+	}
+end
+
+turretplayer_reset local.team local.player:
+
+	if(local.player == NIL || local.player == NULL) // if turret player left the game
+	{
+		self lock
+		self.gun lock
+		self.gun2 lock
+		self.turretplayer = NIL // if turret player leaves, then rejoins, he cannot see the vehicle's turretgun, but everyone else can (weird graphics glitch?).
+		end			// for the rejoining player to fix it: enter the turret again, or wait for the vehicle to respawn.
+	}
+
+	local.player.passenger = 0
+	local.player.scale = 1
+	if(local.player.dmteam != "spectator") { local.player show }
+	local.player thread wallstuck_fix
+
+	if(isalive local.player && local.player.dmteam != "spectator")
+	{
+		self unlock
+		self.gun unlock
+		self.gun2 unlock
+		self douse local.player
+		local.player exit
+	}
+	self lock
+	self.gun lock
+	self.gun2 lock
+	self.turretplayer = NIL
+
+	local.PI = 3.14159265359
+	local.degrees = self.angles[1] + 180
+	if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
+	local.radians = local.degrees * (local.PI / 180)
+	local.sin = (sin local.radians) * 100
+	local.cos = (cos local.radians) * 100
+
+	if(local.player.dmteam != local.team && local.player.dmteam != "spectator") { local.player respawn }
+	else { local.player.viewangles = ( self.gun.angles[0] self.gun.angles[1] 0 ) }
+
+	if(local.player.dmteam == local.team) { local.player.origin = self.origin + ( local.cos local.sin 200 ) }
+
+	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver)) { local.player damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+end
+
+remove_viewmodels:
+
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && (local.entity.model == "models/vehicles/jeep_30cal_viewmodel.tik" || local.entity.model == "models/vehicles/sdkfz_mg42_viewmodel.tik"))
+			{
+				for(local.i = 1; local.i <= $player.size; local.i++)
+				{
+					local.dist = vector_length(local.entity.origin - $player[local.i].origin)
+					if(local.dist <= 100 && $player[local.i].remove_viewmodel == 1) { local.entity remove; $player[local.i].remove_viewmodel = 0 }
+				}
+			}
+			waitframe
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+weaponfix local.newteam:
+
+	while(self != NULL && self.dmteam == spectator) { waitframe; local.spectator = 1 } // tank drivers who go to spectator still need their invisible weapons fixed if they join a team again.
+	if(local.spectator == 1)
+	{
+		while(self != NULL && self.inventory.size <= 1) { waitframe } // if spectator joined a team but hasn't chosen a weapon yet (not yet spawned), keep waiting until he does.
+	}
+	if(local.newteam == 1 || local.spectator == 1) { self thread weaponfix2; end } // go to a simpler weaponfix thread if tank driver switched teams or came out of spectator.
+
+	waitframe
+	if(self.dmteam == allies) { self give models/weapons/colt45.tik } // make sure they have a pistol to switch to. switching weaopns makes their guns visible again, so do it automatically.
+	if(self.dmteam == axis) { self give models/weapons/p38.tik }	// wait 0.5 cannot be any shorter in time, otherwise "useweaponclass" will not work (guns still invisible).
+	wait 0.1
+	self stufftext "useweaponclass pistol"
+	wait 0.55
+
+	if(self.mef_weaponclass != NIL) { self stufftext ("useweaponclass " + self.mef_weaponclass) } // if a player entered the tank with his main weapon (mg, smg, rifle, sniper, heavy), switch to main weapon.
+	if(self.mef_weaponclass == NIL)
+	{
+		if(self.dmteam == allies) { self give models/weapons/m2frag_grenade.tik } // if a player entered the tank with a pistol, grenade, or empty-handed,
+		if(self.dmteam == axis) { self give models/weapons/steilhandgranate.tik } // give him a grenade to switch to, after he switches to pistol and waits 0.5 seconds.
+		self stufftext ("useweaponclass grenade")
+	}
+end
+
+weaponfix2:
+
+	self.mef_weaponclass = waitthread global/get_player_weaponclass.scr::main self
+	self stufftext "useweaponclass pistol"
+	wait 0.55
+	self stufftext ("useweaponclass " + self.mef_weaponclass)
+end
+
+////////////////////////////////////////////////////////////////////////
+
+dummyavatar:
+
+	local.avatar = spawn func_beam
+	local.avatar attach self.driver "Bip01 Head"
+	local.avatar.origin = self.driver.origin + ( 0 0 100 )
+	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+	local.avatar minoffset 0.0
+	local.avatar maxoffset 0.0
+	local.avatar color ( 1.0 1.0 1.0 )
+	local.avatar scale 7.0
+	local.avatar life 0
+	if(self.driver.dmteam == "allies") { local.avatar shader ("textures/hud/allies_headicon") }
+	if(self.driver.dmteam == "axis") { local.avatar shader ("textures/hud/axis_headicon") }
+	local.avatar numsegments 1
+	local.avatar alpha 0.80
+	local.avatar activate
+
+	local.team = self.driver.dmteam
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	{
+		local.avatar.origin = self.driver.origin + ( 0 0 100 )
+		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+		waitframe
+	}
+	local.avatar remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+wallstuck_fix:
+
+	local.c = 0
+	local.origin = self.origin
+	local.team = self.dmteam
+
+	if(self.wallstuck_fixing == 1) { end }
+	self.wallstuck_fixing = 1
+
+	while(self != NULL && isalive self && self.dmteam == local.team) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
+	{
+		if(local.c >= 60) // about 3 seconds
+		{
+			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
+			break
+		}
+		local.c++
+		waitframe
+	}
+	if(self != NULL) { self.wallstuck_fixing = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster local.model:
+
+level.mapname = getcvar "mapname"
+local.master = spawn scriptmaster
+
+if(local.model == "models/vehicles/kingtank.tik")
+{
+	local.soundtype = 1
+}
+else { local.soundtype = 2 }
+
+if(level.tankscriptmaster[local.soundtype] != NIL) { end }
+level.tankscriptmaster[local.soundtype] = 1
+
+if(local.soundtype == 1 && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache king_snd_idle sound/vehicle/veh_tank_idle1.wav soundparms 0.5 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_revup sound/vehicle/veh_tank_revup1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_revdown sound/vehicle/veh_tank_revdown1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_shift1 sound/vehicle/veh_tank_shift1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_shift2 sound/vehicle/veh_tank_shift2.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_shift3 sound/vehicle/veh_tank_shift3.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_on sound/vehicle/veh_tank_on1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_start sound/vehicle/veh_tank_on1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_off sound/vehicle/veh_tank_off1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_stop sound/vehicle/veh_tank_off1.wav soundparms 1.5 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_tread_snd_stone sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_tread_snd_wood sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_doorclose sound/mechanics/DoorHatchClose_02.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_vehicle_crash1 sound/mechanics/damage_vehicle_1.wav soundparms 0.5 0.5 0.7 0.5 160 1600 auto loaded maps level.mapname
+	local.master aliascache king_vehicle_crash2 sound/mechanics/damage_vehicle_2.wav soundparms 0.5 0.5 0.7 0.5 160 1600 auto loaded maps level.mapname
+	local.master aliascache king_vehicle_crash3 sound/mechanics/damage_vehicle_3.wav soundparms 0.5 0.5 0.7 0.5 160 1600 auto loaded maps level.mapname
+	local.master aliascache king_vehicle_crash4 sound/mechanics/damage_vehicle_4.wav soundparms 0.5 0.5 0.7 0.5 160 1600 auto loaded maps level.mapname
+	local.master aliascache king_snd_turret_up sound/null.wav soundparms 0.7 0.0 1.3 0.2 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_reload sound/null.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps level.mapname
+}
+if(local.soundtype == 1 && level.mapname != "m5l2a" && level.mapname != "m5l2b")
+{
+	local.master aliascache king_snd_fire1 sound/weapons/fire/TankFire1.wav soundparms 1.5 0.0 1.0 0.0 2000 4000 weapon loaded maps level.mapname
+}
+if(local.soundtype == 1 && level.mapname != "m5l3")
+{
+	local.master aliascache king_snd_fire2 sound/weapons/fire/TankCannonFire1.wav soundparms 1.5 0.0 1.0 0.0 2000 4000 weapon loaded maps level.mapname
+}
+if(local.soundtype == 1)
+{
+	local.master aliascache king_snd_dooropen sound/null.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 2 && level.mapname != "m5l2a" && level.mapname != "m5l2b")
+{
+	local.master aliascache tank_snd_reload sound/weapons/fire/TankFire1.wav soundparms 1.5 0.0 1.0 0.0 800 4000 weapon loaded maps level.mapname
+}
+
+if(local.soundtype == 2 && level.mapname != "m3l3" && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache tank_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache tank_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache tank_tread_snd_wood sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache tank_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache tank_snd_fire1 sound/weapons/fire/TankCannonFire1.wav soundparms 1.5 0.0 1.0 0.0 2000 4000 weapon loaded maps level.mapname
+	local.master aliascache tank_snd_fire2 sound/weapons/fire/Flak88Fire1.wav soundparms 1.5 0.0 1.0 0.0 2000 4000 weapon loaded maps level.mapname
+	local.master aliascache tank_snd_fire3 sound/weapons/fire/Flak88Fire3.wav soundparms 1.5 0.0 1.0 0.0 2000 4000 weapon loaded maps level.mapname
+	local.master aliascache tank_snd_fire4 sound/weapons/fire/Flak88Fire4.wav soundparms 1.5 0.0 1.0 0.0 2000 4000 weapon loaded maps level.mapname
+
+	if(level.mapname != "m1l2b")
+	{
+		local.master alias tank_snd_run sound/vehicle/veh_tank_run1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto streamed maps level.mapname
+		local.master aliascache tank_snd_revup sound/vehicle/veh_tank_revup1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_revdown sound/vehicle/veh_tank_revdown1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_shift1 sound/vehicle/veh_tank_shift1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_shift2 sound/vehicle/veh_tank_shift2.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_shift3 sound/vehicle/veh_tank_shift3.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_on sound/vehicle/veh_tank_on1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_start sound/vehicle/veh_tank_on1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_off sound/vehicle/veh_tank_off1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+		local.master aliascache tank_snd_stop sound/vehicle/veh_tank_off1.wav soundparms 1.0 0.0 1.0 0.0 1000 4000 auto loaded maps level.mapname
+		local.master aliascache tank_tread_snd_stone sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+
+		if(level.mapname != "training")
+		{
+			local.master alias tank_idle_training sound/vehicle/veh_tank_idle1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto streamed maps level.mapname
+			local.master alias tank_snd_idle sound/vehicle/veh_tank_idle1.wav soundparms 0.5 0.0 1.0 0.0 800 4000 auto streamed maps level.mapname
+		}
+	}
+}
+
+if(level.tankscriptmaster2 != 1 && level.mapname != "m3l3" && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache tank_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps level.mapname
+}
+
+if(level.tankscriptmaster2 != 1 && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache king_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps level.mapname
+	local.master aliascache king_snd_run sound/vehicle/veh_tank_run1.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+}
+
+if(level.tankscriptmaster2 != 1 && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache tank_vehicle_crash1 sound/null.wav soundparms 0.7 0.4 1.0 0.5 160 1600 auto loaded maps level.mapname
+	local.master aliascache damage_tank1 sound/null.wav soundparms 0.7 0.4 0.9 0.2 160 1600 auto loaded maps level.mapname
+}
+
+if(level.tankscriptmaster2 != 1 && level.mapname != "m1l3a" && level.mapname != "m1l3b" && level.mapname != "m3l3" && level.mapname != "m4l2" && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3" && level.mapname != "m6l3c")
+{
+	local.master aliascache explode_tank4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 0.9 0.2 0.8 0.2 1500 9000 weapon loaded maps level.mapname
+
+	if(level.mapname != "m4l3" && level.mapname[3] != "/")
+	{
+		local.master aliascache explode_tank3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 0.9 0.2 0.8 0.2 1500 9000 weapon loaded maps level.mapname
+	}
+
+	if(level.mapname != "m1l2b" && level.mapname[3] != "/")
+	{
+		local.master aliascache explode_tank2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 0.9 0.2 0.8 0.2 1500 9000 weapon loaded maps level.mapname
+	}
+
+	if(level.mapname != "m1l2b" && level.mapname != "m4l3" && level.mapname != "m6l1c" && level.mapname != "training")
+	{
+		local.master aliascache explode_tank1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 0.9 0.2 0.8 0.2 1500 9000 weapon loaded maps level.mapname
+	}
+}
+
+if(level.tankscriptmaster2 != 1 && level.mapname == "training" || level.mapname[2] == "/" || level.mapname[3] == "/")
+{
+	local.master aliascache tank_snd_doorclose sound/mechanics/DoorHatchClose_02.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+}
+if(level.tankscriptmaster2 != 1 && level.mapname[2] == "/" || level.mapname[3] == "/")
+{
+	local.master aliascache tank_snd_dooropen sound/mechanics/DoorHatchClose_02.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+}
+
+if(level.tankscriptmaster2 != 1)
+{
+	local.master aliascache tankfire30cal sound/weapons/fire/50CalFire2.wav soundparms 1.05 0.2 0.95 0.1 800 4000 weapon loaded maps level.mapname
+}
+if(level.scriptmaster_sndmove != 1)
+{
+	local.master aliascache snd_move sound/null.wav soundparms 0.4 0.2 0.9 0.2 160 1600 auto loaded maps level.mapname
+}
+level.scriptmaster_sndmove = 1
+level.tankscriptmaster2 = 1
+end

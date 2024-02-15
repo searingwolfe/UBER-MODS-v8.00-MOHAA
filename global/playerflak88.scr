@@ -1,0 +1,354 @@
+main local.turret local.health local.resettime local.origin local.angles local.removebase local.baseangles: 
+
+	if(local.health == NIL || local.health < 0) { local.health = 999999 } // ideal health = 350
+	if(local.resettime == NIL || local.resettime < 0) { local.resettime = 999999 }
+	if(local.baseangles == NIL) { local.baseangles = local.angles }
+
+ 	if(local.turret != NIL && local.turret != NULL) { local.flak88 = $(local.turret) }
+	if(local.turret == NIL || local.turret == NULL)
+	{
+		if(level.flak88scriptmaster != 1) { cache models/statweapons/flak88turret.tik; cache models/statweapons/flak88base.tik }
+		local.flak88 = spawn statweapons/flak88turret.tik
+		local.flak88.targetname = ("playerflak88_" + local.flak88.entnum)
+		if(local.removebase != 1)
+		{
+			local.base = spawn script_model
+			local.base model statweapons/flak88base.tik
+			local.base.origin = local.origin
+			local.base.angles = local.baseangles
+		}
+		local.flak88.origin = local.origin + ( 0 0 56 )
+		local.flak88.angles = local.angles // does not work for VehicleTurretGun classes, but still holds a local.angles value within 1 frame (for fwd_vec)
+	}
+	local.fwd_vec = angles_toforward local.flak88.angles
+	local.init_angles = spawn script_origin		// need this entity to initially point the turret towards local.angles
+	local.init_angles.origin = trace (local.flak88.origin + local.fwd_vec * 56) (local.flak88.origin + local.fwd_vec * 10240) 0
+	local.flak88 setaimtarget local.init_angles
+
+	local.trig = spawn trigger_multiple spawnflags 128
+	local.trig.health = local.health // need this, otherwise trig = NULL
+	local.trig.origin = local.flak88.origin
+	local.trig setsize ( -60 -60 -50 ) ( 60 60 85 )
+	local.trig setthread ImDead
+
+	local.flak88 setplayerusable 0
+	local.flak88.damagemodel = "models/statweapons/flak88_d.tik"
+	local.flak88 pitchCaps ( -60 25 0 )
+	local.flak88.trigshot = local.trig
+	local.flak88.init_angles = local.init_angles
+	local.flak88 thread ResetFlak
+
+	local.trig.flak88 = local.flak88
+	local.trig.health_init = local.health
+	local.trig.resettime_init = local.resettime
+
+	if(level.flak88scriptmaster != 1) // this only runs once
+	{
+		cache models/statweapons/flak88_d.tik
+		cache models/projectiles/tigercannonshell.tik
+		cache models/emitters/mortar_dirt_nosound.tik
+		cache models/emitters/mortar_higgins.tik //models/fx/fx_flak88_explosion.tik
+		cache models/fx/fx_cannonsmoke.tik
+		thread scriptmaster
+		level.flak88scriptmaster = 1
+	}
+end
+
+ResetFlak local.groundtarget:
+
+	local.trig = spawn trigger_use
+	local.trig.origin = self.origin
+	local.trig setsize ( -60 -60 -50 ) ( 60 60 85 )
+	local.trig.flak88 = self
+	local.trig.groundtarget = local.groundtarget // keep the groundtarget so the flak88 (TurretGun class) keeps its angles instead of falling backward like an mg42
+	local.trig setthread playergetin_flak
+
+	self.trigenter = local.trig
+	self.corona = 0
+	self thread healthboost
+	removeclass Camera
+end
+
+healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.trigshot.health
+	while(self != NULL && self.dead != 1 && self.trigshot != NULL && self.trigshot.health > 0)
+	{
+		self.trigshot.health = local.health
+		waitframe
+	}
+end
+
+playergetin_flak:
+
+	local.player = parm.other
+	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { self triggerable; end }
+	if(local.player.isdog == 1)
+	{
+		local.player iprint ("Dogs cannot use flak88s.") // set other exceptions here
+		self triggerable
+		end
+	}
+	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1) { end }
+
+	self nottriggerable
+	if(self.groundtarget != NIL && self.groundtarget != NULL) { self.groundtarget remove }
+
+	self.flak88.fplayer = parm.other
+	local.team = self.flak88.fplayer.dmteam
+
+	if(self.flak88.init_angles != NIL && self.flak88.init_angles != NULL) { self.flak88.init_angles remove }
+	self.flak88 dmprojectile models/projectiles/tigercannonshell.tik
+
+	self.flak88.fplayer forcelegsstate STAND
+	self.flak88.fplayer hide
+	self.flak88.fplayer notsolid
+	self.flak88.fplayer nodamage
+	//self.flak88.fplayer safeholster 1 // must "wait 1" for safeholster to work, crosshair also gets removed
+	self.flak88.fplayer.driving = 1
+	//wait 1
+	self.flak88.fplayer physics_off
+	self.corona = 1
+	self.flak88.fplayer iprint ("*** Hold USE for 1 second to exit the Flak88.*** ")
+	self.flak88 thread dummydriver
+
+	local.groundtarget = spawn script_origin
+	self.flak88 setaimtarget local.groundtarget
+	local.holdtime = 0
+	local.flakangles = 0
+	local.lookangles = 0
+
+	while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.dead != 1 && level.change_team_score != 1)
+	{
+		self.flak88.fplayer.origin = self.flak88.origin + ( -10 0 20 )
+		local.fwd_vec = angles_toforward self.flak88.fplayer.viewangles
+		local.start = self.flak88.fplayer gettagposition "Bip01 Head"
+		local.range = 10240
+		if(self.flak88.fplayer.viewangles != local.lookangles && self.flak88.fplayer.leanleftheld != 1 && self.flak88.fplayer.leanrightheld != 1) // if leaning, player can peek behind him without moving turret
+		{
+			local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * local.range) 0
+			self.flak88 loopsound flak_snd_move
+		}
+		if(self.flak88.angles == local.flakangles) { self.flak88 stoploopsound }
+		local.flakangles = self.flak88.angles
+		local.lookangles = self.flak88.fplayer.viewangles
+
+		if(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.fireheld == 1 && self.flak88.flakfiredelay != 0)
+		{
+			self.flak88.fplayer playsound flak_snd_fire
+			self.flak88 playsound flak_reload
+			self.flak88 anim fire
+			self.flak88 thread reload_flak
+		}
+
+		while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.useheld == 1 && self.flak88.fplayer.dead != 1 && level.change_team_score != 1)
+		{
+			if(local.holdtime >= 10) // hold USE for 1 second
+			{
+				self.flak88 stoploopsound
+				self.flak88.fplayer.origin = self.flak88.origin + ( 0 0 85 )
+				self.flak88.fplayer.viewangles = ( self.flak88.angles[0] self.flak88.angles[1] 0 )
+				self.flak88.fplayer physics_on
+				self.flak88.fplayer show
+				self.flak88.fplayer solid
+				self.flak88.fplayer takedamage
+				//self.flak88.fplayer safeholster 0
+				self.flak88.fplayer.driving = 0
+				self.flak88.fplayer = NIL
+				self.flak88 thread ResetFlak local.groundtarget
+				self remove
+				end
+			}
+			local.holdtime++
+			wait 0.1
+		}
+		waitframe
+	}
+
+	if(local.player != NULL) { local.player.driving = 0 }
+	if(self == NULL && local.player != NIL && local.player != NULL)
+	{
+		local.player takedamage
+		local.player physics_on
+		if(local.player.dmteam == spectator)
+		{
+			local.player.origin = local.player.origin + ( 0 0 85 )
+			local.player.viewangles = ( local.player.angles[0] local.player.angles[1] 0 )
+		}
+		if(local.player.dmteam != spectator)
+		{
+			local.player show
+			local.player solid
+			killent local.player.entnum
+		}
+	}
+	if(self != NULL)
+	{
+		if(self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && (self.flak88.fplayer.dmteam != local.team || level.change_team_score == 1))
+		{
+			if(self.flak88.fplayer.dmteam == spectator)
+			{
+				self.flak88.fplayer.origin = self.flak88.origin + ( 0 0 85 )
+				self.flak88.fplayer.viewangles = ( self.flak88.angles[0] self.flak88.angles[1] 0 )
+			}
+			if(self.flak88.fplayer.dmteam != spectator) { self.flak88.fplayer solid; self.flak88.fplayer show }
+			self.flak88 stoploopsound
+			self.flak88.fplayer physics_on
+			self.flak88.fplayer takedamage
+			self.flak88.fplayer = NIL
+			self.flak88 thread ResetFlak local.groundtarget
+			self remove
+			end
+		}
+		if(self.flak88 != NULL && self.flak88.dead != 1 && (self.flak88.fplayer == NIL || self.flak88.fplayer == NULL))
+		{
+			self.flak88.fplayer = NIL
+			self.flak88 thread ResetFlak local.groundtarget
+			self remove
+			end
+		}
+		if(self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && (self.flak88 == NULL || self.flak88.dead == 1 || !isalive self.flak88.fplayer))
+		{
+			self.flak88 stoploopsound
+			self.flak88.fplayer.origin = self.flak88.fplayer.origin + ( 0 0 85 )
+			self.flak88.fplayer show
+			self.flak88.fplayer solid
+			self.flak88.fplayer takedamage
+			self.flak88.fplayer physics_on
+			
+			if(isalive self.flak88.fplayer)
+			{
+				if(self.flak88.trigshot.killer != NIL && self.flak88.trigshot.killer != NULL) { self.flak88.fplayer damage self.flak88.trigshot.killer 15000 self.flak88.trigshot.killer (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				if(self.flak88.trigshot.killer == NIL || self.flak88.trigshot.killer == NULL) { killent self.flak88.fplayer.entnum }
+			}
+	
+			self.flak88.fplayer = NIL
+			if(self.flak88.dead != 1)
+			{
+				self.flak88 thread ResetFlak local.groundtarget
+			}
+		}
+		self remove
+	}
+end
+
+reload_flak:
+
+	self.flaksmokecount = 0
+	if(self.flaksmoking != 1) { self thread smokey }
+
+	self.flakfiredelay = 0
+	wait 5
+	if(self != NULL) { self.flakfiredelay = 1 }
+end
+
+smokey:
+
+	local.smoke = spawn script_model
+	local.smoke model "fx/fx_cannonsmoke.tik"
+	local.smoke attach self "tag_barrel" 0 ( 0 0 0 )
+
+	while(self != NULL && self.dead != 1 && self.flaksmokecount < 120) { self.flaksmokecount++; waitframe }
+
+	if(local.smoke != NULL) { local.smoke remove }
+	if(self != NULL) { self.flaksmoking = 0; self.flaksmokecount = 0 }
+end
+
+ImDead:
+
+	self nottriggerable
+	self.flak88.trigenter nottriggerable
+	self.killer = parm.other
+	self.flak88 stoploopsound
+	self.flak88 stopsound
+
+	local.turret = self.flak88
+	local.model = self.flak88.model
+	local.health = self.health_init
+	local.resettime = self.resettime_init
+	local.origin = self.flak88.origin
+	local.angles = self.flak88.angles
+
+	local.explode = spawn script_model
+	local.explode model "models/emitters/mortar_higgins.tik" // fx/fx_flak88_explosion.tik
+	local.explode.origin = self.origin + ( 0 0 -56 ) //+ ( 0 0 30 )
+	local.explode.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.explode.scale = 1.0 //1.3
+	local.explode anim start
+	local.explode notsolid
+	
+	local.debris = spawn script_model
+	local.debris model "emitters/mortar_dirt_nosound.tik" 
+	local.debris.origin = self.origin
+	local.debris notsolid
+	local.debris.scale = 0.8
+	local.debris anim start
+
+	local.explode playsound explode_flak88
+	radiusdamage local.explode.origin 500 750
+	exec global/earthquake.scr .35 2 0 0
+	self.flak88.dead = 1
+	self.flak88 hide
+	
+	local.flak88_d = spawn script_model
+	local.flak88_d model self.flak88.damagemodel
+	local.flak88_d.origin = self.flak88.origin
+	local.flak88_d.angles = self.flak88.angles
+	waitframe
+	local.explode remove
+	local.debris remove
+	wait local.resettime
+
+	if(self.flak88.trigenter != NIL && self.flak88.trigenter != NULL) { self.flak88.trigenter remove }
+	self.flak88.model = local.model
+	self.flak88.dead = 0
+	self.flak88 show
+	self.flak88.fplayer = NIL
+	local.flak88_d remove
+	self remove
+	thread main local.turret local.health local.resettime local.origin local.angles 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+dummydriver:
+
+	self attachmodel self.fplayer.model "wheel02" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( -22 -45 9 ) //( +forward -backward, +up -down, +left -right )
+	$("driverdummy_" + self.entnum).angles = ( 0 0 -90 )
+	
+	while(self != NULL && self.fplayer != NIL && self.fplayer != NULL) { waitframe }
+
+	if($("driverdummy_" + self.entnum) != NULL) { $("driverdummy_" + self.entnum) remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster:
+
+level.mapname = getcvar "mapname"
+local.master = spawn scriptmaster
+
+if(level.mapname != "m3l2" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3" && level.nebelscriptmaster != 1)
+{
+	if(level.mapname != "m1l3a" && level.mapname != "m1l3b" && level.mapname != "m1l3c")
+	{
+	local.master aliascache flak_snd_move sound/vehicle/veh_tank_turret1.wav soundparms .9 .2 .9 .2 800 4000 auto loaded maps level.mapname
+	}
+
+	if(level.mapname[2] == "/" || level.mapname == "m2l1" || level.mapname == "m2l2a" || level.mapname == "m2l2b" || level.mapname == "m2l2c" || level.mapname == "m2l3" || level.mapname == "m3l1a" || level.mapname == "m3l1b" || level.mapname == "m4l0" || level.mapname == "m4l1" || level.mapname == "m4l2" || level.mapname == "m4l3")
+	{
+	local.master aliascache explode_flak881 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_flak882 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_flak883 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_flak884 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	}
+}
+if(level.mapname != "m3l2" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache flak_reload sound/weapons/fire/TankFire1.wav soundparms 1.5 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache flak_snd_fire1 sound/weapons/fire/TankCannonFire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache flak_snd_fire2 sound/weapons/fire/Flak88Fire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache flak_snd_fire3 sound/weapons/fire/Flak88Fire3.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache flak_snd_fire4 sound/weapons/fire/Flak88Fire4.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+}
+end

@@ -1,0 +1,391 @@
+main local.origin local.color local.name local.health local.anglestart local.mountwall local.orient local.removeafterdeath local.spotangles_init local.path:
+
+exec global/aliascache_triggersounds.scr spotlight
+
+	if(level.autospot_trigdist == NIL || level.autospot_trigdist <= 0) { level.autospot_trigdist = 550 }
+	if(level.autospot_movespeed == NIL || level.autospot_movespeed <= 0) { level.autospot_movespeed = 2 }
+
+	local.s0 = spawn script_model targetname (local.name)
+	local.s0 model miscobj/searchlightbase.tik
+	local.s0.origin = ( local.origin )
+	local.s0.color = ( local.color )
+	if(local.health <= 0) { local.s0.health = 999999; local.indestructible = 1 }
+	if(local.health > 0) { local.s0.health = local.health }
+	local.s0 notsolid
+	local.s0.removeafterdeath = local.removeafterdeath // if 1, spotlight and base will be gone when health <= 0
+
+	if(local.mountwall != 1 && local.mountwall != 2 && local.mountwall != 3 ) { local.s0.angles = ( 0 local.anglestart 0 ) }
+	if(local.mountwall == 1 ) 
+	{ 
+		if(local.orient != 1) { local.s0.angles = ( local.anglestart 0 90 ) }
+		if(local.orient == 1) { local.s0.angles = ( local.anglestart -90 90 ) }
+	}
+	if(local.mountwall == 2 ) { local.s0.angles = ( 0 local.anglestart 180 ) }
+	if(local.mountwall == 3 ) 
+	{ 
+		if(local.orient != 1) { local.s0.angles = ( local.anglestart 0 -90 ) }
+		if(local.orient == 1) { local.s0.angles = ( local.anglestart -90 -90 ) }
+	}
+
+	thread makespot local.s0 local.mountwall local.name local.indestructible local.orient local.spotangles_init local.path
+end
+
+makespot local.spotlight local.mountwall local.name local.indestructible local.orient local.spotangles_init local.path:
+
+	if(local.spotlight.color == NIL)
+		local.color = ( 1 1 1 )
+	else
+		local.color = local.spotlight.color
+
+	if(local.mountwall != 1 && local.mountwall != 2 && local.mountwall != 3 ) 
+	{ 
+		local.spot = spawn script_model model miscobj/searchlightoff.tik origin (local.spotlight.origin + ( 0 0 32 )) spawnflags 1 
+	}
+	if(local.mountwall == 1) 
+	{ 
+		if(local.orient != 1) { local.spot = spawn script_model model miscobj/searchlightoff.tik origin (local.spotlight.origin + ( 0 -32 0 )) spawnflags 1 } 
+		if(local.orient == 1) { local.spot = spawn script_model model miscobj/searchlightoff.tik origin (local.spotlight.origin + ( -32 0 0 )) spawnflags 1 } 
+	}
+	if(local.mountwall == 2) { local.spot = spawn script_model model miscobj/searchlightoff.tik origin (local.spotlight.origin + ( 0 0 -32 )) spawnflags 1 }
+	if(local.mountwall == 3) 
+	{ 
+		if(local.orient != 1) { local.spot = spawn script_model model miscobj/searchlightoff.tik origin (local.spotlight.origin + ( 0 32 0 )) spawnflags 1 }
+		if(local.orient == 1) { local.spot = spawn script_model model miscobj/searchlightoff.tik origin (local.spotlight.origin + ( 32 0 0 )) spawnflags 1 }
+	}
+
+	local.spot.destroyed = 0
+	if(local.spotangles_init == NIL) { local.spot.angles = local.spotlight.angles + ( 0 180 0 ) }
+	if(local.spotangles_init != NIL && local.spotangles_init[2] != NIL) { local.spot.angles = local.spotangles_init }
+	if(local.spotangles_init != NIL && local.spotangles_init[2] == NIL) { local.spot.angles = ( 0 local.spotangles_init 0 ) }
+	local.spot.targetname = ("s_spotauto_" + local.name)
+
+	local.spotdamage = spawn trigger_multiple origin local.spot.origin spawnflags 144
+	local.spotdamage setsize ( -30 -30 -30 )( 30 30 30 )
+	local.spotlight.spotdamage = local.spotdamage
+
+	if(local.spotlight.health == NIL || local.spotlight.health <= 0)
+		local.spotdamage.health = 99999
+	else
+		local.spotdamage.health = local.spotlight.health
+
+	local.spottrigger = spawn trigger_multiple origin local.spotlight.origin
+	local.spottrigger setsize ( -50 -50 -50 )( 50 50 50 )
+	local.spottrigger.origin = local.spotlight.origin
+	local.spotlight.spottrigger = local.spottrigger
+
+	local.groundtarget = spawn script_origin
+	local.groundspot_target = spawn script_origin
+	local.spotlight.groundtarget = local.groundtarget
+	local.spotlight.groundspot_target = local.groundspot_target
+
+	local.light = spawn script_model
+	local.light model "fx/searchlight.tik"
+	local.light notsolid
+	local.light.origin = local.spot.origin + local.spot.forwardvector * -16
+	local.light hide
+	local.spotlight.originlight = local.light
+
+	local.flare = spawn script_model targetname ("s_colorchange_" + local.name)
+	local.flare model "fx/searchlight.tik"
+	local.flare notsolid
+	local.flare scale 3.5
+	local.flare.origin = local.groundtarget.origin
+	local.flare hide
+	local.flare light local.color
+	local.flare lightradius 250
+	local.flare.on = 0 //********** Added line
+	local.spotlight.flare = local.flare
+	
+	local.flare.s_newcolor = local.color
+
+	local.beam = spawn func_beam origin local.spot.origin
+	local.beam alpha .2
+	local.beam maxoffset 0
+	local.beam numsegments 20
+	local.beam scale 50
+	local.beam activate
+	local.beam life .1
+   	local.beam color local.color
+   	local.beam hide
+	local.spotlight.beam = local.beam
+
+  	thread aimspot local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.indestructible
+
+	local.spottrigger thread replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path
+
+	local.spotlight thread spotpath local.name local.path local.spot local.flare
+ 
+	local.light show
+	local.flare show
+	local.flare.on = 1//********** Added line
+	local.beam show
+	local.range = 10240
+
+	while(local.spotlight != NULL && local.spot != NULL && local.spottrigger != NULL)
+	{
+		local.fwd_vec = angles_toforward local.spot.angles
+		local.groundtarget.origin = trace (local.spot.origin + local.fwd_vec * 64) (local.spot.origin + local.fwd_vec * local.range) 0
+
+		local.s_vec = ( local.groundtarget.origin - local.spot.origin )
+		local.s_ang = vector_toangles(local.s_vec)
+
+		local.spot.angles = local.s_ang
+
+		// for left-side wall mounts (local.mountwall == 1) and right-side wall mounts (local.mountwall == 3) only,
+		// make spotlightbase always rotate clockwise when looking upward. also check which side of spotlight the player is facing.
+		// spotlightbase quickly reorients itself after looking vertically up or down.
+		//
+
+		if(local.mountwall != 1 && local.mountwall != 2 && local.mountwall != 3 ) { local.spotlight.angles = ( 0 local.s_ang[1] 0 ) } // default, mountwall = 0, floor mounts.
+
+		if(local.mountwall == 2) { local.spotlight.angles = ( 0 local.s_ang[1] 180 ) } // mountwall = 2, ceiling spotlightbase mounts.
+
+		if(local.orient != 1) 
+		{
+			if(local.mountwall == 1 && ((local.player.angles[1] >= 90 && local.player.angles[1] < 180) || (local.player.angles[1] >= 180 && local.player.angles[1] < 270)) ) 
+			{ 
+				local.spotlight.angles = ( local.s_ang[0] 0 90 )
+			}
+			if(local.mountwall == 1 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+			{ 
+				local.spotlight.angles = ( -local.s_ang[0] 0 90 )					
+			}
+	
+			if(local.mountwall == 3 && ((local.player.angles[1] >= 90 && local.player.angles[1] < 180) || (local.player.angles[1] >= 180 && local.player.angles[1] < 270)) ) 
+			{ 
+				local.spotlight.angles = ( local.s_ang[0] 0 -90 )
+			}
+			if(local.mountwall == 3 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+			{ 
+				local.spotlight.angles = ( -local.s_ang[0] 0 -90 )
+			}
+		}
+
+		if(local.orient == 1) 
+		{ 
+			if(local.mountwall == 1 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] >= 90 && local.player.angles[1] < 180)) ) 
+			{ 
+				local.spotlight.angles = ( local.s_ang[0] 0 90 ) + ( 0 -90 0 )
+			}
+			if(local.mountwall == 1 && ((local.player.angles[1] >= 180 && local.player.angles[1] < 270) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+			{ 
+				local.spotlight.angles = ( -local.s_ang[0] 0 90 ) + ( 0 -90 0 )
+			}
+	
+			if(local.mountwall == 3 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] >= 90 && local.player.angles[1] < 180)) ) 
+			{ 
+				local.spotlight.angles = ( local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
+			}
+			if(local.mountwall == 3 && ((local.player.angles[1] >= 180 && local.player.angles[1] < 270) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+			{ 
+				local.spotlight.angles = ( -local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
+			}
+		}
+
+		local.light.origin = local.spot.origin + local.spot.forwardvector * -8
+		waitframe
+
+		local.random1 = (randomint(100) / 100.0000)
+		local.random2 = (randomint(100) / 100.0000)
+		local.random3 = (randomint(100) / 100.0000)
+
+		if(level.spotlight[local.name] == 1 || level.flags[allspotlights] == 1)
+		{
+			if(local.flare != NULL) { local.flare light ( local.random1 local.random2 local.random3 ) }
+			if(local.beam != NULL) { local.beam color ( local.random1 local.random2 local.random3 ) }
+			$("s_colorchange_" + local.name).s_newcolor = ( local.random1 local.random2 local.random3 )
+
+			level.spotlight[local.name] = 0
+			level.flags[allspotlights] = 0
+		} 
+
+		if(level.spotlight_rainbow[local.name] == 1 || level.flags[allspotlights_rainbow] == 1)
+		{
+			if(local.flare != NULL) { local.flare light ( local.random1 local.random2 local.random3 ) }
+			if(local.beam != NULL) { local.beam color ( local.random1 local.random2 local.random3 ) }
+			$("s_colorchange_" + local.name).s_newcolor = ( local.random1 local.random2 local.random3 )
+		}
+
+		if(local.spotlight == NULL || local.spot == NULL || local.spottrigger == NULL || local.spot.destroyed == 1) { break }
+	}
+end
+
+aimspot local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.indestructible:
+
+   while(local.spotlight != NULL && local.spot != NULL && local.spottrigger != NULL && local.spot.destroyed != 1)
+   {
+	local.groundspot_target.origin = local.spot.origin + local.spot.forwardvector * -10240
+
+	local.p = trace local.spot.origin local.groundspot_target.origin 0
+
+	local.beam endpoint local.p
+
+	local.flare.origin = local.p
+
+   // ******** Added section **************************
+
+	if(local.flare.on == 1)
+	{
+		for(local.i=1;local.i<=$player.size;local.i++)
+		{
+		   if($player[local.i].dmteam != "spectator" && $player[local.i].dead != 1) // $(local.name) = local.spotlight
+		   {
+			if(local.spotlight == NULL || local.spotlight == NULL || local.spot == NULL || local.spottrigger == NULL || local.spot.destroyed == 1) { end }
+
+			if(vector_length(local.p - $player[local.i].origin) < level.autospot_trigdist) { local.spotlight.followplayer = $player[local.i] }
+			if(vector_length(local.p - $player[local.i].origin) < 50) 
+			{
+ 				if($player[local.i].packon != 1) { $player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2] }
+			}
+			if(local.spotlight.followplayer != NIL && local.spotlight.followplayer != NULL && vector_length(local.p - local.spotlight.followplayer.origin) >= level.autospot_trigdist) { local.spotlight.followplayer = NIL }
+		   }
+		}
+	}
+
+   //****************************************************
+
+	if(local.spotdamage.health <= 0 && local.indestructible != 1)
+	{
+		local.spark = spawn script_model
+		local.spark model "fx/fx_spotlighthit.tik"
+		local.spark.origin = local.spot.origin
+		local.spark notsolid
+		local.spark anim start
+
+		local.spot playsound exp_searchlight
+		local.spot.destroyed = 1
+		waitframe
+
+		if(local.spotlight.removeafterdeath >= 1) 
+		{ 
+			if(local.spotlight.removeafterdeath >= 2) { local.spotlight remove } // spotlight base
+			local.spot remove						     // spotlight light
+		}
+
+		local.light delete
+		local.flare delete
+		local.spottrigger delete
+		local.spotdamage delete
+		local.groundtarget delete
+		local.beam deactivate
+
+		wait 0.1 // cannot use "waitframe" for "fx_spotlighthit.tik", the spark animation gets removed too fast.
+		local.spark remove
+		break
+	}
+   	waitframe
+   }
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight:
+
+	self waittill trigger
+	self nottriggerable
+	local.player = parm.other
+
+	local.origin = local.spotlight.origin
+	local.color = local.spotlight.color
+	local.health = local.spotlight.health
+	local.anglestart = local.player.angles[1]
+	local.removeafterdeath = local.spotlight.removeafterdeath
+
+	local.fwd_vec = angles_toforward local.player.viewangles
+	local.start = local.player gettagposition "Bip01 Head"
+	local.range = 10240
+	local.targetorigin = trace (local.start + local.fwd_vec * 64) (local.start + local.fwd_vec * local.range ) 0
+	local.s_vec = ( local.targetorigin - local.spot.origin )
+	local.s_ang = vector_toangles(local.s_vec)
+	local.s_ang[0] = (local.s_ang[0] * -1) 	// un-invert pitch rotation for floor & ceiling mounts
+	local.spotangles_init = local.s_ang + ( 0 180 0 ) // keep spotlight's angles = local.player's angles.
+
+	local.groundspot_target remove
+	local.spotlight remove
+	local.beam remove
+	local.spot remove
+	local.light remove
+	local.groundtarget remove
+	local.flare remove
+	local.spotdamage remove
+	self remove
+
+	exec map_triggers/player_spotlight.scr local.origin local.color local.name local.health local.anglestart 0 0 local.removeafterdeath 1 local.spotangles_init level.spotauto_pathnode[local.name]
+end
+
+////////////////////////////////////////////////////////////////////////
+
+spotpath local.name local.path local.spot local.flare:
+
+	local.targetlight = spawn script_model
+	local.targetlight model "fx/searchlight.tik"
+	local.targetlight.origin = local.flare.origin
+	local.targetlight notsolid
+	local.targetlight hide
+	local.targetlight thread spotattach local.name self local.spot
+
+	self thread spotmoveauto local.name local.path local.targetlight local.spot
+end
+
+spotattach local.name local.spotlight local.spot:
+
+	while(self != NULL && local.spotlight != NULL && local.spot != NULL)
+	{
+		local.s_vec = (local.spot.origin - self.origin)
+		local.s_ang = vector_toangles(local.s_vec)
+		local.spot.angles = local.s_ang
+		waitframe
+	}
+end
+
+spotmoveauto local.name local.path local.targetlight local.spot:
+
+	self.followplayer = NIL
+	while(self != NULL && self.followplayer == NIL && local.spot != NULL)
+	{
+		local.targetlight.origin = local.path.origin
+		local.targetlight time level.autospot_movespeed
+		local.targetlight moveto local.path.target //local.targetlight flypath local.path 250 750 200
+		local.targetlight waitmove
+		local.path = local.path.target
+		level.spotauto_pathnode[local.name] = local.path
+	}
+	if(self != NULL && local.spot != NULL && self.followplayer != NIL)
+	{
+		self thread spotfollow local.name local.targetlight local.spot
+		self thread spotreset local.name local.targetlight local.spot
+	}
+end
+
+spotfollow local.name local.targetlight local.spot:
+
+	while(self != NULL && self.followplayer == NIL && local.spot != NULL) { waitframe }
+	if(self != NULL && self.followplayer != NIL) { local.team = self.followplayer.dmteam }
+
+	while(self != NULL && local.spot != NULL && isalive self.followplayer && self.followplayer.dmteam == local.team)
+	{
+		local.targetlight.origin = self.followplayer.origin
+		local.targetlight time 0.1
+		local.targetlight moveto self.followplayer.origin
+		local.targetlight waitmove
+
+		if(self != NULL && self.followplayer != NIL && self.followplayer != NULL && vector_length(local.targetlight.origin - self.followplayer.origin) >= 650) { break }
+	}
+	if(self != NULL && local.spot != NULL) { self.followplayer = NIL }
+end
+
+spotreset local.name local.targetlight local.spot:
+
+	local.c = 0
+	while(self != NULL && local.spot != NULL && local.c < 0.5)
+	{
+		local.angles0 = int(local.spot.angles[0])
+		local.angles1 = int(local.spot.angles[1])
+		wait 0.1
+		if(self != NULL && self.followplayer != NIL) { local.c = 0 }
+		if(local.spot != NULL && int(local.spot.angles[0]) == local.angles0 && int(local.spot.angles[1]) == local.angles1 && self.followplayer == NIL) { local.c = local.c + 0.1 }
+	}
+	if(self != NULL && local.spot != NULL) { self thread spotmoveauto local.name level.spotauto_pathnode[local.name] local.targetlight local.spot }
+end

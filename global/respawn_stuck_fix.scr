@@ -1,0 +1,42 @@
+main:
+
+	level waittill spawn // without this, server will crash before map loads.
+	thread main2
+end
+
+main2: // keep newly respawned players from getting stuck inside each other.
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i] != NULL && !isalive $player[local.i] && $player[local.i].respawn_stuck_check != 1) { $player[local.i] thread respawn_stuck_check }
+		}
+		waitframe
+	}
+	thread main2
+end
+
+respawn_stuck_check:
+
+	self.respawn_stuck_check = 1
+	local.team = self.dmteam
+
+	while(self != NULL && !isalive self && self.dmteam != "spectator" && self.dmteam == local.team) { waitframe }
+
+	if(isalive self && self.dmteam != "spectator" && self.dmteam == local.team)
+	{
+		local.c = 0
+		while(self != NULL && isalive self && self.dmteam != "spectator" && self.dmteam == local.team && self getmovement == "falling" && local.c < 30)
+		{
+			local.c++
+			wait 0.1
+		}
+	}
+	if(self != NULL)
+	{
+		if(isalive self && self.dmteam != "spectator" && self.dmteam == local.team && self getmovement == "falling") { self respawn }
+		self.respawn_stuck_check = 0
+	}
+end

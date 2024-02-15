@@ -1,0 +1,383 @@
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Bomber Plane Airstrikes" - No spline path (path is randomized)
+//*** --------------------------------------------
+
+main local.team local.planes local.offtime local.bombs local.bombswait local.end local.noprint local.origin local.angles local.destination local.bulletstokill local.playerowner:
+
+   if(level.bomberplane_map_setsizes_check != 1 && (local.origin == NIL || local.angles == NIL || local.destination == NIL))
+   {
+	if(level.bomberplane_map_setsize1 == NIL || level.bomberplane_map_setsize2 == NIL) { wait 1; println("----- ERROR bomberplane_nospline.scr: Must define 'level.bomberplane_map_setsize1' & 'setsize2' dimensions."); end }
+	if(level.bomberplane_map_setsize1[0] > 0 || level.bomberplane_map_setsize1[1] > 0 || level.bomberplane_map_setsize1[2] > 0) { wait 1; println("----- ERROR bomberplane_nospline.scr: 'level.bomberplane_map_setsize1' dimensions must be <= 0."); end }
+	if(level.bomberplane_map_setsize2[0] < 0 || level.bomberplane_map_setsize2[1] < 0 || level.bomberplane_map_setsize2[2] < 0) { wait 1; println("----- ERROR bomberplane_nospline.scr: 'level.bomberplane_map_setsize1' dimensions must be >= 0."); end }
+	level.bomberplane_map_setsizes_check = 1
+   }
+
+	if(int(local.planes) < 0) { local.planes = local.planes * -1 }
+	if(int(local.planes) == 0 || string(local.planes) == "0") { wait 1; println("----- ERROR bomberplane_nospline.scr: 'planes' parameter must be an integer > 0."); end }
+	if(int(local.offtime) < 0) { local.offtime = local.offtime * -1 }
+	if(int(local.offtime) == 0 || string(local.offtime) == "0") { wait 1; println("----- ERROR bomberplane_nospline.scr: 'off time' parameter must be a number >= 1."); end }
+	if(local.team != "allies" && local.team != "axis" && local.team != "c47") { local.team = "axis" }
+	if(local.bombs != NIL && string(local.bombs) != "0")
+	{
+		if(int(local.bombs) < 0) { local.bombs = local.bombs * -1 }
+		if(int(local.bombs) == 0) { wait 1; println("----- ERROR bomberplane_nospline.scr: 'bombs' parameter must be an integer > 0."); end }
+		if(int(local.bombswait) < 0) { local.bombswait = local.bombswait * -1 }
+		if((int(local.bombswait) == 0 && local.bombswait.size > 1) || string(local.bombswait) == "0") { wait 1; println("----- ERROR bomberplane_nospline.scr: 'bombs wait' parameter must be a number > 0."); end }
+		local.bombs = int(local.bombs)
+	}
+	else { local.bombsoff = 1 }
+	local.planes = int(local.planes)
+	if(level.scriptmaster_bomberplane != 1) { thread cache_plane_explodestuff }
+
+	if(level.bomberplane_health == NIL || level.bomberplane_health <= 0) { level.bomberplane_health = 200 }
+	if(level.bomberplane_bombspeed == NIL || level.bomberplane_bombspeed <= 0) { level.bomberplane_bombspeed = 0.25 }
+	if(level.bomberplane_bombgravity == NIL || level.bomberplane_bombgravity <= 0) { level.bomberplane_bombgravity = 2 }
+
+	if(local.playerowner != NIL && local.playerowner != NULL) { local.owner_exists = 1 }
+
+	while($auto_bomberplane != NULL || $airstrike_bomberplane != NULL) { waitframe } // wait until airspace is not busy anymore
+	wait (local.offtime - 2) // offtime can also be between 1 and 2. any offtime between 1 and 2 is essentially waiting 0 seconds.
+
+	if(local.owner_exists == 1 && (local.playerowner == NIL || local.playerowner == NULL || local.playerowner.dmteam != local.team)) { end }
+	if(local.bombsoff != 1 && local.noprint != 1) { iprintlnbold "*** Airstrike Carpet Bomb Incoming! Take Cover! ***"; println("----- Airstrike Carpet Bomb Incoming!") }
+	wait 2
+	if(local.owner_exists == 1 && (local.playerowner == NIL || local.playerowner == NULL || local.playerowner.dmteam != local.team)) { end }
+
+	if(local.origin == NIL && local.angles == NIL)
+	{
+		local.r = randomint(4)
+		local.r2 = randomint(2)
+		local.height = level.bomberplane_map_setsize2[2]
+
+		if(local.r == 0)
+		{
+			if(local.r2 == 0) { local.r3 = randomint(level.bomberplane_map_setsize1[1] * -1) * -1 }
+			if(local.r2 == 1) { local.r3 = randomint(level.bomberplane_map_setsize2[1]) }
+			local.origin = ( -8200 local.r3 local.height )
+			local.angles = ( -5 0 0 )
+			local.destination = ( 8200 local.r3 local.height )
+		}
+		if(local.r == 1)
+		{
+			if(local.r2 == 0) { local.r3 = randomint(level.bomberplane_map_setsize1[1] * -1) * -1 }
+			if(local.r2 == 1) { local.r3 = randomint(level.bomberplane_map_setsize2[1]) }
+			local.origin = ( 8200 local.r3 local.height )
+			local.angles = ( -5 180 0 )
+			local.destination = ( -8200 local.r3 local.height )
+		}
+		if(local.r == 2)
+		{
+			if(local.r2 == 0) { local.r3 = randomint(level.bomberplane_map_setsize1[0] * -1) * -1 }
+			if(local.r2 == 1) { local.r3 = randomint(level.bomberplane_map_setsize2[0]) }
+			local.origin = ( local.r3 -8200 local.height )
+			local.angles = ( -5 90 0 )
+			local.destination = ( local.r3 8200 local.height )
+		}
+		if(local.r == 3)
+		{
+			if(local.r2 == 0) { local.r3 = randomint(level.bomberplane_map_setsize1[0] * -1) * -1 }
+			if(local.r2 == 1) { local.r3 = randomint(level.bomberplane_map_setsize2[0]) }
+			local.origin = ( local.r3 8200 local.height )
+			local.angles = ( -5 -90 0 )
+			local.destination = ( local.r3 -8200 local.height )
+		}
+	}
+
+	for(local.p = 2; local.p <= local.planes; local.p++) { thread main local.team 1 (local.p - 1) local.bombs local.bombswait 1 1 local.origin local.angles local.destination local.bulletstokill local.playerowner }
+
+	local.plane = spawn script_model targetname "airstrike_bomberplane"
+	if(local.team == "allies") { local.plane model "vehicles/p47fly.tik" }
+	if(local.team == "axis") { local.plane model "vehicles/fockwulffly.tik" }
+	if(local.team == "c47") { local.plane model "vehicles/c47fly.tik" }
+	local.plane.origin = local.origin
+	local.plane.angles = local.angles
+	local.plane.scale = 1
+	local.plane notsolid
+	local.plane show
+	local.plane.team = local.team
+
+	local.plane time 6
+	local.plane moveto local.destination
+	local.plane playsound airplane_flyover
+	local.plane loopsound airplane_idle
+
+	local.plane thread damagetrigger local.bulletstokill local.playerowner
+	if(local.bombsoff != 1) { local.plane thread dropbombs local.bombs local.bombswait local.offtime local.noprint local.playerowner }
+	if(local.playerowner != NIL && local.playerowner != NULL) { local.plane thread delete_airstrike local.playerowner local.playerowner.dmteam }
+
+	local.plane waitmove
+	if(local.plane != NULL) { local.plane remove }
+
+	if(local.end != 1) { thread main local.team local.planes local.offtime local.bombs local.bombswait local.end local.noprint local.origin local.angles local.destination local.bulletstokill local.playerowner }
+end
+
+damagetrigger local.bulletstokill local.playerowner:
+
+	local.trigger = spawn trigger_multiple spawnflags 128 targetname "airstrike_bomberplanetrig" // only responds to bullets and explosions occuring near them
+	local.trigger.origin = self.origin
+	if(self.model == "models/vehicles/c47fly.tik") { local.trigger setsize ( -600 -600 -100 ) ( 600 600 100 ) }
+	else { local.trigger setsize ( -300 -300 -100 ) ( 300 300 100 ) }
+
+	if(local.bulletstokill == NIL) { local.trigger.health = level.bomberplane_health }
+	else { local.trigger.health = 10000 * local.bulletstokill }
+	local.trigger glue self
+	local.trigger.player_owner = local.playerowner
+	self.damage_trigger = local.trigger
+	
+	while(self != NULL && local.trigger.health > 0) 
+	{
+		for(local.p = 1; local.p <= $player.size; local.p++)
+		{
+			if($player[local.p] istouching self) { $player[local.p] volumedamage 999 } // kill any player that touches the plane
+
+			if($("bigbombweap" + (local.p - 1)) != NULL && $("bigbombweap" + (local.p - 1)) istouching self) { self thread plane_explode_null; local.trigger remove; end }
+			if($("lightbombweap" + (local.p - 1)) != NULL && $("lightbombweap" + (local.p - 1)) istouching self) { self thread plane_explode_null; local.trigger remove; end }
+		}
+		waitframe
+	}
+
+	if(self != NULL && local.trigger.health <= 1) { self thread plane_crashing_null }
+	local.trigger remove 
+end
+
+////////////////////////////////////////////////////////////////////////
+
+dropbombs local.bombs local.bombswait local.offtime local.noprint local.playerowner:
+
+	wait local.bombswait
+	if(local.noprint == 1)
+	{
+		for(local.t = 1; local.t <= local.offtime; local.t++) { wait 0.1 } // ensures that every 2 planes' bombs drop in different locations
+	}
+
+	local.b = 0
+	while(self != NULL && self.damage_trigger != NULL && self.damage_trigger.health > 0 && local.b <= local.bombs)
+	{
+		self thread bomb local.playerowner
+		local.b++
+		wait 0.2
+	}
+end
+
+bomb local.playerowner:
+
+	local.bomb = spawn script_model targetname ("airstrike_bombdrop_" + self.entnum)
+	local.bomb model "ammo/us_bomb.tik" 
+	local.bomb.origin = self.origin - ( 0 0 50 )
+	local.bomb.angles = ( self.angles + ( 0 90 0 ) )
+	local.bomb.scale = 1.5
+	local.bomb thread bombtwist
+	local.bomb playsound leadinmp2
+	local.bomb notsolid
+	local.bomb physics_on
+
+	local.bomb gravity level.bomberplane_bombgravity
+	local.bomb.velocity = ( (self.velocity[0] * level.bomberplane_bombspeed) (self.velocity[1] * level.bomberplane_bombspeed) (self.velocity[2] * level.bomberplane_bombspeed) )
+
+	wait 0.5
+	if(local.bomb == NULL) { end }
+	local.bomb solid
+	local.bomb waittill touch
+	if(local.bomb == NULL) { end }
+	
+	local.origin = local.bomb.origin
+	//local.bomb explode // this creates its own radiusdamage
+
+	local.boom = spawn script_model
+	local.boom model emitters/mortar_dirt_nosound.tik // emitters/fx_explosion_mine.tik
+	local.boom.origin = local.origin
+	local.boom.scale = 1.5 // = 1 if using fx_explosion_mine.tik
+	local.boom anim start
+	local.boom light 1 0 0 500
+
+	//radiusdamage local.boom.origin 300 600
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(vector_length(local.boom.origin - $player[local.i].origin) < 600) // "cansee" condition removed; if somehow a teammate cannot see a bomb, they will still get killed by radiusdamage
+		{
+			if(local.playerowner == NIL || local.playerowner == NULL) { $player[local.i] volumedamage 300 }
+			else
+			{
+				$player[local.i] damage local.playerowner 300 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // by default, "damage" does not hurt teammates
+				if($player[local.i] != local.playerowner && $player[local.i].dmteam == local.playerowner.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			}
+		}
+	}
+	if(local.blewup == 1) { radiusdamage local.boom.origin 300 600 }
+
+	if(self != NULL && vector_length(self.origin - local.boom.origin) <= 500) { self nodamage; self.nodamage = 1 }
+	local.boom playsound artyexp_sand
+
+	waitframe
+	local.boom remove
+	local.bomb remove
+	if(self != NULL && self.nodamage == 1) { self takedamage }
+end
+
+bombtwist:
+
+	for(local.i=0;local.i<=90 ;local.i+=3)
+	{
+
+		waitframe
+		if(self == NIL || self == NULL)
+		{
+			end
+		}
+		else
+		{
+			self.angles = (  self.angles[0] self.angles[1] local.i )
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+plane_crashing_null: // almost identical threads from server_planes/plane_crash.scr
+
+	self stoploopsound
+	self notsolid
+	self hide
+
+	local.deadplane = spawn script_model
+	local.deadplane model self.model
+	local.deadplane.origin = self.origin + ( 0 0 -50 )
+	local.deadplane.angles = self.angles
+	local.deadplane.scale = self.scale
+	local.deadplane loopsound airplane_idle
+	local.deadplane physics_on			// need physics for "waittill touch" and gravity to work
+	local.deadplane.velocity = self.velocity	// always set the velocity after turning physics on.
+
+	local.deadplane thread plane_crash_null
+
+	local.flyingexplosion = spawn "models/emitters/fireandsmoke.tik"			
+	local.flyingexplosion glue local.deadplane
+	local.flyingexplosion.origin = local.deadplane.origin
+	if(local.deadplane.model == "models/vehicles/c47fly.tik") { local.flyingexplosion.scale = local.deadplane.scale * 2 }
+	else { local.flyingexplosion.scale = local.deadplane.scale }
+	local.flyingexplosion anim start
+	local.flyingexplosion notsolid
+
+	local.flyingsmoke = spawn "models/emitters/plane_smoke.tik"			
+	local.flyingsmoke glue local.deadplane
+	local.flyingsmoke.origin = local.deadplane.origin
+	if(local.deadplane.model == "models/vehicles/c47fly.tik") { local.flyingsmoke.scale = local.deadplane.scale * 2 }
+	else { local.flyingsmoke.scale = local.deadplane.scale }
+	local.flyingsmoke anim start
+	local.flyingsmoke notsolid
+
+	local.now = local.deadplane.angles[0]
+	local.end = local.now + 40
+
+	for(local.i=0;local.i<=45 ;local.i+=1)
+	{
+		waitframe
+		if(local.deadplane==NULL)
+		{
+			break
+		}
+		else
+		{
+			local.deadplane.angles = ( local.i local.deadplane.angles[1] local.deadplane.angles[2] )
+		}
+	}
+
+	while(local.deadplane)
+	{
+		waitframe
+	}
+
+	local.flyingsmoke remove
+	local.flyingexplosion remove
+end	
+
+plane_crash_null:
+
+	self waittill touch
+	self thread plane_explode_null
+end	
+
+plane_explode_null:
+
+	local.origin = self.origin
+	local.scale = self.scale
+	local.model = self.model
+	self explode
+	self remove
+
+	if(local.model == "models/vehicles/c47fly.tik") { local.radius = 1000 * local.scale }
+	else { local.radius = 550 * local.scale }
+
+	if(local.model == "models/vehicles/c47fly.tik") { local.expscale = 3.00 * local.scale }
+	else { local.expscale = 1.50 * local.scale }
+	if(local.expscale < 0.6) { local.expscale = 0.6 }
+
+	local.Exp = spawn "emitters/mortar_higgins.tik"
+	local.Exp.origin = local.origin
+	local.Exp.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.Exp light 1 0 1 local.radius
+	local.Exp anim start
+	local.Exp.scale = local.expscale
+	local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik"
+	local.Exp2.origin = local.origin
+	local.Exp2 anim start
+	local.Exp2.scale = local.expscale
+
+	exec global/earthquake.scr .35 2 0 0
+	radiusdamage local.origin 500 local.radius
+	local.Exp playsound artyexp_sand
+	local.Exp2 playsound explodeplane
+
+	local.Exp anim start
+	local.Exp2 anim start
+	wait 0.1
+	local.Exp remove	
+	local.Exp2 remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+delete_airstrike local.player local.team:
+
+	while(self != NULL && local.player != NULL && local.player.dmteam == local.team && local.player.dmteam != "spectator") { waitframe }
+	if(self == NULL) { end }
+
+	$("airstrike_bombdrop_" + self.entnum) remove
+	self remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cache_plane_explodestuff:
+
+	if(level.scriptmaster_flyableplanes == 1) { end }
+
+	exec global/aliascache_triggersounds.scr airstrikes
+	exec global/aliascache_triggersounds.scr arty_exp_sand
+
+	local.master = spawn scriptmaster
+	local.master aliascache explodeplane1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane5 sound/weapons/explo/Explo_MetalMed5.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache leadinmp2 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps level.mapname
+
+	if(level.scriptmaster[arty_exp_sand] != 1)
+	{
+		local.master aliascache artyexp_sand1 sound/weapons/explo/exp_dirt_01.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_sand2 sound/weapons/explo/exp_dirt_02.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_sand3 sound/weapons/explo/exp_dirt_03.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_sand4 sound/weapons/explo/exp_dirt_04.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
+	}
+
+	cache models/ammo/us_bomb.tik
+	cache models/emitters/fireandsmoke.tik
+	cache models/emitters/plane_smoke.tik
+	cache models/emitters/mortar_dirt_nosound.tik
+	cache models/emitters/mortar_higgins.tik
+
+	level.scriptmaster_bomberplane = 1
+end

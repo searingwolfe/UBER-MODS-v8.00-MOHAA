@@ -1,0 +1,672 @@
+main local.name local.model local.origin local.angles local.health local.boatspeed local.resettime local.gotout:
+
+	if(local.model == NIL) { wait 1; println("----- ERROR playerboat.scr: 'model' parameter is missing!"); end }
+	if(local.model[0] != "m" && local.model[1] != "o" && local.model[2] != "d" && local.model[3] != "e" && local.model[4] != "l" && local.model[5] != "s")
+	{
+		local.model = "models/" + local.model
+		if(local.model == "models/vehicles/higgins.tik") { local.model = "models/vehicles/higginsxtrahull.tik" }
+		if(level.vehiclescriptmaster[local.model] != 1) { cache local.model }
+	}
+
+	if($(local.name) != NULL) 
+	{
+		waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe } } } }
+		if($(local.name) != NULL)
+		{
+			if(level.vehiclescriptmaster[local.model] != 1) { wait 1; println("----- ERROR playerboat.scr: $" + local.name + " must be removed before spawning a drivable boat.") }
+			end
+		}
+	}
+
+	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] != 1)) { wait 1; println("----- ERROR playerboat.scr: health must be greater than 0."); end }
+	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] == 1)) { end } // end when in rare cases, a 2nd vehicle with local.health = 0 could spawn after getting destroyed
+
+	local.desmodel = models/vehicles/higgins_damage.tik
+
+	local.vehicle = spawn local.model targetname (local.name) // scriptmasters are already added in ubersound.scr
+	local.vehicle.name = local.name
+	local.vehicle.origin = local.origin
+	local.vehicle.angles = local.angles
+	local.vehicle.desmodel = local.desmodel
+	local.vehicle.health = local.health
+	local.vehicle.boatspeed = local.boatspeed
+	local.vehicle.resettime = local.resettime
+
+	if(local.vehicle.classname != "DrivableVehicle") { local.vehicle remove; wait 1; println("----- ERROR playerboat.scr: .tik model is not a DrivableVehicle."); end }
+
+	local.vehicle turnrate 5
+	if(local.gotout == 1) { local.vehicle playsound sdkfz_snd_stop }
+
+	local.vehicle.seats = 1		// initialize this before adding seats in "seatstuff" thread to avoid NIL errors
+	local.vehicle thread vehiclereset
+	local.vehicle thread vehicledamage
+	local.vehicle thread vehicledeath
+	local.vehicle thread vehicletrigger
+
+	if(level.boat_initorigin[local.name] == NIL) { level.boat_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
+	if(level.boat_initangles[local.name] == NIL) { level.boat_initangles[local.name] = local.angles }
+
+	if(level.vehiclescriptmaster[local.vehicle.model] != 1) // this only runs once
+	{
+		cache local.vehicle.model
+		cache local.desmodel
+		cache models/emitters/fancyfire.tik; cache models/emitters/linger_smoke.tik
+		cache models/emitters/mortar_higgins.tik
+		cache models/emitters/mortar_dirt_nosound.tik
+		thread scriptmaster local.vehicle.model
+		level.vehiclescriptmaster[local.vehicle.model] = 1
+		level.vehiclescriptmaster[local.model] = 1
+	}
+										// "local.player.touching_playerboat" or "$player[1].touching_playerboat" can be included in trigger setthreads
+	if(level.touching_playerboat != 1) { thread touching_playerboat }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+vehiclereset:
+
+	self thread healthboost
+	removeclass Camera
+end
+
+healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0) // prevent regular bullets from killing vehicles (depends on initial health; i.e. if 250 health, vehicle can still be killed by 2 grenades or a shotgun blast)
+	{
+		self.health = local.health
+		waitframe
+	}
+end
+
+vehicletrigger:
+
+	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
+	local.trig = spawn trigger_use targetname (self.name + "_trig")
+	local.trig.origin = self.origin
+	local.trig setsize ( -130 -130 -30 ) ( 130 130 100 )
+	local.trig.vehicle = self
+	local.trig setthread triggered
+
+	while(self != NULL && local.trig != NULL) // sometimes a high-velocity object (non-projectile) pushes the vehicle away from its trigger.
+	{
+		if(self.origin != local.trig.origin) { local.trig.origin = self.origin } // keep the vehicle and its trigger together.
+		waitframe
+	}
+end
+
+triggered:
+
+	local.player = parm.other
+	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { end }
+	if(self.vehicle != NULL)
+	{
+		if(self.vehicle.driver != NIL && self.vehicle.passengers.size < self.vehicle.seats)
+		{
+			self.vehicle thread passengers
+		}
+		if(self.vehicle.driver == NIL)
+		{
+			if(local.player.isdog != 1) { self.vehicle thread playergetin }
+			if(local.player.isdog == 1) { local.player iprint ("Dogs cannot drive vehicles.") } // set other exceptions here
+		}
+	}
+end
+
+playergetin:
+
+	local.player = parm.other
+	local.team = local.player.dmteam
+
+	local.player safeholster 1
+	wait 1
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1) { end }
+	self.driver = local.player
+	self.driver.driving = 1
+	local.driver = self.driver
+
+	self.passengers[1] = NIL // initialize as array to make size = 0 instead of size = -1
+	self thread seatstuff
+
+	self.driver forcelegsstate STAND
+	self.driver hide
+	self.driver nodamage
+	self.driver notsolid
+	self.driver iprint ("Lean Left/Right = look left/right.")
+	self.driver iprint ("Hold USE = exit, hold FIRE = look behind.")
+
+	self attachdriverslot 0 self.driver
+	self thread dummyavatar
+	self.driver loopsound wavelaps
+
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	{
+		local.holdtime = 0
+		self.driver.viewangles = ( 10 self.angles[1] 0 )
+
+		while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.useheld == 1 && self.driver.dead != 1 && level.change_team_score != 1)
+		{
+			self.driver.viewangles = ( 10 self.angles[1] 0 )
+	
+			if(local.holdtime >= 20) // hold USE for 1 second.
+			{
+				self thread driverreset
+				self thread vehiclereset
+				self.driver thread wallstuck_fix
+				self.driver = NIL
+				break
+			}
+			local.holdtime++
+			waitframe
+		}
+		if(self != NULL && isalive self.driver && self.driver.dmteam == local.team)
+		{
+			if(self.driver.useheld != 1)
+			{
+				if(self.driver.fireheld == 1 && self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
+				if(self.driver.fireheld != 1 && self.driver.leanleftheld == 1 && self.driver.leanrightheld != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
+				if(self.driver.fireheld != 1 && self.driver.leanleftheld != 1 && self.driver.leanrightheld == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
+			}
+
+			if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind)
+			{
+				self.driver loopsound riverdrive
+				if(self.driver.viewangles[1] == self.angles[1] + 180) { self.velocity = self.velocity + self.forwardvector * self.boatspeed * -1 }
+				else { self.velocity = self.velocity + self.forwardvector * self.boatspeed } // make vehicles drive faster, only when holding W (forward key)
+			}
+			if(self.velocity == ( 0 0 0 )) { self.driver loopsound wavelaps }
+		}
+		waitframe
+	}
+
+	if(self != NULL) // spawn in the new vehicle and remove the old one.
+	{
+		thread main self.name self.model self.origin self.angles self.health self.boatspeed self.resettime 1
+
+		if(self.driver != NIL && self.driver != NULL)
+		{
+			if(self.driver.dmteam == local.team && level.change_team_score != 1) { self thread driverreset }
+			if(self.driver.dmteam != local.team || level.change_team_score == 1) { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle
+			self thread vehiclereset
+		}
+		if(self.turretplayer != NIL && self.turretplayer != NULL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer }
+
+		self.driver = NIL // the old vehicle must be properly removed, otherwise the server will crash if anyone driving the vehicle leaves the game (becomes NULL).
+		self remove
+	}
+	waitframe
+	if(local.driver != NULL) { local.driver.driving = 0; local.driver stoploopsound }
+end
+
+driverreset local.status:
+
+	if(self.driver == NIL) { end } // if the vehicle blew up with nobody driving it, end this thread.
+
+	if(local.status != 1) { cueplayer }				// reattaches camera to player's head
+	self detachdriverslot 0 self.driver
+	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
+
+	local.outheight = 150 // if this is 100 or lower and the boat is still moving after the player gets out, the player will be run over by the boat and killed.
+
+	if(self.driver.dmteam != spectator)
+	{
+		self.driver show
+		self.driver solid
+		self.driver takedamage
+		if(local.status != 1 && local.status != 2)
+		{
+			self.driver.origin = self.origin + ( 0 0 local.outheight )
+			self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
+		}
+	}
+end
+
+vehicledamage:
+
+	local.c = 0
+	while(self != NULL && self.health > 0)
+	{
+		if(self != NULL)
+		{
+			local.previoushealth = self.health
+			if(local.c > 0) { local.c-- }
+		}
+		waitframe
+		if(self != NULL && local.previoushealth > self.health)
+		{
+			local.c = local.c + 2
+			self playsound damage_vehicle
+			//if(local.c == 2) { exec global/earthquake.scr .2 3 0 0 } // if tank is getting constantly damaged per frame, stop earthquake from spamming. (removed, since it was still getting annoying)
+		}
+	}
+end
+
+vehicledeath:
+
+	self waittill death // when waiting until "death", vehicle is not NULL yet
+	self playsound explode_truck
+
+	local.desvehicle = spawn script_model
+	local.desvehicle.origin = self.origin + ( 0 0 -25 )
+	local.desvehicle.scale = self.scale
+	local.desvehicle model self.desmodel
+
+	local.r = randomint(2)
+	if(local.r == 0) { local.one = 1 }
+	if(local.r == 1) { local.one = -1 }
+	local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
+
+	local.distance = -100
+	local.PI = 3.14159265359
+	local.degrees = self.angles[1]
+	if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
+	local.radians = local.degrees * (local.PI / 180)
+
+	local.sin = (sin local.radians) * local.distance
+	local.cos = (cos local.radians) * local.distance
+
+	local.fire = spawn script_model
+	local.fire model "models/emitters/fancyfire.tik"
+	local.fire.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
+	local.fire.angles = ( 270 0 0 )
+	local.fire.scale = 1
+	local.fire anim start
+	local.fire notsolid
+	local.smoke = spawn script_model
+	local.smoke model "models/emitters/linger_smoke.tik"
+	local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
+	local.smoke.angles = ( 270 0 0 )
+	local.smoke.scale = 0.7
+	local.smoke anim start
+	local.smoke notsolid
+
+	self thread driverreset 1					// local.status = 1
+	self thread mainreset local.desvehicle local.fire local.smoke	// waiting self.resettime seconds until a new vehicle is spawned in
+
+	if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
+	self.driver = NIL
+
+	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
+	self remove
+	exec global/earthquake.scr .35 2 0 0
+	radiusdamage local.desvehicle.origin 500 600
+
+	local.boom = spawn script_model
+	local.boom model "models/emitters/mortar_higgins.tik"
+	local.boom.origin = local.desvehicle.origin + ( 0 0 25 )
+	local.boom.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.boom.scale = 1.0
+	local.boom anim start
+	local.boom notsolid
+
+	local.debris = spawn script_model
+	local.debris model "emitters/mortar_dirt_nosound.tik" 
+	local.debris.origin = local.desvehicle.origin + ( 0 0 25 )
+	local.debris.scale = 0.8
+	local.debris anim start
+	local.debris notsolid
+	waitframe
+	local.boom remove
+	local.debris remove
+end
+
+mainreset local.desvehicle local.fire local.smoke:
+
+	if(self.resettime == NIL || self.resettime <= 0) { end }
+
+	local.name = self.name
+	local.model = self.model
+	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
+	local.angles = self.angles
+	local.health = self.max_health // self.max_health is the local.health initially given to the vehicle
+	local.boatspeed = self.boatspeed
+	local.resettime = self.resettime
+
+	while(self != NULL) { waitframe }
+	wait local.resettime
+
+	if(local.fire != NIL && local.fire != NULL) { local.fire remove }
+	if(local.smoke != NIL && local.smoke != NULL) { local.smoke remove }
+	local.desvehicle remove
+	thread main local.name local.model level.boat_initorigin[local.name] level.boat_initangles[local.name] local.health local.boatspeed local.resettime
+end
+
+////////////////////////////////////////////////////////////////////////
+
+passengers:
+	
+	local.player = parm.other
+	local.team = local.player.dmteam
+	waitframe	// need this here, otherwise driver & passenger could be attached to the same seat!
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+
+	for(local.s = 1; local.s <= self.seats; local.s++)
+	{
+		if(self.passengers[local.s] == NIL) { self.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
+	}
+
+	local.outheight = 150
+
+	if(local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
+	{
+		self.passengers[local.s] = NIL
+		local.player iprint ("An enemy player is driving this vehicle!")
+		end
+	}
+	if(self.dist_offset[local.s] == NIL) { end }
+	local.distoffset = self.dist_offset[local.s]
+
+	local.player forcelegsstate STAND
+	//local.player hide
+	local.player noclip
+	local.player nodamage
+	local.player notsolid
+	local.player iprint ("Hold FIRE = look around.")
+	local.player iprint ("Hold USE = exit vehicle.")
+	local.player.origin = self.origin
+	local.player.passenger = 1
+	local.PI = 3.14159265359
+	local.driver = self.driver
+
+	while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
+	{
+		local.holdtime = 0
+		local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
+		if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
+		local.radians = local.degrees * (local.PI / 180)
+		local.sin = (sin local.radians) * self.dist_offset[local.s]
+		local.cos = (cos local.radians) * self.dist_offset[local.s]
+
+		local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
+		if(local.player.fireheld != 1)
+		{
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
+			else { local.player.viewangles = self.angles }
+		}
+		if(self.velocity != ( 0 0 0 )) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed } // keep passengers inside the vehicles
+		else { local.player.velocity = ( 0 0 0 ) }
+
+		while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && local.player.useheld == 1)
+		{
+			local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
+			if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
+			local.radians = local.degrees * (local.PI / 180)
+			local.sin = (sin local.radians) * self.dist_offset[local.s]
+			local.cos = (cos local.radians) * self.dist_offset[local.s]
+
+			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) }
+			else { local.player.viewangles = self.angles }
+			if(self.velocity != ( 0 0 0 )) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed }
+			else { local.player.velocity = ( 0 0 0 ) }
+	
+			if(local.holdtime >= 20) // hold USE for 1 second.
+			{
+				if(local.player.isdog != 1) { local.player show }
+				local.player solid
+				local.player takedamage
+				local.player noclip
+				local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) ) // using player's origin might prevent passengers getting stuck inside each other
+				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+
+				local.player thread wallstuck_fix
+				self.passengers[local.s] = NIL
+				local.player.passenger = 0
+				end
+			}
+			local.holdtime++
+			waitframe
+		}
+		waitframe
+	}
+	if(self != NULL) { self.passengers[local.s] = NIL }
+
+	if(local.player != NULL)
+	{
+		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
+		local.player.passenger = 0
+		if(local.player.dmteam != spectator)
+		{
+			if(local.player.isdog != 1) { local.player show }
+			local.player solid
+			local.player takedamage
+			local.player noclip
+			if(local.player.dmteam == local.team) // if the passenger did not switch teams
+			{
+				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units
+				local.cos = local.cos / local.distoffset * 25
+	
+				local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )
+				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+	
+				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1)) { local.player damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			}
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+seatstuff:
+
+	self.seats = 9
+
+	self.degree_offset[1] = 25.796		// [1] = front passenger. [2] = back right, [3], [4], [5] = front right. [6] = front left, [7], [8], [9] = back left
+	self.dist_offset[1] = 133.282
+	self.height_offset[1] = 50
+
+	self.degree_offset[5] = 170.198 // very front right
+	self.dist_offset[5] = 218.976
+	self.height_offset[5] = 50
+	self.degree_offset[4] = 137.859
+	self.dist_offset[4] = 163.920
+	self.height_offset[4] = 50
+	self.degree_offset[3] = 142.595
+	self.dist_offset[3] = 63.107
+	self.height_offset[3] = 50
+	self.degree_offset[2] = 51.896
+	self.dist_offset[2] = 48.277
+	self.height_offset[2] = 50 // back right
+
+	self.degree_offset[6] = -168.554 // very front left
+	self.dist_offset[6] = 218.308
+	self.height_offset[6] = 50
+	self.degree_offset[7] = -161.461
+	self.dist_offset[7] = 136.358
+	self.height_offset[7] = 50
+	self.degree_offset[8] = -136.768
+	self.dist_offset[8] = 63.300
+	self.height_offset[8] = 50
+	self.degree_offset[9] = -54.647
+	self.dist_offset[9] = 53.714
+	self.height_offset[9] = 50 // back left
+end
+			// run "exec global/playerboat::test boat_01" in any map .scr script, or any boat's targetname other than "boat_01".
+test local.targetname:	// player[1] can now stand anywhere on the boat and easily calculate the desired passenger seat's "degree_offset" and "dist_offset" for the "seatstuff" thread.
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		local.v1 = ( $(local.targetname).origin[0] $(local.targetname).origin[1] 0 )
+		local.v2 = ( $player[1].origin[0] $player[1].origin[1] 0 )
+
+		local.v = vector_length(local.v1 - local.v2)
+		local.a = vector_toangles(local.v1 - local.v2)
+		local.a2 = local.a[1] + 180
+		if(local.a2 >= 180) { local.a2 -= 360 }
+
+		iprintlnbold("dist = " + local.v + " ... degree = " + local.a2)
+		wait 2
+	}
+	thread test local.targetname
+end
+
+////////////////////////////////////////////////////////////////////////
+
+dummyavatar:
+
+	local.avatar = spawn func_beam
+	local.avatar attach self.driver "Bip01 Head"
+	local.avatar.origin = self.driver.origin + ( 0 0 100 )
+	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+	local.avatar minoffset 0.0
+	local.avatar maxoffset 0.0
+	local.avatar color ( 1.0 1.0 1.0 )
+	local.avatar scale 7.0
+	local.avatar life 0
+	if(self.driver.dmteam == "allies") { local.avatar shader ("textures/hud/allies_headicon") }
+	if(self.driver.dmteam == "axis") { local.avatar shader ("textures/hud/axis_headicon") }
+	local.avatar numsegments 1
+	local.avatar alpha 0.80
+	local.avatar activate
+	local.heightinc = 0
+
+	self.driver show
+	local.team = self.driver.dmteam
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	{
+		local.avatar.origin = self.driver.origin + ( 0 0 (100 + local.heightinc) )
+		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+		waitframe
+	}
+	local.avatar remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+wallstuck_fix:
+
+	local.c = 0
+	local.origin = self.origin
+	local.team = self.dmteam
+
+	if(self.wallstuck_fixing == 1) { end }
+	self.wallstuck_fixing = 1
+
+	while(self != NULL && isalive self && self.dmteam == local.team) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
+	{
+		if(local.c >= 60) // about 3 seconds
+		{
+			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
+			break
+		}
+		local.c++
+		waitframe
+	}
+	if(self != NULL) { self.wallstuck_fixing = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+touching_playerboat local.vehicles:
+
+	level.touching_playerboat = 1
+
+	if(local.vehicles == NIL) // only run once when map starts. leave local.vehicles = NIL or empty at first.
+	{
+		local.a = 0
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == DrivableVehicle && local.entity.model == "models/vehicles/higginsxtrahull.tik")
+			{
+				local.vehicles[local.a] = local.entity.targetname
+				local.a++
+			}
+			if(local.e % 14 == 0) { waitframe }
+		}
+		if(local.vehicles.size < 1) { end }
+	}
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			$player[local.i].touching_playerboat = 0 // ensures that only one boat needs to be touched for touching_playerboat = 1.
+		}
+
+		for(local.a = 0; local.a <= local.vehicles.size; local.a++)
+		{
+			for(local.s = 1; $(local.vehicles[local.a]) != NULL && local.s <= $(local.vehicles[local.a]).size; local.s++) // sometimes, two vehicles with the same targetname can exist
+			{													// for 1 or 2 frames. this for-loop prevents any console errors.
+				for(local.i = 1; local.i <= $player.size; local.i++)
+				{
+					if($player[local.i] istouching $(local.vehicles[local.a])[local.s]) { $player[local.i].touching_playerboat = 1 }
+				}
+			}
+		}
+		waitframe
+	}
+
+	thread touching_playerboat local.vehicles
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster local.model:
+
+level.mapname = getcvar "mapname"
+local.master = spawn scriptmaster
+
+if(level.boatscriptmaster != 1)
+{
+	local.master aliascache wavelaps sound/amb/Wave_Laps1.wav soundparms 1.0 0.0 1.0 0.0 200 4000 auto loaded maps level.mapname
+	local.master aliascache riverdrive sound/amb/Amb_River.wav soundparms 2.0 0.0 1.0 0.0 200 4000 auto loaded maps level.mapname
+}
+
+local.soundtype = 2
+if(level.vehiclescriptmaster[local.soundtype] != NIL) { end }
+level.vehiclescriptmaster[local.soundtype] = 1
+
+if(local.soundtype == 2 && level.mapname != "training" && level.mapname != "m3l3" && level.mapname != "m5l2a")
+{
+	local.master aliascache sdkfz_snd_idle sound/vehicle/veh_track_idle.wav soundparms 0.5 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 2 && level.mapname != "m3l3" && level.mapname != "m5l2a")
+{
+	local.master aliascache sdkfz_snd_run sound/vehicle/veh_track_move.wav soundparms 1.5 0.0 1.0 0.0 1000 6000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_revup sound/vehicle/veh_track_revup.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_revdown sound/vehicle/veh_track_revdown.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_shift1 sound/vehicle/veh_track_shiftin.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_shift2 sound/vehicle/veh_track_shiftout.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_on sound/vehicle/veh_track_on.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_start sound/vehicle/veh_track_on.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_off sound/vehicle/veh_track_off.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_stop sound/vehicle/veh_track_off.wav soundparms 1.5 0.0 1.0 0.0 1000 6000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_stone sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_wood sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_doorclose sound/null.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_dooropen sound/null.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 2 && level.mapname != "m3l3" && level.mapname != "m5l2a" && level.mapname != "m5l2b")
+{
+	local.master aliascache sdkfz_vehicle_crash1 sound/null.wav soundparms 0.7 0.4 1.0 0.5 100 1600 auto loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname != "m1l3a" && level.mapname != "m1l3b" && level.mapname != "m4l1")
+{
+	local.master aliascache explode_truck1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname != "m1l3a" && level.mapname != "m1l3b")
+{
+	local.master aliascache explode_truck2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_truck3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_truck4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_truck5 sound/weapons/explo/Explo_MetalMed5.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache damage_vehicle1 sound/null.wav soundparms 0.7 0.4 0.9 0.2 160 1600 auto loaded maps level.mapname
+}
+
+level.boatscriptmaster = 1
+level.vehiclescriptmaster2 = 1
+end

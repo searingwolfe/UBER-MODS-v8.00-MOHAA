@@ -1,0 +1,736 @@
+main local.origin local.angles local.bulletsanger local.angertime:
+
+exec global/aliascache_triggersounds.scr dog
+
+local.thing = spawn trigger_use //targetname local.name // to eliminate name parameter, add "entnum" to targetname after "level waittill spawn".
+local.thing model models/animal/german_shepherd.tik
+local.thing.origin = local.origin
+local.thing.angles = local.angles
+local.thing setsize ( -30 -30 -10 ) ( 30 30 50 )
+local.thing droptofloor
+local.thing show
+local.thing anim dog_stand_idle
+local.thing light .4 .18 0 150
+
+local.thing message "*** You have transformed into a living dog. ***"
+local.thing setthread player
+
+local.thing2 = spawn trigger_multiple spawnflags 128
+//local.thing2 model "items/cigarette.tik" 
+local.thing2.origin = local.origin
+local.thing2 setsize ( -50 -50 -20 ) ( 50 50 50 )
+local.thing2.scale = 0.01
+local.thing2 light 1 .75 0 50
+//local.thing2 notsolid		// if using a model for a trigger, do not add "notsolid", otherwise "setthread" will not work.
+
+local.thing2.bulletsanger = local.bulletsanger
+local.thing2.angertime = local.angertime * 10 // for-loop counter increments every 0.1 seconds.
+local.thing2.shot = 0
+local.thing2.runonce = 0
+local.thing2.angrydog = 0
+local.thing2 setthread dogtrig_shot
+
+level waittill spawn
+
+local.thing.targetname = ("dogtrig" + local.thing.entnum)
+local.thing2.name = local.thing.targetname
+
+local.thing thread dog_anims
+end
+
+dog_anims:
+
+	if(self.animsave == NIL) // dog only idles for 20 seconds after map starts, then it's always walking or resting.
+	{
+		self.animsave = 0
+		wait 5
+		if(self.animsave < 3 && self.angrydog != 1) { self anim dog_stand_idle; self.animsave = 0; self thread trigsounds } // "animsave" indicates the animation to return to, after dog is shot at and pain animation ends.
+		wait 5
+		if(self.animsave < 3 && self.angrydog != 1) { self anim dog_stand_idle; self.animsave = 0; self thread trigsounds } // the dog barks once, each time the "idle" anim runs.
+		wait 5
+		if(self.animsave < 3 && self.angrydog != 1) { self anim dog_stand_idle; self.animsave = 0; self thread trigsounds } // 0 = idle, 1 = walking, 2 = resting, 3 = curious (angry and ready to kill players), 4 = discipline (after anger is done).
+		wait 5
+	}
+	while(1)
+	{															    // if dog is already walking, don't run another "dog_walk_leash" anim.
+		if(self.animsave < 3 && local.dogwalking != 1 && self.angrydog != 1) { self anim dog_walk_leash; self.animsave = 1; local.dogwalking = 1; self thread trigsounds } 
+		wait 30
+		local.r = randomint(2) // if local.r = 0, dog keeps walking. otherwise, rest & end this thread.
+		if(local.r == 1) 
+		{ 
+			if(self.animsave < 3 && self.angrydog != 1) { self anim dog_rest; self.animsave = 2; self thread trigsounds; break }
+		} 
+	}
+end
+
+dogtrig_shot:
+
+	if(self == NULL) { end }
+	self nottriggerable
+	if(self.shot < self.bulletsanger && $(self.name).animsave != 4) // begin counting when dog gets shot at, only run one "shot_reset" thread.
+	{ 
+		self.shot++
+		if(self.runonce != 1) { self thread shot_reset }
+	}
+	if(self.shot >= self.bulletsanger) { self.runonce = 0; self thread shot_reset }
+	
+	if(self.takingpain != 1) { self thread dogpain }
+
+	self light 1 1 1 50
+	$(self.name) light 1 1 1 150
+
+	waitframe
+	self light 1 .75 0 50
+	if($(self.name).angrydog != 1) { $(self.name) light .4 .18 0 150 }
+	if($(self.name).angrydog == 1) { $(self.name) light 1 0 0 150 }
+	
+	if(self.shot >= self.bulletsanger && self.angrydog != 1) { self.angrydog = 1 }
+	self triggerable
+end
+
+dogpain:
+
+	self.takingpain = 1
+	self thread trigsounds
+
+	if($(self.name).animsave != 2 && $(self.name).animsave != 4)
+	{
+		local.r = randomint(3)
+		if(local.r == 0) { $(self.name) anim dog_pain_head }
+		if(local.r == 1) { $(self.name) anim dog_pain_front }
+		if(local.r == 2) { $(self.name) anim dog_pain_back }
+		wait 0.5
+	}
+
+	if($(self.name).animsave == 0) { $(self.name) anim dog_stand_idle } // return to original animation before getting shot.
+	if($(self.name).animsave == 1) { $(self.name) anim dog_walk_leash }
+	if($(self.name).animsave == 2) 
+	{ 
+		$(self.name) anim dog_standup
+		self.shot = 0
+
+		wait 0.3 
+		$(self.name).animsave = 1
+ 		$(self.name) thread dog_anims // if resting dog was shot, stand him up, then begin walking again.
+	}
+	if($(self.name).animsave == 3) { $(self.name) anim dog_stand_curious }
+	self.takingpain = 0
+end
+
+shot_reset:
+
+	local.angles = $(self.name).angles
+	self.runonce = 1
+	for(local.c = 0; local.c <= 40; local.c++) // after 4 seconds and if self.shot < self.bulletsanger, then make self.shot = 0.
+	{
+		if(self.shot >= self.bulletsanger || self.angrydog == 1) { break }
+		wait 0.1
+	}
+	if(local.c >= 40 && self.shot < self.bulletsanger) // if the 4-second counter ended before the dog was shot "bulletsanger" times, then make "shot = 0" again.
+	{ 
+		self.shot = 0 
+		self.angrydog = 0
+		$(self.name).angrydog = 0
+		self.runonce = 0
+		local.c = 0
+	}
+
+	if($(self.name).animsave > 2) { end } // if dog is still angry, then end this thread immediately.
+
+	local.c = 0
+	for(local.a = 0; self.angrydog == 1 && local.a <= self.angertime; local.a++) // dog is now angry and ready to bite players, angry for "angetime" seconds.
+	{ 
+		self light 1 .75 0 50
+		$(self.name) light 1 0 0 150
+		if(local.a < 1 || (local.c >= 50 && local.a < (self.angertime - 4))) 
+		{
+			$(self.name) anim dog_stand_curious; $(self.name).animsave = 3; self thread trigsounds; local.c = 0
+		}
+		$(self.name).angrydog = 1
+		$(self.name) nottriggerable	// nobody can become a dog when the dog is angry.
+
+		self thread biteplayers
+		wait 0.1
+
+		local.c++ // loop dog_stand_curious animations every 4 seconds.
+		if(self.takingpain == 1) { local.c = 0 }
+	}
+	if(local.a >= self.angertime) 
+	{ 
+		self light 1 .75 0 50
+		$(self.name) light .4 .18 0 150
+		$(self.name).angrydog = 0
+		self.angrydog = 0
+		self.shot = 0
+		self.disciplining = 1
+
+		$(self.name).scale = 0.001 // "hide" turns off the light.
+		$(self.name).angles = $(self.name).angles + ( 0 180 0 ) // dog must be rotated 180 degrees when using "dog_discipline".
+		waitframe
+		$(self.name).scale = 1
+		$(self.name) anim dog_discipline; $(self.name).animsave = 4; self thread trigsounds 1
+
+		wait 3
+		$(self.name).scale = 0.001
+		$(self.name).angles = local.angles
+		waitframe
+		$(self.name).scale = 1
+
+		$(self.name) triggerable
+		$(self.name).animsave = 1
+		self.shot = 0
+		self.runonce = 0
+		self.disciplining = 0
+
+		$(self.name) thread dog_anims
+	}
+end
+
+biteplayers:
+
+	local.shortest_dist = 99999 	// give this a really high number instead of 0, since we're looking for the smallest number in an array of players, not the biggest one.
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.dist = vector_length(self.origin - $player[local.i].origin) // do "self - $player[local.i]", not the other way around, otherwise dog's angles will be backwards.
+		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator")  // if a player gets too close, kill the player
+		{
+			if(local.dist < 70)
+			{
+				$player[local.i] iprint ("Don't get too close to an angry dog.")
+				$player[local.i] thread bite_anim self.name
+				waitframe
+			}
+			if(local.dist < 700 && $(self.name) cansee $player[local.i] 360 && local.dist < local.shortest_dist) // look at the closest player it can see
+			{
+				local.shortest_dist = local.dist
+				local.d = local.i
+			}
+		}
+	}
+	if(local.d != NIL && local.d <= $player.size && $player[local.d] != NULL && $player[local.d].dmteam != "spectator")
+	{
+		local.dog_vec = ( $player[local.d].origin - self.origin )
+		local.dog_ang = vector_toangles(local.dog_vec)
+		$(self.name).angles = ( 0 local.dog_ang[1] 0 ) // self = invisible trigger, $(self.name) = dog model trigger
+	}
+end
+
+bite_anim local.name:
+
+	$(local.name).bitingplayer = 1
+	$(local.name) anim dog_bite_face
+	killent self.entnum // "self kill" doesn't work if the player just respawned
+
+	wait 1
+	$(local.name) anim dog_stand_curious
+	$(local.name).bitingplayer = 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+trigsounds local.discipline:
+
+	self stopsound
+	if(self.takingpain == 1 && self.disciplining != 1) { self playsound dogpain }
+
+	if(self.animsave == 0) // idle
+	{
+		if(self.takingpain != 1) { self playsound dogpant }
+		wait 0.32
+		if(self.takingpain != 1) { self playsound dogcollar }
+	}
+	if(self.animsave == 2) // rest
+	{
+		if(self.takingpain != 1) { self playsound dogsniff }
+		wait 0.32
+		if(self.takingpain != 1) { self playsound dogcollar }
+		wait 3.3
+		if(self.takingpain != 1) { self playsound dogcollar }
+	}
+	if(self.runonce == 1 && self.takingpain != 1 && local.discipline != 1) // self.animsave == 3, curious
+	{
+		if(self.takingpain != 1 && self.angrydog == 1) { self playsound dogsniff }
+		wait 0.5
+		if(self.takingpain != 1 && self.angrydog == 1) { self playsound dogcollar }
+		waitframe
+		if(self.takingpain != 1 && self.angrydog == 1) { self playsound doggrowl }
+		wait 0.6
+		if(self.takingpain != 1 && self.angrydog == 1) { self playsound dogsniff }
+		wait 0.6
+		if(self.takingpain != 1 && self.angrydog == 1) { self playsound dogcollar }
+		waitframe
+		if(self.takingpain != 1 && self.angrydog == 1) { self playsound dogsniff }
+		wait 0.45
+		if(self.takingpain != 1 && self.angrydog == 1) { self playsound dogsniff }
+		wait 1.5
+		if(self.takingpain != 1 && self.angrydog == 1)
+		{
+			local.r = randomint(2)
+			if(local.r == 0) { self playsound doggrowl1 }
+			if(local.r == 1) { self playsound doggrowl2 }
+		}
+	}
+	if(local.discipline == 1) // self.animsave == 4, discipline
+	{
+		self playsound dogcollar
+		waitframe
+		self playsound dogpain
+		wait 1.2
+		self playsound dogcollar
+		waitframe
+		self playsound dogpain
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+player:
+
+	self nottriggerable
+	local.player = parm.other
+
+	if(local.player.driving == 1 || local.player.flying == 1) { end }
+	if(local.player.isdog == 1 || local.player.dead == 1)
+	{
+		self triggerable
+		if(local.player.dead != 1) { local.player iprint ("You are already a dog.") }
+		end
+	}
+
+	//local.player iprint ("Bite people to kill them. CAUTION: This includes teammates.")
+	local.player iprint ("FIRE = bite, USE + FIRE = bark, WALK + Stand = quiet walking.")
+	//local.player iprint ("JUMP = high jump animation, hold USE + JUMP = shorter jump.")
+	local.player.isdog = 1
+
+	local.specorg = local.player.origin 
+	local.specang = (angles_toforward local.player.viewangles)
+
+	local.anim = spawn script_model model self.model
+	local.anim.angles = local.player.angles
+	local.anim anim idle
+	local.anim notsolid
+
+	local.player takeall
+	local.player hide
+
+	local.pos = local.anim gettagposition "tag_mouth" // when the player bites, anyone who touches the dog's mouth is killed.
+	local.anim.trigger = spawn trigger_multiple targetname ("dogmouthtrig_" + local.player.entnum)
+	local.anim.trigger.origin = local.pos
+	local.anim.trigger setsize ( -5 -5 -5 ) ( 5 5 5 )
+	local.anim.trigger setthread bite
+	local.anim.trigger nottriggerable
+	local.anim.trigger.player = local.player
+	local.anim.trigger glue local.anim
+	local.anim.trigger.biting = 0
+	local.anim.origin = (local.specorg + ((local.specang[0]) (local.specang[1]) (0)) * 50)
+
+	local.player.dog = local.anim
+	local.anim thread move local.player
+
+	local.player thread sounds_loop
+	local.player thread get_movement
+	local.player thread run_counter
+
+	self triggerable
+end
+
+bite:
+
+	local.player = parm.other
+	if(self.player.dmteam == "allies" || self.player.dmteam == "axis") { local.noteamkilling = 1 }
+
+	if(local.player == self.player || local.player.bitten == 1 || (local.player.dmteam == self.player.dmteam && local.noteamkilling == 1)) { end }
+	else
+	{
+		local.player.bitten = 1
+		local.player damage self.player 15000 self.player (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 // use "damage" so self.player's kills are counted.
+		wait 1
+		if(local.player != NULL) { local.player.bitten = 0 }
+	}
+end
+
+run_counter:
+
+	local.c = 0
+	local.team = self.dmteam
+
+	while(1)
+	{
+		if(self == NULL || !isalive self || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1) 
+		{
+			if(isalive self) 
+			{ 
+				if(self != NULL && self.dog != NULL) { self.dog remove }
+				self thread global/get_player_weaponclass.scr::give_weapons self.mef_weaponclass
+			}
+			if(self != NULL) { self.isdog = 0 }
+			end
+		}
+		local.position = self getposition
+
+		while(isalive self && self.dmteam == local.team && level.change_team_score != 1 && self.fellundermap != 1 && self.dog_anim == dog_run && local.position == standing) 
+		{
+			wait 0.1
+			if(local.c < 50) { local.c++ } 		 // count to 5 seconds when dog begins running, only if player is standing (not crouching).
+			if(local.c >= 50) { self.runningstop = 1 } // when the player runs for 5+ seconds and stops running afterwards, do the "dog_leash_stop" animation.
+		}
+		if(self != NULL && self.dog_anim != dog_run) { self.runningstop = 0; local.c = 0 } 
+		waitframe
+	}
+end
+
+move local.player:
+
+	local.anim = dog_stand_idle
+	local.team = local.player.dmteam
+	local.player.dog_anim = dog_stand_idle
+
+	while(1)
+	{
+		if(local.player == NULL || local.player.dmteam != local.team || level.change_team_score == 1 || local.player.fellundermap == 1)
+		{
+			if(local.player != NULL)
+			{
+				if(local.player.deathanim == 0) { self anim death }
+				if(local.player.deathanim == 1) { self anim dog_death }
+				if(local.player.deathanim == 2) { self anim dog_death2 }
+				if(local.player.deathanim == 3) { self anim dog_death_run }
+				local.player thread sounds
+			}
+			if(isalive local.player) { local.player thread global/get_player_weaponclass.scr::give_weapons local.player.mef_weaponclass } // if they switch teams without dying, don't let them respawn empty handed.
+
+			if(self != NULL) { self remove }
+			end
+		}
+
+		local.specang = (angles_toforward local.player.viewangles)
+		local.specorg = local.player.origin
+		self.velocity = local.player.velocity
+		self.origin = (local.specorg + ((local.specang[0]) (local.specang[1]) (0)) * 50) // keep dog 50 units in front of player
+		self.angles = local.player.angles
+
+		if(local.anim != local.player.dog_anim)
+		{
+			if(local.player.dog_anim == dog_death)
+			{
+				if(local.player.deathanim == 0) { self anim death }
+				if(local.player.deathanim == 1) { self anim dog_death }
+				if(local.player.deathanim == 2) { self anim dog_death2 }
+				if(local.player.deathanim == 3) { self anim dog_death_run }
+				local.player thread sounds
+				wait 10
+				if(self != NULL) { self remove }
+				end
+			}
+			self anim local.player.dog_anim
+			local.anim = local.player.dog_anim // perform the current dog_anim anim, then update local.anim if the player is still alive.
+		}
+		waitframe
+	}
+end
+
+get_movement:
+
+	local.team = self.dmteam
+
+	while(1)
+	{
+		if(self == NULL || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1)
+		{
+			if(self != NULL) 
+			{
+				self.isdog = 0
+				self.dog remove
+				self thread global/get_player_weaponclass.scr::give_weapons self.mef_weaponclass
+			}
+			end
+		}
+		else
+		{
+			if(local.health != NIL && self.health < local.health && local.position != offground) // if the dog takes damage (not fall damage), then do a pain animation.
+			{
+				local.r = randomint(3)
+				if(local.r == 0) { self.dog_anim = dog_pain_head }
+				if(local.r == 1) { self.dog_anim = dog_pain_front }
+				if(local.r == 2) { self.dog_anim = dog_pain_back }
+				self thread sounds
+				wait 0.5
+			}
+			local.health = self.health
+
+			local.position = self getposition // these are found in global/mike_legs.st (moveposflags "movement" "position") 
+			local.movement = self getmovement // for some reason when walking while standing (not crouching), movement = "standing" (should be "walking", possible game bug).
+
+			if(self.origin == local.originold && self.runningstop == 1) 		// if the dog is running for 5 seconds or more,
+			{ 									// do "dog_leash_stop" when dog stops running.
+				self.dog_anim = dog_leash_stop
+				self.runningstop = 0
+				wait 0.5
+			}	
+			if(local.movement == running) { self.dog_anim = dog_run }			
+			if(local.movement == walking) { self.dog_anim = dog_walk_bored } 					// this only works for crouching + walking.
+			if(local.movement == standing && self.origin != local.originold) { self.dog_anim = dog_walk_leash }     // fix for standing + walking. also move around silently.
+
+			if(local.position == standing && local.movement == standing && self.origin == local.originold) { self.dog_anim = dog_stand_idle } // "if dog_rest, then dog_standup, wait 0.3, dog_stand_idle" was
+			local.originold = self.origin													  // removed from here, since "standup" anim didn't work well with players.
+
+			if(local.position == offground && self.dog_anim == dog_run) { self.dog_anim = dog_leap } // dog jumps higher than before with only the "leap" anim.
+			if(self.useheld == 1)
+			{
+				if(local.position == offground && self.dog_anim == dog_leap) { self.dog_anim = dog_land } // if holding USE, the dog will not jump as high since "land" anim is added.
+			}
+
+			if(local.position == crouching && local.movement == standing)
+			{
+				waitframe // keeps the dog_rest anim timed properly.
+				waitframe
+				waitframe 
+				waitframe
+				if(self != NULL) { local.position = self getposition }
+				if(local.position == offground) { self.dog_anim = dog_leap } // crouching, but still falls.
+				else if(local.position == crouching && local.movement == standing) { self.dog_anim = dog_rest }
+			}
+
+			if(self != NULL && !isalive self)
+			{
+				self.dog_anim = dog_death
+				self hide
+
+				while!(isalive self)
+				{
+					if(self == NULL || self.dmteam != local.team || level.change_team_score == 1) 
+					{
+						if(self != NULL) { self.isdog = 0 }
+						end
+					}
+					else { waitframe }
+				}
+
+				self show
+				self.isdog = 0
+				end
+			}
+
+			if(self.fireheld == 1 && self.useheld == 0 && self.held != 1)
+			{
+				local.dog_anim = self.dog_anim
+				self.held = 1
+				self.dog.trigger triggerable
+				self.dog.trigger.biting = 1
+				if(self.viewangles[0] < 0 || self.viewangles[0] >= 180) // if player is looking horizontally to straight up, bite face
+				{							// if player is looking horizontally to straight down, bite leg
+					self.dog_anim = dog_bite_face; self thread sounds
+				}
+				else { self.dog_anim = dog_bite_leg; self thread sounds }
+				wait .75
+				if(self != NULL)
+				{
+					self.dog.trigger.biting = 0
+					self.dog.trigger nottriggerable
+					self.dog_anim = local.dog_anim
+				}
+			}
+
+			if(self.fireheld == 1 && self.useheld == 1 && self.held2 != 1) // if player is Left/Right-clicking while holding USE, only bark.
+			{
+				local.dog_anim = self.dog_anim
+				self.held2 = 1
+				self.dog_anim = dog_bark; self thread sounds
+				self.dogbarking = 1
+				wait .20
+				if(self != NULL) { self.dog_anim = local.dog_anim }
+			}
+			if(self.fireheld != 1) { self.held = 0; self.held2 = 0 }
+			if(self.passenger == 1) { self.dog_anim = dog_stand_idle } // if dog is a passenger of a vehicle, don't run
+		}
+		waitframe
+		if(self != NULL && self.inventory.size > 0) { self takeall } // in case they pick up some weapons	
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+sounds_loop: // recreating the german_shepherd.tik anim sounds for server-side players who don't have the UBER mods (or a modded ubersound.scr).
+
+	local.team = self.dmteam
+	self.dogjumpcount = 0
+
+	while(isalive self && self.dmteam == local.team && self.dog != NIL && self.dog != NULL && level.change_team_score != 1)
+	{
+		if(self.dogbarking != 1 && self.dogjumping == 1 && (self getposition) == "standing" && self.dogjumpcount >= 20) { self.dog playsound dogcollar; self.dogjumpcount = 0 }
+		if(self.dogbarking != 1 && self.dogjumping == 1) { self.dogjumpcount++ } // count how long the player is in the air, to prevent dogcollar sound from playing after every little jump
+
+		if(self != NULL && self.dog != NULL && self.dog_anim == dog_run)
+		{
+			self.dog.animating = 0
+			self.dog playsound dogfs
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_run) { self.dog playsound dogfs }
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_run) { self.dog playsound dogfs }
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_run) { self.dog playsound dogfs }
+			if(self != NULL) { self.dogbarking = 0; self.dogjumping = 0; self.dogjumpcount = 0 }
+		}
+		if(self != NULL && self.dog != NULL && self.dog_anim == dog_walk_bored)
+		{
+			self.dog.animating = 0
+			self.dog playsound dogpant
+			self.dog playsound dogfs
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_walk_bored) { self.dog playsound dogfs }
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_walk_bored) { self.dog playsound dogfs }
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_walk_bored) { self.dog playsound dogfs }
+			if(self != NULL) { self.dogbarking = 0; self.dogjumping = 0; self.dogjumpcount = 0 }
+		}
+		if(self != NULL && self.dog != NULL && self.dog_anim == dog_leash_stop && self.dog.animating != 1)
+		{
+			self.dog.animating = 1
+			self.dog playsound dogfs
+			waitframe
+			if(self != NULL && self.dog != NULL)
+			{
+				self.dog playsound dogcollar
+				self.dog playsound dogfs
+			}
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_leash_stop) { self.dog playsound dogfs }
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_leash_stop)
+			{
+				self.dog playsound dogfs
+				self.dog playsound dogcollar
+			}
+			if(self != NULL) { self.dogbarking = 0; self.dogjumping = 0; self.dogjumpcount = 0 }
+		}
+		if(self != NULL && self.dog != NULL && self.dog_anim == dog_rest && (self.dog.animating != 1 || self.dog_anim != local.dog_anim))
+		{
+			self.dog.animating = 1
+			self.dog playsound dogsniff
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_rest) { self.dog playsound dogcollar }
+			waitframe
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_rest) { self.dog playsound dogpant }
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_rest) { self.dog playsound dogcollar }
+			if(self != NULL) { self.dogbarking = 0; self.dogjumping = 0; self.dogjumpcount = 0 }
+		}
+		if(self != NULL && self.dog != NULL && self.dog_anim == dog_stand_idle && (self.dog.animating != 1 || self.dog_anim != local.dog_anim))
+		{
+			self.dog.animating = 1
+			if(self != NULL && self.dogbarking != 1 && self.dogjumping != 1) { self.dog playsound dogpant } // dogpant sometimes makes a barking sound too
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_stand_idle && self.dogjumping != 1) { self.dog playsound dogcollar } // dog_leap already has a dogcollar sound
+			if(self != NULL) { self.dogbarking = 0; self.dogjumping = 0; self.dogjumpcount = 0 }
+		}
+		if(self != NULL && self.dog != NULL && (self.dog_anim == dog_leap || (self getposition) == "offground") && (self.dog.animating != 1 || self.dog_anim != local.dog_anim))
+		{
+			self.dog.animating = 1
+			self.dog playsound dogfs
+			self.dogjumping = 1
+			self.dog playsound dogcollar
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL) { self.dog playsound dogfs }
+			waitframe
+			waitframe
+			if(self != NULL && self.dog != NULL) { self.dog playsound dogfs }
+		}
+		if(self != NULL && self.dog != NULL) { local.dog_anim = self.dog_anim }
+		waitframe
+	}
+end
+
+sounds:
+
+	if(self == NULL || self.dog == NIL || self.dog == NULL) { end }
+
+	if(self != NULL && self.dog != NULL && self.dog_anim == dog_bark)
+	{
+		waitframe
+		if(self != NULL && self.dog != NULL) { self.dog playsound dogbark }
+	}
+	if(self != NULL && self.dog != NULL && self.dog_anim == dog_bite_face)
+	{
+		waitframe
+		waitframe
+		if(self != NULL && self.dog != NULL) { self.dog playsound dogcollar }
+		waitframe
+		waitframe
+		if(self != NULL && self.dog != NULL) { self.dog playsound dogbite }
+		waitframe
+		waitframe
+		waitframe
+		waitframe
+		if(self != NULL && self.dog != NULL) { self.dog playsound dogfs }
+		waitframe
+		if(self != NULL && self.dog != NULL) { self.dog playsound dogfs }
+	}
+	if(self != NULL && self.dog != NULL && self.dog_anim == dog_bite_leg)
+	{
+		self.dog playsound dogbite
+	}
+	if(self != NULL && self.dog != NULL && (self.dog_anim == dog_pain_head || self.dog_anim == dog_pain_front || self.dog_anim == dog_pain_back))
+	{
+		if(self.health > 0) { self.dog playsound dogpain }
+		if(self.health <= 0)
+		{
+			self.deathanim = randomint(4)
+			if(self.deathanim == 0) // anim death
+			{
+				self playsound dogdeath
+				waitframe
+				waitframe
+				waitframe
+				waitframe
+				waitframe
+				if(self != NULL) { self playsound sndbodyfall }
+			}
+			if(self.deathanim == 1) // anim dog_death
+			{
+				self playsound dogdeath
+				waitframe
+				waitframe
+				if(self != NULL) { self playsound sndbodyfall }
+			}
+			if(self.deathanim == 2 || self.deathanim == 3) // anim dog_death2, anim dog_death_run
+			{
+				self playsound dogdeath
+				waitframe
+				waitframe
+				waitframe
+				waitframe
+				if(self != NULL) { self playsound sndbodyfall }
+			}
+		}
+	}
+end
