@@ -1,0 +1,69 @@
+<><><> Updates & Bug Fixes <><><>
+
+v7.88 (10-26-2023): - Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
+- Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
+- Tank and halftrack 30cals, as well as turret players, are scaled down to 0.5 to prevent blocking the driver's view or a rotating tank's turret.
+
+- If a player's 30cal_viewmodel.tik somehow doesn't get removed, a thread continuously removes any viewmodel entities near players that are not using turrets (only works if map entity count is less than 869!).
+- Two more missing tank sound aliases added to prevent console errors.
+- Fixed a bug that prevented players from driving other vehicles/tanks if they died right before getting into a vehicle/tank, or any time after exiting a flak88/nebelwerfer.
+- Fixed a potential server crashing bug from "wallstuck_fix" thread, due to more and more of these threads running without old ones ending yet (entering and exiting vehicles/tanks repeatedly).
+
+- Flyable planes' mg42 & 30cal guns now deal radiusdamage only if their bullets did not hit any players or planes, allowing bullets to destroy destructible objects around a map.
+- Players flying planes will eject after a round ends in Cyber Attack, Search & Destroy, or Freeze Tag (if level.change_team_score = 1).
+- If player flying a plane dies, the game now says [player] "blew up", instead of "died". Few more NIL & NULL errors also fixed.
+
+- Fell-under-map teles fixed to prevent teleporting players while in vehicles, tanks, or planes.
+- Flak88s, nebelwerfers, vehicles, tanks, and planes all make sure a gametype round has not ended, and make sure the player isn't currently a living dog or inside another drivable entity.
+
+- playercount.scr & entitycount.scr CVAR scripts now properly display $player names without printing errors when $players suddenly become NULL (i.e. $player[1] = NULL but $player[2] still exists).
+- playercount.scr CVAR script also keeps memory of players' IP addresses when initially joining the server ("localhost" may also indicate duplicate IPs, usually from LAN players sharing the same IP).
+- find.scr & findent.scr CVAR scripts updated to include printing the entity's ".gun" and ".gun2" turret slot entities if they exist.
+- Disabled "anti_hacks" thread in cvars/adminstuff.scr to prevent players from crashing due to "command overflow" errors (a better script will be added in a future update).
+
+- Fixed rare "cannot cast array" errors in cyberattack_searchdestroy.scr if somehow 2+ frozen bodies have the same targetname, now checking for all entities in a $targetname.size array.
+- Fixed spamming NULL errors from jetpack/trigger.scr caused when a player changes teams while using a jetpack.
+
+- "noclip2 [client num]", "noclip2 [net name]" CVAR added for allowing more than just $player[1] (client num = 1) to noclip around the map (still works if "cheats" = "0").
+
+- "coord2" CVAR added to print all players' coords & angles to a "main/cvars/coords.txt" file (must create this file for CVAR to work).
+- "coord2 entity" or "coord2 1" = print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line.
+- "coord2 trigger" = print "( 0 0 0 ) " coords format on the same line.
+- "coord2 spawn" = print ""0 0 0" "angle" "0"" coords format on a new line.
+
+---------------
+
+- M1L3A fully modded. 3 tanks, 7 drivable vehicles, and 4 flyable plane triggers added to the map. 2 sets of radiobomb-walkies, 4 extra throwing knives also added.
+- Laser roads across the back edge of the map allow vehicles via ramps to drive on/off the main part of the map, also connecting to the road at the far end of the map.
+- Any vehicle/tank that falls off the laser road, or is somehow pushed outside of the map, will explode.
+- NOTE: Tank treads should be roughly horizontal before going onto the laser road, otherwise the tank could fly up into the sky and explode!
+- NOTE: Players driving some vehicles with windshields (such as mercedes), cannot see any lasers through the windshield.
+
+- Player spawns added and distributed more widely across the Allies/Axis spawns (none near the big building).
+- Invisible walls block prevent any players or projectiles from going under the map or going behind rock cliffs and shooting through them.
+- Some teles allow players to stand on rock cliffs or platforms on top of large rocks, to shoot players from high above them.
+- Alarm switches in the dead-end halls behind the openable doors each blow up a bangalore outside the door.
+- Cyber Attack and Search & Destroy bombs and bombsites added to the map. Base-Builder Allies/Axis labels fixed in the map script.
+
+- New airstrikes script (global/bomberplane.scr) simplifies adding them into maps. Only a splinepath is needed; bomb drop coords are automated and drop closer to splinepath's central line.
+- Parameters: path targetname, team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike).
+- Example: exec global/bomberplane.scr bomberpath allies 2 150 0 16 3.2
+- Example: exec global/bomberplane.scr bomberpath allies 2 150 1
+
+- level.bomberplane_health = 200     // these are defaults set inside global/bomberplane.scr
+- level.bomberplane_bombspeed = 0.25 // speed multiplier; higher = bombs drop horizontally further away from plane's splinepath (default = 0.5)
+- level.bomberplane_bombgravity = 2  // higher = bombs drop faster vertically & closer to plane's splinepath
+- Allies/Axis airstrikes can also be alternated within a simple while(1) loop. Example thread is below:
+
+airstrikes_alternate:
+
+	while(1)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { waitexec global/bomberplane.scr bomberpath allies 2 150 0 16 3.2 1 }
+		if(local.r == 1) { waitexec global/bomberplane.scr bomberpath2 axis 2 150 0 16 3.2 1 }
+		waitframe
+	}
+end
+
+<><><> <><><>

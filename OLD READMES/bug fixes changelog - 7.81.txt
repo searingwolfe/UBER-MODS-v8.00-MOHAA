@@ -1,0 +1,152 @@
+<><><> Updates & Bug Fixes <><><>
+
+v7.80 (9-13-2023): - Fixed NULL errors in some cvars. Added "findclass", "findent", "findmodel", and "drawpath" cvars.
+- Added "g_ubergametype" cvar only for printing "g_ubergametype will be changed upon restarting.". Added "g_ubermods" cvar (0, 1, 2 default) & "g_throwingknives" cvar (0 or 1) for enabling & disabling various mods.
+- Added more cvar number setting options for "entities" and "track" cvars [See README (7.80 essentials).txt for cvar info].
+- Added "HOLD Lean Left/Right" for 2 seconds in UBER BASEBUILDER to trim angle rotation for the currently held object (only while holding USE and build laser is visible). Let go of USE button to reset held object's angles.
+- "players 2" & "players 3" cvars now print players' names & IP addresses, not just their names.
+
+- Anti-hacker scripts added (cvars/adminstuff.scr): add admins' or moderators' IP addresses in the array at the top of this script. Players' IP addresses in the array will have name priority.
+- Two players cannot have the same name anymore. Anyone besides priority players who try to change their name to someone else's will add "_[clientnum]" to the end of their names" to differentiate them.
+- An anti-wallhack, anti-aimbot script is implemented, which prints out "I am a hacker..." for anyone the script suspects of hacking.
+- Anti-hacker CVARs are added: "hacker_kill [clientnum or player's name]" (i.e. "hacker_kill 27" or "hacker_kill Searingwolfe"), "hacker_unbindall [..]", "hacker_disconnect [..]", and "hacker_quit [..]".
+- These CVARs will continuously: kill a hacker, unbind all their keys, disconnect [kick] them, or make them quit their game.
+
+- Major cyberattack_searchdestroy.scr script changes: dead players mid-round can now spectate between living players and dead frozen bodies across the map, by pressing FIRE or USE (cycle forward/backward). This now applies to Cyber Attack too.
+- Incorporated the new g_ubergametype (0, bb, cyb, snd, ft) cvar (for example: add "seta g_ubergametype cyb" to server.cfg or before level waittill prespawn).
+- Freeze Tag UBER gametype added: essentially Cyber Attack but without any bomb or bombsites, and with players regularly respawning after getting melted instead of teleporting back to their dead bodies (level.meltrespawn = 1).
+- Freeze Tag only: melt laser threads added for melting any far-away frozen players in direct line-of-sight; "laser-groundtarget istouching frozen player" conditions added for melting players.
+- Fixed a server crashing issue in cyberattack_searchdestroy.scr, caused when a spectarget left the game and spectating teammates weren't getting a new player to spectate (script checked for self.spectarget == NULL, when it should've checked == NIL first).
+
+- Major updates for global/playertank.scr & global/playervehicle.scr, including all explosions & sounds fixed.
+- Destroyed model & turret model parameters removed for playertank.scr & playervehicle.scr, both are now automated from the given regular model parameter ("vehiclespeed" removed for playertank.scr, since it may be impossible to get working).
+- Drivable tanks' turrets now maintain their angles whenever players exit the tank (briefly setaimtarget where driver was last looking at).
+- Cannon smoke emitter added to the tank turrets' "tag_barrel" for a few seconds after firing tank shells. Some tank model and destroyed tank model setsizes readjusted.
+- Fixed rare cases where driver viewangles would not be ( 0 playerangles[1] 0 ), but instead be tilted left or right due to exiting a tank while it's on sloped terrain.
+- Ensured that all entities are properly removed when drivers exit tanks (2 of them were not deleting during tank reset, including a "Camera" class entity).
+- All players using vehicles, tanks, flak88s, or nebelwerfers will fully exit & reset them after a round ends in cyb, snd, or ft gamemodes.
+- Any player who exits a vehicle or tank and gets stuck inside a wall (stuck "falling") for too long (about 3 seconds) will automatically get respawned.
+
+- All drivable vehicles now have passenger seats for carrying teammates only (cannot carry any passengers in Free-For-All). Dogs cannot drive vehicles, but they can sit in passenger seats.
+- Drivable opeltrucks' corona headlights are now properly attached to tags "light left" & "light right", and white-light illumination adjusted.
+- Drivable vehicles' "vehiclespeed" parameter now allows vehicles to drive much faster than normal player walking speed (vehiclespeed still does not work for tanks). 
+- All vehicle models (non-destroyed, non-damaged) are now drivable. All vehicles except sdkfz & sdkfz_afrika can now turn on/off headlights. Some horn sounds added to vehicles (removed for bmwbike).
+- All vehicles can now drive on rugged terrain without falling under the map. Setsizes and some seatoffsets (seatoffset doesn't work for opeltrucks or jeeps) were adjusted for more accurate vehicle collisions.
+- Player's angles fixed for vehicles driving on rough terrain, no longer changes pitch & roll angles that were causing player's vision to be obscured by the vehicle's interior.
+
+- Giant Bomb & Light Bomb map_triggers now count as kills/scorepoints when exploding near & killing enemy players. Throwing knife kills now print an "impaled" kill message.
+- New HUD text for indicating the statuses of an equipped Giant Bomb, Light Bomb, or Joint.
+- The joint trigger indicates via HUD text if smoking, puffing (holding USE for 1-3 seconds), or dropping (holding USE for 4+ seconds).
+- The LED dot trap can now be held along with all other triggers (no longer says "cannot use, you are holding something already").
+- Living dogs' bite animations now reset properly if player holds FIRE button. Targetname added for dog-mouth bite trigger, so dogs can bite & kill nebelwerfer players.
+- Dog triggers' angles will now look towards the closest player it can see within 700 units, only after getting shot at too many times and the dog becomes "angry" (red in color).
+
+- global/player_spotlight.scr & map_triggers/player_spotlight.scr now work together by switching back and forth between these two scripts.
+- The global spotlights continuously follow a single-player node path until a player is within level.autospot_trigdist distance from the spotlight's target light, then following the spotted player until he runs out of the spotlight's view.
+Any players that stand near the auto-spotlight will convert it into the regular map_triggers spotlights, allowing the player to aim and turn on/off the spotlight.
+After the player moves away and after a few seconds, the map_triggers spotlights revert back to the global auto-spotlights (also turning back on).
+- level.autospot_trigdist = 550
+- level.autospot_movespeed = 2.5
+Parameters: origin, color, name, health, anglestart (this doesn't matter), mountwall, orient, removeafterdeath, spotangles_init, path name
+Example: exec global/player_spotlight.scr ( 2270.25 2047.58 320 ) ( 1 0 0 ) s_auto0 9999 270 0 0 1 ( 0 0 0 ) spotpath1_2
+
+- Corona headlight fixes for truckstuff_trig.scr, now properly attached to tags "light left" & "light right", and white-light illumination adjusted.
+- Added if-statement to end script and prevent server crashing if truck's targetname = NULL. 
+- Fixed a few NULL errors for the various airstrike map scripts (including airstrikebombs.scr for Training).
+- Fixed more NULL errors for barrel.scr (could use more work, since some barrels still explode without damaging players).
+- Fixed NULL errors in check_team_swap.scr
+- Reduced scale of fancyfire.tik emitter, for mini-flak88 flamethrowers (only for UBER BASEBUILDER).
+- Removed "last stopanimating" lines from some FX explosions (not available for them, prints a console error).
+- Fixed various other models' setsizes for drivable vehicles; commented out a few missing shaders & unavailable command lines.
+- Flak88 turret given a new "_viewmodel.tik" model (invisible) so the console stops spamming errors when players use the mini-flak88s as a "TurretGun" class.
+
+- Improved FPS in obj/obj_team3 by replacing all barbwire invisible walls (stop players from going under the map) with fewer script_objects that have much larger setsizes.
+- Fixed some teleporters in mohdm4 & obj/obj_team4 so they're visible in the river water; fixed a few teles that would break after using them one time.
+- Added random water explosions in the obj/obj_team4 river (outside the original map's boundaries only).
+- Fixed Stalingrad's moveable cabinet object so it stops spamming NULL player errors.
+- Fixed barrel.scr again by removing an "end" line, which keeps hidden all dummy launch barrels that were floating above existing launch barrels (not exploded yet).
+- Added several missing .tga & .jpg textures added for the finished singleplayer maps (Training, M1L1, M1L2A, M1L2B).
+- Various missing sound aliases & duplicate sound aliases fixed, including aliascache_triggersounds.scr & ubersound.scr.
+
+---------------
+
+- New scripts added: global/playerflak88.scr & global/playernebelwerfer.scr (both included in obj/obj_team3 & obj/obj_team4, Omaha Beach & The Bridge).
+
+- Place any script examples before "level waittill spawn". Change coords & angles as needed.
+- With these two global scripts, players can now get into, rotate, and shoot with the flak88s & nebelwerfers (mainly for Allied Assault).
+- The flak88s shoots one shell before waiting 5 seconds to reload. Player is invisible and cannot be killed unless the flak88 is destroyed.
+- The nebelwerfers shoot 6 rockets before waiting 6 seconds to reload. Player is visible and can be shot or killed without destroying the nebelwerfer, or killed after it is destroyed.
+- The nebelwerfers cannot reload until all 6 rockets are fired, and it keeps reloading even if the player leaves.
+- After a specified amount of reset time, both scripts reset the destroyed turrets back to their initial states.
+- The flak88s' shells do not count as kills / scorepoints, but nebelwerfer rockets do count as kills (rockets do not kill teammates).
+- Firing the nebelwerfer rockets too close to the nebelwerfer could blow it up and kill the turret player.
+- After rockets/shells are fired, cannon smoke emits for about 6 seconds.
+- All sounds are audible client & server side. Most, if not all, NULL errors are fixed for turret players switching teams, spectating, dying, or leaving the game.
+
+- To prevent the turrets from ever resetting, set the reset time to 99999.
+- Ideally, health should be 250, so only two grenades or a direct shotgun blast can destroy the turrets (damage scale below):
+shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage.
+
+Flak88 Parameters: existing flak88 targetname (NIL, if spawning a new one), health, reset time, new flak88 origin, new flak88 angles, remove turret base (0 = no, 1 = yes), turret base angles (if NIL, default = flak88 angles)
+Flak88 Example (a): exec global/playerflak88.scr $flak88_weapon1 250 60
+Flak88 Example (b): exec global/playerflak88.scr NIL 250 60 ( 2150 3700 -253 ) ( 0 0 0 ) 0 ( 0 90 0 )
+
+Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new one), health, reset time, new nebel origin, new nebel angles
+Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60
+Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
+
+---------------
+
+- Modified script parameters: global/playertank.scr & global/playervehicle.scr (mainly in fully-modded singleplayer maps).
+
+- Available drivable vehicles: bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
+gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
+
+- Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All): 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank.
+
+- Available drivable tanks: kingtank, panzer_tank, panzer_tank_europe. (tigertank & tigertankdsrt cannot be driven, since turret model completely blocks player's screen)
+
+- For drivable vehicles: Hold FIRE = look behind, Hold USE for 1 second = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
+- For drivable tanks: Press FIRE = shoot turret, Hold USE for 1 second = exit.
+
+Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time
+Tank Example: exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -680 2788 -257 ) ( 0 270 0 ) 1000 60
+
+Vehicle Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, initial headlights (0 = off, 1 = on), no headlights (1 = keep them off).
+Vehicle Example: exec global/playervehicle.scr jeep vehicles/jeep.tik ( -2541 2297 -255 ) ( 0 40 0 ) 250 400 45 1
+
+---------------
+
+v7.805 (9-15-2023): - Fixed Allies-side panzer_tank in m1l2b being not triggerable until it blew up first.
+- Fixed spamming NIL error in dog trigger, only if shooting at the trigger and making the dog "angry" while the player is more than 700 units away.
+- Fixed more teleporters in mohdm4 & obj_team4 that were invisible under the river water, and increased their -z setsizes.
+
+---------------
+
+v7.807 (9-19-2023): - The cyberattack_searchdestroy.scr script (for cyb, snd, ft) now checks if players' connect state is "CS_ZOMBIE" along with NULL and puts them into spectator,
+in order to keep accurate the total players per team tallies and prevent rare script issues. Fixed a few "array size out of range" errors.
+- Joint trigger attachmodels are now visible on dogs. Fixed more "self.dog = NULL" errors.
+
+---------------
+
+v7.81 (10-3-2023): - Fixed flak88s & nebelwerfers so players properly reset when a round ends in "ft", "cyb", or "snd" (before, players would get stuck unless they reconnect to server).
+- Fixed adminstuff.scr's anti-hacks so any hacker's game quits, instead of spamming "I am a hacker" (too many times will crash the server).
+
+- Throwing knives can no longer be thrown while driving tanks, vehicles, using flak88s, nebelwerferes, or flying planes.
+- Boosted nebelwerfer's damage from 110 to 250, and added radiusdamage for its rockets (to damage tanks, flak88s, etc); radiusdamage only applies if not hitting teammates in non-FFA.
+- Fixed bug in playervehicle.scr that filled up a vehicle's passenger seats whenever a player tries to get in the vehicle with an opposite-team driver, even though the player wasn't getting into the vehicle.
+
+- Fixed more script errors in Training map for some mods (only for some ubergametypes). Readded the original mg42. The 1st tan tank now resets for any ubergametype after dying. Added 2nd exit tele for tunnel base (regular TDM or FFA only).
+- Fixed the explodable laser door in M1L2A so it can blow up from grenades again (broke this script earlier when the drivable bmwbike.tik was added). Also fixed explosion knockback for card chairs.
+
+- Fixed Elgan's planes' script errors, and fixed the MG42 & 30Cal guns for the newer airplane model-pairs (0 = regular p47/fockwulf for Allies/Axis, 1 = stuka_dsrt/stuka for Allies/Axis, 2 = c47 for both teams).
+- Fixed planes flown by Allies players that weren't dropping bombs when Right-clicking. Previously, only Axis players were able to drop bombs. Also fixed plane rockets' angles.
+- Ensured that all parachute entities are removed ("chute1" wasn't removed after script ended), otherwise map's entity count would keep increasing after each flight.
+- Added some NULL plane threads to crash planes without errors, whenever players leave the game in-flight or while crashing their planes.
+- Increased planes' shoot-down trigger's setsizes to always match the plane's scale (half of wings aren't included, to better match the fuselage size).
+- Initial player's camera positions, light radii and crash-explosions are also a function of plane's scale.
+- All plane weapon sounds & explosions are now audible client-side & server-side for all maps. Also added radiusdamage for flying planes' rockets; only applies if not hitting teammates in non-FFA.
+
+- Started modding M1L3A: all invisible barriers added so players cannot hide behind walls or shoot from under the ground, basebuild objects updated.
+
+<><><> <><><>

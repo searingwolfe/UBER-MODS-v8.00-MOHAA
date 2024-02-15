@@ -1,0 +1,44 @@
+<><><> Updates & Bug Fixes <><><>
+
+v7.92 (12-23-2023): - New killstreaks system added to all fully-modded maps. Whenever a player dies or changes teams, their killstreak count reverts to 0 again.
+- Killstreak damage handler ensures that scorepoints are properly given to killstreak owners, or to enemies that destroy the killstreaks and kill other players.
+- Scorepoints are also properly given during chain-reaction explosions, such as a mine destroying another mine before killing an enemy player.
+
+- 3 killstreaks added, more coming soon: 2 claymores (3 kills), sentry turret (6 kills), cluster mine (9 kills).
+- To use killstreaks: hold USE(e) + lean left/right to show the killstreak and begin placing.
+- To place killstreaks: hold USE(e) + FIRE(right click) to place down the killstreak.
+
+- Claymores: Lasers point toward enemies. All enemy players (including the claymore-owner, but not his allies) that run too close to a claymore will be killed within 150 degrees from forward.
+If an enemy shoots the claymore, the claymore-owner and his allies standing too close can be killed within all 360 degrees.
+- Sentry Turret: Rotates continuously. The closest enemy player to the turret will be locked-on (within 120 degrees) for 1 second before firing until the enemy player goes out of sight or dies.
+Enemies can destroy the sentry turret with explosions, grenades or rockets (bullets do not deal damage).
+- Cluster Mine: 5 additional mines fly out from center. Similar to claymores, but without lasers and capable of killing enemies within all 360 degrees. These can also be shot and destroyed.
+
+- Ensured that 30 Cal turret gun players are always killed and properly detached from the turret when the vehicle dies in rare cases (driving off the cliff in M1l3C, hopefully the final bug in these scripts).
+- Fixed "cannot cast array to listener" errors for vehicles' headlights and dummy models, occuring when vehicle dies while headlights are turning on.
+- Prevented two sets of headlights from spawning whenever spamming the Lean Right button while driving vehicles.
+
+- Throwing knives cannot be thrown when currently holding & placing down a killstreak.
+- Fixed missing manon_pain and manon_death sound aliases (added into global/dmprecache.scr).
+
+- A very rare server-crashing bug from killstreaks/sentry_turret.scr might occur just before the turret locks onto player. This issue is being investigated.
+If it occurs too frequently, the script will have to be commented out in the map .scr scripts. Errors below:
+"Reborn EXCEPTION: BulletAttack - PointersGet! EXCEPTION CODE: -529697949"
+"Reborn EXCEPTION: BulletAttack - GetMuzzle&Trace! EXCEPTION CODE: -1073741819"
+
+---------------
+
+- Place any script examples before "level waittill spawn". Change "kills" parameter as needed (number of kills in a killstreak, without dying or changing teams).
+- Additional level parameters such as "damage", "radius" (radius of damage and distance to trigger explosions), triggering field-of-view in degrees, scale of claymore/mine, 
+velocity of additional mines spawned, bullet damage for sentry turrets, turret lock-on delay in frames, and maximum lock-on distance, can be edited at the top of each killstreak script.
+
+Claymores Parameters: number of kills, number of claymores given (max = 5).
+Claymores Example: exec killstreaks/claymores.scr 3 2
+
+Sentry Turret Parameters: number of kills, time until sentry turret dies.
+Sentry Turret Example: exec killstreaks/sentry_turret.scr 6 90
+
+Cluster Mine Parameters: number of kills, number of additional mines spawned (max = 15).
+Cluster Mine Example: exec killstreaks/cluster_mines.scr 9 5
+
+<><><> <><><>
