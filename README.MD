@@ -61,7 +61,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 
 - maxentities = 869 in code, but players may crash joining Reborn servers (singleplayer maps) if current entities = 725+, or 140+ remaining entities.
 
-| File Name:        | CVAR without quotes:           | Description:   |
+| File Name:        | CVAR without quotes or brackets:           | Description:   |
 |:-------------:|:-------------:|:-----:|
 | exec cvars/playercount.scr      | "players 1" | print to console the # of players in-game (type these into the server's console window). |
 |       | "players 2" | print to console the # of players in-game & their usernames. |
@@ -122,8 +122,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "g_ubermods 0" | all UBER mods disabled. |
 |       | "g_throwingknives 1" | all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map. |
 |       | "g_throwingknives 0" | no throwing knives. |
-| exec cvars/adminstuff.scr      | "hacker_kill 27" |  |
-|       | "hacker_kill Searingwolfe" |  |
+| exec cvars/adminstuff.scr      | "hacker_kill [27 or Searingwolfe]" |  |
 |       | "hacker_takeall 27" |  |
 |       | "hacker_takeall Searingwolfe" |  |
 |       | "spectator 27" |  |
