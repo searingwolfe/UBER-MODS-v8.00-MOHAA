@@ -10,7 +10,6 @@ This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run 
 
 # Essential CVARS for UBER MODS Servers
 
-
 This new CVAR allows for switching between the current 3 uber game modes (besides FFA or TDM) before loading a new map.<br>
 Place one of these lines into your server.cfg file, or add one of these lines to an .scr map script (before level waittill prespawn):
 
@@ -27,9 +26,9 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 	g_gametype 4; map obj/obj_team3
 	g_gametype 4; map obj/obj_team4
 
-<><><> <><><>
+#
 
-<><><> Essential UBER BASEBUILDER Info <><><>
+# Essential UBER BASEBUILDER Info
 
 - exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
 
@@ -56,9 +55,9 @@ While holding object & holding USE key, lean left/right to change object angles.
 Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.<br>
 Mini-flak88 objects act as flamethrowers, killing players within 5 hits. 
 
-<><><> <><><>
+ 
 
-<><><> UBER CVARS Scripts Info <><><>
+# UBER CVARS Scripts Info
 
 | File Name:        | CVAR without quotes:           | Description:   |
 |:-------------:|:-------------:|:-----:|
@@ -135,9 +134,9 @@ exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuousl
 				//
 				// for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
 
-<><><> <><><>
+ 
 
-<><><> Essential CYBER ATTACK / SEARCH & DESTROY / FREEZE TAG Info <><><>
+# Essential CYBER ATTACK / SEARCH & DESTROY / FREEZE TAG Info
 
 The popular Cyber Attack and Search & Destroy game modes from Call of Duty: Modern Warfare 2 (2022) have been ported into MOHAA for 2023.<br>
 The gameplay, rules, and conditions to win/lose in this mod are almost identical to the originals.<br>
@@ -320,9 +319,9 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 		}
 	end
 
-<><><> <><><>
+ 
 
-<><><> Killstreak Rewards <><><>
+# Killstreak Rewards
 
 - Killstreak count increases as a player gains kills without dying. Whenever a player dies or changes teams, their killstreak count reverts to 0 again.<br>
 - Killstreak damage handler ensures that scorepoints are properly given to killstreak owners, or to enemies that destroy the killstreaks and kill other players.<br>
@@ -367,9 +366,9 @@ Cluster Mine Example: exec killstreaks/cluster_mines.scr 9 5
 Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).<br>
 Airstrike Example: exec killstreaks/airstrikes.scr 5 8
 
-<><><> <><><>
+ 
 
-<><><> Drivable Vehicles / Usable Statweapons <><><>
+# Drivable Vehicles / Usable Statweapons
 
 - global/playerboat.scr & global/playertank.scr & global/playervehicle.scr.
 - Place any script examples before "level waittill spawn". Change coords & angles as needed.
@@ -425,9 +424,9 @@ Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new 
 Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60<br>
 Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
 
-<><><> <><><>
+ 
 
-<><><> Singleplayer Maps Mods <><><>
+# Singleplayer Maps Mods
 
 Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C.
 
@@ -601,9 +600,9 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 
 - All singleplayer maps will eventually be modded: M1 and M2 (v7.95), M3 and M4 (v7.97), M5 and M6 + final version edits (v8.00).
 
-<><><> <><><>
+ 
 
-<><><> Updates & Bug Fixes <><><>
+# Updates & Bug Fixes
 
 v7.93 (1-26-2023): - New killstreak added: Airstrikes. After 5 kills in a row, players can Hold USE(e) + Lean Left/Right to laze a target for the airstrike, then Hold USE(e) + FIRE to call the airstrike.
 
@@ -636,4 +635,4 @@ Airstrike Example: exec killstreaks/airstrikes.scr 5 8
 
 - M2L1 fully modded.
 
-<><><> <><><>
+ 
