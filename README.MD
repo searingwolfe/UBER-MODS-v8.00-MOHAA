@@ -134,7 +134,7 @@ exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuousl
 				//
 				// for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
 
- 
+#
 
 # Essential CYBER ATTACK / SEARCH & DESTROY / FREEZE TAG Info
 
@@ -148,16 +148,16 @@ Teams in both game modes have a specified amount of rounds to win (5 by default)
 ---------------
 
 - When the map loads, the first round begins after a few seconds (8 by default). Until the round begins, the bomb cannot be picked up, and all players can respawn after dying.<br>
-Once started, the bomb and bombsites become triggerable. Any players that die will go to team-only spectating mode (not actually in spectator), and a frozen body will appear where players died if playing Cyber Attack.<br>
-These frozen players can only be melted by their teammates, similar to Freeze Tag.<br>
-When revived, the melted player is respawned and teleported back to where they were frozen, only after all other players have moved far enough away from your frozen body (prevents players getting stuck inside each other).<br>
+- Once started, the bomb and bombsites become triggerable. Any players that die will go to team-only spectating mode (not actually in spectator), and a frozen body will appear where players died if playing Cyber Attack.<br>
+- These frozen players can only be melted by their teammates, similar to Freeze Tag.<br>
+- When revived, the melted player is respawned and teleported back to where they were frozen, only after all other players have moved far enough away from your frozen body (prevents players getting stuck inside each other).<br>
 
 - While in team-spectating mode and waiting to get melted in Cyber Attack, or waiting for the next round in Search & Destroy, the spectating player can cycle between any living teammates or frozen dead bodies, with FIRE key (cycle forward) or USE key (cycle backward).<br>
-If the enemy team wins while your teammates are spectating, all team-spectators will begin spectating the enemy team until the next round begins (usually 3 seconds total).<br>
-If somehow all players are dead (round was a draw), then team-spectators will all teleport to and be trapped within their frozen body's beams until the next round begins.
+- If the enemy team wins while your teammates are spectating, all team-spectators will begin spectating the enemy team until the next round begins (usually 3 seconds total).<br>
+- If somehow all players are dead (round was a draw), then team-spectators will all teleport to and be trapped within their frozen body's beams until the next round begins.
 
 - If a team wins but there are no players on the other team, scorepoints will not be added. A bomb (thread) and at least two bombsites (waitthreads) are added in the main map script.<br>
-If a bomb-carrying player dies, the bomb drops to the ground. If a bomb-carrying player leaves or changes teams or goes to spectator, the bomb respawns back to the origin it was last picked up at.
+- If a bomb-carrying player dies, the bomb drops to the ground. If a bomb-carrying player leaves or changes teams or goes to spectator, the bomb respawns back to the origin it was last picked up at.
 
 - Cyber Attack:
 	- This game mode is best played on DM maps, since bombsites switch team defenders every 3 rounds. Each team has a bombsite to defend at all times, ideally placed near opposite corners of the map in DM maps or near team spawnpoints in OBJ maps.<br>
@@ -165,30 +165,35 @@ If a bomb-carrying player dies, the bomb drops to the ground. If a bomb-carrying
 	- If defused by the enemy team, the defusing player receives the radiobomb, ready to be planted on the enemy team's bombsite. To win, players must kill all enemies or plant and destroy the enemy's bombsite.<br>
 	- Every 3 rounds, the bombsites "change sides": all Allies bombsites become Axis, and all Axis bombsites become Allies.
 
-- Search & Destroy: This game mode is best played on OBJ maps, so the bomb can always spawn near the planting team's spawnpoints.<br>
-Depending on "level.changesides" (0 or default = Allies plant first, 1 = Axis plant first), one team has two bombsites to find and defend, while the other planting team must find and destroy a bombsite.<br>
-These bombsites are ideally placed near the center of the map where both teams clash in gun battles the most, but kept far enough away from each other so the defending team cannot defend both bombsites with one player simultaneously.<br>
-The bomb is ideally spawned near the planting team's spawnpoints, whose origin changes when the planting team changes. The bomb cannot be picked up by players on the defending team. The bomb takes 4.5 seconds to plant/defuse.<br>
-If defused by the enemy team, the defusing team wins immediately. To win, players must kill all enemies, plant and destroy the enemy's bombsite, or defuse the enemy's bomb.<br>
-Every 3 rounds, the bombsites "change sides": the planting team becomes defenders, the defending team becomes planters, and all bombsites change teams accordingly.
+- Search & Destroy:
+	- This game mode is best played on OBJ maps, so the bomb can always spawn near the planting team's spawnpoints.<br>
+	- Depending on "level.changesides" (0 or default = Allies plant first, 1 = Axis plant first), one team has two bombsites to find and defend, while the other planting team must find and destroy a bombsite.<br>
+	- These bombsites are ideally placed near the center of the map where both teams clash in gun battles the most, but kept far enough away from each other so the defending team cannot defend both bombsites with one player simultaneously.<br>
+	- The bomb is ideally spawned near the planting team's spawnpoints, whose origin changes when the planting team changes. The bomb cannot be picked up by players on the defending team. The bomb takes 4.5 seconds to plant/defuse.<br>
+	- If defused by the enemy team, the defusing team wins immediately. To win, players must kill all enemies, plant and destroy the enemy's bombsite, or defuse the enemy's bomb.<br>
+	- Every 3 rounds, the bombsites "change sides": the planting team becomes defenders, the defending team becomes planters, and all bombsites change teams accordingly.
 
-- Freeze Tag: This game mode is an almost identical replica of Mefy's Freeze Tag. Unlike Cyber Attack where melted players respawn back to their dead bodies, Freeze Tag simply respawns the melted players.<br>
-There are no bombs or bombsites in Freeze Tag, so any "bombsite" or "bomb" threads are ignored by the script (still requires running the main script, or running "......scr::main" to run this game mode).<br>
-After the round begins, the 1st team to kill all enemy players wins the round.
+- Freeze Tag:
+	- This game mode is an almost identical replica of Mefy's Freeze Tag. Unlike Cyber Attack where melted players respawn back to their dead bodies, Freeze Tag simply respawns the melted players.<br>
+	- There are no bombs or bombsites in Freeze Tag, so any "bombsite" or "bomb" threads are ignored by the script (still requires running the main script, or running "......scr::main" to run this game mode).<br>
+	- After the round begins, the 1st team to kill all enemy players wins the round.
 
 ---------------
 
-- bombsite: Make sure these are waitthreads, so the bombsite's targetname can increment after a previous bombsite has finished spawning. Parameters: origin, angle, team.<br>
-The "team" parameter only applies to Cyber Attack, since "level.changesides" will determine the team for both bombsites in Search & Destroy.<br>
-Both teams in Cyber Attack can have more than 1 bombsite if desired, but make sure they have at least 1 bombsite. Search & Destroy can also have 1, 2, or more bombsites since team parameter is ignored.<br>
-Run "exec global/cyberattack_searchdestroy.scr" after level waittill spawn and after all cyberattack_searchdestroy.scr threads run. Example below:
+- bombsite:
+	- Parameters: origin, angle, team.<br>
+	- Make sure these are waitthreads, so the bombsite's targetname can increment after a previous bombsite has finished spawning.<br>
+	- The "team" parameter only applies to Cyber Attack, since "level.changesides" will determine the team for both bombsites in Search & Destroy.<br>
+	- Both teams in Cyber Attack can have more than 1 bombsite if desired, but make sure they have at least 1 bombsite. Search & Destroy can also have 1, 2, or more bombsites since team parameter is ignored.<br>
+	- Run "exec global/cyberattack_searchdestroy.scr" after level waittill spawn and after all cyberattack_searchdestroy.scr threads run. Example below:
 
 		waitthread global/cyberattack_searchdestroy.scr::bombsite ( -1210 485 168 ) -90 axis // team parameters can be removed for search & destroy.
 		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1297 2461 672 ) 90 allies
 
-- bomb: Parameters: Allies origin, Allies origin, Axis origin, Axis angle, central origin, central angle. Both Allies and Axis origins/angles are for Search & Destroy only.<br>
-The central origin/angle is for Cyber Attack only. The bomb color is always blue when Allies are planting, and red when Axis are planting in Search & Destroy. Only spawn in one bomb per map.<br>
-If only using Cyber Attack, for example, then don't forget the other parameters (just keep them 0). Examples below:
+- bomb:
+	- Parameters: Allies origin, Allies origin, Axis origin, Axis angle, central origin, central angle. Both Allies and Axis origins/angles are for Search & Destroy only.<br>
+	- The central origin/angle is for Cyber Attack only. The bomb color is always blue when Allies are planting, and red when Axis are planting in Search & Destroy. Only spawn in one bomb per map.<br>
+	- If only using Cyber Attack, for example, then don't forget the other parameters (just keep them 0). Examples below:
 
 		thread global/cyberattack_searchdestroy.scr::bomb ( -153 1445 96 ) 180 ( -153 1445 96 ) 180 ( -153 1445 96 ) -90 	// cyb & snd
 		thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -153 1445 96 ) -90 			// cyber attack only
@@ -196,33 +201,53 @@ If only using Cyber Attack, for example, then don't forget the other parameters 
 
 ---------------
 
-- level.round_starttime: 8 seconds default. This variable determimes the time in seconds until the round begins, disabling respawning and forcing dead players to spectate their teammates until the next round begins.<br>
-Waiting a few seconds for a new round to begin serves as a temporary spawn protection. 
+- level.round_starttime:
+	- 8 seconds default.
+	- This variable determimes the time in seconds until the round begins, disabling respawning and forcing dead players to spectate their teammates until the next round begins.<br>
+	- Waiting a few seconds for a new round to begin serves as a temporary spawn protection. 
 
-- level.rounds_towin: 5 rounds to win default. This determines how many rounds a team must obtain before winning and ending the map, allowing a winning game to be as close as 5 to 4 points by default.
+- level.rounds_towin:
+	- 5 rounds to win default.
+	- This determines how many rounds a team must obtain before winning and ending the map, allowing a winning game to be as close as 5 to 4 points by default.
 
-- level.changesides: 0, Allies plant first default. This can only be 0 or 1, where 1 = Axis plant first (for Search & Destroy).<br>
-If playing Cyber Attack, setting level.changesides = 1 will flip the bombsite's defending teams to the opposite teams initially.<br>
-Every 3 total rounds, level.changesides toggles from 1 to 0 or from 0 to 1. 
+- level.changesides:
+	- 0, Allies plant first default.
+	- This can only be 0 or 1, where 1 = Axis plant first (for Search & Destroy).<br>
+	- If playing Cyber Attack, setting level.changesides = 1 will flip the bombsite's defending teams to the opposite teams initially.<br>
+	- Every 3 total rounds, level.changesides toggles from 1 to 0 or from 0 to 1. 
 
-- level.keepsamesides: 0, no nothing default. If set to 1, level.changesides will never increment, mainly for OBJ & singleplayer maps (bomb & bombsites will not change teams every 3 rounds).
+- level.keepsamesides:
+	- 0, no nothing default.
+	- If set to 1, level.changesides will never increment, mainly for OBJ & singleplayer maps (bomb & bombsites will not change teams every 3 rounds).
 
-- level.spectators_jointeams: 0, do nothing default. If set to 1, all actual spectators will be forced to auto-join teams and be given a machine gun, pistol, and grenades when the round begins.<br>
-If those players are still AFK, they'll eventually get killed and placed into team-spectating mode until the next round begins.
+- level.spectators_jointeams:
+	- 0, do nothing default.
+	- If set to 1, all actual spectators will be forced to auto-join teams and be given a machine gun, pistol, and grenades when the round begins.<br>
+	- If those players are still AFK, they'll eventually get killed and placed into team-spectating mode until the next round begins.
 
-- level.bombcamera: 0, do nothing default. If set to 1, when a bombsite is about to explode, all players' cameras are moved to the bombsite to view the explosion, before returning all cameras back to their respective players' heads after a few seconds.<br>
-While viewing the explosion, players cannot see or kill each other.
+- level.bombcamera:
+	- 0, do nothing default.
+	- If set to 1, when a bombsite is about to explode, all players' cameras are moved to the bombsite to view the explosion, before returning all cameras back to their respective players' heads after a few seconds.<br>
+	- While viewing the explosion, players cannot see or kill each other.
 
-- level.cameradistance: 200 default. This determines the distance between a bombsite and all players' cameras when the bombsite blows up.<br>
-Some bombsites are indoors. If the camera is inside the wall or the bombsite is invisible during explosion, this variable should be lowered.
+- level.cameradistance:
+	- 200 default.
+	- This determines the distance between a bombsite and all players' cameras when the bombsite blows up.<br>
+	- Some bombsites are indoors. If the camera is inside the wall or the bombsite is invisible during explosion, this variable should be lowered.
 
-- level.melttime: 3 seconds default. This determines the time in seconds for a player to melt/revive a teammate.<br>
-Note: there's always roughly a half-second extra time required for all players to move away from the melted/revived teammate, before he respawns.
+- level.melttime:
+	- 3 seconds default.
+	- This determines the time in seconds for a player to melt/revive a teammate.<br>
+	- Note: there's always roughly a half-second extra time required for all players to move away from the melted/revived teammate, before he respawns.
 
-- level.meltrespawn: 0, respawn melted/revived players back to their frozen bodies default. If set to 1, then all players that get melted/revived will not tele back to their dead bodies (regular respawn instead).<br>
-This = 1 by default for Freeze Tag only, unless specified as level.meltrespawn = 0.
+- level.meltrespawn:
+	- 0, respawn melted/revived players back to their frozen bodies default.
+	- If set to 1, then all players that get melted/revived will not tele back to their dead bodies (regular respawn instead).<br>
+	- This = 1 by default for Freeze Tag only, unless specified as level.meltrespawn = 0.
 
-- level.meltlaser: 0, laser beam is invisible default (Freeze Tag only). If set to 1, all players' melting laser beams (when holding USE key) are visible.
+- level.meltlaser:
+	- 0, laser beam is invisible default (Freeze Tag only).
+	- If set to 1, all players' melting laser beams (when holding USE key) are visible.
 
 ---------------
 
@@ -320,7 +345,7 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 		}
 	end
 
- 
+#
 
 # Killstreak Rewards
 
@@ -333,21 +358,28 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 - To use killstreaks: hold USE(e) + lean left/right to show the killstreak and begin placing.<br>
 - To place killstreaks: hold USE(e) + FIRE(right click) to place down the killstreak.
 
-- Claymores: Lasers point toward enemies. All enemy players (including the claymore-owner, but not his allies) that run too close to a claymore will be killed within 150 degrees from forward.<br>
-If an enemy shoots the claymore, the claymore-owner and his allies standing too close can be killed within all 360 degrees.<br>
-Claymores remain on the map after the player_owner dies, but disappear after the player_owner respawns.
+- Claymores:
+	- Lasers point toward enemies.
+	- All enemy players (including the claymore-owner, but not his allies) that run too close to a claymore will be killed within 150 degrees from forward.<br>
+	- If an enemy shoots the claymore, the claymore-owner and his allies standing too close can be killed within all 360 degrees.<br>
+	- Claymores remain on the map after the player_owner dies, but disappear after the player_owner respawns.
 
-- Sentry Turret: Rotates continuously. The closest enemy player to the turret will be locked-on (within 120 degrees) for 1 second before firing until the enemy player goes out of sight or dies.<br>
-Enemies can destroy the sentry turret with explosions, grenades or rockets (bullets do not deal damage).<br>
-Sentry Turrets stay on the map after the player_owner dies and respawns. These will disappear after 180 seconds if not destroyed.
+- Sentry Turret:
+	- Rotates continuously.
+	- The closest enemy player to the turret will be locked-on (within 120 degrees) for 1 second before firing until the enemy player goes out of sight or dies.<br>
+	- Enemies can destroy the sentry turret with explosions, grenades or rockets (bullets do not deal damage).<br>
+	- Sentry Turrets stay on the map after the player_owner dies and respawns. These will disappear after 180 seconds if not destroyed.
 
-- Cluster Mine: 5 additional mines fly out from center. Similar to claymores, but without lasers and capable of killing enemies within all 360 degrees. These can also be shot and destroyed.<br>
-Cluster mines stay on the map after the player_owner dies and respawns.
+- Cluster Mine:
+	- 5 additional mines fly out from center.
+	- Similar to claymores, but without lasers and capable of killing enemies within all 360 degrees. These can also be shot and destroyed.<br>
+	- Cluster mines stay on the map after the player_owner dies and respawns.
 
-- Airstrike: Mark the center-point location and the direction of the airstrike's bombing run, before launching the airstrike.<br>
-Laser arrows indicate the direction that airstrike planes will follow. Bombs drop from the planes continuously (traveling -8200 to 8200 units from player's origin, 16400 units total).<br>
-Dropped bombs that kill players count as scoreponts and cannot damage teammates (but can kill them if driving vehicles).<br>
-The airplanes can only be shot down by enemy players after shooting them 8+ times. Any crashing planes can kill any players.
+- Airstrike:
+	- Mark the center-point location and the direction of the airstrike's bombing run, before launching the airstrike.<br>
+	- Laser arrows indicate the direction that airstrike planes will follow. Bombs drop from the planes continuously (traveling -8200 to 8200 units from player's origin, 16400 units total).<br>
+	- Dropped bombs that kill players count as scoreponts and cannot damage teammates (but can kill them if driving vehicles).<br>
+	- The airplanes can only be shot down by enemy players after shooting them 8+ times. Any crashing planes can kill any players.
 
 ---------------
 
@@ -355,19 +387,19 @@ The airplanes can only be shot down by enemy players after shooting them 8+ time
 - Additional level parameters such as "damage", "radius" (radius of damage and distance to trigger explosions), triggering field-of-view in degrees, scale of claymore/mine,<br>
 velocity of additional mines spawned, bullet damage for sentry turrets, turret lock-on delay in frames, and maximum lock-on distance, can be edited at the top of each killstreak script.
 
-Claymores Parameters: number of kills, number of claymores given (max = 5).<br>
-Claymores Example: exec killstreaks/claymores.scr 3 2
+		Claymores Parameters: number of kills, number of claymores given (max = 5).<br>
+		Claymores Example: exec killstreaks/claymores.scr 3 2
 
-Sentry Turret Parameters: number of kills, time until sentry turret dies.<br>
-Sentry Turret Example: exec killstreaks/sentry_turret.scr 6 90
+		Sentry Turret Parameters: number of kills, time until sentry turret dies.<br>
+		Sentry Turret Example: exec killstreaks/sentry_turret.scr 6 90
 
-Cluster Mine Parameters: number of kills, number of additional mines spawned (max = 15).<br>
-Cluster Mine Example: exec killstreaks/cluster_mines.scr 9 5
+		Cluster Mine Parameters: number of kills, number of additional mines spawned (max = 15).<br>
+		Cluster Mine Example: exec killstreaks/cluster_mines.scr 9 5
 
-Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).<br>
-Airstrike Example: exec killstreaks/airstrikes.scr 5 8
+		Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).<br>
+		Airstrike Example: exec killstreaks/airstrikes.scr 5 8
 
- 
+#
 
 # Drivable Vehicles / Usable Statweapons
 
@@ -425,7 +457,7 @@ Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new 
 Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60<br>
 Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
 
- 
+#
 
 # Singleplayer Maps Mods
 
@@ -594,7 +626,7 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 
 - All singleplayer maps will eventually be modded: M1 and M2 (v7.95), M3 and M4 (v7.97), M5 and M6 + final version edits (v8.00).
 
- 
+#
 
 # Updates & Bug Fixes
 
