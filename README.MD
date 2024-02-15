@@ -33,6 +33,7 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 - exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime, objectlimit, buildspeed, buildtakeweaps, buildfalldamage, countdownhide, hudhide, consoleprint
 
 - basebuild.scr::main (parameters) --->
+
 	build start time in seconds (ex: 800)
 	object limit (ex: 1000)
 	player speed while building (ex: >= 280, 250 is default)
@@ -43,6 +44,7 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 	print object-placed origin, angles, model (1 for yes)
 
 - BASEBUILDER CONSOLE COMMANDS:
+
 	alx_basebuild 0 (turn off basebuilding immediately, respawns everyone)
 	alx_timeboost 120 (increase build time limit by 120 seconds, or any # of seconds)
 	alx_timedown 120 (decrease build time limit by 120 seconds, or any # of seconds)
