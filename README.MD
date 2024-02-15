@@ -67,25 +67,66 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "players 2" | print to console the # of players in-game & their usernames. |
 |       | "players 3" | see which players in $player array are NULL. |
 
-exec cvars/playercount.scr	// "players" cvar.  	"players 1" = print to console the # of players in-game (type these into the server's console window).
-				//	       		"players 2" = print to console the # of players in-game & their usernames.
-				//	       		"players 3" = see which players in $player array are NULL.
-exec cvars/entitycount.scr 	// "entities" cvar.	"entities 1" = wait 4 seconds to print # of entities & remaining entities until maxentities (1024) is reached.
-				//	       		"entities 2" = print all entities & their targetnames (or NULL) from 1 to maxentities.
-				//	       		"entities 3" = print all entities & their targetnames, but print slower.
-				//			"entities 4" = print only non-NULL entities ($player entities do not print for "entities" 4, 5, 6, 7).
-				//			"entities 5" = print only non-NULL entities that have targetnames.
-				//			"entities 6" = print only non-NULL entities that do not have targetnames (targetnames = "").
-				//			"entities 7" = print only non-NULL entities, and print their classnames.
-exec cvars/track.scr		// "track" cvar.    	"track 1" = iprint each players' coords & angle to their own screens. 
-				//			"track 2" = iprint and print to console each players' coords & angles once every 3 seconds.
-				//			"track 0" = turn off tracking.
-exec cvars/check.scr		// "check_[trigger]" cvar. "check_giantbomb 1" "check_giantbomb 2" "check_lightbomb 1" "check_lightbomb 2" (giantbomb, lightbomb, health, grenade, rocket, snowball)
-				// 			"1" = teleports all spectators to each of the ("giantbomb", "health", "rocket", etc) trigger's randomized origins every 3 seconds.
-				// 			"2" = spawn in a dummy model at each of the trigger's origins (only works once).
-				// 			"0" = stop teleporting, delete the dummy models.
-				// 			"check 0" = make all "check_[trigger]" cvars "0".
-				//
+| exec cvars/entitycount.scr      | "entities 1" | wait 4 seconds to print # of entities & remaining entities until maxentities (1024) is reached. |
+|       | "entities 2" | print to console the # of players in-game & their usernames. |
+|       | "entities 3" | print all entities & their targetnames, but print slower. |
+|       | "entities 4" | print only non-NULL entities ($player entities do not print for "entities" 4, 5, 6, 7). |
+|       | "entities 5" | print only non-NULL entities that have targetnames. |
+|       | "entities 6" | print only non-NULL entities that do not have targetnames (targetnames = ""). |
+|       | "entities 7" | print only non-NULL entities, and print their classnames. |
+
+| exec cvars/track.scr      | "track 1" | iprint each players' coords & angle to their own screens.  |
+|       | "track 2" | iprint and print to console each players' coords & angles once every 3 seconds. |
+|       | "track 0" | turn off tracking. |
+| exec cvars/check.scr      | "check_giantbomb 1" |  |
+|       | "check_giantbomb 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
+|       | "check_lightbomb 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
+|       | "check_lightbomb 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
+|       | "check_health 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
+|       | "check_health 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
+|       | "check_grenade 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
+|       | "check_grenade 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
+|       | "check_rocket 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
+|       | "check_rocket 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
+|       | "check_snowball 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
+|       | "check_snowball 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
+|       | "check 0" | make all "check_[trigger]" cvars "0". |
+| exec cvars/find.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+| exec cvars/findent.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+| exec cvars/findclass.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+| exec cvars/findmodel.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+| exec cvars/drawpath.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+| exec cvars/cybsnd.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+| exec cvars/ubergametype.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+| exec cvars/adminstuff.scr      | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+|       | "entities 3" |  |
+
 exec cvars/find.scr		// "find [targetname without $]" cvar. "find truckclip", "find endtrigger", "find aispawn", or multiple ents with the same targetname: "find barrel[1]", "find barrel[2]",
 				// 			to teleport all players on the map to the entity's coords (also printing: coords, angles, entnum, and target).
 exec cvars/findent.scr		// "findent [entnum]" cvar. "findent 65", "findent 450", or any entnum >= "sv_maxclients" cvar to teleport all players on the map to the entity's coords (also printing: coords, angles,
