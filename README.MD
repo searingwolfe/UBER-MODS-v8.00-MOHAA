@@ -76,7 +76,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 | exec cvars/track.scr      | "track 1" | iprint each players' coords & angle to their own screens.  |
 |       | "track 2" | iprint and print to console each players' coords & angles once every 3 seconds. |
 |       | "track 0" | turn off tracking. |
-| exec cvars/check.scr      | "check_giantbomb 1" |  |
+| exec cvars/check.scr      | "check_giantbomb 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
 |       | "check_giantbomb 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
 |       | "check_lightbomb 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
 |       | "check_lightbomb 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
@@ -89,13 +89,13 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "check_snowball 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
 |       | "check_snowball 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
 |       | "check 0" | make all "check_[trigger]" cvars "0". |
+| exec cvars/find.scr      | "find truckclip" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
+|       | "find endtrigger" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
+|       | "find barrel[1]" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
+|       | "find barrel[2]" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
+| exec cvars/findent.scr      | "findent 65" | teleport all players on the map to the non-player entity's coords (also printing: coords, angles, classname, model, targetname, target, health). |
+|       | "findent 450" | teleport all players on the map to the non-player entity's coords (also printing: coords, angles, classname, model, targetname, target, health). |
 
-| exec cvars/find.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-| exec cvars/findent.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
 | exec cvars/findclass.scr      | "entities 3" |  |
 |       | "entities 3" |  |
 |       | "entities 3" |  |
@@ -126,11 +126,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "entities 3" |  |
 |       | "entities 3" |  |
 
-exec cvars/find.scr		// "find [targetname without $]" cvar. "find truckclip", "find endtrigger", "find aispawn", or multiple ents with the same targetname: "find barrel[1]", "find barrel[2]",
-				// 			to teleport all players on the map to the entity's coords (also printing: coords, angles, entnum, and target).
-exec cvars/findent.scr		// "findent [entnum]" cvar. "findent 65", "findent 450", or any entnum >= "sv_maxclients" cvar to teleport all players on the map to the entity's coords (also printing: coords, angles,
-				// classname, model, targetname, target, health).
-				//
+
 exec cvars/findclass.scr	// "findclass [classname, case-specific]" cvar. "findclass ScriptModel", "findclass CrateObject", "findclass TurretGun", "findclass Trigger", or any other classname to print all entnums and
 				// their targetnames in the map with that classname.
 				//
