@@ -1,0 +1,111 @@
+/**
+ Medal of Honor: Allied Assault v1.12 REBORN
+ ================================================================
+ GAME.SYSTEM.IO.DIRECTORY CLASS;
+ ================================================================
+ BY Sor
+ VERSION 1.0.0
+ =-------------------------------------------------------------=		
+ Copyright (c) 2008-2014  Lenny Knockx
+ All rights reserved.
+ =-------------------------------------------------------------=
+ Permission to use, copy, modify, and/or distribute this software 
+ for any purpose with or without fee is hereby granted, provided 
+ that the above copyright notice and this permission notice appear
+ in all copies.
+ ---------------
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL 
+ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL 
+ THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR 
+ CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM 
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR 
+ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ =-------------------------------------------------------------=
+ CONTACT: 	http://www.x-null.net/forums/member.php?185-Sor
+ WEBSITE: 	http://www.x-null.net
+ ================================================================
+*/
+__init:
+	if !(self && self.objectType == game.System.Object.CLASS) {
+		end;
+	}
+	
+	self.initialized = 1; // init complete!
+end;
+
+__meta:
+	self.author = "Sor";
+	self.version = 1.0;
+end;
+
+// $Directory.HasFolders(), $Directory.HasFiles() 
+// $Directory.GetTempFolder() (!)
+
+/** $Directory.Create()
+	-> fnewdir() only creates one directory in an already existing one
+	-> Use $Path.GetDirectory to omit all file references.
+	-> $String.Split both arguments by $Path.directorySeparator
+	-> Iterate over new directory tree, if both directory lines up like
+		main/maps/dm/
+		main/maps/obj/
+	then don't do anything. Once they misalign (at dm/ and obj/); check if
+	the new directory already exists, otherwise, create it. Alignment is 
+	broken will not play a role from now on (=> 1 loop for aligning, the
+	other for creating).
+*/
+
+/** $Directory.Rename() / $Directory.Move()
+	-> if new directory already exists, fail.
+	-> frename() -> renames the folder that the old directory path refers to the name
+					of the folder than the new directory path refers to.
+					If the new path contains nonexistent directories other than the one
+					it points to, then this function will fail.
+					If it succeeds, the folder has been successfully 'renamed', which is
+					to say it and its contents have been moved to the location specified
+					by the new path.
+					This also fails if the old directory path refers to a directory with
+					subfolders!
+	-> check if old directory contains subfolders, 
+		-> if not try frename()
+		-> if there are subfolders, recursively traverse (depth-first!) and the tree is 
+		recorded in a multi-dimensional associative array (with keyarray for convenience)
+		while, upon branching back, each folder is moved to a new temporary folder.
+		After this we recurse through the associative array by moving each directory 
+		(from the highest folder level to the lowest) and as such we reconstruct the
+		folder hierarchy.
+			-> try frename() again...
+	-> use $Directory.Create() to create the missing directories and try frename() (again).
+	
+	-> Move() is the exact same routine except that that is keeps its directory name, but
+	not its directory path/location.
+*/
+
+/** Flist()
+		In case nothing was found:
+		- returns the first argument
+		Else
+		- returns array
+	
+		In case of PK3 files:
+		- if one folderlevel deep: 						flist("", <path>, 0)
+		- multiple folderlevels: 						flist(<dir>, <filename>, 0)
+		
+		In case of non-packed files: 					flist(<dir>, <filename>, 0)
+		
+		In both cases, the following will work 
+		(but will be significantly slower): 			flist("", <path/filename>, 1)
+	
+		In case of directories:
+		- subfolders in current directory:				flist(<dir>, "/", 0)
+		  (names are listed, without a slash at the end;)
+		- all subfolders under the current directory: 	flist(<dir>, "/..", 1)
+		  (lists subfolder structure (once!) but all paths end with '/..')
+		  
+		In both cases, <dir> must be prepended.
+		
+		The list is ASCII-sorted, not naturally-sorted. 
+		When not specifically looking for a file (list.size==1), the list will start with 
+		'.' and '..' if there is no filter or if the filter includes a dot.
+*/

@@ -1,0 +1,1987 @@
+/**
+ Medal of Honor: Allied Assault v1.12 REBORN
+ ================================================================
+ GAME.SYSTEM.STRING CLASS;
+ ================================================================
+ BY Sor
+ VERSION 1.6.14
+ =-------------------------------------------------------------=		
+ Copyright (c) 2008-2014  Lenny Knockx
+ All rights reserved.
+ =-------------------------------------------------------------=
+ Permission to use, copy, modify, and/or distribute this software 
+ for any purpose with or without fee is hereby granted, provided 
+ that the above copyright notice and this permission notice appear
+ in all copies.
+ ---------------
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL 
+ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL 
+ THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR 
+ CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM 
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR 
+ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ =-------------------------------------------------------------=
+ CONTACT: 	http://www.x-null.net/forums/member.php?185-Sor
+ WEBSITE: 	http://www.x-null.net
+ ================================================================
+*/
+__init:
+	if !(self && self.objectType == game.System.Object.CLASS) {
+		end;
+	}
+	
+	//<properties>
+	self.empty = "";
+	//</properties>
+	
+	//<functions>
+	self.IsString = 		self.path::IsString;
+	self.IsStringOrChar = 	self.path::IsStringOrChar;
+	self.IsInteger = 		self.path::IsInteger;
+	self.IsFloat = 			self.path::IsFloat;
+	self.IsNumeric = 		self.path::IsNumeric;
+	self.IsVector = 		self.path::IsVector;
+	self.Empty = 			self.path::Empty;
+	self.Compare = 			self.path::Compare;
+	self.NCompare = 		self.path::NaturalCompare;
+	self.Split = 			self.path::Split;
+	self.MultiSplit = 		self.path::MultiSplit;
+	self.Find = 			self.path::Find;
+	self.Search = 			self.path::Search;
+	self.Remove = 			self.path::Remove;
+	self.Replace = 			self.path::Replace;
+	self.RemoveAll =		self.path::RemoveAll;
+	self.ReplaceAll = 		self.path::ReplaceAll;
+	self.Concatenate = 		self.path::Concatenate;
+	self.Join =				self.path::Join;
+	self.ToUpper = 			self.path::ToUpper;
+	self.ToLower = 			self.path::ToLower;
+	self.Filter = 			self.path::Filter;
+	self.Transform =		self.path::Transform;
+	self.Partition = 		self.path::Partition;
+	self.Insert = 			self.path::Insert;
+	self.Trim = 			self.path::Trim;
+	self.TrimLeft = 		self.path::TrimLeft;
+	self.TrimRight = 		self.path::TrimRight;
+	self.PadLeft =			self.path::PadLeft;
+	self.PadRight =			self.path::PadRight;
+	self.Reverse = 			self.path::Reverse;
+	self.Left = 			self.path::Left;
+	self.Right = 			self.path::Right;
+	self.LeftOf = 			self.path::LeftOf;
+	self.RightOf = 			self.path::RightOf;
+	self.CutLeft = 			self.path::CutLeft;
+	self.CutRight = 		self.path::CutRight;
+	self.CutLeftOf = 		self.path::CutLeftOf;
+	self.CutRightOf = 		self.path::CutRightOf;
+	self.Slice = 			self.path::Slice;
+	self.SubString = 		self.path::SubString;
+	self.SubStr = 			self.path::SubStr;
+	self.MakeLine = 		self.path::MakeLine;
+	self.StripLines = 		self.path::StripLines;
+	self.Quote = 			self.path::Quote;
+	//</functions>
+	
+	self.initialized = 1; // init complete!
+end;
+
+__meta:
+	self.author = "Sor";
+	self.version = 1.614;
+end;
+
+/**
+ string Empty()
+ =================================================================
+ OVERVIEW|: Returns an empty 'const string'.
+ RETURN	 |: <string>; 
+*/
+Empty:
+end "";
+
+/**
+ bool IsString(<type> var)
+ =================================================================
+ OVERVIEW|: Determines whether the variable is of type 'string' or 
+			'const string'.
+ RETURN	 |: <bool>; 
+*/
+IsString local.string:
+	local.type = typeof(local.string);
+end (local.type[local.type.size-1] == "g");
+
+/**
+ bool IsStringOrChar(<type> var)
+ =================================================================
+ OVERVIEW|: Determines whether the variable is of type 'string', 
+			'const string' or 'char'.
+ RETURN	 |: <bool>; 
+*/
+IsStringOrChar local.string:
+	local.type = typeof(local.string);
+end (local.type[local.type.size-1] == "g" || local.type[1] == "h");
+
+/**
+ int IsInteger(<string> string)
+ =================================================================
+ OVERVIEW|: Determines whether the string is a valid representation 
+			of an integer that can be successfully casted.
+ RETURN	 |: <int>	=>	2=int; 
+						1=stringified int; 
+						0=other. 
+*/
+IsInteger local.string:
+	if ((typeof local.string)[0] == "i") {
+		end 2;
+	}
+	if (!local.string) {
+		end 0;
+	}
+	
+	local.string = string(local.string);
+	local.strSize = local.string.size;
+	local.start = 0;
+	
+	if (local.string[0] == "-") {
+		if (local.strSize == 1) {
+			end 0;
+		}
+		local.start = 1;
+	}
+
+	for (local.i = local.start; local.i < local.strSize; local.i++) {
+		local.byte = charToInt(local.string[local.i]);
+		if (local.byte < 48 || 57 < local.byte) {
+			end 0;
+		}
+	}
+end 1;
+
+/**
+ int IsFloat(<string> string)
+ =================================================================
+ OVERVIEW|: Determines whether the string is a valid representation 
+			of a float that can be successfully casted.
+ RETURN	 |: <int>	=>	2=float; 
+						1=stringified float; 
+						0=other. 
+*/
+IsFloat local.string:
+	if ((typeof local.string)[0] == "f") {
+		end 2;
+	}
+	if (!local.string) {
+		end 0;
+	}
+	
+	local.string = string(local.string);
+	local.strSize = local.string.size;
+	local.start = 0;
+	local.dot = 0;
+	
+	if (local.string[0] == "-") {
+		local.start = 1;
+	}
+	
+	for (local.i = local.start; local.i < local.strSize; local.i++) {
+		local.byte = charToInt(local.string[local.i]);
+		
+		if (local.byte == 46) {
+			local.dot++;
+		} 
+		else if (local.byte < 48 || 57 < local.byte) {
+			end 0;
+		}
+	}
+	
+	if (local.dot != 1) { // floats have only 1 'point'
+		end 0;
+	}
+end 1;
+
+/**
+ int IsNumeric(<string> string)
+ =================================================================
+ OVERVIEW|: Determines whether the string is a valid representation 
+			of a number that can be successfully casted to either
+			int or float.
+ RETURN	 |: <int>	=>	3=int or float; 
+						2=stringified float; 
+						1=stringified integer;
+						0=other. 
+*/
+IsNumeric local.string:
+	local.type = typeof(local.string);
+	if (local.type[local.type.size-1] == "t") { // int or float.
+		end 3;
+	}
+	if (!local.string) {
+		end 0;
+	}
+	
+	local.string = string(local.string);
+	local.strSize = local.string.size;
+	local.start = 0;
+	local.dot = 0;
+	
+	if (local.string[0] == "-") {
+		if (local.strSize == 1) {
+			end 0;
+		}
+		local.start = 1;
+	}
+	
+	for (local.i = local.start; local.i < local.strSize; local.i++) {
+		local.byte = charToInt(local.string[local.i]);
+		
+		if (local.byte == 46) {
+			local.dot++;
+		} 
+		else if (local.byte < 48 || 57 < local.byte) {
+			end 0;
+		}
+	}
+	
+	if (local.dot == 1) {
+		end 2;
+	} else if (local.dot == 0) {
+		end 1;
+	}
+end 0;
+
+/**
+ int IsVector(<string> string)
+ =================================================================
+ OVERVIEW|: Determines whether the string is a valid representation 
+			of a vector that can be successfully casted to vector.
+ RETURN	 |: <int>	=>	2=vector; 
+						1=stringified vector;
+						0=other. 
+*/
+IsVector local.string:
+	if ((typeof local.string)[0] == "v") { // is vector
+		end 2;
+	}
+	if (!local.string) { // is bogus
+		end 0;
+	}
+	
+	local.string = string(local.string);
+	local.strSize = (local.string.size - 1);
+	
+	// Can't be a vector
+	if !(local.string[0] == "(" && local.string[local.strSize] == ")") {
+		end 0;
+	}
+	
+	local.start = 1;
+	if (charToInt(local.string[local.start]) == 45) {
+		local.start++;
+	}	
+	
+	for (local.i = local.start; local.i < local.strSize; local.i++) {
+		local.byte = charToInt(local.string[local.i])
+		if (local.byte == 44) {
+			// Reset flag for dots.
+			local.dot = 0;
+			
+			// Skips following space char
+			if (charToInt(local.string[local.i + 1]) == 32) {
+				local.i++; 
+			}
+			
+			// If our following number is negative (so we're looking for a dash),
+			// then we can skip it and let the main loop treat subsequent dashes as false.
+			if (local.i < local.strSize && charToInt(local.string[local.i + 1]) == 45) {
+				local.i++;
+			}
+			continue;
+		}
+		
+		// Our char was '.' but we already have a dot in this number..
+		if (local.byte == 46) {
+			if (local.dot) {
+				end 0;
+			}
+			local.dot = 1;
+		// Bytes 48 through 57 represent the characters '0' through '9'.
+		} else if (local.byte < 48 || 57 < local.byte) {
+			end 0;  // So bytes outside this range are invalid.
+		}
+	}
+end 1;
+
+/**
+ int Compare(<string> A, <string> B, [<bool> caseSensitive])
+ =================================================================
+ OVERVIEW|: Compares two given strings lexicographically and returns
+			whether the first smaller than, greater than or equal to
+			the second string.
+			By default, this comparison is case-insensitive.
+ RETURN	 |: <int>	=>	1= A is greater than B; 
+						0= A is equal to B;
+						-1=A is smaller than B. 
+ NOTE 	 |: Comparisons are made with the ASCII bytes of the characters
+			and with the length of the given strings.
+*/
+Compare local.a local.b local.caseSensitive: 
+	local.a = string(local.a);
+	local.b = string(local.b);
+	
+	local.aSize = local.a.size;
+	local.bSize = local.b.size;
+	
+	//Only bother in this situation
+	if (local.aSize < local.bSize) {
+		local.chkSize = local.aSize;
+		local.result = -1;
+	} 
+	else if (local.bSize < local.aSize) {
+		local.chkSize = local.bSize;
+		local.result = 1;
+	}
+	else {
+		local.chkSize = local.aSize;
+		local.result = 0;
+	}
+	
+	if (local.caseSensitive) {
+		goto __Compare;
+	}
+	
+	for (local.i = 0; local.i < local.chkSize; local.i++) {
+		local.char1 = charToInt(game.System.String.Char.toLower[ string(local.a[local.i]) ]);
+		local.char2 = charToInt(game.System.String.Char.toLower[ string(local.b[local.i]) ]);
+	
+		if (local.char1 < local.char2) {
+			end -1;
+		} 
+		else if (local.char1 > local.char2) {
+			end 1;
+		}
+	}
+end local.result;
+
+__Compare:
+	for (local.i = 0; local.i < local.chkSize; local.i++) {
+		local.char1 = charToInt( local.a[local.i] );
+		local.char2 = charToInt( local.b[local.i] );
+
+		if (local.char1 < local.char2) {
+			end -1;
+		} 
+		else if (local.char1 > local.char2) {
+			end 1;
+		}
+	}
+end local.result;
+
+/**
+ int NaturalCompare(<string> A, <string> B)
+ =================================================================
+ OVERVIEW|: Compares two given strings lexicographically to determine
+			their 'natural order', and returns whether the first is
+			smaller than, greater than or equal to the second string.
+ RETURN	 |: <int>	=>	1= A is greater than B; 
+						0= A is equal to B;
+						-1=A is smaller than B. 
+ NOTE 1	 |: This function implements a comparison algorithm that  
+			orders alphanumeric strings in the way a human would; 
+			this is described as a "natural ordering". 
+	  2	 |: This comparison is case insensitive.
+*/
+NaturalCompare group.a group.b:
+	group.a = string(group.a);
+	group.b = string(group.b);
+	
+	group.aSize = group.a.size;
+	group.bSize = group.b.size;
+	group.ai = 0;
+	group.bi = 0;
+	
+	while(group.ai < group.aSize && group.bi < group.bSize) {
+		if (waitthread game.System.String.Char.IsWhiteSpace group.a[group.ai] || group.a[group.ai] == "0") {
+			group.ai++;
+			continue;
+		}
+		if (waitthread game.System.String.Char.IsWhiteSpace group.b[group.bi] || group.b[group.bi] == "0") {
+			group.bi++;
+			continue
+		}
+		
+		local.ca = charToInt(game.System.String.Char.toLower[ string(group.a[group.ai]) ]);
+		local.cb = charToInt(game.System.String.Char.toLower[ string(group.b[group.bi]) ]);
+		
+		// If both characters are digits, compare them as a number.
+		if (48 <= local.ca && local.ca <= 57 && 48 <= local.cb && local.cb <= 57) {
+			local.result = waitthread __CompareDigits;
+			
+			if (local.result != 0) {
+				end local.result;
+			}
+		}
+		
+		if (local.ca < local.cb) {
+			end -1;
+		} 
+		else if (local.cb < local.ca) {
+			end 1;
+		}
+		
+		group.ai++;
+		group.bi++;
+	}
+end 0;
+
+__CompareDigits:
+	local.bias = 0;
+	
+	while(group.ai < group.aSize && group.bi < group.bSize) {
+		local.isDigitA = waitthread game.System.String.Char.IsDigit group.a[group.ai];
+		local.isDigitB = waitthread game.System.String.Char.IsDigit group.b[group.bi];
+		
+		if (!local.isDigitA && !local.isDigitB) {
+			end local.bias;
+		}
+		else if (!local.isDigitA) {
+			end -1;
+		}
+		else if (!local.isDigitB) {
+			end 1;
+		}
+		
+		local.ca = charToInt(group.a[group.ai]);
+		local.cb = charToInt(group.b[group.bi]);
+		
+		if (local.ca < local.cb) {
+			if (!local.bias) {
+				local.bias = -1;
+			}
+		} 
+		else if (local.cb < local.ca) {
+			if (!local.bias) {
+				local.bias = 1;
+			}
+		}
+		
+		group.ai++;
+		group.bi++;
+	}
+end local.bias;
+
+/**
+ array[1] Split(<string> string, [<string/char> spaceChar])
+ =================================================================
+ OVERVIEW|: Splits specified string into an array of substrings 
+			according to a specified spaceChar. By default, the 
+			spaceChar is the space character (ASCII #32).
+ RETURN	 |: one-based <array> 	=> 	check .size to get the count; 
+									if .size is 1, then the string
+									has not been split;
+			or NIL upon failure.
+*/
+Split local.string local.spaceChar:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Split()]: Specified string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		} 
+	}
+
+	if (local.spaceChar.size != 1) {
+		local.spaceChar = " ";
+	} else {
+		local.spaceChar = string(local.spaceChar);
+	}
+	
+	local.strSize = local.string.size;
+	local.word = 1;
+	local.result[local.word] = "";
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		if (local.spaceChar[0] == local.string[local.i]) {
+			if (local.result[local.word] != "") {
+				local.word++;
+				local.result[local.word] = "";
+			}
+			continue;
+		}
+		local.result[local.word] += local.string[local.i];
+	}
+	
+	// If there were trailing spacers on the right, the result size may be inaccurate
+	if (local.result[local.result.size] == "") {
+		local.result[local.result.size] = NIL;
+	}
+end local.result;
+
+/**
+ array[1] MultiSplit(<string> string, <array:string/char> spaceChars)
+ =================================================================
+ OVERVIEW|: Splits specified string into an array of substrings 
+			according to given array of spaceChars.
+ RETURN	 |: one-based <array> 	=> 	check .size to get the count; 
+									if .size is 1, then the string
+									has not been split;
+			or NIL upon failure.
+*/
+MultiSplit local.string local.spaceChars:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.MultiSplit()]: Specified string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		} 
+	}
+	
+	/* Main logic */
+	local.bounds = waitthread game.System.Array.GetBounds local.spaceChars;
+	if (!local.bounds) {
+		if (level.DEBUG) {
+			conprintf "~^~^~^~ ERROR[System.String.MultiSplit()]: Specified array of spaceChars <arg2> is invalid! ~^~^~^~ \n";
+		}
+		end;
+	}
+
+	for (local.i = local.bounds[1]; local.i <= local.bounds[2]; local.i++) {
+		// invalid crap gets added, sure, but it'll never match anything
+		local.isSpacer[string(local.spaceChars[local.i])] = 1;
+	}
+
+	local.strSize = local.string.size;
+	local.word = 1;
+	local.result[local.word] = "";
+	
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		if (local.isSpacer[string(local.string[local.i])]) {
+			if (local.result[local.word] != "") {
+				local.word++;
+				local.result[local.word] = "";
+			}
+			continue;
+		}
+		local.result[local.word] += local.string[local.i];
+	}
+	
+	// If there were trailing spacers on the right, the result size may be inaccurate
+	if (local.result[local.result.size] == "") {
+		local.result[local.result.size] = NIL;
+	}
+end local.result;
+
+/**
+ array[1] Find( <string> hayStack, <string/char> needle, 
+				[<int> index], [<bool> caseInsensitivity] )
+ =================================================================
+ OVERVIEW|: Seeks for a given 'needle' string in a specified 'haystack'
+			string and returns the start and end indices of the first
+			instance found.
+ INPUT	 |: If an index is specified, then the function will start 
+			searching from that position in the haystack. By default,
+			this is 0.
+			If caseInsensitivity is true, letter cases will be ignored
+			while searching.
+ RETURN	 |: 1-based <array>	=>	[1]=start index in haystack;
+								[2]=end index in haystack;
+			or empty array (.size==0) when nothing is found;
+			or NIL upon failure.
+			
+ NOTE 1	 |: This function implements a custom and memory-efficient 
+			implementation of the Boyer-Moore-Horspool algorithm. 
+	  2	 |:	The end index is always inclusive!
+*/
+Find local.hayStack local.needle local.index local.caseInsensitive:
+	/**Sanity checks*/
+	if (level.DEBUG) {
+		if !(waitthread IsString local.hayStack) {
+			conprintf "~^~^~^~ ERROR[System.String.Find()]: Specified haystack <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if !(waitthread IsStringOrChar local.needle) {
+			conprintf "~^~^~^~ ERROR[System.String.Find()]: Specified needle <arg2> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	
+	/**Pre-processing*/
+	if ((typeof local.index)[0] != "i" || local.index < 0) {
+		local.index = 0;
+	}
+	local.needle = string(local.needle);
+	
+	local.nlength = local.needle.size;
+	local.hlength = local.hayStack.size - local.index;
+	local.last = local.nlength - 1;
+	
+	if (local.caseInsensitive) {
+		goto __Find;
+	}
+	
+	// Shift table for mismatched chars
+	for (local.i = 0; local.i < local.last; local.i++) {
+		local.table[charToInt(local.needle[local.i])] = local.last - local.i;
+	}
+	
+	/**String search*/
+	while (local.nlength <= local.hlength) {
+		local.k = local.index + local.last;
+		
+		// Determines the shift/skip value based on the first char that is 
+		// checked in the haystack.
+		local.shift = local.table[charToInt(local.hayStack[local.k])];
+		if (local.shift == NIL) {
+			local.shift = local.nlength;
+		}
+		
+		for (local.j = local.last; local.hayStack[local.k] == local.needle[local.j]; local.j--) {
+			if (local.j == 0) {
+				end (local.index::(local.index + local.last));
+			}
+			local.k--;
+		}
+
+		local.index += local.shift;
+		local.hlength -= local.shift;
+	}
+	
+	local.result[0] = NIL;
+end local.result;
+
+__Find:
+	local.toLower = game.System.String.Char.toLower;
+	for (local.i = 0; local.i < local.last; local.i++) {
+		local.table[local.toLower[string(local.needle[local.i])]] = local.last - local.i;
+	}
+	
+	while (local.nlength <= local.hlength) {
+		local.k = local.index + local.last;
+		
+		local.shift = local.table[local.toLower[string(local.hayStack[local.k])]];
+		if (local.shift == NIL) {
+			local.shift = local.nlength;
+		}
+		
+		for (local.j = local.last; local.toLower[string(local.hayStack[local.k])] == local.toLower[string(local.needle[local.j])]; local.j--) {
+			if (local.j == 0) {
+				end (local.index::(local.index + local.last));
+			}
+			local.k--;
+		}
+		local.index += local.shift;
+		local.hlength -= local.shift;
+	}
+	local.result[0] = NIL;
+end local.result;
+
+/**
+ array[1] Search( <string> hayStack, <string/char> needle, 
+				  [<bool> caseInsensitivity] )
+ =================================================================
+ OVERVIEW|: Seeks for a given 'needle' string in a specified 'haystack'
+			string and returns the start and end indices of all found
+			instances.
+ INPUT	 |: If caseInsensitivity is true, letter cases will be ignored
+			while searching.
+ RETURN	 |: 1-based <array>	=>	[1-X] = found instance of needle
+								[X]	 =>	[1]=start index in haystack;
+										[2]=end index in haystack;
+			or empty array (.size==0) when nothing is found;
+			or NIL upon failure.
+			
+ NOTE 1	 |: This function implements a custom and memory-efficient 
+			implementation of the Boyer-Moore-Horspool algorithm. 
+	  2	 |:	The end index is always inclusive!
+*/
+Search local.hayStack local.needle local.caseInsensitive:
+	/**Sanity checks*/
+	if (level.DEBUG) {
+		if !(waitthread IsString local.hayStack) {
+			conprintf "~^~^~^~ ERROR[System.String.Find()]: Specified haystack <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if !(waitthread IsStringOrChar local.needle) {
+			conprintf "~^~^~^~ ERROR[System.String.Find()]: Specified needle <arg2> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	local.needle = string(local.needle);
+	
+	/**Pre-processing*/
+	local.nlength = local.needle.size;
+	local.hlength = local.hayStack.size;
+	local.last = local.nlength - 1;
+	
+	local.result[0] = NIL;
+	local.index = 0;
+	
+	if (local.caseInsensitive) {
+		goto __Search;
+	}
+	
+	// Populate table with skip values for the rightmost occurance of 
+	// each char in our 'needle' string. The skip values determine how
+	// far ahead we can shift forward if we encounter a mismatch based 
+	// on the first char in the hayStack string we examined. 
+	for (local.i = 0; local.i < local.last; local.i++) {
+		local.table[charToInt(local.needle[local.i])] = local.last - local.i;
+	}
+	
+	// Forward scanning...
+	while (local.nlength <= local.hlength) {
+		// ...backward comparing:
+		local.k = local.index + local.last;
+		
+		// The skip value is not determined by the mismatched char 
+		// in our haystack, like Boyer-Moore, but by the first char 
+		// of the haystack that is checked.
+		local.shift = local.table[charToInt(local.hayStack[local.k])];
+		if (local.shift == NIL) {
+			local.shift = local.nlength;
+		}
+		
+		for (local.j = local.last; local.hayStack[local.k] == local.needle[local.j]; local.j--) {
+			if (local.j == 0) {
+				local.result[local.result.size+1] = (local.index::(local.index + local.last));
+				local.shift = local.nlength;
+				break;
+			}
+			local.k--;
+		}
+		
+		local.index += local.shift;
+		local.hlength -= local.shift;
+	}
+end local.result;
+
+__Search:
+	local.toLower = game.System.String.Char.toLower;
+	for (local.i = 0; local.i < local.last; local.i++) {
+		local.table[local.toLower[string(local.needle[local.i])]] = local.last - local.i;
+	}
+	
+	while (local.nlength <= local.hlength) {
+		local.k = local.index + local.last;
+		
+		local.shift = local.table[local.toLower[string(local.hayStack[local.k])]];
+		if (local.shift == NIL) {
+			local.shift = local.nlength;
+		}
+		
+		for (local.j = local.last; local.toLower[string(local.hayStack[local.k])] == local.toLower[string(local.needle[local.j])]; local.j--) {
+			if (local.j == 0) {
+				local.result[local.result.size+1] = (local.index::(local.index + local.last));
+				local.shift = local.nlength;
+				break;
+			}
+			local.k--;
+		}
+		local.index += local.shift;
+		local.hlength -= local.shift;
+	}
+end local.result;
+
+/**
+ string Remove( <string> text, <string/char> subString, 
+				[<int> index], [<bool> caseInsensitivity] )
+ =================================================================
+ OVERVIEW|: Returns a new string where the first instance of the given
+			subString is removed from the specified text string.
+ INPUT	 |: If an index is specified, then the function will start 
+			searching from that position in the text. By default,
+			this is 0.
+			If caseInsensitivity is true, letter cases will be ignored
+			while searching.
+ RETURN	 |: <string>
+			or NIL upon failure. 
+*/
+Remove local.string local.subString local.index local.caseInsensitive:
+	local.function = "Remove";
+	local.newSubString = "";
+	goto Edit;
+
+/**
+ string Replace( <string> text, <string/char> subString, 
+				 <string/char> newSubstring,
+				 [<int> index], [<bool> caseInsensitivity] )
+ =================================================================
+ OVERVIEW|: Returns a new string where the first instance of the given
+			subString has been replaced with the given newSubString in 
+			the specified text string.
+ INPUT	 |: If an index is specified, then the function will start 
+			searching from that position in the text. By default,
+			this is 0.
+			If caseInsensitivity is true, letter cases will be ignored
+			while searching.
+ RETURN	 |: <string>
+			or NIL upon failure. 
+*/
+Replace local.string local.subString local.newSubString local.index local.caseInsensitive:
+	local.function = "Replace";
+	goto Edit;
+
+Edit: // Logic for Remove and Replace operations:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf("~^~^~^~ ERROR[System.String." + local.function + "()]: Specified string <arg1> is invalid! ~^~^~^~ \n");
+			end;
+		} else if !(waitthread IsStringOrChar local.subString) {
+			conprintf("~^~^~^~ ERROR[System.String." + local.function + "()]: Specified subString <arg2> is invalid! ~^~^~^~ \n");
+			end;
+		} else if !(waitthread IsStringOrChar local.newSubString) {
+			conprintf("~^~^~^~ ERROR[System.String." + local.function + "()]: Specified newSubString string <arg3> is invalid! ~^~^~^~ \n");
+			end;
+		}
+	}
+
+	local.positions = waitthread Find local.string local.subString local.index local.caseInsensitive;
+	
+	if (local.positions == NIL) {
+		if (level.DEBUG) {
+			conprintf("~^~^~^~ EXCEPTION[System.String." + local.function + "()]: Helper function 'Find()' was abnormally terminated! ~^~^~^~ \n");
+		}
+		end;
+	} 
+	else if (local.positions.size == 0) {
+		end local.string;
+	}
+	
+	local.result = "";
+	local.strSize = local.string.size;
+	
+	for (local.i = 0; local.i < local.positions[1]; local.i++) {
+		local.result += local.string[local.i];
+	}
+	local.result += local.newSubString;
+	
+	for (local.i = (local.positions[2] + 1); local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string RemoveAll( <string> text, <string/char> subString, 
+					[<bool> caseInsensitivity] )
+ =================================================================
+ OVERVIEW|: Returns a new string where all the instances of the given
+			subString have been removed from the specified text string.
+ INPUT	 |: If caseInsensitivity is true, letter cases will be ignored
+			while searching.
+ RETURN	 |: <string>
+			or NIL upon failure. 
+*/
+RemoveAll local.string local.subString local.caseInsensitive:
+	local.function = "RemoveAll";
+	local.newSubString = "";
+	goto EditAll;
+
+/**
+ string ReplaceAll( <string> text, <string/char> subString, 
+					<string/char> newSubstring, 
+					[<bool> caseInsensitivity] )
+ =================================================================
+ OVERVIEW|: Returns a new string where all the instances of the given
+			subString have been replaced with the given newSubString 
+			in the specified text string.
+ INPUT	 |: If caseInsensitivity is true, letter cases will be ignored
+			while searching.
+ RETURN	 |: <string>
+			or NIL upon failure. 
+*/
+ReplaceAll local.string local.subString local.newSubString local.caseInsensitive:
+	local.function = "ReplaceAll";
+	goto EditAll;
+
+EditAll: // Logic for RemoveAll and ReplaceAll operations:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf("~^~^~^~ ERROR[System.String." + local.function + "()]: Specified string <arg1> is invalid! ~^~^~^~ \n");
+			end;
+		} else if !(waitthread IsStringOrChar local.subString) {
+			conprintf("~^~^~^~ ERROR[System.String." + local.function + "()]: Specified subString <arg2> is invalid! ~^~^~^~ \n");
+			end;
+		} else if !(waitthread IsStringOrChar local.newSubString) {
+			conprintf("~^~^~^~ ERROR[System.String." + local.function + "()]: Specified newSubString string <arg3> is invalid! ~^~^~^~ \n");
+			end;
+		}
+	}
+	
+	local.positions = waitthread Search local.string local.subString local.caseInsensitive;
+	
+	if (local.positions == NIL) {
+		if (level.DEBUG) {
+			conprintf ("~^~^~^~ EXCEPTION[System.String." + local.function + "()]: Helper function 'Find()' was abnormally terminated! ~^~^~^~ \n");
+		}
+		end;
+	} 
+	else if (local.positions.size == 0) {
+		end local.string;
+	}
+	
+	local.result = "";
+	local.strSize = local.string.size;
+	
+	local.start = 0;
+	for (local.i = 1; local.i <= local.positions.size; local.i++) {
+		for (local.j = local.start; local.j < local.positions[local.i][1]; local.j++) {
+			local.result += local.string[local.j]; 
+		}
+		local.result += local.newSubString;
+		local.start = local.positions[local.i][2] + 1;
+	}
+	
+	for (local.i = local.start; local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string Concatenate( <string/char> string1, <string/char> string2, 
+					[<string/char> string3], 
+					[<string/char> string4], 
+					[<string/char> string5] )
+ =================================================================
+ OVERVIEW|: Concatenates up to five strings and returns the new string.
+ RETURN	 |: <string>
+			or NIL upon failure. 
+*/
+Concatenate local.str1 local.str2 local.str3 local.str4 local.str5:
+	if !(local.str1) { local.str1 = "";}
+	if !(local.str2) { local.str2 = "";}
+	if !(local.str3) { local.str3 = "";}
+	if !(local.str4) { local.str4 = "";}
+	if !(local.str5) { local.str5 = "";}
+end ( (string(local.str1)) + (string(local.str2)) + (string(local.str3)) + (string(local.str4)) + (string(local.str5)) );
+
+/**
+ string Join( <array:string/char> strings, [<string/char> spacer] )
+ =================================================================
+ OVERVIEW|: Joins all strings in the specified array, in order, to 
+			one concatenated string and returns it. 
+			Optionally, you can specify a spacer string or 
+			character to place between each string.
+ RETURN	 |: <string>
+			or NIL upon failure. 
+*/
+Join local.strings local.spacer:
+	local.bounds = waitthread game.System.Array.GetBounds local.strings;
+	if (level.DEBUG) {
+		if (!(waitthread game.System.Array.IsArray local.strings) || (!local.bounds)) {
+			conprintf "~^~^~^~ ERROR[System.String.Join()]: Invalid array of strings <arg1> specified!  ~^~^~^~ \n";
+			end;
+		}
+	}
+
+	if (local.spacer == NIL)  {
+		local.spacer = "";
+	} else {
+		local.spaceChar = string(local.spacer);
+	}
+	
+	if ((typeof local.strings) != "const array" && local.strings[0].size > 0) {
+		local.arraySizes[1] = 0;
+		local.arraySizes[2] = local.strings.size;
+	} else {
+		local.arraySizes[1] = 1;
+		local.arraySizes[2] = (local.strings.size + 1);
+	}
+	
+	local.result = local.strings[local.arraySizes[1]];
+	for (local.i = (local.arraySizes[1] + 1); local.i < local.arraySizes[2]; local.i++) {
+		local.result += (local.spacer + local.strings[local.i]);
+	}
+end local.result;
+
+/**
+ string ToUpper( <string> string, [<int/array:int> indices] )
+ =================================================================
+ OVERVIEW|: Returns the specified string with all lowercase letters
+			converted to uppercase. 
+			If an index or an array of indices is specified, then 
+			only characters on those positions in the string will 
+			be converted.
+ RETURN	 |: <string>
+			or NIL upon failure. 
+*/
+ToUpper local.string local.index:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.ToUpper()]: Specified string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+
+	local.toUpper = game.System.String.Char.toUpper;
+
+	if ((typeof local.index)[0] == "i")  {
+		local.string[local.index] = local.toUpper[string(local.string[local.index])];
+	} 
+	else if (waitthread game.System.Array.IsArray local.index) { 
+		local.bounds = waitthread game.System.Array.GetBounds local.index;
+		if (!local.bounds) {
+			if (level.DEBUG) {
+				conprintf "~^~^~^~ ERROR[System.String.ToUpper()]: Specified array of indices <arg2> is invalid! ~^~^~^~ \n";
+			}
+			end;
+		}
+		
+		for (local.j = 1; local.j <= local.index.size; local.j++) {
+			local.string[local.index[local.j]] = local.toUpper[string(local.string[local.index[local.j]])];
+		}
+	}
+	else {
+		for (local.i = 0; local.i < local.string.size; local.i++) {
+			local.string[local.i] = local.toUpper[string(local.string[local.i])];
+		}
+	}
+end local.string;
+
+/**
+ string ToLower( <string> string, [<int/array:int> indices] )
+ =================================================================
+ OVERVIEW|: Returns the specified string with all uppercase letters
+			converted to lowercase. 
+			If an index or an array of indices is specified, then 
+			only characters on those positions in the string will 
+			be converted.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+ToLower local.string local.index:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.ToLower()]: Specified string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	
+	local.toLower = game.System.String.Char.toLower;
+
+	if ((typeof local.index)[0] == "i")  {
+		local.string[local.index] = local.toLower[string(local.string[local.index])];
+	} 
+	else if (waitthread game.System.Array.IsArray local.index) { 
+		local.bounds = waitthread game.System.Array.GetBounds local.index;
+		if (!local.bounds) {
+			if (level.DEBUG) {
+				conprintf "~^~^~^~ ERROR[System.String.ToLower()]: Specified array of indices <arg2> is invalid! ~^~^~^~ \n";
+			}
+			end;
+		}
+		
+		for (local.j = 1; local.j <= local.index.size; local.j++) {
+			local.string[local.index[local.j]] = local.toLower[string(local.string[local.index[local.j]])];
+		}
+	}
+	else {
+		for (local.i = 0; local.i < local.string.size; local.i++) {
+			local.string[local.i] = local.toLower[string(local.string[local.i])];
+		}
+	}
+end local.string;
+
+/**
+ string Filter( <string> string, <string/array:string> char(s) 
+				[<bool> caseInsensitive] )
+ =================================================================
+ OVERVIEW|: Filters one or more character(s) out of the specified
+			string and returns the result. 
+			By default, cases are sensitive, but this function can
+			also treat cases the same.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Filter local.string local.chars local.caseInsensitive:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Filter()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	
+	if (waitthread IsStringOrChar local.chars) {
+		local.arr[0] = (string(local.chars));
+		local.bounds = 0::0;
+		local.chars = NIL;
+	}
+	else if (waitthread game.System.Array.IsArray local.chars) {
+		local.bounds = waitthread game.System.Array.GetBounds local.chars;
+		local.arr = local.chars;
+	}
+	if (level.DEBUG) {
+		if (!local.bounds || local.arr.size <= 0) {
+			conprintf "~^~^~^~ ERROR[System.String.Filter()]: Specified char/array of chars <arg2> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	
+	// Uses associate array to facilitate the transformation
+	if (local.caseInsensitive) {
+		for (local.i = local.bounds[1]; local.i <= local.bounds[2]; local.i++) {
+			local.arr[local.i] = string(local.arr[local.i]);
+			local.mapping[ game.System.String.Char.toLower[ local.arr[local.i] ] ] = 1;
+			local.mapping[ game.System.String.Char.toUpper[ local.arr[local.i] ] ] = 1;
+		}
+	} 
+	else {
+		for (local.i = local.bounds[1]; local.i <= local.bounds[2]; local.i++) {
+			local.mapping[ string(local.arr[local.i]) ] = 1;
+		}
+	}
+	
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		if (local.mapping[ string(local.string[local.i]) ]) {
+			continue;
+		}
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string Transform( <string> string, <string/array:string> char(s),
+				   <string/char> replacement, [<bool> insensitive] )
+ =================================================================
+ OVERVIEW|: Returns the specified string with all instances of one
+			or more given characters replaced with the given 
+			replacement character. 
+			By default, cases are sensitive, but this function can
+			also treat cases the same.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Transform local.string local.charsToReplace local.replacement local.caseInsensitive:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Transform()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		} if !(waitthread IsStringOrChar local.replacement) {
+			conprintf "~^~^~^~ ERROR[System.String.Transform()]: Specified replacement character <arg3> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	
+	local.replacement = (string(local.replacement))[0];
+	
+	// Parse argument
+	if (waitthread IsStringOrChar local.charsToReplace) {
+		local.arr[0] = (string(local.charsToReplace));
+		local.bounds = 0::0;
+		local.charsToReplace = NIL;
+	}
+	else if (waitthread game.System.Array.IsArray local.charsToReplace) {
+		local.bounds = waitthread game.System.Array.GetBounds local.charsToReplace;
+		local.arr = local.charsToReplace;
+	}
+	if (level.DEBUG) {
+		if (!local.bounds || local.arr.size <= 0) {
+			conprintf "~^~^~^~ ERROR[System.String.Transform()]: Specified char/array of chars <arg2> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	
+	// Uses associate array to facilitate the transformation
+	if (local.caseInsensitive) {
+		for (local.i = local.bounds[1]; local.i <= local.bounds[2]; local.i++) {
+			local.arr[local.i] = string(local.arr[local.i]);
+			local.mapping[ game.System.String.Char.toLower[ local.arr[local.i] ] ] = local.replacement;
+			local.mapping[ game.System.String.Char.toUpper[ local.arr[local.i] ] ] = local.replacement;
+		}
+	} 
+	else {
+		for (local.i = local.bounds[1]; local.i <= local.bounds[2]; local.i++) {
+			local.mapping[ string(local.arr[local.i]) ] = local.replacement;
+		}
+	}
+	
+	local.strSize = local.string.size;
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		local.char = string(local.string[local.i]);
+		if (local.mapping[local.char] != NIL) {
+			local.string[local.i] = local.mapping[local.char];
+		}
+	}
+end local.string;
+
+/**
+ array[1] Partition( <string> string, <int> partitionSize )
+ =================================================================
+ OVERVIEW|: Partitions a specified string into an array of strings
+			that are not larger than the specified partitionSize.
+ RETURN	 |: one-based <array>;
+			or NIL upon failure. 
+*/
+Partition local.string local.partitionSize:
+	if (level.DEBUG) {
+		if ( !local.string || !(waitthread IsString local.string) ) {
+			conprintf "~^~^~^~ ERROR[System.String.Partition()]: Specified string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.partitionSize)[0] != "i" || local.partitionSize <= 0) {
+			conprintf "~^~^~^~ ERROR[System.String.Partition()]: Specified partitionSize <arg2> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+	
+	local.strSize = local.string.size;
+	local.partition = 1;
+	local.result[local.partition] = "";
+	local.chars = 0;
+	for (local.i = 0; local.i < local.string.size; local.i++) {
+		if (local.chars == local.partitionSize) {
+			local.chars = 0;
+			local.partition++;
+			local.result[local.partition] = "";
+		}
+		local.result[local.partition] += local.string[local.i];
+		local.chars++;
+	}
+end local.result;
+
+/**
+ string Insert( <string> string, <string> insertion, <int> index,
+				[<bool> afterOrBefore] )
+ =================================================================
+ OVERVIEW|: Inserts specified insertion string in specified string 
+			after the specified position. Optionally, the insertion
+			string can also be inserted before the specified index.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Insert local.string local.insertStr local.pos local.before:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Insert()]: Specified string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		} if !(waitthread IsStringOrChar local.insertStr) {
+			conprintf "~^~^~^~ ERROR[System.String.Insert()]: Specified insertString <arg2> is invalid! ~^~^~^~ \n";
+			end;
+		} 
+	}
+
+	if ((typeof local.pos)[0] != "i" || local.pos < 0 || local.string.size <= local.pos) {
+		if (level.DEBUG) {
+			conprintf "\n ~^~^~^~ ERROR[System.String.Insert()]: Position index <arg3> is invalid! ~^~^~^~ \n";
+		}
+		end local.string;
+	}
+	
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = 0; local.i < local.pos; local.i++) {
+		local.result += local.string[local.i];
+	}
+	
+	// Actual insertion
+	if (!local.before) {
+		local.result += local.string[local.pos];
+		local.i = local.pos + 1;
+	}
+	local.result += local.insertStr;
+	
+	for (/*padding*/; local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string Trim( <string> string, [<string/char> trailingChar] )
+ =================================================================
+ OVERVIEW|: Removes trailing spaces from either side of the specified
+			string. Alternatively, you can specify a different char 
+			to trim.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Trim local.string local.char:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Trim()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	}
+
+	/* Main logic */
+	if (local.char.size != 1) {
+		local.char = " ";
+	} else {
+		local.char = string(local.char);
+	}
+	
+	// left side
+	local.strSize = local.string.size;
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		if (local.string[local.i] != local.char) {
+			local.startPos = local.i;
+			break;
+		}
+	}
+	// right side
+	for (local.i = (local.strSize - 1); local.i >= 0; local.i--) {
+		if (local.string[local.i] != local.char) {
+			local.endPos = local.i;
+			break;
+		}
+	}
+	
+	// form trimmed string
+	if ((local.endPos + 1 - local.startPos) != local.strSize) {
+		local.result = "";
+		for (local.i = local.startPos; local.i <= local.endPos; local.i++) {
+			local.result += local.string[local.i];
+		}
+	} else {
+		local.result = local.string;
+	}
+end local.result;
+
+/**
+ string TrimLeft( <string> string, [<string/char> trailingChar] )
+ =================================================================
+ OVERVIEW|: Removes trailing spaces from the left side of the 
+			specified string. Alternatively, you can specify a 
+			different char to trim.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+TrimLeft local.string local.char:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.TrimLeft()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	} 
+
+	/* Main logic */
+	if (local.char.size != 1) {
+		local.char = " ";
+	} else {
+		local.char = string(local.char);
+	}
+	
+	local.strSize = local.string.size;
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		if (local.string[local.i] != local.char) {
+			local.startPos = local.i;
+			break;
+		}
+	}
+	if (local.startPos != 0) {
+		local.result = "";
+		for (local.i = local.startPos; local.i < local.strSize; local.i++) {
+			local.result += local.string[local.i];
+		}
+	} else {
+		local.result = local.string;
+	}
+end local.result;
+
+/**
+ string TrimRight( <string> string, [<string/char> trailingChar] )
+ =================================================================
+ OVERVIEW|: Removes trailing spaces from the right side of the 
+			specified string. Alternatively, you can specify a 
+			different char to trim.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+TrimRight local.string local.char:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.TrimRight()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	} 
+	
+	/* Main logic */
+	if (local.char.size != 1) {
+		local.char = " ";
+	} else {
+		local.char = string(local.char);
+	}
+
+	for (local.i = (local.string.size - 1); local.i >= 0; local.i--) {
+		if (local.string[local.i] != local.char) {
+			local.endPos = local.i;
+			break;
+		}
+	}
+	if (local.endPos != (local.string.size - 1)) {
+		local.result = "";
+		for (local.i = 0; local.i <= local.endPos; local.i++) {
+			local.result += local.string[local.i];
+		}
+	} else {
+		local.result = local.string;
+	}
+end local.result;
+
+/**
+ string PadLeft(<string> string, <int> length, [<string/char> padChar])
+ =================================================================
+ OVERVIEW|: Adds spaces to the left side/beginning of the specified 
+			string for a given length. 
+			Alternatively, you can specify a different char to pad 
+			with.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+PadLeft local.string local.length local.padChar:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.PadLeft()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	} 
+	
+	if (!local.padChar) {
+		local.padChar = " "[0];
+	} else {
+		local.padChar = (string(local.padChar))[0];
+	}
+	
+	if ((typeof local.length)[0] != "i") {
+		local.length = 0;
+	}
+	
+	local.tmp = "";
+	while (local.length > 0) {
+		local.tmp += local.padChar;
+		local.length--;
+	}
+end (local.tmp + local.string);
+
+/**
+ string PadRight(<string> string, <int> length, [<string/char> padChar])
+ =================================================================
+ OVERVIEW|: Adds spaces to the right side/end of the specified string
+			for a given length. 
+			Alternatively, you can specify a different char to pad 
+			with.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+PadRight local.string local.length local.padChar:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.PadRight()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	} 
+	
+	if (!local.padChar) {
+		local.padChar = " "[0];
+	} else {
+		local.padChar = (string(local.padChar))[0];
+	}
+	
+	if ((typeof local.length)[0] != "i") {
+		local.length = 0;
+	}
+	
+	while (local.length > 0) {
+		local.string += local.padChar;
+		local.length--;
+	}
+end local.string;
+
+/**
+ string Reverse(<string> string)
+ =================================================================
+ OVERVIEW|: Reverses the order of the characters in the specified string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Reverse local.string:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Reverse()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	} 
+
+	// In-place
+	local.j = local.string.size - 1;
+	for (local.i = 0; local.i < local.j; local.i++) {
+		local.tmp = local.string[local.i];
+		local.string[local.i] = local.string[local.j];
+		local.string[local.j] = local.tmp;
+		local.j--;
+	}
+end local.string;
+
+/**
+ string Left(<string> string, <int> numberOfChars)
+ =================================================================
+ OVERVIEW|: Returns new string containing a specified number of  
+			characters from the left side of given string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Left local.string local.chars: 
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Left()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.chars)[0] != "i") {	
+			conprintf "~^~^~^~ ERROR[System.String.Left()]: Invalid number of characters <arg2>! ~^~^~^~ \n";
+			end;
+		} 
+	}
+	
+	/* Main logic */
+	if (local.chars <= 0) {
+		end "";
+	} else if (local.chars >= local.string.size) {
+		end local.string;
+	}
+	
+	local.result = "";
+	for (local.i = 0; local.i < local.chars; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string Right(<string> string, <int> numberOfChars)
+ =================================================================
+ OVERVIEW|: Returns new string containing a specified number of  
+			characters from the right side of given string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Right local.string local.chars:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Right()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.chars)[0] != "i") {	
+			conprintf "~^~^~^~ ERROR[System.String.Right]: Invalid number of characters <arg2>! ~^~^~^~ \n";
+			end;
+		} 
+	} 
+	
+	/* Main logic */
+	if (local.chars <= 0) {
+		end "";
+	} else if (local.chars >= local.string.size) {
+		end local.string;
+	}
+	
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = (local.strSize - local.chars); local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string LeftOf(<string> string, <int> position)
+ =================================================================
+ OVERVIEW|: Returns new string containing the characters left of 
+			the specified position index in the given string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+LeftOf local.string local.pos:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.LeftOf()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.pos)[0] != "i") {
+			conprintf "~^~^~^~ ERROR[System.String.LeftOf()]: String position <arg2> is invalid or out of range! ~^~^~^~ \n";
+			end;
+		} 
+	}  
+	
+	/* Main logic */
+	if (local.pos < 0) {
+		end "";
+	} else if (local.pos >= local.string.size) {
+		end local.string;
+	}
+
+	local.result = "";
+	for (local.i = 0; local.i < local.pos; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string RightOf(<string> string, <int> position)
+ =================================================================
+ OVERVIEW|: Returns new string containing the characters right of 
+			the specified position index in the given string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+RightOf local.string local.pos:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.RightOf()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.pos)[0] != "i") {
+			conprintf "~^~^~^~ ERROR[System.String.RightOf()]: String position <arg2> is invalid or out of range! ~^~^~^~ \n";
+			end;
+		}
+	}  
+
+	/* Main logic */
+	if (local.pos >= local.string.size) {
+		end "";
+	} else if (local.pos < 0) {
+		end local.string;
+	}
+
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = (local.pos + 1); local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string CutLeft(<string> string, <int> numberOfChars)
+ =================================================================
+ OVERVIEW|: Removes the specified number of characters on the left 
+			side of the given string and returns the new string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+CutLeft local.string local.chars:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.CutLeft()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.chars)[0] != "i" || local.chars < 0) {	
+			conprintf "~^~^~^~ ERROR[System.String.CutLeft()]: Invalid number of characters <arg2>! ~^~^~^~ \n";
+			end;
+		}
+	} 
+	
+	/* Main logic */
+	 if (local.chars >= local.string.size) {
+		end "";
+	}
+	
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = local.chars; local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string CutRight(<string> string, <int> numberOfChars)
+ =================================================================
+ OVERVIEW|: Removes the specified number of characters on the right 
+			side of the given string and returns the new string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+CutRight local.string local.chars:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.CutRight()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.chars)[0] != "i" || local.chars < 0) {	
+			conprintf "~^~^~^~ ERROR[System.String.CutRight()]: Invalid number of characters <arg2>! ~^~^~^~ \n";
+			end;
+		}
+	} 
+	
+	/* Main logic */
+	if (local.chars >= local.string.size) {
+		end "";
+	}
+	
+	local.strSize = local.string.size - local.chars;
+	local.result = "";
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string CutLeftOf(<string> string, <int> position)
+ =================================================================
+ OVERVIEW|: Removes all characters left of the specified position
+			index in the given string and returns the new string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+CutLeftOf local.string local.pos:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.CutLeftOf()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.pos)[0] != "i") {
+			conprintf "~^~^~^~ ERROR[System.String.CutLeftOf()]: String position <arg2> is invalid or out of range! ~^~^~^~ \n";
+			end;
+		}
+	}  
+	
+	/* Main logic */
+	if (local.pos >= local.string.size) {
+		end "";
+	} else if (local.pos < 0) {
+		end local.string;
+	}
+	
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = local.pos; local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string CutLeftOf(<string> string, <int> position)
+ =================================================================
+ OVERVIEW|: Removes all characters right of the specified position
+			index in the given string and returns the new string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+CutRightOf local.string local.pos:
+	/* Error & Exception handling */
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.CutRightOf()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.pos)[0] != "i") {
+			conprintf "~^~^~^~ ERROR[System.String.CutRightOf()]: String position <arg2> is invalid or out of range! ~^~^~^~ \n";
+			end;
+		}
+	}  
+	
+	if (local.pos < 0) {
+		end "";
+	} else if (local.pos >= local.string.size) {
+		end local.string;
+	}
+	
+	/* Main logic */
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = 0; local.i <= local.pos; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string Slice(<string> string, <int> startIndex, [<int> endIndex],
+				[<string/char> insertionStr])
+ =================================================================
+ OVERVIEW|: Removes part of the string starting at the specified 
+			start position to an optional end index and returns
+			the new string.
+ INPUT	 |: By default, the last index in the given string is used.
+			Optionally, one can insert a specified string between 
+			the gap.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+ NOTE	 |: Indices are inclusive!
+*/
+Slice local.string local.startIndex local.endIndex local.insertion:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.Slice()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.startIndex)[0] != "i") {
+			conprintf "\n ~^~^~^~ ERROR[System.String.Slice()]: Invalid startIndex <arg2>. ~^~^~^~ \n";
+			end;
+		}
+	}  
+
+	if (local.startIndex >= local.string.size) {
+		end local.string;
+	} else if (local.startIndex < 0) {
+		local.pos = 0;
+	}
+	
+	local.strSize = local.string.size;
+	
+	if ((typeof local.endIndex)[0] != "i" || local.endIndex >= local.string.size || local.endIndex < local.startIndex) {
+		local.endIndex = local.strSize - 1;
+	}
+	if !(local.insertion) {
+		local.insertion = "";
+	}
+	
+	local.left = "";
+	for (local.i = 0; local.i < local.startIndex; local.i++) {
+		local.left += local.string[local.i];
+	}
+	local.right = "";
+	for (local.i = local.endIndex+1; local.i < local.strSize; local.i++) {
+		local.right += local.string[local.i];
+	}
+end (local.left + local.insertion + local.right);
+
+/**
+ string SubString(<string> string, <int> startIndex, [<int> endIndex])
+ =================================================================
+ OVERVIEW|: Extracts and returns part of the string starting at the 
+			specified start position to an optional end index.
+			By default, the last index in the given string is used.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+ NOTE	 |: Indices are inclusive!
+*/
+SubString local.string local.startIndex local.endIndex:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.SubString()]: String <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.startIndex)[0] != "i") {
+			conprintf "~^~^~^~ ERROR[System.String.SubString()]: Invalid startIndex <arg2>. ~^~^~^~ \n";
+			end;
+		} 
+	}  
+
+	if (local.startIndex >= local.string.size) {
+		end "";
+	} else if (local.startIndex < 0) {
+		local.pos = 0;
+	}
+	
+	if ((typeof local.endIndex)[0] != "i" || local.endIndex >= local.string.size || local.endIndex < local.startIndex) {
+		local.endIndex = local.string.size - 1;
+	} 
+	
+	local.result = "";
+	for (local.i = local.startIndex; local.i <= local.endIndex; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string SubStr(<string> string, <int> index, [<int> numberOfChars])
+ =================================================================
+ OVERVIEW|: Extracts and returns a specified number of characters
+			starting at the specified index position.
+			By default, the number of characters extracted is 1.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+SubStr local.string local.index local.numberOfChars:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.SubStr()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+		if ((typeof local.index)[0] != "i") {
+			conprintf "~^~^~^~ ERROR[System.String.SubStr()]: invalid index <arg2>! ~^~^~^~ \n";
+			end;
+		}
+	}
+
+	if (local.index >= local.string.size) {
+		end "";
+	} else if (local.index < 0) {
+		local.index = 0;
+	}
+	
+	if ((typeof local.numberOfChars)[0] != "i" || local.numberOfChars <= 0)  {
+		local.strSize = local.index + 1;
+	} else {
+		local.strSize = local.index + local.numberOfChars;
+		if (local.string.size < local.strSize) {
+			local.strSize = local.string.size;
+		}
+	}
+
+	local.result = "";
+	for (local.i = local.index; local.i < local.strSize; local.i++) {
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string MakeLine(<string> string, [<int> end], [<int> start])
+ =================================================================
+ OVERVIEW|: Turns specified string into line. Optionally, you can
+			determine how many newline characters to add at the
+			end or start of the string.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+MakeLine local.string local.end local.start:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.MakeLine()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	} 
+	// default
+	if (!local.end && !local.start) {
+		end (local.string + "\n");
+	} 
+	
+	// custom options..
+	if (local.end) {
+		for (local.i = 1; local.i <= local.end; local.i++) {
+			local.string += "\n";
+		}
+	} 
+	if (local.start) {
+		for (local.i = 1; local.i <= local.start; local.i++) {
+			local.string = "\n" + local.string;
+		}
+	}
+end local.string;
+
+/**
+ string StripLines(<string> string)
+ =================================================================
+ OVERVIEW|: Strips specified string of newline ("\n") markers.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+StripLines local.string:
+	if (level.DEBUG) {
+		if !(waitthread IsString local.string) {
+			conprintf "~^~^~^~ ERROR[System.String.StripLines()]: string <arg1> is invalid! ~^~^~^~ \n";
+			end;
+		}
+	} 
+	local.strSize = local.string.size;
+	local.result = "";
+	for (local.i = 0; local.i < local.strSize; local.i++) {
+		if (local.string[local.i] == "\n") {
+			continue;
+		}
+		local.result += local.string[local.i];
+	}
+end local.result;
+
+/**
+ string Quote(<string> string)
+ =================================================================
+ OVERVIEW|: Puts specified string between double quotations.
+ RETURN	 |: <string>;
+			or NIL upon failure. 
+*/
+Quote local.string:
+end ("\"" + string(local.string) + "\"");

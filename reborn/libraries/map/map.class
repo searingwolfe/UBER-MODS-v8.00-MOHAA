@@ -1,0 +1,140 @@
+/**
+ Medal of Honor: Allied Assault v1.12 REBORN
+ ================================================================
+ GAME.SYSTEM.MAP CLASS;
+ ================================================================
+ BY Sor
+ VERSION 1.0.0
+ =-------------------------------------------------------------=		
+ Copyright (c) 2008-2014  Lenny Knockx
+ All rights reserved.
+ =-------------------------------------------------------------=
+ Permission to use, copy, modify, and/or distribute this software 
+ for any purpose with or without fee is hereby granted, provided 
+ that the above copyright notice and this permission notice appear
+ in all copies.
+ ---------------
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL 
+ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL 
+ THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR 
+ CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM 
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR 
+ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ =-------------------------------------------------------------=
+ CONTACT: 	http://www.x-null.net/forums/member.php?185-Sor
+ WEBSITE: 	http://www.x-null.net
+ ================================================================
+*/
+__init:
+	if !(self && self.objectType == game.System.Object.CLASS) {
+		end;
+	}
+	
+	self.Reload = 				self.path::Reload;
+	self.Load = 				self.path::Load;
+	self.Restart = 				self.path::Restart;
+	self.Change = 				self.path::Change;
+	self.Transition = 			self.path::Transition;
+	self.Exists = 				self.path::Exists;
+	
+	self.initialized = 1; // init complete!
+end;
+
+__meta:
+	self.author = "Sor";
+	self.version = 1.0;
+end;
+
+Reload:
+	stuffsrv("map " + getcvar("mapname"))
+end;
+
+Load local.mapName:
+	if !(waitthread Exists local.mapName) {
+		if (level.DEBUG) {
+			conprintf("~^~^~^~ ERROR[System.Map.Load()]: cannot find map 'maps/" + local.mapName + ".bsp'! ~^~^~^~");
+		}
+		end 0;
+	}
+	stuffsrv("map " + local.mapName); 
+end 1;
+
+Restart:
+	stuffsrv("restart");
+end;
+
+// Interestingly, the Reborn event-system does not detect this player intermission event. 
+// Equally interesting is the fact that if the next map is the current map, the game will simply restart.
+// TODO: trigger intermission event if needed
+Change local.mapName:
+	if !(waitthread Exists local.mapName) {
+		if (level.DEBUG) {
+			conprintf("~^~^~^~ ERROR[System.Map.Change()]: cannot find map 'maps/" + local.mapName + ".bsp'! ~^~^~^~");
+		}
+		end 0;
+	}
+	
+	// I'm going to need these cvars and 
+	// I'll have to reset them to the original values.
+	local.nextmap = getcvar("nextmap");
+	local.g_gametype = getcvar("g_gametype");
+
+	// 'g_gametype' is 0 (for Single Player) for 'leveltransition()' command to work.
+	// The 'nextmap' cvar is used to determine which map the server should load.
+	setcvar "nextmap" local.mapName;
+	setcvar "g_gametype" "0"
+	
+	// According the game_module_classes this command requires you to pass the mapname  
+	// string as argument, yet it absolutely does not matter what you pass it since 
+	// the 'nextmap' cvar is used for that purpose. I felt that this looked cleanest.
+	leveltransition(0)
+	
+	setcvar "g_gametype" local.g_gametype;
+	setcvar "nextmap" local.nextmap;
+end 1;
+
+Transition local.mapName:
+	if !(waitthread Exists local.mapName) {
+		if (level.DEBUG) {
+			conprintf("~^~^~^~ ERROR[System.Map.Transition()]: cannot find map 'maps/" + local.mapName + ".bsp'! ~^~^~^~");
+		}
+		end 0;
+	}
+	
+	local.nextmap = getcvar("nextmap");
+	local.g_gametype = getcvar("g_gametype");
+
+	setcvar "nextmap" local.mapName;
+	setcvar "g_gametype" "0"
+	
+	bsptransition(0)
+
+	// TODO: trigger intermission event if needed.
+	
+	setcvar "g_gametype" local.g_gametype;
+	setcvar "nextmap" local.nextmap;
+end 1;
+
+// Supports only the mapNames that the game's components (like maplist, rcon map etc...) accept as arguments.
+Exists local.mapName:
+	if !(waitthread game.System.String.IsString local.mapName) {
+		end 0;
+	}
+	
+	local.bsp = (local.mapName + ".bsp");
+	if (local.bsp != (flist "maps/" local.bsp 1)[0]) {
+		end 0;
+	}
+end 1;
+
+// ChangeGameType()?
+/// Round.class??
+// RestartRound
+// EndRound <type>
+
+// Function that scans each .urc file in the main/ui/ folder
+// If the menu refers to an existing map, search for the "title" keyword
+// and associate the found string with the map's bsp name in a separate register.
+// A separate register holds all urc files which are to be skipped by default.

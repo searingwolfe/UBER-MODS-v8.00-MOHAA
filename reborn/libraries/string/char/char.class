@@ -1,0 +1,1034 @@
+/**
+ Medal of Honor: Allied Assault v1.12 REBORN
+ ================================================================
+ GAME.SYSTEM.STRING.CHAR CLASS;
+ ================================================================
+ BY Sor
+ VERSION 1.1.0
+ =-------------------------------------------------------------=		
+ Copyright (c) 2008-2014  Lenny Knockx
+ All rights reserved.
+ =-------------------------------------------------------------=
+ Permission to use, copy, modify, and/or distribute this software 
+ for any purpose with or without fee is hereby granted, provided 
+ that the above copyright notice and this permission notice appear
+ in all copies.
+ ---------------
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL 
+ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL 
+ THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR 
+ CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM 
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR 
+ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ =-------------------------------------------------------------=
+ CONTACT: 	http://www.x-null.net/forums/member.php?185-Sor
+ WEBSITE: 	http://www.x-null.net
+ ================================================================
+*/
+__init:
+	if !(self && self.objectType == game.System.Object.CLASS) {
+		end;
+	}
+	
+	//<properties>
+	self.table = 				waitthread GetASCIITable 1;
+	self.toLower = 				waitthread __CaseConversionMasks 0;
+	self.toUpper = 				waitthread __CaseConversionMasks 1;
+	//</properties>
+	
+	//<functions>
+	self.IsDigit = 				self.path::IsDigit;
+	self.IsLetter =				self.path::IsLetter;
+	self.IsLetterOrDigit = 		self.path::IsLetterOrDigit;
+	self.IsWhiteSpace = 		self.path::IsWhiteSpace;
+	self.IsWhiteSpaceOrEmpty = 	self.path::IsWhiteSpaceOrEmpty;
+	self.IsWhiteSpaceOrNull = 	self.path::IsWhiteSpaceOrNull;
+	self.IsEscSequence =		self.path::IsEscSequence;
+	self.IsPunctuation = 		self.path::IsPunctuation;
+	self.IsSymbol = 			self.path::IsSymbol;
+	self.IsInvisible = 			self.path::IsInvisible;
+	self.IsLowercase = 			self.path::IsLowercase;
+	self.IsUppercase =			self.path::IsUppercase;
+	self.GetByte = 				self.path::GetByte;
+	self.GetASCIITable = 		self.path::GetASCIITable;
+	//</functions>
+	
+	self.initialized = 1; // init complete!
+end;
+
+__meta:
+	self.author = "Sor";
+	self.version = 1.1;
+end;
+
+/**
+ bool IsDigit(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a digit, i.e. whether 
+			it is numerical.
+ RETURN	 |: <bool>; 
+*/
+IsDigit local.char:
+	// charToInt(char) will only check the 0'th character if a string was passed.
+	local.byte = charToInt(string(local.char));
+	if (48 <= local.byte && local.byte <= 57) {
+		end 1;
+	}
+end 0;
+
+/**
+ bool IsLetter(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a letter.
+ RETURN	 |: <bool>; 
+*/
+IsLetter local.char:
+	local.byte = charToInt(string(local.char));
+	if (65 <= local.byte && local.byte <= 90) {
+		end 1; // uppercase alphabet
+	} 
+	else if (97 <= local.byte && local.byte <= 122) {
+		end 1; // lowercase alphabet
+	} 
+	else if (192 <= local.byte && local.byte <= 255 && \
+			local.byte != 215 && local.byte != 247) {
+		end 1; // lower- and uppercase latin and cyril letters
+	}
+	
+	switch(local.byte) {
+		case 138:
+		case 140:
+		case 142:
+		case 154:
+		case 156:
+		case 158:
+		case 159:
+			end 1; // more lower- and uppercase latin and cyril letters
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsLetterOrDigit(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a letter or a digit.
+ RETURN	 |: <bool>; 
+*/
+IsLetterOrDigit local.char:
+	local.byte = charToInt(string(local.char));
+	if (65 <= local.byte && local.byte <= 90) {
+		end 1; // uppercase alphabet
+	} 
+	else if (97 <= local.byte && local.byte <= 122) {
+		end 1; // lowercase alphabet
+	} 
+	else if (48 <= local.byte && local.byte <= 57) {
+		end 1; // numeric chars
+	}
+	else if (192 <= local.byte && local.byte <= 255 && \
+			local.byte != 215 && local.byte != 247) {
+		end 1; // lower- and uppercase latin and cyril letters
+	}
+	
+	switch(local.byte) {
+		case 138:
+		case 140:
+		case 142:
+		case 154:
+		case 156:
+		case 158:
+		case 159:
+			end 1; // more lower- and uppercase latin and cyril letters
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsWhiteSpace(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a white space or not.
+ RETURN	 |: <bool>; 
+ NOTE	 |: A 'whitespace' is either a space, a horizontal tab, a
+			newline or carriage return.
+*/
+IsWhiteSpace local.char:
+	switch (charToInt(string(local.char))) {
+		case 9:
+		case 32:
+		case 10:
+		case 13:
+			end 1;
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsWhiteSpaceOrEmpty(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a white space or 
+			an empty string.
+ RETURN	 |: <bool>; 
+*/
+IsWhiteSpaceOrEmpty local.char:
+	if (local.char == "") {
+		end 1;
+	}
+	switch (charToInt(string(local.char))) {
+		case 9:
+		case 32:
+		case 10:
+		case 13:
+			end 1;
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsWhiteSpaceOrNull(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a white space, an 
+			empty string or NIL/NULL.
+ RETURN	 |: <bool>; 
+*/
+IsWhiteSpaceOrNull local.char:
+	if !(local.char) {
+		end 1;
+	}
+	switch (charToInt(string(local.char))) {
+		case 9:
+		case 32:
+		case 10:
+		case 13:
+			end 1;
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsEscSequence(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char is an escape sequence or not.
+ RETURN	 |: <bool>; 
+*/
+IsEscSequence local.char:
+	/*Main Logic*/
+	
+	switch (string(local.char)) {
+		case "\n":
+		case "\t":
+		case "\"":
+		case "\\":
+			local.result = 1;
+		break;
+		default:
+			local.result = 0;
+		break;
+	}
+end local.result;
+
+/**
+ bool IsPunctuation(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a punctuation symbol.
+ RETURN	 |: <bool>; 
+*/
+IsPunctuation local.char:
+	/*Main Logic*/
+	switch (local.var) {
+		case ".":
+		case ",":
+		case ":":
+		case ";":
+		case "?":
+		case "!":
+		case "\"":
+		case "'":
+		case "-":
+			local.result = 1;
+		break;
+		default:
+			local.result = 0;
+		break;
+	}
+end local.result;
+
+/**
+ bool IsSymbol(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char represents a symbol.
+ RETURN	 |: <bool>; 
+*/
+IsSymbol local.char:
+	if (waitthread IsLetterOrDigit local.char) {
+		end 0; //letter or digit
+	} else if (waitthread IsInvisible local.char) {
+		end 0; // unprintable/invisible char
+	}
+end 1;
+
+/**
+ bool IsInvisible(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char is unprintable or invisible.
+ RETURN	 |: <bool>; 
+*/
+IsInvisible local.char:
+	local.byte = charToInt(string(local.char));
+	if (local.byte < 32) {
+		end 1; //control chars (the 'unprintables')
+	}
+	
+	switch(local.byte) {
+		case 129:
+		case 141:
+		case 143:
+		case 144:
+		case 157:
+		case 160:
+			end 1; // other weird chars
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsLowercase(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char is a lowercase letter.
+ RETURN	 |: <bool>; 
+*/
+IsLowercase local.char:
+	local.byte = charToInt(string(local.char));
+	if (97 <= local.byte && local.byte <= 122) {
+		end 1;
+	} else if (223 <= local.byte && local.byte <= 255 && local.byte != 247) {
+		end 1;
+	}
+	switch(local.byte) {
+		case 154:
+		case 156:
+		case 158:
+			end 1;
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsUppercase(<string/char> character)
+ =================================================================
+ OVERVIEW|: Determines whether char is a uppercase letter.
+ RETURN	 |: <bool>; 
+*/
+IsUppercase local.char:
+	local.byte = charToInt(string(local.char));
+	if (65 <= local.byte && local.byte <= 90) {
+		end 1;
+	} else if (192 <= local.byte && local.byte <= 223 && local.byte != 215) {
+		end 1;
+	}
+	switch(local.byte) {
+		case 138:
+		case 140:
+		case 142:
+		case 159:
+			end 1;
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool GetByte(<string/char> character)
+ =================================================================
+ OVERVIEW|: Returns the unsigned byte that represents the char in 
+			ASCII encoding.
+ RETURN	 |: <bool>; 
+ NOTE	 |: While basic ASCII encoding remains consistent, the 
+			extended charset is encoded with 'Windows-1252'.
+*/
+GetByte local.char:
+end (charToInt(string(local.char)));
+
+/**
+ array[0] GetASCIITable([<bool> extended])
+ =================================================================
+ OVERVIEW|: Returns the basic (0-127) or extended (0-255) ASCII table.
+ RETURN	 |: zero-based <array>; 
+ 
+ NOTE 1	 |: While basic ASCII encoding remains consistent, the 
+			extended charset is encoded with 'Windows-1252'.
+	  2	 |: The NULL character (ASCII #0) cannot be used (because
+			strings are null-terminated) and is represented by an
+			empty string.
+*/
+GetASCIITable local.extended:
+	/// BASIC ASCII (7bit)
+	///'Non-printable' characters
+	///http://www.asciitable.com/
+	local.chars[0] = ""; 	/**NULL character; can't use null character in script :p*/
+	local.chars[1] = ""; 	/**Start of Header*/
+	local.chars[2] = ""; 	/**Start of Text*/
+	local.chars[3] = ""; 	/**End of Text*/
+	local.chars[4] = ""; 	/**End of Transmission*/
+	local.chars[5] = ""; 	/**Enquiry*/
+	local.chars[6] = ""; 	/**Acknowledge*/
+	local.chars[7] = ""; 	/**Bell*/
+	local.chars[8] = "";  	/**Backspace*/
+	local.chars[9] = "\t";	/**Horizontal TAB*/
+	local.chars[10] = "\n"; /**Line Feed/New Line*/
+	local.chars[11] = "";	/**Vertical TAB; bizarrely, this prints the symbol for the male gender? :p*/
+	local.chars[12] = "";	/**Form Feed/New page; bizarrely, this prints the symbol for the female gender? :p*/
+	local.chars[13] = "\n";	/**Carriage Return; unfortunately, the escape sequence '\r' doesn't work in MoHAA.*/
+	local.chars[14] = "";	/**Shift OUT; prints musical note? :p*/
+	local.chars[15] = "";	/**Shift IN*/
+	local.chars[16] = "";	/**Data Link Escape*/
+	local.chars[17] = "";	/**Device Control 1*/
+	local.chars[18] = "";	/**Device Control 2*/
+	local.chars[19] = "";	/**Device Control 3*/
+	local.chars[20] = "";	/**Device Control 4*/
+	local.chars[21] = "";	/**Negative Acknowledgement*/
+	local.chars[22] = "";	/**Synchronous Idle*/
+	local.chars[23] = "";	/**End of Transmission Block*/
+	local.chars[24] = "";	/**Cancel*/
+	local.chars[25] = "";	/**End of Medium*/
+	local.chars[26] = "";	/**Substitute*/
+	local.chars[27] = "";	/**Escape*/
+	local.chars[28] = "";	/**File Seperator*/
+	local.chars[29] = "";	/**Group Seperator*/
+	local.chars[30] = "";	/**Record Seperator*/
+	local.chars[31] = "";	/**Unit Seperator*/
+	
+	local.chars[32] = " ";
+	local.chars[33] = "!";
+	local.chars[34] = "\"";
+	local.chars[35] = "#";
+	local.chars[36] = "$";
+	local.chars[37] = "%";
+	local.chars[38] = "&";
+	local.chars[39] = "'";
+	local.chars[40] = "(";
+	local.chars[41] = ")";
+	local.chars[42] = "*";
+	local.chars[43] = "+";
+	local.chars[44] = ",";
+	local.chars[45] = "-";
+	local.chars[46] = ".";
+	local.chars[47] = "/";
+	local.chars[48] = "0";
+	local.chars[49] = "1";
+	local.chars[50] = "2";
+	local.chars[51] = "3";
+	local.chars[52] = "4";
+	local.chars[53] = "5";
+	local.chars[54] = "6";
+	local.chars[55] = "7";
+	local.chars[56] = "8";
+	local.chars[57] = "9";
+	local.chars[58] = ":";
+	local.chars[59] = ";";
+	local.chars[60] = "<";
+	local.chars[61] = "=";
+	local.chars[62] = ">";
+	local.chars[63] = "?";
+	
+	local.chars[64] = "@";
+	local.chars[65] = "A";
+	local.chars[66] = "B";
+	local.chars[67] = "C";
+	local.chars[68] = "D";
+	local.chars[69] = "E";
+	local.chars[70] = "F";
+	local.chars[71] = "G";
+	local.chars[72] = "H";
+	local.chars[73] = "I";
+	local.chars[74] = "J";
+	local.chars[75] = "K";
+	local.chars[76] = "L";
+	local.chars[77] = "M";
+	local.chars[78] = "N";
+	local.chars[79] = "O";
+	local.chars[80] = "P";
+	local.chars[81] = "Q";
+	local.chars[82] = "R";
+	local.chars[83] = "S";
+	local.chars[84] = "T";
+	local.chars[85] = "U";
+	local.chars[86] = "V";
+	local.chars[87] = "W";
+	local.chars[88] = "X";
+	local.chars[89] = "Y";
+	local.chars[90] = "Z";
+	local.chars[91] = "[";
+	local.chars[92] = "\\";
+	local.chars[93] = "]";
+	local.chars[94] = "^";
+	local.chars[95] = "_";
+	local.chars[96] = "`";
+	
+	local.chars[97] = "a";
+	local.chars[98] = "b";
+	local.chars[99] = "c";
+	local.chars[100] = "d";
+	local.chars[101] = "e";
+	local.chars[102] = "f";
+	local.chars[103] = "g";
+	local.chars[104] = "h";
+	local.chars[105] = "i";
+	local.chars[106] = "j";
+	local.chars[107] = "k";
+	local.chars[108] = "l";
+	local.chars[109] = "m";
+	local.chars[110] = "n";
+	local.chars[111] = "o";
+	local.chars[112] = "p";
+	local.chars[113] = "q";
+	local.chars[114] = "r";
+	local.chars[115] = "s";
+	local.chars[116] = "t";
+	local.chars[117] = "u";
+	local.chars[118] = "v";
+	local.chars[119] = "w";
+	local.chars[120] = "x";
+	local.chars[121] = "y";
+	local.chars[122] = "z";
+	local.chars[123] = "{";
+	local.chars[124] = "|";
+	local.chars[125] = "}";
+	local.chars[126] = "~";
+	local.chars[127] = "";
+	
+	if !(local.extended) {
+		end local.chars;
+	}
+	
+	/// EXTENDED ASCII (8bit)
+	local.chars[128] = "€";
+	local.chars[129] = "";
+	local.chars[130] = "‚";
+	local.chars[131] = "ƒ";
+	local.chars[132] = "„";
+	local.chars[133] = "…";
+	local.chars[134] = "†";
+	local.chars[135] = "‡";
+	local.chars[136] = "ˆ";
+	local.chars[137] = "‰";
+	local.chars[138] = "Š";
+	local.chars[139] = "‹";
+	local.chars[140] = "Œ";
+	local.chars[141] = "";
+	local.chars[142] = "Ž";
+	local.chars[143] = "";
+	local.chars[144] = "";
+	local.chars[145] = "‘";
+	local.chars[146] = "’";
+	local.chars[147] = "“";
+	local.chars[148] = "”";
+	local.chars[149] = "•";
+	local.chars[150] = "–";
+	local.chars[151] = "—";
+	local.chars[152] = "˜ ";
+	local.chars[153] = "™";
+	local.chars[154] = "š";
+	local.chars[155] = "›";
+	local.chars[156] = "œ";
+	local.chars[157] = "";
+	local.chars[158] = "ž";
+	local.chars[159] = "Ÿ";
+	
+	local.chars[160] = "";
+	local.chars[161] = "¡";
+	local.chars[162] = "¢";
+	local.chars[163] = "£";
+	local.chars[164] = "¤";
+	local.chars[165] = "¥";
+	local.chars[166] = "¦";
+	local.chars[167] = "§";
+	local.chars[168] = "¨";
+	local.chars[169] = "©";
+	local.chars[170] = "ª";
+	local.chars[171] = "«";
+	local.chars[172] = "¬";
+	local.chars[173] = "­";
+	local.chars[174] = "®";
+	local.chars[175] = "¯";
+	local.chars[176] = "°";
+	local.chars[177] = "±";
+	local.chars[178] = "²";
+	local.chars[179] = "³";
+	local.chars[180] = "´";
+	local.chars[181] = "µ";
+	local.chars[182] = "¶";
+	local.chars[183] = "·";
+	local.chars[184] = "¸";
+	local.chars[185] = "¹";
+	local.chars[186] = "º";
+	local.chars[187] = "»";
+	local.chars[188] = "¼";
+	local.chars[189] = "½";
+	local.chars[190] = "¾";
+	local.chars[191] = "¿";
+	
+	local.chars[192] = "À";
+	local.chars[193] = "Á";
+	local.chars[194] = "Â";
+	local.chars[195] = "Ã";
+	local.chars[196] = "Ä";
+	local.chars[197] = "Å";
+	local.chars[198] = "Æ";
+	local.chars[199] = "Ç";
+	local.chars[200] = "È";
+	local.chars[201] = "É";
+	local.chars[202] = "Ê";
+	local.chars[203] = "Ë";
+	local.chars[204] = "Ì";
+	local.chars[205] = "Í";
+	local.chars[206] = "Î";
+	local.chars[207] = "Ï";
+	local.chars[208] = "Ð";
+	local.chars[209] = "Ñ";
+	local.chars[210] = "Ò";
+	local.chars[211] = "Ó";
+	local.chars[212] = "Ô";
+	local.chars[213] = "Õ";
+	local.chars[214] = "Ö";
+	local.chars[215] = "×";
+	local.chars[216] = "Ø";
+	local.chars[217] = "Ù";
+	local.chars[218] = "Ú";
+	local.chars[219] = "Û";
+	local.chars[220] = "Ü";
+	local.chars[221] = "Ý";
+	local.chars[222] = "Þ";
+	local.chars[223] = "ß";
+	
+	local.chars[224] = "à";
+	local.chars[225] = "á";
+	local.chars[226] = "â";
+	local.chars[227] = "ã";
+	local.chars[228] = "ä";
+	local.chars[229] = "å";
+	local.chars[230] = "æ";
+	local.chars[231] = "ç";
+	local.chars[232] = "è";
+	local.chars[233] = "é";
+	local.chars[234] = "ê";
+	local.chars[235] = "ë";
+	local.chars[236] = "ì";
+	local.chars[237] = "í";
+	local.chars[238] = "î";
+	local.chars[239] = "ï";
+	local.chars[240] = "ð";
+	local.chars[241] = "ñ";
+	local.chars[242] = "ò";
+	local.chars[243] = "ó";
+	local.chars[244] = "ô";
+	local.chars[245] = "õ";
+	local.chars[246] = "ö";
+	local.chars[247] = "÷";
+	local.chars[248] = "ø";
+	local.chars[249] = "ù";
+	local.chars[250] = "ú";
+	local.chars[251] = "û";
+	local.chars[252] = "ü";
+	local.chars[253] = "ý";
+	local.chars[254] = "þ";
+	local.chars[255] = "ÿ";
+end local.chars;
+
+__CaseConversionMasks local.letterCase:
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars["\t"] = "\t";
+	local.chars["\n"] = "\n";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	local.chars[""] = "";
+	
+	local.chars[" "] = " ";
+	local.chars["!"] = "!";
+	local.chars["\""] = "\"";
+	local.chars["#"] = "#";
+	local.chars["$"] = "$";
+	local.chars["%"] = "%";
+	local.chars["&"] = "&";
+	local.chars["'"] = "'";
+	local.chars["("] = "(";
+	local.chars[")"] = ")";
+	local.chars["*"] = "*";
+	local.chars["+"] = "+";
+	local.chars[","] = ",";
+	local.chars["-"] = "-";
+	local.chars["."] = ".";
+	local.chars["/"] = "/";
+	local.chars["0"] = "0";
+	local.chars["1"] = "1";
+	local.chars["2"] = "2";
+	local.chars["3"] = "3";
+	local.chars["4"] = "4";
+	local.chars["5"] = "5";
+	local.chars["6"] = "6";
+	local.chars["7"] = "7";
+	local.chars["8"] = "8";
+	local.chars["9"] = "9";
+	local.chars[":"] = ":";
+	local.chars[";"] = ";";
+	local.chars["<"] = "<";
+	local.chars["="] = "=";
+	local.chars[">"] = ">";
+	local.chars["?"] = "?";	
+	
+	local.chars["@"] = "@";
+	local.chars["["] = "[";
+	local.chars["\\"] = "\\";
+	local.chars["]"] = "]";
+	local.chars["^"] = "^";
+	local.chars["_"] = "_";
+	local.chars["`"] = "`";
+	local.chars["{"] = "{";
+	local.chars["|"] = "|";
+	local.chars["}"] = "}";
+	local.chars["~"] = "~";
+	local.chars[""] = "";
+	
+	local.chars["€"] = "€";
+	local.chars["‚"] = "‚";
+	local.chars["ƒ"] = "ƒ";
+	local.chars["„"] = "„";
+	local.chars["…"] = "…";
+	local.chars["†"] = "†";
+	local.chars["‡"] = "‡";
+	local.chars["ˆ"] = "ˆ";
+	local.chars["‰"] = "‰";
+	local.chars["‹"] = "‹";
+	local.chars["‘"] = "‘";
+	local.chars["’"] = "’";
+	local.chars["“"] = "“";
+	local.chars["”"] = "”";
+	local.chars["•"] = "•";
+	local.chars["–"] = "–";
+	local.chars["—"] = "—";
+	local.chars["˜ "] = "˜ ";
+	local.chars["™"] = "™";
+	local.chars["›"] = "›";
+	
+	local.chars["¡"] = "¡";
+	local.chars["¢"] = "¢";
+	local.chars["£"] = "£";
+	local.chars["¤"] = "¤";
+	local.chars["¥"] = "¥";
+	local.chars["¦"] = "¦";
+	local.chars["§"] = "§";
+	local.chars["¨"] = "¨";
+	local.chars["©"] = "©";
+	local.chars["ª"] = "ª";
+	local.chars["«"] = "«";
+	local.chars["¬"] = "¬";
+	local.chars["­"] = "­";
+	local.chars["®"] = "®";
+	local.chars["¯"] = "¯";
+	local.chars["°"] = "°";
+	local.chars["±"] = "±";
+	
+	local.chars["²"] = "²";
+	local.chars["³"] = "³";
+	local.chars["´"] = "´";
+	local.chars["µ"] = "µ";
+	local.chars["¶"] = "¶";
+	local.chars["·"] = "·";
+	local.chars["¸"] = "¸";
+	local.chars["¹"] = "¹";
+	local.chars["º"] = "º";
+	local.chars["»"] = "»";
+	local.chars["¼"] = "¼";
+	local.chars["½"] = "½";
+	local.chars["¾"] = "¾";
+	local.chars["¿"] = "¿";
+	local.chars["×"] = "×";
+	local.chars["÷"] = "÷";
+	
+	local.chars["ß"] = "ß"; // esszet is the only letter that is unicase
+		
+	// All letters
+	if (!local.letterCase) { // lowercase
+		local.chars["A"] = "a";
+		local.chars["B"] = "b";
+		local.chars["C"] = "c";
+		local.chars["D"] = "d";
+		local.chars["E"] = "e";
+		local.chars["F"] = "f";
+		local.chars["G"] = "g";
+		local.chars["H"] = "h";
+		local.chars["I"] = "i";
+		local.chars["J"] = "j";
+		local.chars["K"] = "k";
+		local.chars["L"] = "l";
+		local.chars["M"] = "m";
+		local.chars["N"] = "n";
+		local.chars["O"] = "o";
+		local.chars["P"] = "p";
+		local.chars["Q"] = "q";
+		local.chars["R"] = "r";
+		local.chars["S"] = "s";
+		local.chars["T"] = "t";
+		local.chars["U"] = "u";
+		local.chars["V"] = "v";
+		local.chars["W"] = "w";
+		local.chars["X"] = "x";
+		local.chars["Y"] = "y";
+		local.chars["Z"] = "z";
+		
+		local.chars["a"] = "a";
+		local.chars["b"] = "b";
+		local.chars["c"] = "c";
+		local.chars["d"] = "d";
+		local.chars["e"] = "e";
+		local.chars["f"] = "f";
+		local.chars["g"] = "g";
+		local.chars["h"] = "h";
+		local.chars["i"] = "i";
+		local.chars["j"] = "j";
+		local.chars["k"] = "k";
+		local.chars["l"] = "l";
+		local.chars["m"] = "m";
+		local.chars["n"] = "n";
+		local.chars["o"] = "o";
+		local.chars["p"] = "p";
+		local.chars["q"] = "q";
+		local.chars["r"] = "r";
+		local.chars["s"] = "s";
+		local.chars["t"] = "t";
+		local.chars["u"] = "u";
+		local.chars["v"] = "v";
+		local.chars["w"] = "w";
+		local.chars["x"] = "x";
+		local.chars["y"] = "y";
+		local.chars["z"] = "z";
+		
+		local.chars["À"] = "à";
+		local.chars["Á"] = "á";
+		local.chars["Â"] = "â";
+		local.chars["Ã"] = "ã";
+		local.chars["Ä"] = "ä";
+		local.chars["Å"] = "å";
+		local.chars["Æ"] = "æ";
+		local.chars["Ç"] = "ç";
+		local.chars["È"] = "è";
+		local.chars["É"] = "é";
+		local.chars["Ê"] = "ê";
+		local.chars["Ë"] = "ë";
+		local.chars["Ì"] = "ì";
+		local.chars["Í"] = "í";
+		local.chars["Î"] = "î";
+		local.chars["Ï"] = "ï";
+		local.chars["Ð"] = "ð";
+		local.chars["Ñ"] = "ñ";
+		local.chars["Ò"] = "ò";
+		local.chars["Ó"] = "ó";
+		local.chars["Ô"] = "ô";
+		local.chars["Õ"] = "õ";
+		local.chars["Ö"] = "ö";
+		local.chars["Ø"] = "ø";
+		local.chars["Ù"] = "ù";
+		local.chars["Ú"] = "ú";
+		local.chars["Û"] = "û";
+		local.chars["Ü"] = "ü";
+		local.chars["Ý"] = "ý";
+		local.chars["Þ"] = "þ";
+		local.chars["Š"] = "š";
+		local.chars["Œ"] = "œ";
+		local.chars["Ž"] = "ž";
+		local.chars["Ÿ"] = "ÿ";
+
+		local.chars["à"] = "à";
+		local.chars["á"] = "á";
+		local.chars["â"] = "â";
+		local.chars["ã"] = "ã";
+		local.chars["ä"] = "ä";
+		local.chars["å"] = "å";
+		local.chars["æ"] = "æ";
+		local.chars["ç"] = "ç";
+		local.chars["è"] = "è";
+		local.chars["é"] = "é";
+		local.chars["ê"] = "ê";
+		local.chars["ë"] = "ë";
+		local.chars["ì"] = "ì";
+		local.chars["í"] = "í";
+		local.chars["î"] = "î";
+		local.chars["ï"] = "ï";
+		local.chars["ð"] = "ð";
+		local.chars["ñ"] = "ñ";
+		local.chars["ò"] = "ò";
+		local.chars["ó"] = "ó";
+		local.chars["ô"] = "ô";
+		local.chars["õ"] = "õ";
+		local.chars["ö"] = "ö";
+		local.chars["ø"] = "ø";
+		local.chars["ù"] = "ù";
+		local.chars["ú"] = "ú";
+		local.chars["û"] = "û";
+		local.chars["ü"] = "ü";
+		local.chars["ý"] = "ý";
+		local.chars["þ"] = "þ";
+		local.chars["š"] = "š";
+		local.chars["œ"] = "œ";
+		local.chars["ž"] = "ž";
+		local.chars["ÿ"] = "ÿ";
+	} 
+	else { // uppercase
+		local.chars["A"] = "A";
+		local.chars["B"] = "B";
+		local.chars["C"] = "C";
+		local.chars["D"] = "D";
+		local.chars["E"] = "E";
+		local.chars["F"] = "F";
+		local.chars["G"] = "G";
+		local.chars["H"] = "H";
+		local.chars["I"] = "I";
+		local.chars["J"] = "J";
+		local.chars["K"] = "K";
+		local.chars["L"] = "L";
+		local.chars["M"] = "M";
+		local.chars["N"] = "N";
+		local.chars["O"] = "O";
+		local.chars["P"] = "P";
+		local.chars["Q"] = "Q";
+		local.chars["R"] = "R";
+		local.chars["S"] = "S";
+		local.chars["T"] = "T";
+		local.chars["U"] = "U";
+		local.chars["V"] = "V";
+		local.chars["W"] = "W";
+		local.chars["X"] = "X";
+		local.chars["Y"] = "Y";
+		local.chars["Z"] = "Z";
+	
+		local.chars["a"] = "A";
+		local.chars["b"] = "B";
+		local.chars["c"] = "C";
+		local.chars["d"] = "D";
+		local.chars["e"] = "E";
+		local.chars["f"] = "F";
+		local.chars["g"] = "G";
+		local.chars["h"] = "H";
+		local.chars["i"] = "I";
+		local.chars["j"] = "J";
+		local.chars["k"] = "K";
+		local.chars["l"] = "L";
+		local.chars["m"] = "M";
+		local.chars["n"] = "N";
+		local.chars["o"] = "O";
+		local.chars["p"] = "P";
+		local.chars["q"] = "Q";
+		local.chars["r"] = "R";
+		local.chars["s"] = "S";
+		local.chars["t"] = "T";
+		local.chars["u"] = "U";
+		local.chars["v"] = "V";
+		local.chars["w"] = "W";
+		local.chars["x"] = "X";
+		local.chars["y"] = "Y";
+		local.chars["z"] = "Z";
+		
+		local.chars["À"] = "À";
+		local.chars["Á"] = "Á";
+		local.chars["Â"] = "Â";
+		local.chars["Ã"] = "Ã";
+		local.chars["Ä"] = "Ä";
+		local.chars["Å"] = "Å";
+		local.chars["Æ"] = "Æ";
+		local.chars["Ç"] = "Ç";
+		local.chars["È"] = "È";
+		local.chars["É"] = "É";
+		local.chars["Ê"] = "Ê";
+		local.chars["Ë"] = "Ë";
+		local.chars["Ì"] = "Ì";
+		local.chars["Í"] = "Í";
+		local.chars["Î"] = "Î";
+		local.chars["Ï"] = "Ï";
+		local.chars["Ð"] = "Ð";
+		local.chars["Ñ"] = "Ñ";
+		local.chars["Ò"] = "Ò";
+		local.chars["Ó"] = "Ó";
+		local.chars["Ô"] = "Ô";
+		local.chars["Õ"] = "Õ";
+		local.chars["Ö"] = "Ö";
+		local.chars["Ø"] = "Ø";
+		local.chars["Ù"] = "Ù";
+		local.chars["Ú"] = "Ú";
+		local.chars["Û"] = "Û";
+		local.chars["Ü"] = "Ü";
+		local.chars["Ý"] = "Ý";
+		local.chars["Þ"] = "Þ";
+		local.chars["Š"] = "Š";
+		local.chars["Œ"] = "Œ";
+		local.chars["Ž"] = "Ž";
+		local.chars["Ÿ"] = "Ÿ";
+		
+		local.chars["à"] = "À";
+		local.chars["á"] = "Á";
+		local.chars["â"] = "Â";
+		local.chars["ã"] = "Ã";
+		local.chars["ä"] = "Ä";
+		local.chars["å"] = "Å";
+		local.chars["æ"] = "Æ";
+		local.chars["ç"] = "Ç";
+		local.chars["è"] = "È";
+		local.chars["é"] = "É";
+		local.chars["ê"] = "Ê";
+		local.chars["ë"] = "Ë";
+		local.chars["ì"] = "Ì";
+		local.chars["í"] = "Í";
+		local.chars["î"] = "Î";
+		local.chars["ï"] = "Ï";
+		local.chars["ð"] = "Ð";
+		local.chars["ñ"] = "Ñ";
+		local.chars["ò"] = "Ò";
+		local.chars["ó"] = "Ó";
+		local.chars["ô"] = "Ô";
+		local.chars["õ"] = "Õ";
+		local.chars["ö"] = "Ö";
+		local.chars["ø"] = "Ø";
+		local.chars["ù"] = "Ù";
+		local.chars["ú"] = "Ú";
+		local.chars["û"] = "Û";
+		local.chars["ü"] = "Ü";
+		local.chars["ý"] = "Ý";
+		local.chars["þ"] = "Þ";
+		local.chars["š"] = "Š";
+		local.chars["œ"] = "Œ";
+		local.chars["ž"] = "Ž";
+		local.chars["ÿ"] = "Ÿ";
+	}
+end local.chars;
