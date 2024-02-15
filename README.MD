@@ -89,19 +89,21 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "check_snowball 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
 |       | "check_snowball 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
 |       | "check 0" | make all "check_[trigger]" cvars "0". |
-| exec cvars/find.scr      | "find truckclip" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
-|       | "find endtrigger" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
-|       | "find barrel[1]" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
-|       | "find barrel[2]" | teleport all players on the map to the entity targetname's coords (also printing: coords, angles, entnum, and target). |
-| exec cvars/findent.scr      | "findent 65" | teleport all players on the map to the non-player entity's coords (also printing: coords, angles, classname, model, targetname, target, health). |
-|       | "findent 450" | teleport all players on the map to the non-player entity's coords (also printing: coords, angles, classname, model, targetname, target, health). |
+| exec cvars/find.scr      | "find truckclip" | teleport all players to $truckclip's coords (also printing: coords, angles, entnum, and target). |
+|       | "find endtrigger" | teleport all players to $endtrigger's coords (also printing: coords, angles, entnum, and target). |
+|       | "find barrel[1]" | teleport all players to $barrel[1]'s coords (also printing: coords, angles, entnum, and target). |
+|       | "find barrel[2]" | teleport all players to $barrel[2]'s coords (also printing: coords, angles, entnum, and target). |
+| exec cvars/findent.scr      | "findent 65" | teleport all players to entity 65's coords (also printing: coords, angles, classname, model, targetname, target, health). |
+|       | "findent 450" | teleport all players to entity 450's coords (also printing: coords, angles, classname, model, targetname, target, health). |
+|       | "findent 0" | does not work if "findent" < sv_maxclients since these entities are reserved for players. |
 
-| exec cvars/findclass.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-| exec cvars/findmodel.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
+| exec cvars/findclass.scr      | "findclass ScriptModel" | print the entnums and targetnames of all entities with a "ScriptModel" classname. |
+|       | "findclass CrateObject" | print the entnums and targetnames of all entities with a "CrateObject" classname. |
+|       | "findclass TurretGun" | print the entnums and targetnames of all entities with a "TurretGun" classname. |
+|       | "findclass Trigger" | print the entnums and targetnames of all entities with a "Trigger" classname. Note: may include other entities such as "TriggerUse" and "TriggerUseOnce" |
+| exec cvars/findmodel.scr      | "findmodel models/static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
+|       | "findmodel static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
+|       | "findmodel static/indycrate" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
 | exec cvars/drawpath.scr      | "entities 3" |  |
 |       | "entities 3" |  |
 |       | "entities 3" |  |
@@ -126,13 +128,6 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "entities 3" |  |
 |       | "entities 3" |  |
 
-
-exec cvars/findclass.scr	// "findclass [classname, case-specific]" cvar. "findclass ScriptModel", "findclass CrateObject", "findclass TurretGun", "findclass Trigger", or any other classname to print all entnums and
-				// their targetnames in the map with that classname.
-				//
-exec cvars/findmodel.scr	// "findmodel [models/...tik]" cvar. "findmodel models/static/indycrate.tik", "findmodel static/indycrate.tik", or any other model to print all entnums and
-				// their targetnames in the map with that model name.
-				//
 exec cvars/drawpath.scr		// "drawpath [1st ent's targetname without $ in a path]" cvar. "drawpath bomberpath", "drawpath spotpath1_1", "drawpath latertruckpath", or multiple paths with the same targetname: "drawpath
 				// exploderchunk[1]", "drawpath exploderchunk[12]", to spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node.
 				//
