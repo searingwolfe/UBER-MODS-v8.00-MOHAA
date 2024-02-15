@@ -159,10 +159,11 @@ If somehow all players are dead (round was a draw), then team-spectators will al
 - If a team wins but there are no players on the other team, scorepoints will not be added. A bomb (thread) and at least two bombsites (waitthreads) are added in the main map script.<br>
 If a bomb-carrying player dies, the bomb drops to the ground. If a bomb-carrying player leaves or changes teams or goes to spectator, the bomb respawns back to the origin it was last picked up at.
 
-- Cyber Attack: This game mode is best played on DM maps, since bombsites switch team defenders every 3 rounds. Each team has a bombsite to defend at all times, ideally placed near opposite corners of the map in DM maps or near team spawnpoints in OBJ maps.<br>
-The Allies bombsite is blue-lit and the Axis bombsite is red-lit. The radiobomb is ideally spawned near the middle of the map. Both teams must find the purple-lit bomb and plant it on the opposite team's bombsite. The bomb takes 1.5 seconds to plant/defuse.<br>
-If defused by the enemy team, the defusing player receives the radiobomb, ready to be planted on the enemy team's bombsite. To win, players must kill all enemies or plant and destroy the enemy's bombsite.<br>
-Every 3 rounds, the bombsites "change sides": all Allies bombsites become Axis, and all Axis bombsites become Allies.
+- Cyber Attack:
+	- This game mode is best played on DM maps, since bombsites switch team defenders every 3 rounds. Each team has a bombsite to defend at all times, ideally placed near opposite corners of the map in DM maps or near team spawnpoints in OBJ maps.<br>
+	- The Allies bombsite is blue-lit and the Axis bombsite is red-lit. The radiobomb is ideally spawned near the middle of the map. Both teams must find the purple-lit bomb and plant it on the opposite team's bombsite. The bomb takes 1.5 seconds to plant/defuse.<br>
+	- If defused by the enemy team, the defusing player receives the radiobomb, ready to be planted on the enemy team's bombsite. To win, players must kill all enemies or plant and destroy the enemy's bombsite.<br>
+	- Every 3 rounds, the bombsites "change sides": all Allies bombsites become Axis, and all Axis bombsites become Allies.
 
 - Search & Destroy: This game mode is best played on OBJ maps, so the bomb can always spawn near the planting team's spawnpoints.<br>
 Depending on "level.changesides" (0 or default = Allies plant first, 1 = Axis plant first), one team has two bombsites to find and defend, while the other planting team must find and destroy a bombsite.<br>
