@@ -59,13 +59,14 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 
 # UBER CVARS Scripts Info
 
+- maxentities = 869 in code, but players may crash joining Reborn servers (singleplayer maps) if current entities = 725+, or 140+ remaining entities.
+
 | File Name:        | CVAR without quotes:           | Description:   |
 |:-------------:|:-------------:|:-----:|
 | exec cvars/playercount.scr      | "players 1" | print to console the # of players in-game (type these into the server's console window). |
 |       | "players 2" | print to console the # of players in-game & their usernames. |
 |       | "players 3" | see which players in $player array are NULL. |
 
-				//		         maxentities = 869 in code, but players may crash joining Reborn servers (singleplayer maps) if current entities = 725+, or 140+ remaining entities.
 exec cvars/playercount.scr	// "players" cvar.  	"players 1" = print to console the # of players in-game (type these into the server's console window).
 				//	       		"players 2" = print to console the # of players in-game & their usernames.
 				//	       		"players 3" = see which players in $player array are NULL.
