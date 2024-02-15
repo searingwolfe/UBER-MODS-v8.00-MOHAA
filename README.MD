@@ -96,7 +96,6 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 | exec cvars/findent.scr      | "findent 65" | teleport all players to entity 65's coords (also printing: coords, angles, classname, model, targetname, target, health). |
 |       | "findent 450" | teleport all players to entity 450's coords (also printing: coords, angles, classname, model, targetname, target, health). |
 |       | "findent 0" | does not work if "findent" < sv_maxclients since these entities are reserved for players. |
-
 | exec cvars/findclass.scr      | "findclass ScriptModel" | print the entnums and targetnames of all entities with a "ScriptModel" classname. |
 |       | "findclass CrateObject" | print the entnums and targetnames of all entities with a "CrateObject" classname. |
 |       | "findclass TurretGun" | print the entnums and targetnames of all entities with a "TurretGun" classname. |
