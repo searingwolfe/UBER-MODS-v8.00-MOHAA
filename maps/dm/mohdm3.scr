@@ -1,0 +1,286 @@
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "Remagen"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "mohdm3"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "2000"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "g_inactivespectate" "0"
+local.v = waitexec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "2") {		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2" }
+if(getcvar("g_gametype") != "2") {		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1" }
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide
+}
+
+if(getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr bathroom
+}
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.script = maps/dm/mohdm3.scr
+	exec global/ambient.scr mohdm3
+	exec global/door_locked.scr::lock
+
+ 	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 150000
+	$world farplane_color ( 0.4980 0.6980 0.9412 ) //( 0.6784 0.8353 0.9686 )
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( 2290 -1597 -55 ) ( 0 -148 0 ) 15 20 // origin, angles, bulletsanger, angertime
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( 3881 -2775 704 )
+
+exec map_triggers/bomb.scr ( 1615 -2618 1160 ) ( 2310 -1073 640 ) ( 2682 -1730 616 ) ( 3458 -1330 728 ) ( 5600 -4073 320 ) ( 3392 -4207 795 ) ( -341 122 592 ) ( 781 -2459 607 ) ( 5208 -3144 856 ) ( 1964 -2593 792 ) 
+exec map_triggers/lightbomb.scr ( 3542 -1605 264 ) ( 3439 -2945 168 ) ( 1388 -1388 112 ) ( 415 72 137 ) ( 1815 -1168 368 ) ( 2645 -2515 614 ) ( 4818 -2203 239 ) ( 5519 -3969 180 ) ( 4437 -2957 577 ) ( 1990 -3700 194 ) 
+exec map_triggers/health.scr ( 762 -2208 -3 ) ( 1215 456 -48 ) ( -992 -656 0 ) ( 6665 -2597 0 ) ( 4332 -4852 8 ) ( 1089 -2991 118 ) ( 4448 -2368 8 ) ( 4108 -1114 7 ) ( 2650 -2515 7 ) ( 2413 -2292 8 ) 
+exec map_triggers/grenade_ammo.scr ( 1041 640 -47 ) ( 689 -1491 8 ) ( 1988 -1952 -55 ) ( 2428 -375 -63 ) ( 3992 -1440 68 ) ( 4511 -3568 48 ) ( 2463 -2575 8 ) ( 3509 -3310 8 ) ( 5122 -2424 72 ) ( 2248 -3336 8 ) 
+exec map_triggers/rocket_ammo.scr ( 2240 -3762 229 ) ( 2640 -2043 208 ) ( 1125 528 207 ) ( 1988 -1702 188 ) ( 5017 -3547 287 ) ( 3956 -3465 397 ) ( 3415 -1092 224 ) ( 2958 -692 76 ) ( 460 -1853 176 ) ( 3134 -4307 32 ) 
+exec map_triggers/snowball_ammo.scr ( 1015 23 321 ) ( 4276 -1509 472 ) ( 1693 -2654 320 ) ( 221 -1968 848 ) ( 2944 -1890 384 ) ( 3082 -4077 544 ) ( 3883 -2176 400 ) ( 2410 -3344 504 ) ( 6209 -1399 236 ) ( 3872 -5576 322 )
+
+exec map_triggers/led_trap.scr ( 2818 -1708 384 ) led1 1
+exec map_triggers/led_trap.scr ( 4388 -1380 397 ) led2 2
+exec map_triggers/led_trap.scr ( 4881 -5288 166 ) led3 1
+
+if(getcvar("g_ubergametype") != "bb")
+{
+// comment these out if there are too many spotlights.
+exec map_triggers/player_spotlight.scr ( 1364 -3198 66 ) ( 1 1 1 ) s0 700 5 0 0 1
+exec map_triggers/player_spotlight.scr ( 1512 -1662 744 ) ( 1 0 .5 ) s1 700 180 0 0 1
+exec map_triggers/player_spotlight.scr ( 2076 -670 744 ) ( 0 .5 1 ) s2 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( 1018 105 552 ) ( 1 .5 0 ) s3 700 270 0 0 1
+exec map_triggers/player_spotlight.scr ( 3627 -1475 728 ) ( .5 0 1 ) s4 700 270 0 0 1
+exec map_triggers/player_spotlight.scr ( 3893 -2780 960 ) ( .5 .5 1 ) s5 700 180 0 0 1
+exec map_triggers/player_spotlight.scr ( 3138 -3984 880 ) ( .5 1 .5 ) s6 700 60 0 0 1
+exec map_triggers/player_spotlight.scr ( 5645 -3946 640 ) ( 1 .5 .5 ) s7 700 150 0 0 1
+exec map_triggers/player_spotlight.scr ( 5175 -1622 477 ) ( .5 1 0 ) s8 700 -120 0 0 1
+exec map_triggers/player_spotlight.scr ( 240 -1218 848 ) ( 0 1 .5 ) s9 700 0 0 0 1
+}
+
+	thread bathroom
+
+	cache models/static/cabinet_dark.tik // hide the other cabinets on the map, before spawning in cabinetswitches.
+	cache models/static/cabinet_tall.tik
+	cache models/static/wardrobe.tik
+
+	exec map_triggers/gen_switches/cabinetswitch.scr ( 1139.79 168.15 -48 ) ( 0 180 0 ) 1 1 // dark; origin, angles, model (1 = dark, 2 = tall, 3 = wardrobe), scale (1 = default).
+	exec map_triggers/gen_switches/cabinetswitch.scr ( 1139.79 344.15 -48 ) ( 0 180 0 ) 1 1 // dark
+	exec map_triggers/gen_switches/cabinetswitch.scr ( 3249 -1343.90 16 ) ( 0 0 0 ) 2 1 // tall
+	exec map_triggers/gen_switches/cabinetswitch.scr ( 740 124 160 ) ( 0 90 0 ) 3 1 // wardrobe
+
+	exec maps/UBER_mapextras/dm3_cratesstuff.scr::main
+	exec maps/UBER_mapextras/dm3_teleporters.scr::main
+}
+
+// use these origins in a map without UBER_mapextras stuff or for more realism, and remove "lightbomb.scr" & "health.scr" triggers (if not removed, some coords will overlap).
+if(getcvar("g_ubermods") == "1")
+{
+exec map_triggers/snowball_ammo.scr ( 762 -2208 -3 ) ( 1215 456 -48 ) ( 4499 -1461 8 ) ( 5566 -4136 8 ) ( 3200 -1365 8 ) ( 2236 -955 152 ) ( 2841 -3863 8 ) ( 3503 -2265 8 ) ( -512 -640 -3 ) ( 2413 -2292 8 ) 
+exec map_triggers/rocket_ammo.scr ( 1041 640 -47 ) ( 689 -1491 8 ) ( 1988 -1952 -55 ) ( 2428 -375 -63 ) ( 3992 -1440 68 ) ( 4511 -3568 48 ) ( 4501 -4337 8 ) ( 3509 -3310 8 ) ( 5122 -2424 72 ) ( 2248 -3336 8 ) 
+exec map_triggers/bomb.scr ( 3567 -1592 264 ) ( 2767 -2191 208 ) ( 1125 528 207 ) ( 1988 -1702 188 ) ( 5017 -3547 287 ) ( 1394 -3215 4 ) ( 1712 -1927 -13 ) ( 2463 -2727 8 ) ( -112 -103 -14 ) ( 3440 -2945 168 ) 
+exec map_triggers/grenade_ammo.scr ( 415 2 -44 ) ( 1592 -1408 -59 ) ( 1744 -408 -63 ) ( 1835 -1864 -55 ) ( 2958 -1640 8 ) ( 2703 -2067 8 ) ( 3896 -2784 48 ) ( 4052 -1319 8 ) ( 3826 -4188 39 ) ( 5996 -2527 8 )
+
+exec maps/UBER_mapextras/dm3_cratesstuff.scr::smoke
+thread crates
+}
+
+level waittill spawn
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1
+
+	exec global/throwingknife.scr k1 ( 4006 -950 64 ) ( 0 -90 0 )
+	exec global/throwingknife.scr k2 ( 5013 -3395 96 ) ( 0 180 0 )
+	exec global/throwingknife.scr k3 ( 605 625 0 ) ( 0 0 0 ) 
+	exec global/throwingknife.scr k4 ( 2769 -2173 272 ) ( 0 -35 0 )
+}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cybsnd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 5
+ 	level.changesides = 0
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 5025 -3268 278 ) 90 axis 
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1110 191 162 ) 180 allies
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 2465 -2627.5 8 ) -90 ( 2465 -2627.5 8 ) -90 ( 2465 -2627.5 8 ) 0 
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+// allies spawn
+exec alienx/basebuild.scr::basebuild ( 1513 -795 -63 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1513 -670 -63 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1513 -549 -63 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 1519 47 -63 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1446 142 -63 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1367 256 -63 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+
+// axis spawn
+exec alienx/basebuild.scr::basebuild ( 5729 -2037 8 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5651 -1946 8 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5547 -1855 8 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 5172 -1723 8 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5037 -1646 8 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4915 -1570 8 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+crates:
+
+	local.crate1 = spawn script_model
+	local.crate1 model "static/indycrate.tik" 
+	local.crate1.origin = ( 3880.5 -2135 8 ) 
+	local.crate1.angles = ( 0 0 0 )
+	local.crate1 solid
+	local.crate2 = spawn script_model
+	local.crate2 model "static/indycrate.tik" 
+	local.crate2.origin = ( 3880.5 -3434 8 ) 
+	local.crate2.angles = ( 0 0 0 )
+	local.crate2 solid
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Extra Map Stuff"
+//*** --------------------------------------------
+
+bathroom: // triggers can do "playsound" but not "loopsound". need a script_model to do "loopsound" at a trigger's origin.
+
+	//coords + angles from mohdm3.map in MOHRadiant (Edit --> Entity Info)
+	//local.table = spawn script_model
+	//local.table model "static/banquet_table.tik" 
+	//local.table.origin = ( 1980 -1700 144 ) 
+	//local.table.angles = ( 0 0 0 )
+	//local.table solid
+
+	local.toilet = spawn trigger_use
+	local.toilet.origin = ( 4810 -3507 278 )
+	local.toilet setsize ( -15 -15 -5 ) ( 15 15 40 )
+	local.toilet setthread toilet_flush
+
+	local.shower = spawn trigger_use
+	local.shower.origin = ( 5019 -3534 292 )
+	local.shower setsize ( -25 -25 -5 ) ( 25 25 40 )
+	local.shower.waterison = 0 // make sure this variable is initialized as an integer 0, before adding "+1". 
+	local.shower thread shower_onoff
+
+	local.faucetloop = spawn script_model targetname "bathtub_faucet"
+	local.faucetloop model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.faucetloop.origin = ( 5019 -3534 292 )
+	local.faucetloop notsolid
+	local.faucetloop.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+
+	local.sink = spawn trigger_use
+	local.sink.origin = ( 4789 -3392 310 )
+	local.sink setsize ( -25 -25 -5 ) ( 25 25 40 )
+	local.sink.waterison = 0
+	local.sink thread sink_onoff
+
+	local.faucetloop2 = spawn script_model targetname "sink_faucet"
+	local.faucetloop2 model "static/indycrate.tik"
+	local.faucetloop2.origin = ( 4789 -3392 310 )
+	local.faucetloop2 notsolid
+	local.faucetloop2.scale = 0.01
+end
+
+toilet_flush:
+	
+	self nottriggerable
+	self playsound flushtoilet
+	wait 6
+	self triggerable	
+end
+
+shower_onoff:
+
+	self waittill trigger
+	self nottriggerable
+
+	if(self.waterison != 1) { $bathtub_faucet loopsound faucetwateron }
+	if(self.waterison == 1) { $bathtub_faucet stoploopsound }
+	
+	self.waterison++
+	if(self.waterison > 1) { self.waterison = 0 }
+
+	wait 1
+	self triggerable
+	self thread shower_onoff
+end
+
+sink_onoff:
+
+	self waittill trigger
+	self nottriggerable
+
+	if(self.waterison != 1) { $sink_faucet loopsound faucetwateron }
+	if(self.waterison == 1) { $sink_faucet stoploopsound }
+	
+	self.waterison++
+	if(self.waterison > 1) { self.waterison = 0 }
+
+	wait 1
+	self triggerable
+	self thread sink_onoff
+end
+

@@ -1,0 +1,174 @@
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "The Crossroads"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "mohdm4"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "2000"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "g_inactivespectate" "0"
+local.v = waitexec global/uberversion.scr
+
+removeclass PlayerIntermission // remove screen change right before map changes; fade to black instead (rare server crash fix).
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "2") {		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2" }
+if(getcvar("g_gametype") != "2") {		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1" }
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide
+}
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.script = maps/dm/mohdm4.scr
+	exec global/ambient.scr mohdm4
+	exec global/door_locked.scr::lock
+
+   	setcvar "r_fastsky" "1"
+	exec global/fastsky.scr 1
+	//$world farplane 5000 //15000, reduced to boost fps
+	$world farplane_color ( 0.4980 0.6980 0.9412 ) //( 0.4980 0.6980 0.9412 )
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( -1016 2344 472 ) ( 0 315 0 ) 15 20 // origin, angles, bulletsanger, angertime
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( 450 2687 1280 )
+
+exec map_triggers/bomb.scr ( 159 -2474 1216 ) ( -656 -1128 1032 ) ( -1377 982 1248 ) ( -307 3386 1168 ) ( -1385 2656 988 ) ( -1060 1743 1104 ) ( 640 4382 1104 ) ( 360 -1440 1082 ) ( 1000 2688 1280 ) ( -813 3900 736 )
+exec map_triggers/lightbomb.scr ( 266 3321 704 ) ( 481 2687 672 ) ( -335 1488 728 ) ( -1120 903 728 ) ( 957 -1376 792 ) ( 1226 1118 907 ) ( -176 20 328 ) ( -554 930 512 ) ( 1184 2873 896 ) ( -704 3648 652 ) 
+exec map_triggers/health.scr ( 850 -2963 240 ) ( -1648 -1031 210 ) ( 1231 816 68 ) ( -3111 -793 209 ) ( -2728 3760 261 ) ( -472 5984 329 ) ( 2998 1519 237 ) ( -98 5040 18 ) ( 93 927 17 ) ( 736 3232 264 ) 
+exec map_triggers/grenade_ammo.scr ( 387 1166 264 ) ( -512 -1375 248 ) ( 1392 -688 64 ) ( 1049 1376 160 ) ( -1103 1535 268 ) ( -516 4452 308 ) ( -1272 2832 448 ) ( 929 2689 263 ) ( -492 2718 264 ) ( -231 176 64 ) 
+exec map_triggers/rocket_ammo.scr ( 465 -1328 480 ) ( 876 -2047 528 ) ( -391 -1360 448 ) ( 634 1347 280 ) ( 527 2463 528 ) ( 488 3755 512 ) ( -783 3303 412 ) ( -1199 1136 432 ) ( -832 2197 768 ) ( 1717 0 368 ) 
+exec map_triggers/snowball_ammo.scr ( -7560 2512 216 ) ( -5623 5055 272 ) ( 1537 7728 334 ) ( -3345 -4977 343 ) ( -432 1968 825 ) ( -889 3520 1056 ) ( 767 3103 920 ) ( -502 -1932 878 ) ( -432 1535 830 ) ( -732 1743 768 ) 
+
+exec map_triggers/led_trap.scr ( -3347 4104 256 ) led1 1
+exec map_triggers/led_trap.scr ( 544 5978 361 ) led2 2
+exec map_triggers/led_trap.scr ( 3893 1001 244 ) led3 2
+exec map_triggers/led_trap.scr ( -1577 -3749 375 ) led4 1
+
+if(getcvar("g_ubergametype") != "bb")
+{
+// comment these out if there are too many spotlights.
+exec map_triggers/player_spotlight.scr ( -374 -1848 944 ) ( 1 0 .5 ) s0 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( 588 1119 907 ) ( 0 .5 1 ) s1 700 180 0 0 1
+exec map_triggers/player_spotlight.scr ( -684 1070 1152 ) ( 1 .5 0 ) s2 700 -50 0 0 1
+exec map_triggers/player_spotlight.scr ( 401 3202 917 ) ( .5 0 1 ) s3 700 -140 0 0 1
+exec map_triggers/player_spotlight.scr ( 292 290 360 )  ( .5 .5 1 ) s4 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( -271 3598 1328 ) ( .5 1 .5 ) s5 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( -1244 3518 1056 ) ( 1 .5 .5 ) s6 700 180 0 0 1
+exec map_triggers/player_spotlight.scr ( -1411 2415 815 ) ( .5 1 0 ) s7 700 -70 0 0 1
+exec map_triggers/player_spotlight.scr ( 325 -1101 976 ) ( 0 1 .5 ) s8 700 180 0 0 1
+exec map_triggers/player_spotlight.scr ( 292 -290 360 ) ( 1 .5 1 ) s9 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( -292 -290 360 ) ( 1 1 .5 ) s10 700 180 0 0 1
+exec map_triggers/player_spotlight.scr ( -292 290 360 ) ( .5 1 1 ) s11 700 180 0 0 1
+}
+
+	exec maps/UBER_mapextras/dm4_teleporters.scr::main
+	exec maps/UBER_mapextras/dm4_cratesstuff.scr::main
+}
+
+// use these origins in a map without UBER_mapextras stuff or for more realism, and remove "lightbomb.scr" & "health.scr" triggers (if not removed, some coords will overlap).
+if(getcvar("g_ubermods") == "1")
+{
+exec map_triggers/snowball_ammo.scr ( 481 2687 672 ) ( -1648 -1031 210 ) ( 1231 816 68 ) ( -176 20 328 ) ( -1120 903 728 ) ( -600 1999 248 ) ( -1644 683 56 ) ( -93 4248 17 ) ( -98 1921 18 ) ( 736 3232 264 )
+exec map_triggers/rocket_ammo.scr ( 387 1166 264 ) ( -512 -1375 248 ) ( 1392 -688 64 ) ( 1049 1376 160 ) ( -1103 1535 268 ) ( -516 4452 308 ) ( -1272 2832 448 ) ( 1601 2231 240 ) ( -492 2718 264 ) ( -231 176 64 ) 
+exec map_triggers/bomb.scr ( 465 -1328 480 ) ( -704 3648 652 ) ( 266 3321 704 ) ( -335 1488 728 ) ( 193 -2880 240 ) ( 552 -2388 240 ) ( -432 1535 240 ) ( -1199 1136 432 ) ( -1728 3272 184 ) ( -1104 1336 296 ) 
+exec map_triggers/grenade_ammo.scr ( 839 -1328 248 ) ( 116 -2501 380 ) ( -1046 -911 240 ) ( 267 287 312 ) ( -976 911 240 ) ( 1584 1151 240 ) ( 98 3039 18 ) ( 431 4368 324 ) ( -1156 3791 240 ) ( -1368 2312 240 ) 
+
+exec maps/UBER_mapextras/dm4_cratesstuff.scr::smoke
+exec maps/UBER_mapextras/dm4_cratesstuff.scr::barbwire
+}
+
+level waittill spawn
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1
+
+	exec global/throwingknife.scr k1 ( 77 2221 60 ) ( 0 258 0 )
+	exec global/throwingknife.scr k2 ( -522 4496 300 ) ( 0 90 0 )
+	exec global/throwingknife.scr k3 ( -582.5 -2080 337 ) ( 0 270 0 ) 
+	exec global/throwingknife.scr k4 ( -1274 1011.5 636 ) ( 0 0 0 )
+}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cybsnd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 5
+ 	level.changesides = 0
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -690 3589 652 ) 0 axis 
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 400 -1299 480 ) 90 allies
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 717 1134 132 ) 300 ( 717 1134 132 ) 300 ( 717 1134 132 ) 30 
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+// allies spawn
+exec alienx/basebuild.scr::basebuild ( 299 -1957 240 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( 299 -1857 240 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 299 -1757 240 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 299 -1657 240 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 299 -1557 240 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 299 -1457 240 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+
+// axis spawn
+exec alienx/basebuild.scr::basebuild ( -219 4078 248 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( -219 3978 248 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -219 3878 248 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( -219 3778 248 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -219 3678 248 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -219 3578 248 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+end

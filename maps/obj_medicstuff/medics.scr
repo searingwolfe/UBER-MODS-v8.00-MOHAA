@@ -1,0 +1,115 @@
+main local.origin local.angleyaw local.medic local.healanyone local.maxhealth local.smoker local.setsize1 local.setsize2:
+
+	if(local.medic != 1 && local.medic != 2) { local.medic = spawn human/dday_ranger_medic.tik } //0, or default
+	if(local.medic == 1) { local.medic = spawn human/1st-ranger_medic.tik } // 1st and 2nd ranger medics do not have unarmed_stand _shock, _curious, _nervous animations.
+	if(local.medic == 2) { local.medic = spawn human/2nd-ranger_medic.tik }
+	local.medic.origin = local.origin
+	local.medic.angle = local.angleyaw
+	local.medic nodamage
+
+	local.trigmed = spawn trigger_use
+	local.trigmed.origin = local.medic.origin
+	if(local.setsize1 == NIL || local.setsize2 == NIL) { local.trigmed setsize ( -100 -100 -5 ) ( 100 100 100 ) }
+	if(local.setsize1 != NIL && local.setsize2 != NIL) { local.trigmed setsize local.setsize1 local.setsize2 }
+
+	local.trigmed.medic = local.medic
+	local.trigmed.healanyone = local.healanyone // if 0, only allies can be healed by medics.
+	
+
+	if(local.maxhealth > 0) { local.trigmed.maxhealth = local.maxhealth }
+	if(local.maxhealth <= 0 || local.maxhealth == NIL) { local.trigmed.maxhealth = 75 } //default
+
+	local.trigmed setthread healplayer
+
+	if(local.smoker != 1) { local.medic thread idlemedic }
+	if(local.smoker == 1) { local.medic thread smokemedic }
+end
+
+healplayer:
+
+	local.player = parm.other
+	self nottriggerable
+
+	if(local.player.dmteam == allies || self.healanyone == 1)
+	{
+		if(local.player.health <= self.maxhealth )
+		{
+			self.medic playsound medic_heal1
+			self message "*** Medic is fully healing you. ***"
+
+			self.medic upperanim pass_canteen_start
+			self.medic waittill upperanimdone
+			self.medic upperanim pass_canteen_end
+
+			local.player.health = 100
+			local.player playsound med_kit
+		}
+		else if(local.player.health > self.maxhealth )
+		{
+			local.player iprint ("You must have " + self.maxhealth + " health or less for medic to give health packs.")
+			self message "*** You have too much health. ***"
+			wait 1
+		}
+	}
+	else if(local.player.dmteam == spectator) {  }
+	else
+	{
+		killent local.player.entnum
+		self message "*** These aren't your allies, lol. ***"
+	}
+
+	self triggerable
+end
+
+////////////////////////////////////////////////////////////////////////
+
+idlemedic: // if grenades are thrown at a medic, they will duck and cover. stand back up after 10 seconds, while not healing a player (only for nonsmoker medics).
+
+	wait 10
+
+	self setmotionanim idle // "anim" and "upperanim" both work for "idle" too
+
+	self thread idlemedic
+end
+
+////////////////////////////////////////////////////////////////////////
+
+smokemedic:
+
+	// using "upperanim" for some animations won't look right unless "setmotionanim" is used (smoking01,02,04). must only use "upperanim" for smoking03,05.
+	// 01 = light up, 02 = first inhale, 03 = inhale, 04 = put cig out with foot, 05 = throw cig away.
+
+	wait 10
+	self setmotionanim idle // idle every 10 seconds (like in "idlemedic" thread) for 30 seconds before smoking begins.
+	wait 10
+	self setmotionanim idle
+	wait 10
+	
+	self setmotionanim idle // if medic crouched from a nearby grenade, "idle" will stand him back up before smoking again.
+	self setmotionanim smoking01
+	self waittill flaggedanimdone
+
+	self setmotionanim idle
+	self setmotionanim smoking02
+
+	for(local.n = 1; local.n <= 2; local.n++) // smoke for about 120 seconds before throwing cig away.
+	{	
+		local.rand = randomint(9)
+		wait (8 + local.rand)
+
+		self setmotionanim idle
+		self upperanim smoking03
+	}
+	wait (8 + local.rand)
+
+	self setmotionanim idle
+	local.random = randomint(2)
+	if(local.random == 0) { self setmotionanim smoking04; self waittill flaggedanimdone }
+	if(local.random == 1) { self upperanim smoking05; self waittill upperanimdone }
+
+	self thread smokemedic
+end
+
+// (anim idle --> waittill animdone), (setmotionanim --> waittill flaggedanimdone), (upperanim or setupperanim --> waittill upperanimdone).
+
+

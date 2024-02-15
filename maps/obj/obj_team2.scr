@@ -1,0 +1,977 @@
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "V2 Rocket Facility"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "objdm2"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "2000"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "g_inactivespectate" "0"
+local.v = waitexec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "1") {		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1" }
+if(getcvar("g_gametype") != "1") {		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2" }
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread snd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide
+}
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr airstrikes
+}
+if(getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr transformers
+exec global/aliascache_triggersounds.scr alarm_switch
+exec global/aliascache_triggersounds.scr light_switch
+exec global/aliascache_triggersounds.scr truck_sounds
+exec global/aliascache_triggersounds.scr radio_music2
+exec global/aliascache_triggersounds.scr pipesteam
+cache models/vehicles/tigertank.tik
+exec global/fworks.scr::prepare
+}
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.script = maps/obj/obj_team2.scr
+	exec global/ambient.scr obj_team2
+	exec global/door_locked.scr::lock
+	level.dmrespawning = 1
+	thread global/exploder.scr::main
+	//thread global/barrel.scr::explosive_barrel
+
+	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 100000
+	$world farplane_color ( 0.6784 0.8353 0.9686 )
+
+	level.bomb_damage = 500 
+	level.bomb_explosion_radius = 1100 // for v2 rocket & control rooom explosions
+
+	//$groundzero remove
+	//$groundzero1 remove
+	$bomberspeaker remove
+	$bomberpath remove
+	$t9 remove	// original map's plane splinepaths
+	$t10 remove
+	$t11 remove
+	$t12 remove
+	$t13 remove
+	$t14 remove
+	$t15 remove
+	$t16 remove
+	$t18 remove
+	$t19 remove
+	$t20 remove
+	$t21 remove
+	$t22 remove
+	$t23 remove
+	$t24 remove
+	$t26 remove
+	$t27 remove
+	$t28 remove
+	
+	$v2_explode notsolid
+	$ctrlroom_explode notsolid
+	$v2_explode hide
+	$ctrlroom_explode hide
+
+	//$t17 remove // v2 rocket model's targetname
+	//$v2_bomb remove
+	//$v2_explode remove
+	//$ctrlroom_bomb remove
+	//$ctrlroom_explode remove
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	if((getcvar("g_gametype") != "1") && (getcvar("g_gametype") != "0"))
+	{
+		exec maps/obj_medicstuff/medics.scr::main ( -1050 218 -449 ) 180 0 0 75 0 // origin, angle, medicmodel (0,1,2), healanyone (0 = only allies, 1 = yes), ...
+		exec maps/obj_medicstuff/medics.scr::main ( -1895 975 -451 ) -90 0 0 75 0 // maxhealth to allow healing (default = 75), medic smoker (1 = yes, will smoke after 30 seconds).
+		exec maps/obj_medicstuff/medics.scr::main ( -718 1151 -447 ) 180 1 0 75 1
+
+		exec maps/obj_medicstuff/healthtables.scr::main ( 1106 2885 0 ) 180 1 // angle (must be +/- 90,180,270,360), items orientation (health stuff on table, 0 or 1).
+		exec maps/obj_medicstuff/healthtables.scr::main ( 2725 2835 0 ) -90 1
+	}
+
+	exec global/dog.scr ( 2030 2130 -651 ) ( 0 270 0 ) 15 20 // origin, angles, bulletsanger, angertime
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+if(getcvar("g_ubermods") == "2")
+{
+	exec global/fworks.scr ( 2300 1277 -784 ) ( 2362 1210 -740 ) ( 0 270 0 ) 1300 2.5 1 //rocket origin, launcher origin, launcher angles, distance, particletime, explosion scale.
+
+	exec map_triggers/joint.scr ( 1487 1727 480 )
+
+exec map_triggers/lightbomb.scr ( -857 1317 -207 ) ( -2516 2136 -448 ) ( 2511 2544 177 ) ( 1551 1039 0 ) ( 2703 -854 -389 ) ( -1925 -915 -317 ) ( 4330 1947 -396 ) ( 688 2127 16 ) ( 847 959 -63 ) ( 503 311 -33 )
+exec map_triggers/bomb.scr ( 2299 1221 -500 ) ( -1066 1505 192 ) ( -2014 11 192 ) ( -1036 -484 464 ) ( 3622 2099 480 ) ( 2289 336 256 ) ( -3375 2559 96 ) ( -3375 -1600 96 ) ( 1087 -1663 256 ) ( 5184 -1663 256 )
+exec map_triggers/grenade_ammo.scr ( -1978 47 -456 ) ( 1491 1754 -511 ) ( 2772 623 -511 ) ( 368 511 -239 ) ( 375 2019 -511 ) ( 752 660 -447 ) ( 1008 911 -767 ) ( 18 1264 -335 ) ( -102 2804 -447 ) ( 2528 2544 -507 )
+exec map_triggers/rocket_ammo.scr ( 1087 3040 98 ) ( 1201 655 -117 ) ( 239 796 93 ) ( 1249 576 93 ) ( -548 207 -354 ) ( 175 2608 -349 ) ( 3007 2559 88 ) ( 3838 2910 -267 ) ( -349 -1011 -234 ) ( 1130 -422 -258 )
+exec map_triggers/snowball_ammo.scr ( 1551 1039 480 ) ( 2559 2544 384 ) ( 3861 -384 -493 ) ( -1725 1056 -147 ) ( -695 1707 368 ) ( -695 -4 368 ) ( -3204 -1482 -245 ) ( 23 2160 16 ) ( -2815 107 -359 ) ( 5147 -1624 -207 )
+exec map_triggers/health.scr ( 1759 1343 -623 ) ( 3167 2848 -511 ) ( 1584 976 -215 ) ( 1233 1899 -575 ) ( -957 1746 -459 ) ( 70 271 -319 ) ( 5168 640 -266 ) ( 3135 -1648 -267 ) ( -1799 -1476 -268 ) ( -3213 534 -229 )
+
+	exec map_triggers/led_trap.scr ( 5185 1490 256 ) led1 1
+	exec map_triggers/led_trap.scr ( 1088 -1044 256 ) led2 1
+	exec map_triggers/led_trap.scr ( -3375 -600 96 ) led3 1
+
+if(getcvar("g_ubergametype") != "bb")
+{
+	// comment these out if there are too many spotlights.
+	exec map_triggers/player_spotlight.scr ( 1997 960 -457 ) ( 1 1 1 ) s0 700 45 0 0 1
+	exec map_triggers/player_spotlight.scr ( 3104 2369 52 ) ( 1 0 .5 ) s1 700 -130 0 0 1
+	exec map_triggers/player_spotlight.scr ( 1722 649 52 )  ( 0 .5 1 ) s2 700 -45 0 0 1
+	exec map_triggers/player_spotlight.scr ( 2656 954 -457 ) ( 1 .5 0 ) s3 700 135 0 0 1
+	exec map_triggers/player_spotlight.scr ( 2186 2312 -457 ) ( .5 0 1 ) s4 700 -45 0 0 1
+	exec map_triggers/player_spotlight.scr ( 48 461 -75 ) ( .5 .5 1 ) s5 700 90 0 0 1
+	exec map_triggers/player_spotlight.scr ( 557 1773 68 ) ( .5 1 .5 ) s6 700 145 0 0 1
+	exec map_triggers/player_spotlight.scr ( -1737 989 192 ) ( 1 .5 .5 ) s7 700 270 0 0 1
+	exec map_triggers/player_spotlight.scr ( -971 1318 192 ) ( .5 1 0 ) s8 700 180 0 0 1
+	exec map_triggers/player_spotlight.scr ( 2048 2428 -63 ) ( 0 1 .5 ) s9 700 -135 0 0 1
+}
+
+	exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( -1035 63 -457 ) ( 0 180 0 ) ( -1035 422 -449 ) ( 0 -90 0 ) 500 1 1 8 // targetname, bomb origin, bomb angles, radio origin, radio angles, ...
+	exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 2958 2559 44 ) ( 0 90 0 ) ( 2833 2559 0 ) ( 0 180 0 ) 500 1 1 8      // damageradius, movefromorigin1st_b4blowingup (0 or 1) ...
+																     	     // pulsatingoff (0 or 1), pulsetime (default: 8).
+	thread truckengine 1 // 0 = no horn, 1 = honk while vehicle is on only, 2 = honk while on or off
+	thread radio_music ( 2304 2700 50 ) ( 0 90 0 ) 1 // origin, angles, ctrlroom (if 1 = yes, make radio almost invisible and notsolid, since one is already there)
+	thread radio_music ( 1327.77 2648.51 51 ) ( 0 110 0 ) 0 // coords from MOHRadiant, obj_team2.scr
+
+	thread v2rocket 400 500 1100 // health, damage, radius
+	thread controlroom 400 500 1100
+
+	thread splinepath
+	thread bomberplane first 210 0 7 2.5 // airstrike happens every 3 mins, 30 secs. (0 = bombs on, 1 = bombs off), bulletstokill, killtime..
+	thread bomberplane second 210 0 7 2.5
+
+	thread pipesteam ( -448 799 -326 ) ( 0 180 0 ) ( -465 810 -439 ) ( 0 180 0 ) 4 10 3  // eswitch origin, angles, pipe steam origin (while standing on floor), ...
+	thread pipesteam ( -581 1296 -325 ) ( 0 90 0 ) ( -592 1313 -439 ) ( 0 90 0 ) 4 10 3 // steam angles, max scale (def: 4), grow time (def: 7), shrink time (def: 3).
+
+	thread transformerswitch ( 361.4 475 -149 ) ( 0 270 0 )
+
+	exec maps/UBER_mapextras/obj2_teleporters.scr::main
+	exec maps/UBER_mapextras/obj2_cratesstuff.scr::main
+}
+
+// use these origins in a map without UBER_mapextras stuff or for more realism, and remove "rocket_ammo.scr" & "health.scr" triggers (if not removed, some coords will overlap).
+if(getcvar("g_ubermods") == "1")
+{
+thread splinepath
+thread bomberplane first 210 1 7 2.5 // airstrike happens every 3 mins, 30 secs. (0 = bombs on, 1 = bombs off), bulletstokill, killtime..
+thread bomberplane second 210 1 7 2.5
+
+exec map_triggers/lightbomb.scr ( -1978 47 -456 ) ( 1491 1754 -511 ) ( 2772 623 -511 ) ( 368 511 -239 ) ( 375 2019 -511 ) ( 752 660 -447 ) ( 1008 911 -767 ) ( 18 1264 -335 ) ( -102 2804 -447 ) ( 2528 2544 -507 )
+exec map_triggers/bomb.scr ( 1087 3040 98 ) ( 1201 655 -117 ) ( 239 796 93 ) ( 1249 576 93 ) ( -548 207 -354 ) ( 175 2608 -349 ) ( 3007 2559 88 ) ( 1551 1039 0 ) ( 503 311 -33 ) ( 688 2127 16 )
+exec map_triggers/snowball_ammo.scr ( 1871 1439 -623 ) ( 3167 2848 -511 ) ( 1584 976 -215 ) ( 1233 1899 -575 ) ( -1176 1496 -454 ) ( 70 271 -319 ) ( 2648 1839 -763 ) ( 1647 399 -511 ) ( 880 2816 -447 ) ( -463 976 -447 )
+exec map_triggers/grenade_ammo.scr ( -919 1046 -447 ) ( -336 792 -375 ) ( -588 1869 -447 ) ( 125 1977 -445 ) ( 58 2168 16 ) ( -28 11 0 ) ( 863 1600 0 ) ( 1561 2544 -447 ) ( 3104 2448 0 ) ( 1991 967 -763 )
+}
+
+level waittill spawn
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1
+
+	exec global/throwingknife.scr k1 ( 2735 717 -463 ) ( 0 105 0 )
+	exec global/throwingknife.scr k2 ( 1453 3029 25 ) ( 0 270 0 )
+	exec global/throwingknife.scr k3 ( -475 543 -415 ) ( 0 180 0 ) 
+	exec global/throwingknife.scr k4 ( 109 2049 -446 ) ( 0 290 0 )
+}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cyb:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.keepsamesides = 1
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 2738 2815 0 ) 180 axis    // for cyber attack only
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -728 735 -447 ) 90 allies
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( -1730 914 -395 ) 180 ( 1455 2834 50 ) 0 ( -153 1445 96 ) -90 
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+snd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 53 1470 8 ) 90 axis    // for search & destroy only, team parameter doesn't matter
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1478 452 0 ) 180 allies 
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( -1730 914 -395 ) 180 ( 1455 2834 50 ) 0 ( -153 1445 96 ) -90 
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+// allies spawn
+exec alienx/basebuild.scr::basebuild ( -1270 1008 -453 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1195 1081 -453 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1159 1167 -453 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( -1159 1267 -453 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1159 1367 -453 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1159 1467 -453 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+
+// axis spawn
+exec alienx/basebuild.scr::basebuild ( 3098 806 -511 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3098 906 -511 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3098 1006 -511 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 3098 1106 -511 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3098 1206 -511 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3098 1306 -511 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "V2 Rocket & Control Room Explosions"
+//*** --------------------------------------------
+
+v2rocket local.health local.damage local.radius: // tanks are used since only rocket impacts and explosions can kill them.
+
+	local.tank = spawn "vehicles/tigertank.tik" // need two below and above the v2 rocket's metal launch pad
+	local.tank.origin = $t17.origin + ( 100 0 20 )
+	local.tank.angles = ( 0 0 0 )
+	local.tank.health = local.health
+	local.tank.scale = 0.1
+	local.tank notsolid
+	local.tank hide
+
+	local.tank2 = spawn "vehicles/tigertank.tik"
+	local.tank2.origin = $t17.origin + ( -100 0 20 )		  
+	local.tank2.angles = ( 0 0 0 )
+	local.tank2.health = local.health
+	local.tank2.scale = 0.1
+	local.tank2 notsolid
+	local.tank2 hide
+
+	local.tank3 = spawn "vehicles/tigertank.tik"
+	local.tank3.origin = $t17.origin + ( 0 -100 20 )		  
+	local.tank3.angles = ( 0 90 0 )
+	local.tank3.health = local.health
+	local.tank3.scale = 0.1
+	local.tank3 notsolid
+	local.tank3 hide
+
+	local.tank4 = spawn "vehicles/tigertank.tik"
+	local.tank4.origin = $t17.origin + ( 0 100 20 )		  
+	local.tank4.angles = ( 0 90 0 )
+	local.tank4.health = local.health
+	local.tank4.scale = 0.1
+	local.tank4 notsolid
+	local.tank4 hide
+
+	while(local.tank != NULL && local.tank2 != NULL && local.tank3 != NULL && local.tank4 != NULL) { wait 0.1 }
+
+	println("----- Blowing up the V2 Rocket.")
+	if(local.tank != NULL) { local.tank remove } // get rid of the other tanks if one didn't blow up
+	if(local.tank2 != NULL) { local.tank2 remove }
+	if(local.tank3 != NULL) { local.tank3 remove }
+	if(local.tank4 != NULL) { local.tank4 remove }
+
+ 	radiusdamage ( 2300 1275 -470 ) local.damage local.radius
+	$v2_explode thread global/obj_dm.scr::bomb_explode local.damage local.radius
+end
+
+controlroom local.health local.damage local.radius:
+
+	local.tank = spawn "vehicles/tigertank.tik" // need one below and above the center radio table.
+	local.tank.origin = ( 2300 2690 105 )			  
+	local.tank.angles = ( 0 0 0 )
+	local.tank.health = local.health
+	local.tank.scale = 0.1
+	local.tank notsolid
+	local.tank hide
+
+	local.tank2 = spawn "vehicles/tigertank.tik"
+	local.tank2.origin = ( 2300 2690 75 )			  
+	local.tank2.angles = ( 0 0 0 )
+	local.tank2.health = local.health
+	local.tank2.scale = 0.1
+	local.tank2 notsolid
+	local.tank2 hide
+
+	while(local.tank != NULL && local.tank2 != NULL) { wait 0.1 }
+
+	println("----- Blowing up the Control Room.")
+	if(local.tank != NULL) { local.tank remove }
+	if(local.tank2 != NULL) { local.tank2 remove }
+	$ctrlroom_radio remove
+	$ctrlroom_radio_trig remove
+
+ 	radiusdamage ( 2300 2490 60 ) local.damage local.radius
+	$ctrlroom_explode thread global/obj_dm.scr::bomb_explode local.damage local.radius
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Extra Map Stuff"
+//*** --------------------------------------------
+
+truckengine local.horn:
+
+	local.trig = spawn trigger_use
+	local.trig.origin = ( 261 2080 -409 )
+	local.trig setsize ( -30 -30 -30 ) ( 30 30 30 )
+	local.trig setthread engine_onoff_horn
+
+	local.trig.engine = 0 // holds the truck trigger's current state (engine off/on: 0 or 1).
+	local.trig.horn = local.horn // 0 = no horn, 1 = honk while vehicle is on only, 2 = honk while on or off
+
+	local.engine = spawn script_model targetname "truck_engine"
+	local.engine model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.engine.origin = ( 321 2019 -450 )
+	local.engine notsolid
+	local.engine.scale = 0.001
+	//local.engine hide // loopsound does not work if script_model is hidden; use .scale = 0.001 instead.
+	
+end
+
+engine_onoff_horn:
+
+	local.player = parm.other
+	local.team = local.player.dmteam // dmteam checks probably not needed, but helps prevent triggering if player changes team or goes to spectator.
+	
+	local.holdtimer = 0
+	while(local.player.useheld == 1 && local.player.dmteam == local.team && isalive local.player)
+	{ 
+		if(local.holdtimer == 0) 
+		{ 
+			local.player stopwatch 3 // begin counting when USE key is held.
+		}
+		if(local.holdtimer >= 60) // 20 loops/sec * 3 seconds = 60.
+		{  
+			local.player stopwatch 0
+
+			if(self.engine == 0) 
+			{ 
+				local.player iprint ("The truck has turned on.")
+				$truck_engine playsound truck_ignitionstart
+				wait 1
+				$truck_engine loopsound truck_idleloop
+			}
+			if(self.engine == 1) 
+			{ 
+				local.player iprint ("The truck has turned off.")
+				$truck_engine stoploopsound
+				$truck_engine playsound truck_ignitionstop
+				wait 1
+			}
+			self.engine++
+			if(self.engine > 1) { self.engine = 0 }
+
+			end
+		}
+									      
+		local.holdtimer++
+		local.team = local.player.dmteam // if player is still alive, then make player's dmteam = local.team.
+		wait 0.05 // 20 while-loop increments per second.
+	}
+
+	if((self.engine == 1 || self.horn == 2) && local.holdtimer <= 20 && self.horn != 0) // if player releases USE key within 1 second while engine is on, or while off if self.horn = 2
+	{ 
+		local.player iprint ("Honking the truck horn.") 
+		$truck_engine playsound truckhorn
+	}
+
+	local.player stopwatch 0
+
+	if(self.engine == 0 && self.horn != 2) { local.player iprint ("Hold USE for 3 seconds to turn on the truck.") }
+	if(self.engine == 0 && self.horn == 2 && local.holdtimer > 20) { local.player iprint ("Hold USE for 3 seconds to turn on the truck, or hold USE for 1 second to honk the horn.") }
+	if(self.engine == 1 && self.horn != 0 && local.holdtimer > 20) { local.player iprint ("Hold USE for 3 seconds to turn off the truck, or hold USE for 1 second to honk the horn.") }
+	if(self.engine == 1 && self.horn == 0) { local.player iprint ("Hold USE for 3 seconds to turn off the truck.") }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+radio_music local.origin local.angles local.ctrlroom:
+
+	if(local.ctrlroom != 1) { local.radio = spawn script_model }
+	if(local.ctrlroom == 1) { local.radio = spawn script_model targetname "ctrlroom_radio" }
+	local.radio model "miscobj/radio_military.tik"
+	local.radio.origin = local.origin
+	local.radio.angles = local.angles
+	local.radio.scale = 0.01
+
+	if(local.ctrlroom == 1) { local.radio.scale = 0.001; local.radio notsolid }
+	
+	if(local.ctrlroom != 1) { local.trig = spawn trigger_use }
+	if(local.ctrlroom == 1) { local.trig = spawn trigger_use targetname "ctrlroom_radio_trig" }
+	local.trig.origin = local.radio.origin
+	local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic3
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic2
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound
+	local.radio loopsound radiomusic
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic1
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound	
+	local.radio remove
+	local.trig remove
+
+	thread radio_music local.origin local.angles local.ctrlroom
+end
+
+////////////////////////////////////////////////////////////////////////
+
+pipesteam local.origin local.angles local.steamorigin local.steamangles local.steamscale local.growtime local.shrinktime:
+
+	if(local.steamscale == NIL) { local.steamscale = 4 } // setting some defaults
+	if(local.growtime == NIL) { local.growtime = 7 }
+	if(local.shrinktime == NIL) { local.shrinktime = 3 }
+
+	local.steam = spawn script_model
+	local.steam.origin = local.steamorigin + ( 0 0 20 )
+	local.steam.angles = local.steamangles
+	local.steam model "emitters/pipe_steam.tik" // this has its own explosion sound
+	local.steam.scale = 0.1
+	local.steam anim stop
+	local.steam2 = spawn script_model
+	local.steam2.origin = local.steamorigin + ( 0 0 62.5 )
+	local.steam2.angles = local.steamangles
+	local.steam2 model "emitters/pipe_steam.tik" // this has its own explosion sound
+	local.steam2.scale = 0.1
+	local.steam2 anim stop
+	local.steam3 = spawn script_model
+	local.steam3.origin = local.steamorigin + ( 0 0 105 )
+	local.steam3.angles = local.steamangles
+	local.steam3 model "emitters/pipe_steam.tik" // this has its own explosion sound
+	local.steam3.scale = 0.1
+	local.steam3 anim stop
+
+	local.eswitch = spawn script_model
+	local.eswitch model "animate/electrical_switch_nopulse.tik"
+	local.eswitch.origin = local.origin
+	local.eswitch.angles = local.angles + ( 0 180 0 )
+	local.eswitch notsolid
+
+	local.eswitchtrig = spawn trigger_use
+	local.eswitchtrig.origin = local.eswitch.origin
+	local.eswitchtrig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+	local.eswitch anim off
+	local.eswitchtrig waittill trigger
+	local.eswitchtrig nottriggerable
+
+	local.eswitch playsound light_switch
+	local.eswitch anim turn
+	local.eswitch anim waittill animdone
+	local.eswitch anim on
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning off steam control. ***")
+	local.steam anim start
+	local.steam2 anim start
+	local.steam3 anim start
+	local.steam2 loopsound pipesteam
+
+	local.scaleinc = local.steamscale * 10.000000 - 1.000000 // by default, this = 39 increments to grow from a scale of 0.1 to 4.
+
+	for(local.n = 1; local.n <= local.scaleinc; local.n++)   // make the steam grow over 7 seconds. 0.1795 * 39 = 7 seconds
+	{
+		local.steam.scale = local.steam.scale + 0.1 // grows to scale = 4, starting from 0.1
+		local.steam2.scale = local.steam2.scale + 0.1
+		local.steam3.scale = local.steam3.scale + 0.1
+		wait (local.growtime / local.scaleinc)      // 0.1795 for 7 seconds by default
+	}	   // this division will not work unless at least one value has enough significant figures (decimal places), otherwise the game
+		   // will round to the nearest integer, making it "wait 0". 6 decimal places were added to the multiplication in "local.scaleinc".
+
+	local.eswitchtrig triggerable
+	local.eswitchtrig waittill trigger
+	local.eswitchtrig nottriggerable
+
+	local.eswitch playsound light_switch
+	local.eswitch anim off
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning on steam control. ***")
+	
+	for(local.n = 1; local.n <= local.scaleinc; local.n++) // make the steam shrink over 3 seconds. .0769 * 39 = 3 seconds
+	{
+		local.steam.scale = local.steam.scale - 0.1 // shrinks to scale = 0.1, starting from 4
+		local.steam2.scale = local.steam2.scale - 0.1
+		local.steam3.scale = local.steam3.scale - 0.1
+		wait (local.shrinktime / local.scaleinc)   //0.0769 for 3 seconds by default
+	}
+
+	local.steam2 stoploopsound
+	local.eswitch remove
+	local.eswitchtrig remove
+	local.steam remove
+	local.steam2 remove
+	local.steam3 remove
+
+	thread pipesteam local.origin local.angles local.steamorigin local.steamangles local.steamscale local.growtime local.shrinktime
+end
+
+////////////////////////////////////////////////////////////////////////
+
+transformerswitch local.origin local.angles:
+
+	local.transformer1 = spawn script_model
+	local.transformer1 model "static/indycrate.tik" 
+	local.transformer1.origin = ( 361 448 -195 ) // starting point
+	local.transformer1 notsolid
+	local.transformer1.scale = 0.001 // do this instead of "hide", for "loopsound".
+
+	local.transformer2 = spawn script_model
+	local.transformer2 model "static/indycrate.tik" 
+	local.transformer2.origin = ( 567 226 -159 ) // starting point
+	local.transformer2 notsolid
+	local.transformer2.scale = 0.001
+
+	local.transformer3 = spawn script_model
+	local.transformer3 model "static/indycrate.tik" 
+	local.transformer3.origin = ( 503 107 87 ) // starting point
+	local.transformer3 notsolid
+	local.transformer3.scale = 0.001
+
+	local.eswitch = spawn script_model
+	local.eswitch model "animate/electrical_switch_nopulse.tik"
+	local.eswitch.origin = local.origin
+	local.eswitch.angles = local.angles + ( 0 180 0 )
+	local.eswitch.scale =  1.8
+	local.eswitch notsolid
+
+	local.eswitchtrig = spawn trigger_use
+	local.eswitchtrig.origin = local.eswitch.origin
+	local.eswitchtrig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+	local.eswitch anim off
+	local.eswitchtrig waittill trigger
+	local.eswitchtrig nottriggerable
+
+	local.eswitch playsound light_switch
+	local.eswitch anim turn
+	local.eswitch anim waittill animdone
+	local.eswitch anim on
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning on the transformers. ***")
+	wait 0.28 // timing the switch sound with loopsound turning on.
+	
+	local.random1 = randomint(3)
+   	if(local.random1 == 0) { local.transformer1 loopsound transformer_humming1 }
+   	if(local.random1 == 1) { local.transformer1 loopsound transformer_humming2 }
+   	if(local.random1 == 2) { local.transformer1 loopsound transformer_humming3 }
+	local.random2 = randomint(3)
+   	if(local.random2 == 0) { local.transformer2 loopsound transformer_humming1 }
+   	if(local.random2 == 1) { local.transformer2 loopsound transformer_humming2 }
+   	if(local.random2 == 2) { local.transformer2 loopsound transformer_humming3 }
+	local.random3 = randomint(3)
+   	if(local.random3 == 0) { local.transformer3 loopsound transformer_humming1 }
+   	if(local.random3 == 1) { local.transformer3 loopsound transformer_humming2 }
+   	if(local.random3 == 2) { local.transformer3 loopsound transformer_humming3 }
+
+	local.eswitchtrig triggerable
+	local.eswitchtrig waittill trigger
+	local.eswitchtrig nottriggerable
+
+	local.eswitch playsound light_switch
+	local.eswitch anim off
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning off the transformers. ***")
+	wait 0.28
+
+	local.transformer1 remove
+	local.transformer2 remove
+	local.transformer3 remove
+	local.eswitch remove
+	local.eswitchtrig remove
+
+	thread transformerswitch local.origin local.angles
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Bomber Plane Airstrikes"
+//*** --------------------------------------------
+
+// plane angles = ( pitch, yaw, roll )
+// +pitch = nose down, -pitch = nose up
+// +roll = raise left wing, -roll = raise right wing
+// yaw = "coord" player angles: ( 0 yaw 0 )
+
+splinepath: // do not use "bomberpath" or "a0, a1, a2...", targetnames pre-assigned in MOHRadiant (obj_team2.map)
+
+	spawn info_splinepath targetname bomberpathh
+	$bomberpathh.origin = ( -3568 2936 808 ) 
+	$bomberpathh.angles = ( -5 -74.83 -45 )
+	$bomberpathh speed 3
+
+	spawn info_splinepath targetname a00
+	$a00.origin = ( -3568 2736 808 )
+	$a00.angles = ( -5 -74.83 -45 )
+	$a00 speed 1.5
+
+	spawn info_splinepath targetname a11
+	$a11.origin = ( -2763 -236 808 )
+	$a11.angles = ( -5 -31.00 -60 )
+	$a11 speed 1.5
+
+	spawn info_splinepath targetname a22
+	$a22.origin = ( -207 -1776 808 )
+	$a22.angles = ( -5 -31.00 -25 )
+	$a22 speed 1.5
+
+	spawn info_splinepath targetname a33
+	$a33.origin = ( 975 -1776 808 )
+	$a33.angles = ( -5 29.43 -45 )
+	$a33 speed 1.35
+
+	spawn info_splinepath targetname a44
+	$a44.origin = ( 4100 -20 808 )
+	$a44.angles = ( -5 68.81 -60 )
+	$a44 speed 1.35
+
+	spawn info_splinepath targetname a55
+	$a55.origin = ( 5296 3056 808 )
+	$a55.angles = ( -5 68.81 -25 )
+	$a55 speed 1.5
+
+	spawn info_splinepath targetname a66
+	$a66.origin = ( 5796 3556 920 )
+	$a66.angles = ( -5 68.81 -25 )
+	$a66 speed 3
+
+	$bomberpathh.target = $a00
+	$a00.target = $a11
+	$a11.target = $a22
+	$a22.target = $a33
+	$a33.target = $a44
+	$a44.target = $a55
+	$a55.target = $a66
+end
+
+bomberplane local.position local.offtime local.bombsoff local.bulletstokill local.killtime:
+
+ if(level.airspace_toobusy != 1)
+ {
+	waitframe // need this, so two "bomberplane" threads can begin before airspace_toobusy = 1 in the 1st thread.
+	level.airspace_toobusy = 1
+	
+	if(local.offtime > 0 && local.offtime != NIL) { wait local.offtime }
+	while($airstrike_bomberplane != NULL) { waitframe } // wait until airspace is not busy anymore
+
+	local.plane = spawn script_model targetname "auto_bomberplane"
+	local.plane model "vehicles/fockwulffly.tik" //"vehicles/p47fly.tik"
+	local.plane.scale = 1
+	local.plane.origin = $bomberpathh.origin
+	local.plane.angles = $bomberpathh.angles
+	local.plane notsolid
+	local.plane show
+
+	local.plane thread damagetrigger local.position local.bulletstokill
+	local.plane thread killplane local.position local.killtime
+
+	local.plane playsound airplane_flyover
+	local.plane loopsound airplane_idle
+	local.plane followpath $bomberpathh
+	if(local.position != "second" && local.bombsoff != 1) { iprintlnbold "*** Airstrike Carpet Bomb Incoming! Take Cover! ***"; println("----- Airstrike Carpet Bomb Incoming!") }
+
+	if(local.bombsoff != 1) { local.plane thread bombdropcoords local.position } // drop bombs from the planes, coords are preset in dropbombcoords.
+
+	if(local.position == "second") { wait 1 } // second plane waits 1 second before beginning "waitmove".
+	local.plane waitmove
+
+	local.plane stoploopsound
+	local.plane remove
+	level.airspace_toobusy = 0
+
+	if(local.position != "second") { wait 1 }
+
+	thread bomberplane local.position local.offtime local.bombsoff local.bulletstokill local.killtime
+ }
+end
+
+damagetrigger local.position local.bulletstokill:
+
+	local.trigger = spawn trigger_multiple spawnflags 128 targetname ("planetrig_" + local.position) // only responds to bullets and explosions occuring near them
+	local.trigger.origin = self.origin
+	local.trigger setsize ( -300 -300 -100 ) ( 300 300 100 )
+	local.trigger.triggered = 0
+	local.trigger setthread triggered
+
+	if(local.bulletstokill == NIL || local.bulletstokill < 1) { local.bulletstokill = 7 } // default = 7 bullets
+
+	level.planedead[local.position] = 0
+	
+	while(self != NULL && level.planedead[local.position] == 0) 
+	{ 
+		local.player = parm.other	   // since multiple flying bombs will have the same targetname, the if-statement below will account for any & all
+		local.trigger.origin = self.origin // make sure the trigger stays on the plane.  	    // bombs (light bombs, giant bombs) flying in the air.
+
+		if(local.trigger.triggered >= local.bulletstokill) { level.planedead[local.position] = 1 }
+		if(local.player != NULL && local.trigger istouching local.player) { local.player volumedamage 999 } // kill any player that touches the plane
+
+		for(local.p = 0; local.p <= $player.size; local.p++)
+		{
+			if($("bigbombweap" + local.p) != NULL && local.trigger istouching $("bigbombweap" + local.p)) { level.planedead[local.position] = 2 }
+			if($("lightbombweap" + local.p) != NULL && local.trigger istouching $("lightbombweap" + local.p)) { level.planedead[local.position] = 2 }
+		}
+		waitframe
+	}
+	local.trigger remove 
+end
+
+triggered: // if the plane gets shot or otherwise triggered 7+ times, then kill the plane.
+
+	self.triggered++
+end
+
+killplane local.position local.killtime:
+
+	if(local.killtime == NIL) { local.killtime = 2.5 } // default = 2.5 seconds
+	
+	while(level.planedead[local.position] != 1 && level.planedead[local.position] != 2) { waitframe; if(self == NULL) { end } }
+	
+	if(level.planedead[local.position] == 1)
+	{
+		local.flyingexplosion = spawn script_model
+		local.flyingexplosion model "emitters/fire.tik"
+		local.flyingexplosion.origin = self.origin
+		local.flyingexplosion.scale = 1	
+		local.flyingexplosion anim start
+		local.flyingexplosion notsolid
+		local.flyingexplosion glue self
+
+		local.flyingsmoke = spawn script_model
+		local.flyingsmoke model "emitters/planesmokefly.tik"	
+		local.flyingsmoke.origin = self.origin
+		local.flyingsmoke.scale = 1		
+		local.flyingsmoke anim start
+		local.flyingsmoke notsolid
+		local.flyingsmoke glue self
+		
+		local.killtime = local.killtime * 10
+		local.n = 0
+
+		while(self != NULL && local.n < local.killtime) 
+		{ 
+			if(self.origin[0] >= $a55.origin[0] && self.origin[1] >= $a55.origin[1]) { local.outofmap = 1; waitframe; break } // break early if plane touches $a55.
+			local.n++
+			wait 0.1
+		}
+		local.flyingsmoke remove // while-loop keeps looping until 2.3 seconds are done, or until the plane reaches splinepath node $a55.
+		local.flyingexplosion remove
+	}
+
+	local.Exp = spawn script_model
+	local.Exp model "fx/fx_truck_explosion.tik"
+	if(self != NULL) { local.Exp.origin = self.origin + ( 0 0 -35 ) }
+	if(self == NULL || local.outofmap == 1) { local.Exp.origin = $a55.origin + ( -35 -35 -35 ) } // near splinepath node $a55, corner of map
+	local.Exp.scale = 2.5
+	local.Exp notsolid
+	local.Exp anim idle
+	
+	local.Exp2 = spawn script_model
+	local.Exp2 model "fx/barrel_gas_destroyed.tik"
+	if(self != NULL) { local.Exp2.origin = self.origin + ( 0 0 -35 ) }
+	if(self == NULL || local.outofmap == 1) { local.Exp2.origin = $a55.origin + ( -35 -35 -35 ) }
+	local.Exp2.scale = 2
+	local.Exp2 notsolid
+	local.Exp2 anim idle
+
+	self hide // do not remove the plane. otherwise the planes will not be 1 second apart from each other for the next airstrike.
+
+	wait 0.1 // sometimes, waitframe isn't long enough for barrel explosion to appear.
+	local.Exp anim aaaa
+	local.Exp anim dummy
+	local.Exp remove
+	local.Exp2 remove
+	if(self != NULL) { self stopsound; self stoploopsound }
+end
+
+dropbomb local.origin local.waittime local.speed local.zrotate local.damageradius local.position:
+
+	local.bombpoint = spawn script_origin origin ( local.origin ) // bombdrop destination
+
+	wait local.waittime // time until bomb drops, while plane is flying down its path
+
+	if(level.planedead[local.position] != 1 && level.planedead[local.position] != 2)
+	{
+		local.bomb = spawn script_model
+		local.bomb model ammo/us_bomb.tik
+		local.bomb.scale = 1.5
+		local.bomb.origin = self.origin + ( 0 0 15 )
+		local.bomb.angle = self.angle + 90
+		local.bomb light 1 0 0 300
+
+		local.bomb thread movestuck_fix local.bombpoint
+		local.bomb moveto local.bombpoint
+		local.bomb speed local.speed // speed to travel from plane to ground
+		local.bomb rotatez local.zrotate // point bomb nose-down over time
+		local.bomb waitmove
+		if(local.bomb != NULL) { local.bomb explode }
+
+		local.boom = spawn script_model
+		local.boom model animate/fx_mortar_dirt.tik // emitters/fx_explosion_mine.tik
+		local.boom.origin = local.bombpoint.origin
+		local.boom.scale = 1.5 // = 1 if using fx_explosion_mine.tik
+		local.boom anim start
+
+		radiusdamage local.boom.origin 200 local.damageradius
+
+		waitframe
+		local.boom anim stop
+	}
+
+	if(local.bomb != NIL && local.bomb != NULL) { local.bomb remove }
+	if(local.boom != NIL && local.boom != NULL) { local.boom remove }
+	local.bombpoint remove
+end
+
+movestuck_fix local.bombpoint:
+
+	local.n = 0
+ 	while(self != NULL && self.origin != local.bombpoint)
+ 	{	    
+		if(local.n == 3.000)
+		{
+			self explode
+			waitframe
+			if(self != NULL) { self remove }
+			end
+		}
+		if(local.n >= 3.000 || local.bombpoint == NIL) { end }
+
+		local.n = local.n + 0.100
+ 		wait 0.1
+	}
+end
+
+bombdropcoords local.position:
+
+	if(local.position != "second") // "first"
+	{
+		// self thread dropbomb ( origin ) waittime speed zrotation damageradius
+		waitframe
+		self thread dropbomb ( -2324 -678 -446 ) 1.00 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( -2133 -975 -437 ) 1.10 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( -1719 -975 -455 ) 1.20 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( -1533 -599 -450 ) 1.30 2000 55 500 local.position
+		waitframe
+
+		self thread dropbomb ( 4490 -935 -384 ) 2.65 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 4777 -225 -460 ) 2.75 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 4729 560 -480 ) 2.85 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 3785 541 -463 ) 2.95 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 4226 1020 -483 ) 3.05 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 4410 1485 -423 ) 3.15 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 4482 1945 -493 ) 3.25 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 5027 2379 -310 ) 3.35 2000 55 500 local.position
+		waitframe
+	}     
+	if(local.position == "second")
+	{
+		waitframe
+		self thread dropbomb ( -2728 1493 -459 ) 1.65 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( -2657 881 -439 ) 1.75 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( -2507 444 -450 ) 1.85 2000 55 500 local.position 
+		waitframe
+		self thread dropbomb ( -2822 107 -359 ) 1.95 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( -2446 -229 -458 ) 2.05 2000 55 500 local.position
+		waitframe
+
+		self thread dropbomb ( 2470 -199 -489 ) 3.05 2000 55 500 local.position 
+		waitframe
+		self thread dropbomb ( 2667 -902 -436 ) 3.15 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 3092 -902 -428 ) 3.25 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 2825 -1312 -378 ) 3.35 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 3273 -165 -482 ) 3.45 2000 55 500 local.position 
+		waitframe
+		self thread dropbomb ( 3773 -996 -368 ) 3.55 2000 55 500 local.position
+		waitframe
+		self thread dropbomb ( 3884 -406 -495 ) 3.65 2000 55 500 local.position 
+		waitframe
+	}
+end
+
+bomb_message:
+end

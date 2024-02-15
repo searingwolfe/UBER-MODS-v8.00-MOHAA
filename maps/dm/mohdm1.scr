@@ -1,0 +1,269 @@
+main:
+				//		         maxentities = 869 in code, but players may crash joining Reborn servers (singleplayer maps) if current entities = 725+, or 140+ remaining entities.
+exec cvars/playercount.scr	// "players" cvar.  	"players 1" = print to console the # of players in-game (type these into the server's console window).
+				//	       		"players 2" = print to console the # of players in-game & their usernames.
+				//	       		"players 3" = see which players in $player array are NULL.
+exec cvars/entitycount.scr 	// "entities" cvar.	"entities 1" = wait 4 seconds to print # of entities & remaining entities until maxentities (1024) is reached.
+				//	       		"entities 2" = print all entities & their targetnames (or NULL) from 1 to maxentities.
+				//	       		"entities 3" = print all entities & their targetnames, but print slower.
+				//			"entities 4" = print only non-NULL entities ($player entities do not print for "entities" 4, 5, 6, 7).
+				//			"entities 5" = print only non-NULL entities that have targetnames.
+				//			"entities 6" = print only non-NULL entities that do not have targetnames (targetnames = "").
+				//			"entities 7" = print only non-NULL entities, and print their classnames.
+exec cvars/track.scr		// "track" cvar.    	"track 1" = iprint each players' coords & angle to their own screens. 
+				//			"track 2" = iprint and print to console each players' coords & angles once every 3 seconds.
+				//			"track 0" = turn off tracking.
+exec cvars/check.scr		// "check_[trigger]" cvar. "check_giantbomb 1" "check_giantbomb 2" "check_lightbomb 1" "check_lightbomb 2" (giantbomb, lightbomb, health, grenade, rocket, snowball)
+				// 			"1" = teleports all spectators to each of the ("giantbomb", "health", "rocket", etc) trigger's randomized origins every 3 seconds.
+				// 			"2" = spawn in a dummy model at each of the trigger's origins (only works once).
+				// 			"0" = stop teleporting, delete the dummy models.
+				// 			"check 0" = make all "check_[trigger]" cvars "0".
+				//
+exec cvars/find.scr		// "find [targetname without $]" cvar. "find truckclip", "find endtrigger", "find aispawn", or multiple ents with the same targetname: "find barrel[1]", "find barrel[2]",
+				// 			to teleport all players on the map to the entity's coords (also printing: coords, angles, entnum, and target).
+exec cvars/findent.scr		// "findent [entnum]" cvar. "findent 65", "findent 450", or any entnum >= "sv_maxclients" cvar to teleport all players on the map to the entity's coords (also printing: coords, angles,
+				// classname, model, targetname, target, health).
+				//
+exec cvars/findclass.scr	// "findclass [classname, case-specific]" cvar. "findclass ScriptModel", "findclass CrateObject", "findclass TurretGun", "findclass Trigger", or any other classname to print all entnums and
+				// their targetnames in the map with that classname.
+				//
+exec cvars/findmodel.scr	// "findmodel [models/...tik]" cvar. "findmodel models/static/indycrate.tik", "findmodel static/indycrate.tik", or any other model to print all entnums and
+				// their targetnames in the map with that model name.
+				//
+exec cvars/drawpath.scr		// "drawpath [1st ent's targetname without $ in a path]" cvar. "drawpath bomberpath", "drawpath spotpath1_1", "drawpath latertruckpath", or multiple paths with the same targetname: "drawpath
+				// exploderchunk[1]", "drawpath exploderchunk[12]", to spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node.
+				//
+exec cvars/cybsnd.scr		// "cybsnd_score 1" cvar, to print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won).
+				// "cybsnd_info 1" cvar, to print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular
+				// spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance.
+				// "cybsnd_debug 1" cvar, to print once per second the Allies/Axis team count (living players) and Allies/Axis team total.
+				//
+exec cvars/ubergametype.scr	// "g_ubergametype" cvar. 	"g_ubergametype bb" = Base-Builder gametype.
+				//				"g_ubergametype cyb" = Cyber Attack gametype.
+				//				"g_ubergametype snd" = Search & Destroy gametype.
+				//				"g_ubergametype 0" or "" = none, regular TDM or FFA (based on g_gametype).
+				// "g_ubermods" cvar.		"g_ubermods 2" = default, all UBER mods enabled.
+				//				"g_ubermods 1" = No crates or teles, fewer triggers for multiplayer maps. Crates & teles, but no extra mods for singleplayer maps.
+				//				"g_ubermods 0" = all UBER mods disabled.
+				// "g_throwingknives" cvar.	"g_throwingknives 1" = all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map.
+				//				"g_throwingknives 0" = no throwing knives.
+				//
+exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuously kill $player[27].
+				//				"hacker_kill Searingwolfe" = continuously kill the player with the name "Searingwolfe".
+				//				"hacker_takeall [27 or Searingwolfe]" = continuously take all their keys.
+				//				"spectator [27 or Searingwolfe]" = continuously force them into spectator.
+				//
+				// "votekick" cvar.		"votekick [27 or Searingwolfe]" = all players vote to kick: Hold USE Key + Lean Left = VOTE NO (default), Hold USE Key + Lean Right = VOTE YES.
+				//
+				// "noclip2" cvar.		"noclip2 [27 or Searingwolfe]" = noclip around the map; still works if "cheats" = "0"; $player[1] client num = 1.
+				//				other hidden CVARS: "nodamage [27 or Searingwolfe]", "takedamage ", "show ", "hide ", "wuss2 " ("hide" makes a player invisible to wallhacks).
+				//
+				// "addkills" cvar.		"addkills [27 or Searingwolfe]" = add one kill to $player[27].
+				// "adddeaths" cvar.		"adddeaths [27 or Searingwolfe]" = add one death to $player[27].
+				//
+				// "coord2" cvar.		print all players' coords & angles to a "main/cvars/coords.txt" file (must create this file for CVAR to work).
+				//				"coord2 entity" or "coord2 1" = print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line.
+				//				"coord2 trigger" = print "( 0 0 0 ) " coords format on the same line.
+				//				"coord2 spawn" = print ""0 0 0" "angle" "0"" coords format on a new line.
+				//
+				// for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
+
+// set scoreboard messages
+setcvar "g_obj_alliedtext1" "Southern France"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "mohdm1"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "2000" // never set this below 1024, otherwise server may crash when loading a new map
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+//setcvar "g_forceteamspectate" "1" // only spectate your teammates, 1 or 0.
+setcvar "g_inactivespectate" "0"  // time until afk players go to spectator; 0 = disabled, 60 = default.
+local.v = waitexec global/uberversion.scr
+
+removeclass PlayerIntermission      // remove screen change right before map changes; fade to black instead (rare server crash fix).
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "2") {		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2" }
+if(getcvar("g_gametype") != "2") {		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1" }
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+
+	// basebuild.scr::main (parameters) --->
+	// 	build start time in seconds (ex: 800),
+	// 	object limit (ex: 1000),
+	// 	player speed while building (ex: >= 280, 250 is default).
+	// 	take weapons while building (0 for no),
+	// 	fall damage while building (1 for yes),
+	// 	hide 70-sec countdown hud (1 for yes),
+	// 	hide bottom hud text (1 for yes),
+	// 	print object-placed origin, angles, model (1 for yes).
+
+	// BASEBUILDER CONSOLE COMMANDS:
+	//	alx_basebuild 0 (turn off basebuilding immediately, respawns everyone)
+	//	alx_timeboost 120 (increase build time limit by 120 seconds, or any # of seconds)
+	//	alx_timedown 120 (decrease build time limit by 120 seconds, or any # of seconds)
+	//	alx_objectlimitboost 200 (increase basebuild object limit by 200, or any # of objects)
+	//	alx_objectlimitdown 200 (decrease basebuild object limit by 200, or any # of objects)
+}
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr 				// ui/fix.scr is only needed for players with Searingwolfe's UBER In-game Menu Skin ("Esc" button)
+	level.script = maps/dm/mohdm1.scr   // in the script, players do stufftext "ui_getplayermodel" only once, so their models can appear immediately (fixes client-side console spamming NULL_name).
+	exec global/ambient.scr mohdm1
+	exec global/door_locked.scr::lock
+
+   	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 150000
+	$world farplane_color ( 0.6784 0.8353 0.9686 )
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( -23 1250 384 ) ( 0 90 0 ) 15 20 // origin, angles, bulletsanger, angertime (how many bullets to shoot at dog trigger, until it gets angry for angertime seconds).
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( 224 -897 296 )
+
+// (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  )
+exec map_triggers/lightbomb.scr ( 240 1936 608 ) ( 783 1870 608 ) ( -7 -30 448 ) ( 801 -98 248 ) ( 884 1136 552 ) ( 983 2751 672 ) ( -892 -880 448 ) ( -1640 1478 500 ) ( 340 2992 752 ) ( 1608 935 528 )
+exec map_triggers/bomb.scr ( -955 3316 846 ) ( 2064 2320 972 ) ( 2076 738 929 ) ( -1136 -347 759 ) ( -1632 728 938 ) ( 793 95 1072 ) ( 1250 -1570 448 ) ( 597 3346 1185 ) ( -144 2044 768 ) ( 784 1551 775 )
+exec map_triggers/grenade_ammo.scr ( -125 -575 16 ) ( 508 -807 16 ) ( 224 686 100 ) ( -551 1124 64 ) ( 1456 1904 348 ) ( 550 2530 420 ) ( 360 1448 144 ) ( 1113 2176 512 ) ( -840 2384 384 ) ( -1103 496 208 )
+exec map_triggers/rocket_ammo.scr ( -607 384 376 ) ( 1364 149 256 ) ( 1536 728 384 ) ( 1345 2800 672 ) ( 1191 1456 608 ) ( -352 1632 384 ) ( 351 1354 384 ) ( -956 1408 712 ) ( -38 1127 272 ) ( -760 924 504  )
+exec map_triggers/snowball_ammo.scr ( 1112 2003 832 ) ( 789 -665 678 ) ( 730 867 806 ) ( -462 1408 747 ) ( 1041 2350 1119 ) ( 1825 1614 549 ) ( -292 479 815 ) ( -25 2456 743 ) ( 223 -1060 588 ) ( -911 2032 503 )
+exec map_triggers/health.scr ( -924 335 32 ) ( -232 -1008 16 ) ( -911 1968 160 ) ( 1359 1264 288 ) ( -240 591 104 ) ( -296 1448 48 ) ( -1452 -48 168 ) ( -2176 927 64 ) ( 2208 1103 176 ) ( -232 -1344 0 )
+
+exec map_triggers/led_trap.scr ( 2024 1311 176 ) led1 1
+exec map_triggers/led_trap.scr ( -2024 1039 64 ) led2 2
+exec map_triggers/led_trap.scr ( 430 2775 128 ) led3 1
+//mohdm1,2,3,7 = 3. mohdm6 = 2. mohdm4,5 = 4. objteam3 = 4. objteam1,2 = 3.
+
+if(getcvar("g_ubergametype") != "bb")
+{
+// comment these out if there are too many spotlights.
+exec map_triggers/player_spotlight.scr ( 1028.16 -728.06 828.13 ) ( 0 1 .5 ) s0 700 125 0 0 1 	// origin, rgb color [ex: ( 1 0 0 ) for red], name, health, angle-start, ...
+exec map_triggers/player_spotlight.scr ( -601.57 -1003.11 776.13 ) ( 1 0 .5 ) s1 700 60 0 0 1	// mountwall (0 = floor, 1 = left wall, 2 = ceiling, 3 = right wall), ...
+exec map_triggers/player_spotlight.scr ( 895.35 1105.78 704.13 ) ( 0 .5 1 ) s2 700 -145 0 0 1	// orient (0 or 1 = rotate along x or y axis; only applies when mountwall = 1 or 3), ...
+exec map_triggers/player_spotlight.scr ( -1105.82 1412.73 712.13 ) ( 1 .5 0 ) s3 700 180 0 0 1	// removeafterdeath (0 = keep everything, disable spotlight; 1 = remove spotlight, keep spotlightbase; 2 = remove everything).
+exec map_triggers/player_spotlight.scr ( 1916.87 958.38 744.13 ) ( .5 0 1 ) s4 700 145 0 0 1
+exec map_triggers/player_spotlight.scr ( 412.57 2945.33 802.13 ) ( .5 .5 1 ) s5 700 -60 0 0 1
+exec map_triggers/player_spotlight.scr ( 1258.32 2274.61 894.13 ) ( .5 1 .5 ) s6 700 -125 0 0 1
+exec map_triggers/player_spotlight.scr ( -1240.04 -178.07 776.13 ) ( 1 .5 .5 ) s7 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( 195.53 1705.12 770.13 ) ( .5 1 0 ) s8 700 130 0 0 1
+exec map_triggers/player_spotlight.scr ( -256.22 891.49 781.48 ) ( 1 1 1 ) s9 700 10 0 0 1
+}
+
+	cache models/static/cabinet_dark.tik // hide the other cabinets on the map, before spawning in cabinetswitches.
+
+	exec map_triggers/gen_switches/cabinetswitch.scr ( 349.96 1415.76 384 ) ( 0 0 0 ) 1 1.1
+	exec map_triggers/gen_switches/cabinetswitch.scr ( -298.04 1303.76 48 ) ( 0 0 0 ) 1 1.1
+
+	exec maps/UBER_mapextras/dm1_cratesstuff.scr::main
+	exec maps/UBER_mapextras/dm1_teleporters.scr::main
+}
+
+// use these origins in a map without UBER_mapextras stuff or for more realism, and remove "lightbomb.scr" & "health.scr" triggers (if not removed, some coords will overlap).
+if(getcvar("g_ubermods") == "1")
+{
+exec map_triggers/rocket_ammo.scr ( -125 -575 16 ) ( 508 -807 16 ) ( 224 686 100 ) ( -551 1124 64 ) ( 1456 1904 348 ) ( 550 2530 420 ) ( 360 1448 144 ) ( 1113 2176 512 ) ( -840 2384 384 ) ( -1103 496 208 )
+exec map_triggers/snowball_ammo.scr ( -607 384 376 ) ( 1364 149 256 ) ( 1536 728 384 ) ( 1345 2800 672 ) ( 1191 1456 608 ) ( -352 1632 384 ) ( 351 1354 384 ) ( 801 -98 248 ) ( -38 1127 272 ) ( -7 -30 448 )
+exec map_triggers/bomb.scr ( -924 335 32 ) ( -232 -1008 16 ) ( -911 1968 160 ) ( 1359 1264 288 ) ( -240 591 104 ) ( -296 1448 48 ) ( -1452 -48 168 ) ( 983 2751 672 ) ( 783 1870 608 ) ( 1608 935 528 )
+exec map_triggers/grenade_ammo.scr ( 1294 2575 384 ) ( 15 2992 256 ) ( 783 1551 376 ) ( 1011 911 98 ) ( -530 575 0 ) ( -1103 1407 64 ) ( -520 1679 384 ) ( 224 141 100 ) ( 1200 -624 304 ) ( -944 -440 128 )
+
+exec maps/UBER_mapextras/dm1_cratesstuff.scr::smoke
+}
+
+level waittill spawn
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // knives are not given or spawned until base-builder is over.
+
+	exec global/throwingknife.scr k1 ( 1344 380 304 ) ( 0 180 0 )
+	exec global/throwingknife.scr k2 ( -514 576 432 ) ( 0 90 0 )
+	exec global/throwingknife.scr k3 ( 375 1269 432 ) ( 0 0 0 )
+	exec global/throwingknife.scr k4 ( 1139 2197 562 ) ( 0 270 0 )
+}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cybsnd: // also includes Freeze Tag if "g_ubergametype" = "ft"
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 5
+	level.changesides = 0			// no bombsites in Freeze Tag
+	level.bombcamera = 1			// no bombs in Freeze Tag
+	//level.keepsamesides = 1		// if set to 1, bomb & bombsites will never change sides/teams
+	//level.cameradistance = 200
+	//level.melttime = 3
+	//level.spectators_jointeams = 1	// 0 by default
+	//level.meltrespawn = 1			// this = 1 by default, for Freeze Tag only. 0 by default for Cyber Attack / Search & Destroy.
+	//level.meltlaser = 1			// only for Freeze Tag
+
+	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -1210 485 168 ) -90 axis  // the 2 waitthreads & thread are ignored for "Freeze Tag" only
+	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1297 2461 672 ) 90 allies
+	thread global/cyberattack_searchdestroy.scr::bomb ( -153 1445 96 ) 180 ( -153 1445 96 ) 180 ( -153 1445 96 ) -90 
+	
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+//                                              					 note all these must have a value!
+//                                                                                       +----------------- light on or off ( 1 = on, 0 = off )
+//                                                                                       | +--------------- red (1 is the max, so for a little red, use 0.5)
+//                                                                                       | | +------------- green (same for red)
+//                                                                                       | | | +----------- blue (same for red)
+//                                                                                       | | | | ++-------- rotation speed (keep it sensable lol)
+//                                                                                       | | | | || ++----- the scale of the pickup object, 1 is default
+//                                                                                       | | | | || || +--- lift creator ( 1 = on, 0 = off )
+//											 | | | | || || | +- teleporter creator ( 1 = on, 0 = off )
+//---| script (alienx/basebuild)     (  ) origin              "-"  model name            | | | | || || | | +solid after creation ( 1 = yes, 0 = no )
+
+// allies spawn
+exec alienx/basebuild.scr::basebuild ( -225.73 330.34 48.13 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -225.73 230.34 48.13 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 669.12 319.92 48.13 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -164.87 97.93 48.13 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 649.12 119.92 48.13 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 649.12 219.92 48.13 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+
+// axis spawn
+exec alienx/basebuild.scr::basebuild ( 743.83 2650.43 384.13 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 743.83 2550.43 384.13 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 443.83 2650.43 384.13 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 743.83 2450.43 384.13 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 643.83 2650.43 384.13 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 543.83 2650.43 384.13 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+end
+

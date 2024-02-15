@@ -1,0 +1,34 @@
+main local.origin local.angles local.model local.scale:
+
+exec global/aliascache_triggersounds.scr radio_music
+
+	local.radio = spawn script_model
+	if(local.model == NIL) { local.radio model "miscobj/radio_civilian.tik" }
+	if(local.model != NIL) { local.radio model local.model }
+	local.radio.origin = local.origin
+	local.radio.angles = local.angles
+	if(local.scale == NIL) { local.radio.scale = 1 }
+	if(local.scale != NIL) { local.radio.scale = local.scale }
+	local.radio notsolid
+
+	local.switchtrig = spawn trigger_use
+	local.switchtrig.origin = local.radio.origin
+	local.switchtrig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+	wait 0.5
+	local.switchtrig waittill trigger
+	local.radio loopsound radiostatic1
+
+	wait 0.5
+	local.switchtrig waittill trigger
+	local.radio stoploopsound
+	local.radio loopsound radiomusic
+
+	wait 0.5
+	local.switchtrig waittill trigger
+	local.radio stoploopsound	
+	local.radio remove
+	local.switchtrig remove
+
+	thread main local.origin local.angles local.model local.scale
+end

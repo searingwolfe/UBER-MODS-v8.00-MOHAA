@@ -1,0 +1,68 @@
+main local.origin local.model local.firescale local.burntime local.burndistance local.damageinc local.burnscale:
+
+exec global/aliascache_triggersounds.scr bonfire
+	
+  local.fire = spawn script_model
+  local.fire model local.model
+  local.fire.origin = local.origin
+  if(local.firescale == NIL) { local.fire.scale = 1 }
+  if(local.firescale != NIL) { local.fire.scale = local.firescale }
+  local.fire notsolid
+
+  if(local.damageinc == NIL) { local.damageinc = 1 }
+  if(local.burndistance == NIL) { local.burndistance = 50 }
+  if(local.burntime == NIL) { local.burntime = 4 }
+  local.burntime = local.burntime * 10
+
+	while(1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && vector_length(local.origin - $player[local.i].origin) < local.burndistance) 
+			{
+ 				$player[local.i] thread catchfire local.model local.burntime local.damageinc local.burnscale local.firescale
+			}
+		}
+		wait 0.1
+	}
+end
+
+catchfire local.model local.burntime local.damageinc local.burnscale local.firescale:
+
+  if (self.caughtonfire == 1)
+  {
+    self.onfire_count = 0
+    end
+  }
+  self.caughtonfire = 1
+
+  //self thread global/messagetrig_print.scr::message "*** Avoid walking into fire! ***" 1
+  self iprint ("*** Avoid walking into fire! ***")
+
+  local.burn = spawn script_model
+  local.burn model local.model
+  local.burn.origin = self.origin
+  if(local.burnscale == NIL) { local.burn.scale = local.firescale }
+  if(local.burnscale != NIL) { local.burn.scale = local.burnscale }
+  local.burn notsolid
+  local.burn glue self 
+  self loopsound fireplace1
+
+  local.team = self.dmteam
+  if(self.onfire_count == NIL) { self.onfire_count = 0 }
+
+  while(self.onfire_count < local.burntime && isalive self && self.dmteam == local.team && self.dmteam != "spectator" && self != NULL) 
+  { 
+  	wait 0.1
+	self volumedamage local.damageinc // "self hurt 1" works too
+	self.onfire_count++
+	if(self.health <= local.damageinc) { self kill } // tell players that they've killed themselves.
+  }
+
+  local.burn unglue
+  local.burn remove
+  //self iprint ("Fire has been extinguished.")
+  self.caughtonfire = 0
+  self.onfire_count = 0
+  self stoploopsound
+end

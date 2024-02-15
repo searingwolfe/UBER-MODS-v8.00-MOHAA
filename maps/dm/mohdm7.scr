@@ -1,0 +1,299 @@
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "Algiers"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "mohdm7"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "2000"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "g_inactivespectate" "0"
+local.v = waitexec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "2") {		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2" }
+if(getcvar("g_gametype") != "2") {		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1" }
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide
+}
+
+if(getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr radio_music2
+exec global/aliascache_triggersounds.scr valve_switch
+}
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.script = maps/dm/mohdm7.scr
+	exec global/ambient.scr mohdm7
+	exec global/door_locked.scr::lock
+
+   	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 150000
+	$world farplane_color ( 0.04314 0.05882 0.16471 ) //( 0.08627 0.09804 0.23137 )
+	$world northyaw 270
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( -3207 49 -107 ) ( 0 21 0 ) 15 20 // origin, angles, bulletsanger, angertime
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( -1896 -1968 202 )
+
+exec map_triggers/bomb.scr ( 1456 -1712 384 ) ( 1904 1448 380 ) ( -1344 -399 320 ) ( -2191 -399 384 ) ( -887 1088 284 ) ( -1039 1935 440 ) ( -2936 688 576 ) ( -3375 543 440 ) ( -816 111 320 ) ( -447 -975 288 ) 
+exec map_triggers/lightbomb.scr ( 687 -1264 40 ) ( 1258 -95 344 ) ( 911 1472 120 ) ( -473 2032 344 ) ( -1151 -1580 -39 ) ( -2608 417 424 ) ( -2799 1864 640 ) ( -1632 128 240 ) ( -536 925 320 ) ( -1359 3272 428 ) 
+exec map_triggers/health.scr ( 1575 -1535 -287 ) ( -1748 -1352 -55 ) ( -3383 343 4 ) ( -3272 1111 0 ) ( -2575 3352 72 ) ( 480 1903 -135 ) ( -240 -592 -199 ) ( -1448 664 76 ) ( -1039 -112 -125 ) ( -2778 -728 72 ) 
+exec map_triggers/grenade_ammo.scr ( 510 235 -111 ) ( -320 975 -135 ) ( 612 -1039 -287 ) ( -1498 -511 -115 ) ( -3150 -360 -91 ) ( -3772 2096 0 ) ( -2945 2751 88 ) ( -2327 2104 65 ) ( -639 -412 -111 ) ( -1615 319 -119 ) 
+exec map_triggers/rocket_ammo.scr ( 1887 -1216 24 ) ( 600 1840 116 ) ( -911 -924 128 ) ( -3040 -650 284 ) ( -3984 1017 248 ) ( -1951 961 284 ) ( -816 1636 264 ) ( -240 -272 40 ) ( 464 -1583 168 ) ( -1417 -160 84 ) 
+exec map_triggers/snowball_ammo.scr ( -3088 1591 640 ) ( -3359 1043 472 ) ( -2272 -952 392 ) ( -1777 -1407 82 ) ( -983 -120 240 ) ( -1482 664 384 ) ( 1456 680 380 ) ( 0 111 320 ) ( -3272 1103 264 ) ( 1575 -891 -287 ) 
+
+exec map_triggers/led_trap.scr ( -2906 297 576 ) led1 1
+exec map_triggers/led_trap.scr ( -256 134 320 ) led2 2
+exec map_triggers/led_trap.scr ( -1639 488 384 ) led3 1
+
+if(getcvar("g_ubergametype") != "bb")
+{
+// comment these out if there are too many spotlights.
+exec map_triggers/player_spotlight.scr ( 340 872 -104 ) ( 1 1 1 ) s0 700 135 0 0 1
+exec map_triggers/player_spotlight.scr ( 962 583 392 ) ( 1 0 .5 ) s1 700 -135 0 0 1
+exec map_triggers/player_spotlight.scr ( 12 948 320 ) ( 0 .5 1 ) s2 700 45 0 0 1
+exec map_triggers/player_spotlight.scr ( -624 1868 344 ) ( 1 .5 0 ) s3 700 -135 0 0 1
+exec map_triggers/player_spotlight.scr ( -1056 2564 248 ) ( .5 0 1 ) s4 700 -135 0 0 1
+exec map_triggers/player_spotlight.scr ( -3104 1872 692 ) ( .5 .5 1 ) s5 700 135 0 0 1
+exec map_triggers/player_spotlight.scr ( -2781 1574 692 ) ( .5 1 .5 ) s6 700 -45 0 0 1
+exec map_triggers/player_spotlight.scr ( -3667 1023 524 ) ( 1 .5 .5 ) s7 700 -135 0 0 1
+exec map_triggers/player_spotlight.scr ( -2988 -646 427 ) ( .5 1 0 ) s8 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( 180 -1362 176 ) ( 0 1 .5 ) s9 700 90 0 0 1
+exec map_triggers/player_spotlight.scr ( -1158 -1011 96 ) ( 1 .5 1 ) s10 700 -45 0 0 1
+exec map_triggers/player_spotlight.scr ( -1547 -80 244 ) ( 1 1 .5 ) s11 700 0 0 0 1
+exec map_triggers/player_spotlight.scr ( 1442 -997 400 ) ( .5 1 1 ) s12 700 125 0 0 1
+}
+
+	//thread table // original table was invisible, added a new one.
+	thread radio_music
+
+	thread firesmoke
+	thread fire_valveswitch ( -3185 -276 -6 ) ( -50 90 0 ) 2 90 1 // keep clockwise = 1 when initializing this valve.
+
+	exec maps/UBER_mapextras/dm7_teleporters.scr::main
+	exec maps/UBER_mapextras/dm7_cratesstuff.scr::main
+}
+
+// use these origins in a map without UBER_mapextras stuff or for more realism, and remove "lightbomb.scr" & "health.scr" triggers (if not removed, some coords will overlap).
+if(getcvar("g_ubermods") == "1")
+{
+exec map_triggers/snowball_ammo.scr ( 1575 -1535 -287 ) ( -1748 -1352 -55 ) ( -3383 343 4 ) ( -3272 1111 0 ) ( -2575 3352 72 ) ( 480 1856 -135 ) ( -240 -592 -199 ) ( 1440 560 24 ) ( -2352 -952 -139 ) ( -1511 719 -103 ) 
+exec map_triggers/rocket_ammo.scr ( 510 235 -111 ) ( -320 975 -135 ) ( 612 -1039 -287 ) ( -1498 -511 -115 ) ( -3150 -360 -91 ) ( -3772 2096 0 ) ( -2945 2751 88 ) ( -2327 2104 65 ) ( -639 -412 -111 ) ( -1615 319 -119 ) 
+exec map_triggers/bomb.scr ( 912 -1264 40 ) ( 600 1840 116 ) ( -1499 -1031 -283 ) ( -3272 1304 264 ) ( 1295 -1216 24 ) ( -1951 961 284 ) ( -3222 3652 284 ) ( -240 -272 40 ) ( 1004 1456 -151 ) ( -1551 2273 184 ) 
+exec map_triggers/grenade_ammo.scr ( -112 -1328 -287 ) ( 1053 -472 -59 ) ( -48 1904 -20 ) ( -1359 2832 -107 ) ( -2455 1055 0 ) ( -1039 503 -103 ) ( -1344 -423 -151 ) ( -3120 -176 -115 ) ( -207 111 -199 ) ( -2559 2742 276 )
+
+exec maps/UBER_mapextras/dm7_cratesstuff.scr::smoke 
+}
+
+level waittill spawn
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1
+
+	exec global/throwingknife.scr k1 ( 948 1330 -86 ) ( 0 90 0 )
+	exec global/throwingknife.scr k2 ( -1645 -1241 -55 ) ( 0 110 0 )
+	exec global/throwingknife.scr k3 ( -2425 2106 65 ) ( 0 180 0 ) 
+	exec global/throwingknife.scr k4 ( -2887 -118.5 -67 ) ( 0 180 0 )
+}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cybsnd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 5
+ 	level.changesides = 0
+	level.bombcamera = 1
+	level.cameradistance = 185
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -3136 1116 264 ) 90 axis 
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 2017 -1134 24 ) 180 allies
+  	thread global/cyberattack_searchdestroy.scr::bomb ( -1327 135 -91 ) 90 ( -1327 135 -91 ) 90 ( -1327 135 -91 ) 180 
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+// allies spawn
+exec alienx/basebuild.scr::basebuild ( 972 211 -152 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( 972 111 -152 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 962 11 -152 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 952 -111 -152 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 962 -211 -152 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 972 -311 -152 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+
+// axis spawn
+exec alienx/basebuild.scr::basebuild ( -2471 1960 0 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2471 1864 0 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2471 1764 0 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( -2471 1664 0 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2471 1564 0 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2471 1464 0 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Extra Map Stuff"
+//*** --------------------------------------------
+
+table:  // radio, table, and firesmoke coords come from MOHRadiant (mohdm7.map file)
+
+	local.table = spawn script_model
+	local.table model "static/bunkertable.tik" 
+	local.table.origin = ( -3260 1194 263 )
+	local.table.angles = ( 0 0 0 )
+	local.table solid
+end
+
+radio_music:
+
+	local.radio = spawn script_model
+	local.radio model "miscobj/radio_military.tik"
+	local.radio.origin = ( -3261.72 1194.28 315.00 )
+	local.radio.angles = ( 0 35 0 )
+	local.radio notsolid
+	local.radio.scale = 0.01 // cannot "hide" radio model, otherwise "loopsound" will not work.
+
+	local.trig = spawn trigger_use
+	local.trig.origin = local.radio.origin
+	local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic3
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic2
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound
+	local.radio loopsound radiomusic
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic1
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound	
+	local.radio remove
+	local.trig remove
+
+	thread radio_music
+end
+
+firesmoke:
+
+	local.fire = spawn script_model
+	local.fire model "emitters/fire.tik" 
+	local.fire.origin = ( -3194.60 -366.60 -92 )
+	local.fire.angles = ( 0 -12 0 )
+	local.fire.scale = 0.30
+	local.fire notsolid
+	local.fire anim start
+
+	local.smoke = spawn script_model targetname "fireplace_smoke"
+	local.smoke model "emitters/firesmoke.tik" 
+	local.smoke.origin = ( -3194.60 -363.60 -60 )
+	local.smoke.angles = ( 0 -12 0 )
+	local.smoke.scale = 0.5
+	local.smoke notsolid
+	local.smoke anim stop // smoke is off at first.
+end
+
+fire_valveswitch local.origin local.angles local.rotatetime local.rotateamount local.clockwise:
+
+	local.valve = spawn script_model
+	local.valve model "animate/redvalve_nopulse.tik"
+	local.valve.origin = local.origin
+	local.valve.angles = local.angles
+	local.valve notsolid
+
+	local.valvetrig = spawn trigger_use
+	local.valvetrig.origin = local.valve.origin
+	local.valvetrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+	local.valvetrig waittill trigger
+	local.valvetrig nottriggerable
+	local.valve.model = animate/redvalve_pulse.tik
+
+	local.player = parm.other
+	if(local.clockwise == 0) { local.valvetrig message ("*** Closing the chimney valve. ***") }
+	if(local.clockwise == 1) { local.valvetrig message ("*** Opening the chimney valve. ***") }
+
+	local.valve time (local.rotatetime)
+	if(local.clockwise == 0) { local.valve rotateZup local.rotateamount }
+	if(local.clockwise == 1) { local.valve rotateZdown local.rotateamount }
+	local.valve playsound valve_switch
+	local.valve waitmove
+
+	if(local.clockwise == 0) { $fireplace_smoke anim stop } // turn on the smoke after valve is done rotating.
+	if(local.clockwise == 1) { $fireplace_smoke anim start }
+
+	local.valve.model = animate/redvalve_nopulse.tik
+	//wait 1
+
+	local.clockwise++
+	if(local.clockwise >= 2) { local.clockwise = 0 } // binary alternating number that controls valve rotation.
+
+	local.angles = local.valve.angles
+	waitframe // need waitframe here, otherwise trigger's message will not appear.
+	local.valve remove
+	local.valvetrig remove
+	thread fire_valveswitch local.origin local.angles local.rotatetime local.rotateamount local.clockwise 
+end
