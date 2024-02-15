@@ -45,11 +45,11 @@ basebuild.scr::main (parameters) --->
 
 BASEBUILDER CONSOLE COMMANDS:
 
-	alx_basebuild 0            (turn off basebuilding immediately, respawns everyone).
-	alx_timeboost 120          (increase build time limit by 120 seconds, or any # of seconds).
-	alx_timedown 120           (decrease build time limit by 120 seconds, or any # of seconds).
-	alx_objectlimitboost 200   (increase basebuild object limit by 200, or any # of objects).
-	alx_objectlimitdown 200    (decrease basebuild object limit by 200, or any # of objects).
+	alx_basebuild 0            // turn off basebuilding immediately, respawns everyone.
+	alx_timeboost 120          // increase build time limit by 120 seconds, or any # of seconds.
+	alx_timedown 120           // decrease build time limit by 120 seconds, or any # of seconds.
+	alx_objectlimitboost 200   // increase basebuild object limit by 200, or any # of objects.
+	alx_objectlimitdown 200    // decrease basebuild object limit by 200, or any # of objects.
 
 While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.<br>
 Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.<br>
