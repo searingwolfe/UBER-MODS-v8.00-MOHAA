@@ -225,8 +225,8 @@ This = 1 by default for Freeze Tag only, unless specified as level.meltrespawn =
 
 ---------------
 
-// Example threads for adding the UBER gametypes to a new map script.
-// For adding Freeze Tag UBER, simply run the "cyb" or "snd" thread before "level waittill spawn", and the script will ignore the "bombsite" and "bomb" threads automatically.
+Example threads for adding the UBER gametypes to a new map script.
+For adding Freeze Tag UBER, simply run the "cyb" or "snd" thread before "level waittill spawn", and the script will ignore the "bombsite" and "bomb" threads automatically.
 
 	cyb:
 
@@ -265,8 +265,8 @@ This = 1 by default for Freeze Tag only, unless specified as level.meltrespawn =
 
 ---------------
 
-// When Search & Destroy games changes sides (every 3 rounds), the bombsites' origins do not normally change.
-// This example thread below for "snd" moves both bombsites to new origins each time "level.changesides" changes (so both bombsites are closer to defending team's spawn).
+When Search & Destroy games changes sides (every 3 rounds), the bombsites' origins do not normally change.
+This example thread below for "snd" moves both bombsites to new origins each time "level.changesides" changes (so both bombsites are closer to defending team's spawn).
 
 	snd:
 
