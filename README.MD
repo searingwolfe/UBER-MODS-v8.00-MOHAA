@@ -59,6 +59,8 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 
 # UBER CVARS Scripts Info
 
+- for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
+
 - maxentities = 869 in code, but players may crash joining Reborn servers (singleplayer maps) if current entities = 725+, or 140+ remaining entities.
 
 | File Name:        | CVAR without quotes or brackets:           | Description:   |
@@ -122,50 +124,25 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "g_ubermods 0" | all UBER mods disabled. |
 |       | "g_throwingknives 1" | all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map. |
 |       | "g_throwingknives 0" | no throwing knives. |
-| exec cvars/adminstuff.scr      | "hacker_kill [27 or Searingwolfe]" |  |
-|       | "hacker_takeall 27" |  |
-|       | "hacker_takeall Searingwolfe" |  |
-|       | "spectator 27" |  |
-|       | "spectator Searingwolfe" |  |
-|       | "votekick 27" |  |
-|       | "votekick Searingwolfe" |  |
-|       | "noclip2 27" |  |
-|       | "noclip2 Searingwolfe" |  |
-|       | "nodamage 27" |  |
-|       | "nodamage Searingwolfe" |  |
-|       | "show 27" |  |
-|       | "show Searingwolfe" |  |
-|       | "hide 27" |  |
-|       | "hide Searingwolfe" |  |
-|       | "wuss2 27" |  |
-|       | "wuss2 Searingwolfe" |  |
-|       | "addkills 27" |  |
-|       | "addkills Searingwolfe" |  |
-|       | "adddeaths 27" |  |
-|       | "adddeaths Searingwolfe" |  |
-|       | "coord2 entity" |  |
-|       | "coord2 trigger" |  |
-|       | "coord2 " |  |
-
-exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuously kill $player[27].
-				//				"hacker_kill Searingwolfe" = continuously kill the player with the name "Searingwolfe".
-				//				"hacker_takeall [27 or Searingwolfe]" = continuously take all their keys.
-				//				"spectator [27 or Searingwolfe]" = continuously force them into spectator.
-				//
-				// "votekick" cvar.		"votekick [27 or Searingwolfe]" = all players vote to kick: Hold USE Key + Lean Left = VOTE NO (default), Hold USE Key + Lean Right = VOTE YES.
-				//
-				// "noclip2" cvar.		"noclip2 [27 or Searingwolfe]" = noclip around the map; still works if "cheats" = "0"; $player[1] client num = 1.
-				//				other hidden CVARS: "nodamage [27 or Searingwolfe]", "takedamage ", "show ", "hide ", "wuss2 " ("hide" makes a player invisible to wallhacks).
-				//
-				// "addkills" cvar.		"addkills [27 or Searingwolfe]" = add one kill to $player[27].
-				// "adddeaths" cvar.		"adddeaths [27 or Searingwolfe]" = add one death to $player[27].
-				//
-				// "coord2" cvar.		print all players' coords & angles to a "main/cvars/coords.txt" file (must create this file for CVAR to work).
-				//				"coord2 entity" or "coord2 1" = print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line.
-				//				"coord2 trigger" = print "( 0 0 0 ) " coords format on the same line.
-				//				"coord2 spawn" = print ""0 0 0" "angle" "0"" coords format on a new line.
-				//
-				// for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
+| exec cvars/adminstuff.scr      | "hacker_kill 27" | continuously kill $player[27], or other $player[numbers]. |
+|       | "hacker_kill Searingwolfe" | continuously kill the player with the name "Searingwolfe", or other named players. |
+|       | "hacker_takeall [27 or Searingwolfe]" | continuously take all their weapons. |
+|       | "spectator [27 or Searingwolfe]" | continuously force them into spectator. |
+|       | "votekick [27 or Searingwolfe]" | all players vote to kick: Hold USE(e) key + Lean Left = VOTE NO (default), Hold USE(e) key + Lean Right = VOTE YES. |
+|       | "noclip2 [27 or Searingwolfe]" | noclip them around the map; still works if "cheats" = "0". |
+|       | "nodamage [27 or Searingwolfe]" | make them take no damage. |
+|       | "takedamage [27 or Searingwolfe]" | make them take damage again. |
+|       | "show [27 or Searingwolfe]" | make them visible again. |
+|       | "hide [27 or Searingwolfe]" | make them invisible. |
+|       | "wuss2 [27 or Searingwolfe]" | give them all weapons; still works if "cheats" = "0". |
+|       | "addkills [27 or Searingwolfe]" | give them +1 kill. |
+|       | "adddeaths [27 or Searingwolfe]" | give them +1 death. |
+|       | "coord2 1" | print $player[1]'s coords & angles to a "main/cvars/coords.txt" file (must create this file for "coord2" CVAR to work) in "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line. |
+|       | "coord2 entity" | print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line. |
+|       | "coord2 trigger" | print "( 0 0 0 ) " coords format on the same line. |
+|       | "coord2 spawn" | print ""0 0 0" "angle" "0"" coords format on a new line. |
+| exec cvars/playerspawns.scr      | "playerspawns 1" | spawn dummy models at all Allies/Axis or FFA spawns (only works in singleplayer maps, not including Training). |
+|       | "playerspawns 0" | remove the dummy models. |
 
 #
 
