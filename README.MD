@@ -1,7 +1,7 @@
 <><><> How To Install / Uninstall <><><>
 
-Delete any and all older UBER MODS .pk3 files.
-If packed in a .zip, unpack the .pk3 files. Copy the .pk3 files and paste them in the "Medal of Honor/main" folder (same folder as Pak0.pk3, Pak1.pk3, Pak2.pk3).
+Delete any and all older UBER MODS .pk3 files.<br>
+If packed in a .zip, unpack the .pk3 files. Copy the .pk3 files and paste them in the "Medal of Honor/main" folder (same folder as Pak0.pk3, Pak1.pk3, Pak2.pk3).<br>
 Uninstall by deleting the .pk3 mod files from the "main" folder.
 
 This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run in a dedicated server.
@@ -10,7 +10,7 @@ This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run 
 
 <><><> Essential CVARS for UBER MODS Servers <><><>
 
-This new CVAR allows for switching between the current 3 uber game modes (besides FFA or TDM) before loading a new map.
+This new CVAR allows for switching between the current 3 uber game modes (besides FFA or TDM) before loading a new map.<br>
 Place one of these lines into your server.cfg file, or add one of these lines to an .scr map script (before level waittill prespawn):
 
 	seta g_ubergametype ""		// none or "0", default to g_gametype 1 or g_gametype 2.
