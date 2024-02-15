@@ -104,48 +104,51 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 | exec cvars/findmodel.scr      | "findmodel models/static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
 |       | "findmodel static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
 |       | "findmodel static/indycrate" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
-| exec cvars/drawpath.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-| exec cvars/cybsnd.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-| exec cvars/ubergametype.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-| exec cvars/adminstuff.scr      | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
-|       | "entities 3" |  |
+| exec cvars/drawpath.scr      | "drawpath bomberpath" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
+|       | "drawpath spotpath1_1" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
+|       | "drawpath exploderchunk[1]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
+|       | "drawpath exploderchunk[12]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
+| exec cvars/cybsnd.scr      | "cybsnd_score 1" | print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won). |
+|       | "cybsnd_info 1" | print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance. |
+|       | "cybsnd_debug 1" | print once per second the Allies/Axis team count (living players) and Allies/Axis team total. If these values are inaccurate, then the mod has broken somehow (wait for the next the round, or reload the map). |
+| exec cvars/coord_pointer.scr      | "coord_pointer 27" | "g_ubergametype bb" = Base-Builder gametype. |
+|       | "coord_pointer Searingwolfe" |  |
+| exec cvars/ubergametype.scr      | "g_ubergametype bb" | "g_ubergametype bb" = Base-Builder gametype. |
+|       | "g_ubergametype cyb" | Cyber Attack gametype. |
+|       | "g_ubergametype snd" | Search & Destroy gametype. |
+|       | "g_ubergametype ft" | Freeze-Tag gametype. |
+|       | "g_ubergametype 0" | regular TDM or FFA (based on "g_gametype"). |
+|       | "g_ubermods 2" | default, all UBER mods enabled. |
+|       | "g_ubermods 1" | No crates or teles, fewer triggers for multiplayer maps. Crates & teles, but no extra mods for singleplayer maps. |
+|       | "g_ubermods 0" | all UBER mods disabled. |
+|       | "g_throwingknives 1" | all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map. |
+|       | "g_throwingknives 0" | no throwing knives. |
+| exec cvars/adminstuff.scr      | "hacker_kill 27" |  |
+|       | "hacker_kill Searingwolfe" |  |
+|       | "hacker_takeall 27" |  |
+|       | "hacker_takeall Searingwolfe" |  |
+|       | "spectator 27" |  |
+|       | "spectator Searingwolfe" |  |
+|       | "votekick 27" |  |
+|       | "votekick Searingwolfe" |  |
+|       | "noclip2 27" |  |
+|       | "noclip2 Searingwolfe" |  |
+|       | "nodamage 27" |  |
+|       | "nodamage Searingwolfe" |  |
+|       | "show 27" |  |
+|       | "show Searingwolfe" |  |
+|       | "hide 27" |  |
+|       | "hide Searingwolfe" |  |
+|       | "wuss2 27" |  |
+|       | "wuss2 Searingwolfe" |  |
+|       | "addkills 27" |  |
+|       | "addkills Searingwolfe" |  |
+|       | "adddeaths 27" |  |
+|       | "adddeaths Searingwolfe" |  |
+|       | "coord2 entity" |  |
+|       | "coord2 trigger" |  |
+|       | "coord2 " |  |
 
-exec cvars/drawpath.scr		// "drawpath [1st ent's targetname without $ in a path]" cvar. "drawpath bomberpath", "drawpath spotpath1_1", "drawpath latertruckpath", or multiple paths with the same targetname: "drawpath
-				// exploderchunk[1]", "drawpath exploderchunk[12]", to spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node.
-				//
-exec cvars/cybsnd.scr		// "cybsnd_score 1" cvar, to print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won).
-				// "cybsnd_info 1" cvar, to print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular
-				// spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance.
-				// "cybsnd_debug 1" cvar, to print once per second the Allies/Axis team count (living players) and Allies/Axis team total.
-				//
-exec cvars/ubergametype.scr	// "g_ubergametype" cvar. 	"g_ubergametype bb" = Base-Builder gametype.
-				//				"g_ubergametype cyb" = Cyber Attack gametype.
-				//				"g_ubergametype snd" = Search & Destroy gametype.
-				//				"g_ubergametype 0" or "" = none, regular TDM or FFA (based on g_gametype).
-				// "g_ubermods" cvar.		"g_ubermods 2" = default, all UBER mods enabled.
-				//				"g_ubermods 1" = No crates or teles, fewer triggers for multiplayer maps. Crates & teles, but no extra mods for singleplayer maps.
-				//				"g_ubermods 0" = all UBER mods disabled.
-				// "g_throwingknives" cvar.	"g_throwingknives 1" = all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map.
-				//				"g_throwingknives 0" = no throwing knives.
-				//
 exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuously kill $player[27].
 				//				"hacker_kill Searingwolfe" = continuously kill the player with the name "Searingwolfe".
 				//				"hacker_takeall [27 or Searingwolfe]" = continuously take all their keys.
