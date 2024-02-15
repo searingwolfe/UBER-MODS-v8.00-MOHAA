@@ -1,0 +1,78 @@
+main local.r local.g local.b:
+
+local.tentwall1 = spawn func_beam targetname "tentwall1"
+local.tentwall1 minoffset 0.0
+local.tentwall1 maxoffset 0.0
+local.tentwall1 numsegments 1
+local.tentwall1 life 0
+local.tentwall1 color ( local.r local.g local.b )
+local.tentwall1 alpha 0.4
+local.tentwall1 alwaysdraw
+local.tentwall1 activate	
+local.tentwall1 scale .5
+local.tentwall1.origin = ( -3132 -290 5 )
+local.tentwall1 endpoint ( -3132 226 5 )
+
+local.tentwall2 = spawn func_beam targetname "tentwall2"
+local.tentwall2 minoffset 0.0
+local.tentwall2 maxoffset 0.0
+local.tentwall2 numsegments 1
+local.tentwall2 life 0
+local.tentwall2 color ( local.r local.g local.b )
+local.tentwall2 alpha 0.4
+local.tentwall2 alwaysdraw
+local.tentwall2 activate	
+local.tentwall2 scale .5
+local.tentwall2.origin = ( -3132 -290 -50 )
+local.tentwall2 endpoint ( -3132 226 -50 )
+
+local.tentwall3 = spawn func_beam targetname "tentwall3"
+local.tentwall3 minoffset 0.0
+local.tentwall3 maxoffset 0.0
+local.tentwall3 numsegments 1
+local.tentwall3 life 0
+local.tentwall3 color ( local.r local.g local.b )
+local.tentwall3 alpha 0.4
+local.tentwall3 alwaysdraw
+local.tentwall3 activate	
+local.tentwall3 scale .5
+local.tentwall3.origin = ( -3132 -290 -105 )
+local.tentwall3 endpoint ( -3132 226 -105 )
+end
+
+////////////////////////////////////////////////////////////////////////
+
+on local.rotatetime local.r local.g local.b:
+
+$tentwall1 color ( .5 0 0 )
+$tentwall2 color ( .5 0 0 )
+$tentwall3 color ( .5 0 0 )
+$tentwall1 solid
+$tentwall2 solid
+$tentwall3 solid
+$tentwall1 activate
+$tentwall2 activate
+$tentwall3 activate
+
+wait local.rotatetime
+$tentwall1 color ( local.r local.g local.b )
+$tentwall2 color ( local.r local.g local.b )
+$tentwall3 color ( local.r local.g local.b )
+end
+
+////////////////////////////////////////////////////////////////////////
+
+off:
+
+$tentwall1 color ( .5 0 0 )
+$tentwall2 color ( .5 0 0 )
+$tentwall3 color ( .5 0 0 )
+wait 0.20
+
+$tentwall1 notsolid
+$tentwall2 notsolid
+$tentwall3 notsolid
+$tentwall1 deactivate
+$tentwall2 deactivate
+$tentwall3 deactivate
+end

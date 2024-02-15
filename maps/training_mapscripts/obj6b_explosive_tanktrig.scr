@@ -1,0 +1,349 @@
+main local.origin local.angles local.r local.g local.b local.radius:
+
+exec global/aliascache_triggersounds.scr plantedbomb
+exec global/aliascache_triggersounds.scr bombticker
+
+ local.bombtrig = spawn trigger_use targetname "explosive_tanktrig"
+ local.bombtrig model "animate/pulse_explosive_pickup.tik"
+ local.bombtrig.origin = local.origin
+ local.bombtrig.angles = local.angles
+ local.bombtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+ local.bombtrig light local.r local.g local.b local.radius
+ local.bombtrig notsolid
+ local.bombtrig show
+ local.bombtrig droptofloor
+
+ local.bombtrig.r = local.r
+ local.bombtrig.g = local.g
+ local.bombtrig.b = local.b
+ local.bombtrig.radius = local.radius
+
+ local.bombtrig setthread obj6 // keep "setthread" commands after "thread" and "setsize", just in case.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+obj6: //$obj6 bombpickup. $grenade_trigger. $obj6b bombplant. $final_door. $door_2_triggeruse. $door_3_triggeruse. 
+
+ self nottriggerable
+ local.player = parm.other
+ if(local.player.inuse)
+  {
+    local.player iprint "Cannot use. You are holding something already."
+    wait 1
+    self triggerable
+  end
+  }
+ else
+  {
+    if(level.tankexplosives_dropped != 1) { $explosive_tanktrig message ("*** You have acquired some explosives. ***") }
+    if(level.tankexplosives_dropped == 1) { $explosive_tanktrig message ("*** You have picked up some explosives. ***") }
+
+    local.player.inuse = 1
+    if($explosive != NULL) { $explosive remove }
+    $explosive_off show
+    local.player playsound bombpickup1
+
+    local.player thread doit self.origin self.r self.g self.b self.radius
+  }
+ self triggerable
+end
+
+////////////////////////////////////////////////////////////////////////
+
+doit local.origin local.r local.g local.b local.radius:
+
+   self iprint ("*** Plant the explosives on the tank.*** ")
+   local.number = randomint 999999999
+   self attachmodel models/animate/pulse_explosive_pickup.tik "Bip01 R Thigh" 1 ("cig_1" + local.number) 1 -1 -1 -1 -1 ( 0 0 3 ) //( -up +down, +forward -backward, +right -left )
+   local.static = spawn script_model
+   local.static model "static/corona_reg.tik"
+   local.static.scale = 0.001
+   local.static.origin = self.origin
+   local.static notsolid
+   local.static light local.r local.g local.b (local.radius + 15)
+   local.static glue self
+   local.static show
+   level.hold_time = 9999
+
+   //huddraw_alpha 104 0
+   //huddraw_virtualsize 104 1
+   //huddraw_alpha 104 .8
+   //huddraw_font 104 "verdana-12"
+   //huddraw_color 104 .5 0 0
+   //huddraw_rect 104 -200 222 200 14 
+   //huddraw_string 104 "Explosives:   Picking Up"
+
+   $("cig_1" + local.number).angles = ( 0 180 20 )
+   self stufftext "say *** I have acquired the explosives! ***"
+   $"explosive_tanktrig" nottriggerable
+   waitframe
+   $"explosive_tanktrig" remove
+   //wait 0.5
+   //huddraw_string 104 "Explosives:   Acquired"
+   
+   $obj6b triggerable
+   local.result = self waitthread scan_player level.hold_time //cannot use self in "doit"
+
+   if(local.result != left)
+   {
+	if(level.bomb_set != 1)
+	{
+		self.inuse = 0
+    		$("cig_1" + local.number) remove
+    		self stufftext "say *** I dropped the explosives! ***"
+    		//huddraw_string 104 "Explosives:   Dropped"
+		local.static unglue
+		local.static remove
+		level.tankexplosives_dropped = 1 // only used to change center screen dialogue.
+
+   		$obj6b nottriggerable
+    		//wait 0.5
+    		//huddraw_string 104 ""	
+
+		if(level.tankbomb_went2spectator == 1) 
+		{ 
+			level.tankbomb_went2spectator = 0
+			goto main local.origin local.angles local.r local.g local.b local.radius 
+		}
+
+    		goto main self.origin self.angles local.r local.g local.b local.radius 			// "goto" command ends the current script immediately, and goes to a new one.
+	}							 	 				// "thread" begins a new script, and finishes the current one simultaneously.
+	else if(level.bomb_set == 1)
+	{
+		self.inuse = 0
+    		$("cig_1" + local.number) remove
+    		self stufftext "say *** I have planted the explosives! ***"
+    		//huddraw_string 104 "Explosives:   Planted"
+		local.static unglue
+		local.static remove
+
+   		$obj6b nottriggerable
+    		//wait 0.5
+    		//huddraw_string 104 ""
+	}
+   }
+   if(local.result == left) { goto main local.origin local.angles local.r local.g local.b local.radius }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scan_player local.time:
+
+ local.result = ok
+ local.team = self.dmteam
+ local.count = 0
+ while(1)
+  {
+     if(self == NULL)
+     {
+   	local.result = left
+   	end local.result
+     }
+     else
+     {
+  	if(self.dmteam != local.team || !isalive self || self.dmteam == spectator || level.bomb_set == 1)
+    	{
+	   if(self.dmteam == spectator || isalive self) { level.tankbomb_went2spectator = 1 }
+    	   end local.result
+    	}
+
+	if(self.dmteam == local.team && isalive self && self.dmteam != spectator && level.bomb_set != 1) // optional else-statement for a player's maximum hold-time (controlled by "level.hold_time = 9999").
+    	{
+    	   local.count++
+    	   if((local.count / 10) >= local.time)
+     	   {
+     	      end local.result
+     	   }
+    	}
+
+	if(self.useheld == 1 && self istouching $obj6b && self.dmteam == local.team && isalive self) 
+	{
+	   thread obj6b // $obj6b.origin should be about the same as $explosive_on.origin.
+	   end local.result
+	}
+     }
+     wait 0.1
+  }
+end local.result
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+obj6b local.driveabletank:
+
+	if(level.bomb_set == 1 || getcvar("g_ubergametype") == ft || getcvar("g_ubergametype") == cyb || getcvar("g_ubergametype") == snd || getcvar("g_ubergametype") == bb) { end }
+	level.bomb_set = 1
+
+     if(local.driveabletank != 1)
+     {
+	$explosive_off hide
+	$explosive_on show
+	$explosive_on playsound plantedbomb
+	$explosive_on loopsound bombticker
+
+	local.bomblight = spawn script_model
+	local.bomblight model "static/corona_reg.tik"
+	local.bomblight.origin = $explosive_on.origin
+	local.bomblight.scale = 0.01
+	local.bomblight light 1 0 0 80
+	local.bomblight notsolid
+
+	$player stopwatch 5
+	wait 5.5 // $player stopwatch is not in sync with time.
+
+	local.ent1 = spawn script_model //$tankdestroyed0a show
+	local.ent1 model "vehicles/tigertank_d.tik"	
+	local.ent1.origin = $tank.origin // ( 724 -2684 -396 ) 
+	local.ent1.angles = $tank.angles // ( 0 -90 0 )
+
+	$tankdestroyed0b anim start //fancyfire underneath tank
+	$tankdestroyed0c anim start
+	$tankdestroyed0d anim start	
+
+	$tankexplosion0a anim start
+	$tankexplosion0b anim start
+	$tankexplosion0c anim idle
+	waitframe
+	$tankexplosion0c anim aaaa
+
+	local.bomblight remove		
+	$explosive_on stoploopsound
+	$explosive_on hide
+	level.tank_idle_entity stoploopsound
+	$tank stoploopsound
+	$tank playsound explode_tank
+
+	$tank.gun = $tank QueryTurretSlotEntity 0
+	$tank.gun2 = $tank QueryTurretSlotEntity 1
+	if ($tank.gun)
+	{
+		$tank DetachTurretSlot 0
+		$tank.gun remove
+	}
+	if ($tank.gun2)
+	{
+		$tank DetachTurretSlot 1
+		$tank.gun2 remove
+	}
+
+	$tank hide
+	$explosive_on remove
+	$explosive_off remove
+
+	radiusdamage $tank.origin 1000 600 
+
+	local.random0 = randomint(2)
+	if(local.random0 == 0) { $tankexplosion0a playsound explode_building_large3 }
+	if(local.random0 == 1) { $tankexplosion0a playsound explode_building_large4 }
+
+	$tank remove // the code below performs the other 4 explosions (3 are under the roofed buildings, one is at the oil barrels).
+     }
+
+	level.flags[tank] = 1
+	setcvar "g_obj_alliedtext2" "Do 4 gun range objectives" 
+	setcvar "g_obj_alliedtext3" "to access final gun range." 
+
+	wait 0.15
+	radiusdamage ( 693 -3401 -387 ) 1000 600
+	radiusdamage ( 700 -2198 -387 ) 1000 600
+	radiusdamage ( 79 -2198 -387 ) 1000 600
+		
+	$tankexplosion11a anim idle
+	$tankexplosion11b anim start
+	$tankexplosion12a anim idle
+	$tankexplosion12b anim start
+	$tankexplosion13a anim idle
+	$tankexplosion13b anim start		
+	waitframe
+	$tankexplosion11a anim aaaa //some emitters need to be turned back off immediately, otherwise player sees explosions again when going in/out of map bounds.
+	$tankexplosion12a anim aaaa
+	$tankexplosion13a anim aaaa
+
+	local.random1 = randomint(2)
+	if(local.random1 == 0) { $tankexplosion11a playsound explode_wood_small1 }
+	if(local.random1 == 1) { $tankexplosion11a playsound explode_wood_small2 }
+	local.random2 = randomint(2)
+	if(local.random2 == 0) { $tankexplosion12a playsound explode_wood_small1 }
+	if(local.random2 == 1) { $tankexplosion12a playsound explode_wood_small2 }
+	local.random3 = randomint(2)
+  	if(local.random3 == 0) { $tankexplosion13a playsound explode_wood_small1 }
+  	if(local.random3 == 1) { $tankexplosion13a playsound explode_wood_small2 }
+
+	exec maps/training_mapscripts/explosiveboxes.scr::blowup
+
+	$m3replace show //replace the m3 halftrack destroyed by radiusdamage
+
+	wait 1
+local.barrelexplode1 = spawn func_crate "model" "*55" "origin" "69 -3127 -381" "$targetname" "explosive_barrel" "debristype" "-1" "#radius" "256" "#dmg" "300" "classname" "func_crate"
+local.barrellaunch2 = spawn func_crate "model" "*120" "origin" "197 -3296 -339" "$targetname" "explosive_barrel_launch" "debristype" "-1" "#radius" "256" "#dmg" "300" "#set" "6" "classname" "func_crate"
+local.barrellaunch3 = spawn func_crate "model" "*120" "origin" "12 -3330 -339" "$targetname" "explosive_barrel_launch" "debristype" "-1" "#radius" "256" "#dmg" "300" "#set" "7" "classname" "func_crate"
+	thread global/barrel.scr::explosive_barrel
+
+	radiusdamage ( 65 -3250 -250 ) 1000 800
+
+	wait 0.05
+	$tankexplosion21a anim idle
+	$tankexplosion21b anim idle
+	$tankexplosion22a anim idle
+	$tankexplosion22b anim idle
+	$tankexplosion_smoke1 anim start
+	$tankexplosion_smoke2 anim start
+	waitframe
+	$tankexplosion21b anim aaaa
+	$tankexplosion22b anim aaaa
+
+	$door_2 unlock
+	$door_3 unlock
+	iprintlnbold "Both middle doors are now unlocked!"
+	println("----- Both middle doors are now unlocked!")
+
+	waitframe
+	exec maps/training_mapscripts/uboatmapwalls.scr::modify mid 0 0 // local.wallname, local.solid (0/default or 1, 0 = notsolid), local.show (0/default or 1, 0 = hide).
+	exec maps/UBER_mapextras/training_cratesstuff.scr::midshow // make visible some crates/tables near the double doors after tank blows up.
+
+	exec maps/training.scr::addremaining_levelspotorigins 0 // add a few more origins for lightbomb, grenade_ammo, snowball_ammo, etc. to spawn at after being triggered by a player.
+	exec maps/training.scr::spawns_enable 0 // enable more player spawns for gunranges, disable a few to keep max spawn points at 20.
+
+	level.objectives++
+	iprintlnbold ("Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	println("----- Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+
+	if(level.objectives == 7) 
+	{ 
+		wait 1
+		iprintlnbold ("*** The final door is now active! Find the key to unlock it! ***")
+		$final_doorlight light 1 .75 0 80
+		waitframe
+		exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorkey
+	}
+
+	wait 3	
+	if(local.barrelexplode1 != NULL) { local.barrelexplode1 remove }
+	if(local.barrellaunch2 != NULL) { local.barrellaunch2 remove }
+	if(local.barrellaunch3 != NULL) { local.barrellaunch3 remove }
+		
+	waitthread maps/training_mapscripts/explosiveboxes.scr::endfire 13 43.5
+	exec maps/training_mapscripts/tankexplosions.scr::removeemitters 0 0 // 0 or 1 = stop tank fire, 0 or 1 = remove tank fire.
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+barrels:
+
+//local.barrellaunch = spawn func_crate "model" "*120" "origin" "-150 -3100 -380" "$targetname" "explosive_barrel_launch" "debristype" "-1" "#radius" "256" "#dmg" "300" "#set" "7" "classname" "func_crate"
+//local.barrelexplode = spawn func_crate "model" "*55" "origin" "-150 -3200 -380" "$targetname" "explosive_barrel" "debristype" "-1" "#radius" "256" "#dmg" "300" "classname" "func_crate"
+//local.barreloil = spawn func_barrel "model" "*57" "origin" "-150 -3300 -380" "barreltype" "oil" "classname" "func_barrel" //model * numbers are found in map .bsp "notepad - search 'func_barrel'"
+
+thread global/barrel.scr::explosive_barrel 
+
+radiusdamage ( -150 -3200 -380 ) 1000 800
+
+//can only clone barrels if they exist in map already. but cloning them spams console with "lightmap rendered twice" errors. 
+//must have "thread global/barrel.scr::explosive_barrel" after spawning clones.
+//spawn them in, but blow them up immediately with "radiusdamage" to avoid errors. 
+//cheap and easy way to add barrel explosion, sound, and radius damage with only 3 code lines.
+end
