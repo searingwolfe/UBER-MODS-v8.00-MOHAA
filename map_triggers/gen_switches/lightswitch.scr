@@ -1,0 +1,73 @@
+main local.origin local.angles local.r local.g local.b local.radius local.name0 local.name1 local.name2 local.name3 local.name4 local.name5 local.name6 local.name7 local.name8 local.name9:
+
+exec global/aliascache_triggersounds.scr light_switch
+
+local.eswitch = spawn script_model
+local.eswitch model "animate/electrical_switch_nopulse.tik"
+local.eswitch.origin = local.origin
+local.eswitch.angles = local.angles + ( 0 180 0 )
+local.eswitch notsolid
+
+local.eswitchtrig = spawn trigger_use
+local.eswitchtrig.origin = local.eswitch.origin
+local.eswitchtrig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+local.eswitch anim off
+local.eswitchtrig waittill trigger
+local.eswitchtrig nottriggerable
+
+local.eswitch playsound light_switch
+local.eswitch anim turn
+local.eswitch anim waittill animdone
+local.eswitch anim on
+
+$(local.name0) light local.r local.g local.b local.radius
+$(local.name1) light local.r local.g local.b local.radius
+$(local.name2) light local.r local.g local.b local.radius
+$(local.name3) light local.r local.g local.b local.radius
+$(local.name4) light local.r local.g local.b local.radius
+$(local.name5) light local.r local.g local.b local.radius
+$(local.name6) light local.r local.g local.b local.radius
+$(local.name7) light local.r local.g local.b local.radius
+$(local.name8) light local.r local.g local.b local.radius
+$(local.name9) light local.r local.g local.b local.radius
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning on the lights. ***")
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.eswitchtrig triggerable
+local.eswitchtrig waittill trigger
+local.eswitchtrig nottriggerable
+
+local.eswitch playsound light_switch
+local.eswitch anim off
+
+$(local.name0) light 0 0 0 0
+$(local.name1) light 0 0 0 0
+$(local.name2) light 0 0 0 0
+$(local.name3) light 0 0 0 0
+$(local.name4) light 0 0 0 0
+$(local.name5) light 0 0 0 0
+$(local.name6) light 0 0 0 0
+$(local.name7) light 0 0 0 0
+$(local.name8) light 0 0 0 0
+$(local.name9) light 0 0 0 0
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning off the lights. ***")
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.eswitch remove
+local.eswitchtrig remove
+
+thread main local.origin local.angles local.r local.g local.b local.radius local.name0 local.name1 local.name2 local.name3 local.name4 local.name5 local.name6 local.name7 local.name8 local.name9
+end

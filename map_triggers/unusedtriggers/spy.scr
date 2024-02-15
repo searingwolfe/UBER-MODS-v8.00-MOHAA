@@ -1,0 +1,272 @@
+// MOD: Undercover Spies
+// SCRIPTING: Gotcha/Master-Of-Fungus-Foo-D - this script has basically been completely rewritten from his original mod
+// Original script/idea credit goes to Master-Of-Fungus-Foo-D
+// Also some bug fixes on the original mod done by Grassy, didn't wanna leave anyone out
+// Big thanks to Purple Elephant1au for the idea to check a CTF mod for making the avatars appear above the head
+// And another big thanks to Mefy for his CTF mod that helped make the avatars possible.
+// You can change ANYTHING you want to, left plenty of comments for reference to anyone who may not know, enjoy. - Gotcha
+// This is currently set up for all weapons, if you DO NOT run all weapons then please see line 80 and 171 and comment out
+// the "useweaponclass" line and uncomment out all other lines/edit the given weapon.
+main local.origin0 local.origin1: // axis spy (for becoming wearing allies uniform), allies spy (for wearing axis uniform)
+
+level.alliedspies = 0
+level.axisspies = 0
+//Give the player a changing clothes sound
+local.master = spawn ScriptMaster
+local.master aliascache change sound/items/Item_UniformPU_03.wav soundparms 1.0 0.0 1.0 0.0 1000 1000 local streamed maps "m dm obj train "
+//Allied spy trigger
+//========================================================
+local.model1 = spawn script_model
+local.model1 model "player/german_panzer_grenadier.tik" //the model that spins
+local.model1.origin = ( local.origin0 )
+local.model1 thread Rotatex
+local.model1 light .2 .2 1 125 //light this trigger up blue for allies
+local.model1 scale 0.75
+local.model1 notsolid //doesn't need an explanation
+//---------------------------------------------------------
+local.trig1 = spawn trigger_use 
+local.trig1.origin = local.model1.origin //set to the above origin
+local.trig1 setsize ( -32 -32 -96 ) ( 32 32 96 ) //trig size, could probably be smaller but meh
+local.trig1 message "*** You have found the Undercover Allies Spy trigger... ***"
+local.trig1 setthread german
+//Axis spy trigger
+//========================================================
+local.model2 = spawn script_model
+local.model2 model "player/american_ranger.tik" //the model that spins
+local.model2.origin = ( local.origin1 )
+local.model2 thread Rotatey
+local.model2 light 1 .2 .2 125 //light this trigger up red for axis
+local.model2 scale 0.75
+local.model2 notsolid //doesn't need an explanation
+//---------------------------------------------------------
+local.trig2 = spawn trigger_use
+local.trig2.origin = local.model2.origin //set to the above origin
+local.trig2 setsize ( -32 -32 -96 ) ( 32 32 96 ) //trig size, could probably be smaller but meh
+local.trig2 message "*** You have found the Undercover Axis Spy trigger... ***"
+local.trig2 setthread allied
+end
+
+
+
+
+//========================================================
+german:
+//========================================================
+local.player = parm.other
+if(local.player.isspy) //this keeps them from spamming the trigger once they become a spy
+end
+//---------------------------------------------------------
+//our list of models
+level.model1[0] = "player/german_afrika_officer.tik"
+level.model1[1] = "player/german_afrika_private.tik"
+level.model1[2] = "player/german_elite_officer.tik"
+level.model1[3] = "player/german_Elite_Sentry.tik"
+level.model1[4] = "player/german_Kradshutzen.tik"
+level.model1[5] = "player/german_Panzer_Grenadier.tik"
+level.model1[6] = "player/german_Panzer_Obershutze.tik"
+level.model1[7] = "player/german_Panzer_Shutze.tik"
+level.model1[8] = "player/german_Panzer_Tankcommander.tik"
+level.model1[9] = "player/german_Scientist.tik"
+level.model1[10] = "player/german_Waffenss_Officer.tik"
+level.model1[11] = "player/german_Waffenss_Shutze.tik"
+level.model1[12] = "player/german_Wehrmacht_Officer.tik"
+level.model1[13] = "player/german_Wehrmacht_Soldier.tik"
+level.model1[14] = "player/german_Winter_1.tik"
+level.model1[15] = "player/german_Winter_2.tik"
+level.model1[16] = "player/german_Worker.tik"
+//---------------------------------------------------------
+if (level.alliedspies != 3) //amount of spies that can be had on each team
+{
+  if (local.player.dmteam == "allies" && local.player.model != local.random ) //if he's allied and doesnt have a random model do this
+  {
+    local.player playsound change //for realism lol
+    local.player iprint "You have become an undercover German soldier!"
+	local.player iprint "You'll blend right in, kill them all."
+    level.alliedspies++ //add one for allies
+    local.player = parm.other
+	local.player.isspy = 1 //stop me from using all 3 spies at once!
+	local.random = randomint((level.model1.size )-1) //set local.random
+    local.player model level.model1[local.random] //pick a model, any model ;)
+    local.player useweaponclass mg //keep weapon from disappearing by switching it, take this out and add below for not all weapons
+//Just set this part up according to what you want and remove the above useweaponclass if you don't run an all weapons server
+//Pistol and nade can stay the same, obviously.
+//	  local.player takeall
+//	  local.player item weapons/p38.tik
+//    local.player item weapons/steilhandgranate.tik
+//    local.player item weapons/kar98.tik //change this to weapon you want
+//    local.player ammo rifle 100 //and your ammo for said weapon
+//    local.player ammo pistol 16
+//    local.player ammo grenade 2
+//    local.player useweaponclass rifle //set this according to the weapon you choose
+//---------------------------------------------------------
+if(local.player.isspy==1)
+{
+
+	local.player = parm.other
+	local.player.hasavvy = 1
+	local.avatar = spawn func_beam
+	local.avatar attach local.player "Bip01 Head"
+	local.avatar.origin = local.player.origin + ( 0 0 94 )
+	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+	local.avatar minoffset 0.0
+	local.avatar maxoffset 0.0
+	local.avatar color ( 1.0 1.0 1.0 )
+	local.avatar scale 7.0
+	local.avatar life 0
+	local.avatar shader ("textures/hud/axis_headicon")
+	local.avatar numsegments 1
+	local.avatar alpha 0.80
+	local.avatar activate
+	while(1)
+		{
+		local.avatar.origin = local.player.origin + ( 0 0 94 )
+		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+		waitframe
+			if ((!isAlive local.player)||(local.player.dmteam !=allies))
+			{
+			local.avatar deactivate //remove the avatar
+			level.alliedspies-- //minus one spy
+			local.player.isspy = 0 //no longer a spy
+			end
+			}
+		}
+}
+//---------------------------------------------------------
+	while(level.alliedspies>=0) //while spies are less than or equal to 0 do this
+      {
+        if ((!isAlive local.player)||(local.player.dmteam !=allies))
+        {
+          level.alliedspies-- 
+		  local.player.isspy = 0
+		  break
+        }
+      wait 1
+      }
+  }
+  else
+  {
+    local.player iprint "You are on the wrong team!"
+  }
+}
+else
+{
+  local.player iprint "Too many spies! No disguises available at this time!"
+}
+end
+
+
+
+
+//========================================================
+allied:
+//========================================================
+local.player = parm.other
+if(local.player.isspy==1) //this keeps them from spamming the trigger once they become a spy
+end
+//---------------------------------------------------------
+//our list of models
+level.model2[0] = "player/allied_Airborne.tik"
+level.model2[1] = "player/allied_Manon.tik"
+level.model2[2] = "player/allied_Pilot.tik"
+level.model2[3] = "player/allied_SAS.tik"
+level.model2[4] = "player/american_army.tik"
+level.model2[5] = "player/american_Ranger.tik"
+//---------------------------------------------------------
+if (level.axisspies != 3) //amount of spies that can be had on each team
+{
+  if (local.player.dmteam == "axis" && local.player.model != local.random ) //if he's axis and doesnt have a random model do this
+  {
+    local.player playsound change //for realism lol
+    local.player iprint "You have become an undercover Allied soldier!"
+	local.player iprint "You'll blend right in, kill them all."
+    level.axisspies++ //add one for axis
+	local.player = parm.other
+	local.player.isspy = 1  //stop me from using all 3 spies at once!
+	local.random = randomint(level.model2.size ) //set local.random
+    local.player model level.model2[local.random] //pick a model, any model ;)
+    local.player useweaponclass mg //keep weapon from disappearing by switching it, take this out and add below for not all weapons
+//Just set this part up according to what you want and remove the above useweaponclass if you don't run an all weapons server
+//Pistol and nade can stay the same, obviously.
+//	  local.player takeall
+//	  local.player item weapons/colt45.tik
+//    local.player item weapons/m2frag_grenade.tik
+//    local.player item weapons/thompsonsmg.tik //change this to weapon you want
+//    local.player ammo smg 150 //and your ammo for said weapon
+//    local.player ammo pistol 16
+//    local.player ammo grenade 2
+//    local.player useweaponclass smg //set this according to the weapon you choose
+//---------------------------------------------------------
+if(local.player.isspy==1)
+{
+
+
+	local.player = parm.other
+	local.player.hasavvy = 1
+	local.avatar = spawn func_beam
+	local.avatar attach local.player "Bip01 Head"
+	local.avatar.origin = local.player.origin + ( 0 0 94 )
+	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+	local.avatar minoffset 0.0
+	local.avatar maxoffset 0.0
+	local.avatar color ( 1.0 1.0 1.0 )
+	local.avatar scale 7.0
+	local.avatar life 0
+	local.avatar shader ("textures/hud/allies_headicon")
+	local.avatar numsegments 1
+	local.avatar alpha 0.80
+	local.avatar activate
+	while(1)
+		{
+		local.avatar.origin = local.player.origin + ( 0 0 94 )
+		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+		waitframe
+			if ((!isAlive local.player)||(local.player.dmteam !=axis))
+			{
+			local.avatar deactivate //remove the avatar
+			level.axisspies-- //minus one spy
+			local.player.isspy = 0 //no longer a spy
+			end
+			}
+		}
+}
+//---------------------------------------------------------
+      while(level.axisspies>=0) //while spies are less than or equal to 0 do this
+      {
+        if ((!isAlive local.player)||(local.player.dmteam !=axis))
+        {
+          level.axisspies-- //take em away when dying or switching teams
+		  break
+        }
+        wait 1
+      }
+  }
+  else
+  {
+    local.player iprint "You are on the wrong team!"
+  }
+}
+else
+{
+  local.player iprint "Too many spies! No disguises available at this time!"
+}
+end
+Rotatex:
+
+	while(self)
+		{
+		self.angles = (self.angles + ( 03 03 03 ))
+		waitframe
+		}
+
+
+end
+Rotatey:
+
+	while(self)
+		{
+		self.angles = (self.angles + ( 03 03 03 ))
+		waitframe
+		}
+
+
+end

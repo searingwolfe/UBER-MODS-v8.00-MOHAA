@@ -1,0 +1,24 @@
+ main local.origin local.destination:
+
+local.master = spawn ScriptMaster
+local.master aliascache noise sound/mechanics/lockpick2.wav soundparms 1.0 0.0 1.0 0.0 1000 1000 local streamed maps "m dm obj train "
+
+local.portlight = spawn script_model
+local.portlight model "fx/corona_red.tik" 
+local.portlight.origin = ( local.origin )
+local.portlight.scale = 2
+local.portlight light 0 1 1 100
+local.trig = spawn trigger_use
+local.trig.targetname = "port1"
+local.trig.origin = ( local.origin )
+local.trig setsize ( -30 -30 0 ) ( 30 30 80 )
+while(1)
+{
+$port1 waittill trigger
+local.player = parm.other
+local.player tele ( local.destination)
+local.player message "*** Teleporting to a new location... ***"
+local.player playsound noise
+wait 0.1
+}
+end

@@ -1,0 +1,38 @@
+spotted local.r local.g local.b:
+
+  if(self == NULL || !isalive self || self.dead == 1) { end }
+  if(self.packon == 1)
+  {
+    self iprint ("You have already been spotted!")
+    end
+  }
+  self.packon = 1
+
+  //self thread global/messagetrig_print.scr::message "*** Avoid spotlight beams on the ground! ***" 1
+  self iprint ("*** Avoid spotlight beams on the ground! ***")
+  self iprint ("Enemies can see you more easily with the bright light below you.")
+
+  local.static = spawn script_model
+  local.static model "items/cigarette.tik"
+  local.static.scale = 0.001
+  local.static.origin = self.origin
+  local.static notsolid
+  local.static light local.r local.g local.b 200
+  //local.static light (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) 200
+  local.static glue self 
+
+  local.random2 = randomint(3)
+  if(local.random2 == 0) { self playsound spotlighttrap1 }
+  if(local.random2 == 1) { self playsound spotlighttrap2 }
+  if(local.random2 == 2) { self playsound spotlighttrap3 }
+
+  local.team = self.dmteam
+
+  while(isalive self && self.dmteam == local.team && self.dmteam != "spectator" && self != NULL && self.dead != 1 && level.change_team_score != 1) { waitframe }
+
+  local.static unglue
+  local.static remove
+  if(self == NULL) { end }
+  self iprint ("The spotlight LED has been removed.")
+  self.packon = 0
+end

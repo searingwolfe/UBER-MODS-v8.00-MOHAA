@@ -1,0 +1,53 @@
+main local.switchorigin local.switchangles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset:
+
+exec global/aliascache_triggersounds.scr alarm_switch
+
+local.switch = spawn script_model
+local.switch model "animate/alarmswitch.tik"
+local.switch.origin = local.switchorigin
+local.switch.angles = local.switchangles
+local.switch notsolid
+
+local.switchtrig = spawn trigger_use
+local.switchtrig.origin = local.switch.origin
+local.switchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.switchtrig waittill trigger
+local.switchtrig nottriggerable
+local.switch anim turnon
+local.switch playsound alarmswitch
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Blowing up a bangalore. ***")
+	waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff
+
+////////////////////////////////////////////////////////////////////////
+
+if(local.manualreset != 1)
+{
+ local.switch anim turnoff
+ wait 1
+}
+if(local.manualreset == 1)
+{
+ local.switchtrig triggerable
+ local.switchtrig waittill trigger
+ local.switch anim turnoff
+ local.switch playsound alarmswitch
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Resetting the alarm switch. ***")
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+}
+
+local.switch remove
+local.switchtrig remove
+
+thread main local.switchorigin local.switchangles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset
+end

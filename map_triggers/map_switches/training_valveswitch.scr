@@ -1,0 +1,76 @@
+main local.origin local.angles local.rotatetime local.rotateamount local.clockwise:
+
+exec global/aliascache_triggersounds.scr valve_switch
+
+local.valve = spawn script_model
+local.valve model "animate/redvalve_nopulse.tik"
+local.valve.origin = local.origin
+local.valve.angles = local.angles
+local.valve notsolid
+
+local.valvetrig = spawn trigger_use
+local.valvetrig.origin = local.valve.origin
+local.valvetrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.valvetrig waittill trigger
+local.valvetrig nottriggerable
+local.valve.model = animate/redvalve_pulse.tik
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+	if(local.clockwise == 0) { local.player iprint ("*** Rotating valve counterclockwise. ***") }
+ 	if(local.clockwise == 1) { local.player iprint ("*** Rotating valve clockwise. ***") }
+	
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 1 0 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 2 0 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 3 0 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 4 0 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 5 0 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 6 0 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 7 0 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 8 0 local.rotatetime
+
+////////////////////////////////////////////////////////////////////////
+
+local.valve time (local.rotatetime)
+if(local.clockwise == 0) { local.valve rotateZup local.rotateamount }
+if(local.clockwise == 1) { local.valve rotateZdown local.rotateamount }
+local.valve playsound valve_switch
+local.valve waitmove
+local.valve.model = animate/redvalve_nopulse.tik
+
+local.valvetrig triggerable
+local.valvetrig waittill trigger
+local.valvetrig nottriggerable
+local.valve.model = animate/redvalve_pulse.tik
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+	if(local.clockwise == 0) { local.player iprint ("*** Rotating valve clockwise. ***") }
+ 	if(local.clockwise == 1) { local.player iprint ("*** Rotating valve counterclockwise. ***") }
+
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 1 1 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 2 1 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 3 1 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 4 1 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 5 1 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 6 1 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 7 1 local.rotatetime
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::move_cabinet 8 1 local.rotatetime
+
+////////////////////////////////////////////////////////////////////////
+
+local.valve time (local.rotatetime)
+if(local.clockwise == 0) { local.valve rotateZdown local.rotateamount }
+if(local.clockwise == 1) { local.valve rotateZup local.rotateamount }
+local.valve playsound valve_switch
+local.valve waitmove
+local.valve.model = animate/redvalve_nopulse.tik
+
+local.valve remove
+waitframe
+local.valvetrig remove
+thread main local.origin local.angles local.rotatetime local.rotateamount local.clockwise 
+end

@@ -1,0 +1,128 @@
+// **********
+// Toilet Mod Script
+// By DjFou
+// 01/07
+// Rev: 6
+// **********
+// Read the HowTo.txt file for use!
+// Have Fun ! :-)
+
+
+
+main local.origin local.isatoilet:
+
+
+// We set for use in maps
+
+	local.active = int(getcvar("dj_toilet"))
+
+
+// Lets exec toilet.cfg
+
+//waitexec toilet.cfg  ##Obsolete
+ 
+	if(local.active == "")
+	
+	{
+	
+		iprintln "Cannot exec toilet.cfg or file is not Configurated"
+	
+		iprintln "Please, correct that problem."
+	
+	}
+  	
+	if(local.active != 1) 
+	{
+	
+		println ("[ToiletMod] Is off.")
+	
+		println ("[ToiletMod] set dj_toilet 1 to turn it on.")
+	
+	}
+
+
+end
+
+toilet:
+// lets spawn something
+
+	level.toiletcount = 0
+	
+	if(local.isatoilet == 1) 
+	{
+	
+		local.toilet = spawn script_model model "static/toilet_short.tik" 
+	local.toilet.origin = local.origin
+	
+		local.toilet.angles = ( 0 -90 0 )
+	
+		local.toilet nodamage
+	
+	}
+
+		level.trig = spawn trigger_use
+
+		level.trig.origin = local.origin
+level.trig setsize ( -50 -50 0 ) ( 60 60 70 )
+local.toiletmessage = getcvar("dj_toiletmessage")
+	
+	if(local.toiletmessage != "")
+	
+	{
+	
+		level.trig message local.toiletmessage
+  	
+	}
+
+	else 
+	{
+
+		level.trig message "Ah, you've found the WCs !"
+
+	}
+
+	level.trig setthread tellme
+
+
+end
+
+
+
+tellme: 
+//Thread that will make player say something
+	
+	local.tellme = getcvar("dj_toiletsay")
+	
+	local.hacktellme = "say "+ local.tellme   // Cuz i'm noob
+
+	local.player = parm.other
+ 	
+	if(local.tellme != "")
+		 
+	{
+		
+		local.player stufftext local.hacktellme
+		
+	}
+		 
+	else 
+		
+	{
+		
+		local.player stufftext "say Ah! That's good !"
+		
+	}
+
+	self playsound toilet_flush
+
+	level.trig nottriggerable
+
+	level.toiletcount ++
+
+	iprintln ("Toilet Fatalities:  " + (level.toiletcount)) // Thx cob for your piano
+
+	wait 5
+1	level.trig triggerable
+
+
+end

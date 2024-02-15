@@ -1,0 +1,304 @@
+// ledtraptype: 1 = respawn LED Dot on trap carrier's dead body (1st death in script)
+// ledtraptype: 2 = respawn LED Dot on illuminated trapped dead body (2nd death in script)
+
+
+main local.origin local.name local.ledtraptype:
+
+local.master = spawn ScriptMaster
+local.master aliascache ledpickup1 sound/items/Item_Bangaloredirt01.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps "m dm moh obj train"
+local.master2 = spawn ScriptMaster
+local.master2 aliascache ledpickup2 sound/items/Item_Bangaloredirt02.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps "m dm moh obj train"
+local.master3 = spawn ScriptMaster
+local.master3 aliascache lituptrap1 sound/mechanics/lockpick1.wav soundparms 1.25 0.2 0.8 0.4 200 2000 weapon loaded maps "m dm moh obj train"
+local.master4 = spawn ScriptMaster
+local.master4 aliascache lituptrap2 sound/mechanics/lockpick2.wav soundparms 1.25 0.2 0.8 0.4 200 2000 weapon loaded maps "m dm moh obj train"
+local.master5 = spawn ScriptMaster
+local.master5 aliascache lituptrap3 sound/mechanics/lockpick3.wav soundparms 1.25 0.2 0.8 0.4 200 2000 weapon loaded maps "m dm moh obj train"
+
+ local.player = parm.other
+ level.smoke_time = 9999
+
+ if(level.leddropped[local.name] != 1)
+ {
+	level.leddropped[local.name] = 0
+	local.trigger = spawn trigger_use targetname ("led_trigger1" + local.name)
+ 	local.trigger.origin = local.origin + ( 0 0 12 )
+ 	local.trigger setsize ( -30 -30 -50 ) ( 30 30 50 )
+ 	local.trigger message "*** You are now carrying an LED Dot trap! ***"
+ 	local.trigger.scale = 0.3
+ }
+ else if(level.leddropped[local.name] == 1)
+ {
+ 	local.trigger = spawn trigger_multiple targetname ("led_dropped_trigger1" + local.name)
+ 	local.trigger.origin = local.origin + ( 0 0 12 )
+ 	local.trigger setsize ( -180 -180 -180 ) ( 180 180 180 )
+ 	local.trigger message "*** You stepped on an LED Dot trap! ***"
+ 	local.trigger light (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) 250
+ 	local.trigger.scale = 0.01
+ }
+ local.trigger model "static/corona_reg.tik"
+ local.trigger.angles = ( 0 0 0 )
+ local.trigger show
+ local.trigger thread Rotatex
+ 
+ if(local.ledtraptype == 1) { level.traptype[local.name] = 1 }
+ else if(local.ledtraptype == 2) { level.traptype[local.name] = 2 }
+ else { thread error_ledtraptype }
+
+level waittill spawn 
+
+local.trigger thread do_random local.trigger.origin local.name
+
+if(level.leddropped[local.name] == 0)
+{
+	local.i[0] = 0
+	local.i[1] = 0
+	local.i[2] = 0
+
+	local.v[0] = 3
+	local.v[1] = 4
+	local.v[2] = 5
+
+	while(1)
+	{
+		if(local.minues!=1)
+		{
+			local.v[0] ++ 
+			local.v[1] ++
+			local.v[2] ++
+		}
+
+		if(local.v[2]==10)
+		{
+			local.minues=1
+		}
+
+		if(local.v[2]==3)
+		{
+			local.minues=0
+		}
+
+		if(local.minues==1)
+		{
+			local.v[0] -- 
+			local.v[1] --
+			local.v[2] --
+		}
+
+		for(local.p=0;local.p<=10;local.p++)
+		{
+			waitframe
+			local.i[0] += local.v[0]
+			local.i[1] += local.v[1]
+			local.i[2] += local.v[2]
+
+			if(local.trigger1.shot==1)
+			{
+				local.i[0] += local.v[0]
+				local.i[1] += local.v[1]
+				local.i[2] += local.v[2]
+				local.i[0] += local.v[0]
+				local.i[1] += local.v[1]
+				local.i[2] += local.v[2]
+				local.trigger1 light 0 1 .35 50
+			}
+
+			waitframe
+			local.trigger light (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) 85
+		}
+	}
+}
+end
+
+do_random local.triggerorigin local.name:
+
+ if(level.leddropped[local.name] != 1)
+ {
+	$("led_trigger1" + local.name) waittill trigger
+	$("led_trigger1" + local.name) nottriggerable
+	local.player = parm.other
+ 	if(local.player.inuse)
+ 	{
+  		local.player iprint "Cannot use. You are holding something already."
+  		wait 1
+  		$("led_trigger1" + local.name) triggerable
+  		end
+ 	}
+ 	else
+	{
+  		if(level.leddropped[local.name] == 0) { local.player iprint "*** You are now carrying an LED Dot trap! ***" }
+		else if(level.leddropped[local.name] == 1) { local.player iprint "*** You stepped on an LED Dot trap! ***" }
+  		local.player.inuse = 1
+  		local.player thread doit local.triggerorigin local.name
+ 	}
+ 	$("led_trigger1" + local.name) triggerable
+ }
+ else if(level.leddropped[local.name] == 1)
+ {
+	$("led_dropped_trigger1" + local.name) waittill trigger
+	$("led_dropped_trigger1" + local.name) nottriggerable
+	local.player = parm.other
+ 	if(local.player.inuse)
+ 	{
+  		local.player iprint "Cannot use. You are holding something already."
+  		wait 1
+  		$("led_dropped_trigger1" + local.name) triggerable
+  		end
+ 	}
+ 	else
+	{
+  		if(level.leddropped[local.name] == 0) { local.player iprint "*** You are now carrying an LED Dot trap! ***" }
+		else if(level.leddropped[local.name] == 1) { local.player iprint "*** You stepped on an LED Dot trap! ***" }
+  		local.player.inuse = 1
+  		local.player thread doit local.triggerorigin local.name
+ 	}
+ 	$("led_dropped_trigger1" + local.name) triggerable
+ }
+end
+
+doit local.origin local.name:
+
+   huddraw_alpha 107 0
+   huddraw_virtualsize 107 1
+   huddraw_alpha 107 .8
+   huddraw_font 107 "verdana-12"
+   huddraw_color 107 .5 0 .5
+   huddraw_rect 107 -200 222 200 14 
+
+   local.player = parm.other
+   local.static = spawn script_model
+   local.static model "static/corona_reg.tik"
+   local.static.scale = 0.001
+   local.static.origin = local.player.origin
+   local.static notsolid
+   local.static glue local.player
+
+   if(level.leddropped[local.name] == 0) 
+   { 
+   	self iprint ("Picked up an LED marker. When you die, an LED Dot will drop.")
+   	self iprint ("If they get too close, they'll be marked with a big light!")
+   	local.static light (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) 15
+
+   	$("led_trigger1" + local.name) remove	
+	$("led_trigger1" + local.name) nottriggerable
+
+   	local.random1 = randomint(2)
+   	if(local.random1 == 0) { local.player playsound ledpickup1 }
+   	if(local.random1 == 1) { local.player playsound ledpickup2 }
+
+  	huddraw_string 107 "LED Dot Trap:   Acquired"
+   	wait 0.5
+	huddraw_string 107 "LED Dot Trap:   Carrying"
+   } 
+
+   else if(level.leddropped[local.name] == 1) 
+   { 
+	self iprint ("*** Avoid enemy LED Dots on the ground! ***")
+   	self iprint ("Enemies can see you more easily with the bright light below you.")
+   	local.static light (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) (randomfloat 90 / 100 + 0.1) 250
+
+   	$("led_dropped_trigger1" + local.name) remove
+   	$("led_dropped_trigger1" + local.name) nottriggerable
+
+	local.random2 = randomint(3)
+   	if(local.random2 == 0) { local.player playsound lituptrap1 }
+   	if(local.random2 == 1) { local.player playsound lituptrap2 }
+   	if(local.random2 == 2) { local.player playsound lituptrap3 }	
+ 
+   	huddraw_string 107 "LED Dot Trap:   Trapped"
+	wait 0.5
+	huddraw_string 107 "LED Dot Trap:   Illuminated"
+   }
+
+   local.number = randomint 999999999
+   $("cig_" + local.number).angles = ( 0 180 20 )
+   local.static show
+
+   local.result = self waitthread scan_player level.smoke_time
+   if(local.result != left)
+   {
+    	self.inuse = 0
+    	$("cig_" + local.number) remove
+    	local.static hide
+    	local.static unglue
+
+	if(level.leddropped[local.name] == 1) 
+   	{ 
+		if(level.traptype[local.name] == 1) { self iprint ("The LED Dot trigger has reset and respawned on the trap carrier's dead body.") }
+    		else if(level.traptype[local.name] == 2) { self iprint ("The LED Dot trigger has reset and respawned on your dead body.") }
+
+		level.leddropped[local.name] = 2 //not 0, only for != if-statement
+
+   		huddraw_string 107 "LED Dot Trap:   Resetting"	
+		wait 0.5
+    		huddraw_string 107 ""
+
+		if(level.traptype[local.name] == 1) { goto main local.origin local.name 1 }
+    		else if(level.traptype[local.name] == 2) { goto main local.player.origin local.name 2 }
+	}
+    	else if(level.leddropped[local.name] == 0) 
+	{
+		self iprint ("You dropped the LED Dot trap on your dead body.")	
+
+		level.leddropped[local.name] = 1
+
+    		huddraw_string 107 "LED Dot Trap:   Planted"
+		wait 0.5
+    		huddraw_string 107 ""
+
+		//local.player iprint ("local.origin = " + local.origin)
+ 		//local.player iprint ("local.name = " + local.name)
+ 		//local.player iprint ("level.leddropped[local.name] = " + level.leddropped[local.name])
+
+		if(level.traptype[local.name] == 1) { goto main local.player.origin local.name 1 }
+    		else if(level.traptype[local.name] == 2) { goto main local.player.origin local.name 2 }
+	}
+   }
+end
+
+scan_player local.time:
+ local.result = ok
+ local.team = self.dmteam
+ local.count = 0
+ while(1)
+ {
+	if(self == NULL)
+  	{
+   		local.result = left
+   		end local.result
+  	}
+  	else
+  	{
+   		if(self.dmteam != local.team || !isalive self)
+   		{
+    			end local.result
+   		}
+   		else
+   		{
+    			local.count++
+    			if((local.count / 10) >= local.time)
+    			{
+     				end local.result
+    			}
+   		}
+  	}
+  	wait 0.1
+  	local.team = self.dmteam
+ }
+end
+
+Rotatex:
+	while(self)
+	{
+		self.angles = (self.angles + ( 7.5 -4.5 10.5 ))
+		waitframe
+	}
+end
+
+error_ledtraptype:
+ local.player = parm.other
+ local.player iprint "ERROR. You must specify the LED Dot's trap-type after its origin coords: 1 or 2"
+ local.player iprint "Example: exec map_triggers/led_traps/led_trap_1.scr ( 0 0 0 ) 2"
+end
+
+

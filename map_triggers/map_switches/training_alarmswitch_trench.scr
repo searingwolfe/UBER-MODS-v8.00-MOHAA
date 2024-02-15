@@ -1,0 +1,130 @@
+main local.name local.origin local.angles local.offtime local.damageradius local.pulsatingoff local.manualreset:
+
+exec global/aliascache_triggersounds.scr alarm_switch
+
+	if(local.name == "tents") { thread trenchswitch 1 local.origin local.angles local.offtime local.damageradius local.pulsatingoff local.manualreset }
+	if(local.name == "tank") { thread trenchswitch 2 local.origin local.angles local.offtime local.damageradius local.pulsatingoff local.manualreset }
+
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+trenchswitch local.name local.origin local.angles local.offtime local.damageradius local.pulsatingoff local.manualreset:
+
+local.switch = spawn script_model targetname ("trenchbombs_switch" + local.name)
+local.switch model "animate/alarmswitch.tik"
+local.switch.origin = local.origin
+local.switch.angles = local.angles
+local.switch notsolid
+
+local.switchtrig = spawn trigger_use targetname ("trenchbombs_trigger" + local.name)
+local.switchtrig.origin = local.switch.origin
+local.switchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.switchtrig waittill trigger
+local.switchtrig nottriggerable
+local.switch anim turnon
+local.switch playsound alarmswitch
+
+if(level.trenchblewup != 1)
+{
+ 	local.player = parm.other
+ 	local.switchtrig message ("*** Blowing up the trench. ***")
+	level.trenchblewup = 1 // keep other nontriggered switch nottriggerable until local.offtime ends.
+
+	if(local.name == 1) // don't use quotations, since this local.name is just a number.
+	{	
+		thread otherswitch_animonly 2 turnon
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 6 local.offtime local.damageradius local.pulsatingoff // offtime only works if using waitthread.
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 5 local.offtime local.damageradius local.pulsatingoff
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 4 local.offtime local.damageradius local.pulsatingoff
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 3 local.offtime local.damageradius local.pulsatingoff
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 2 local.offtime local.damageradius local.pulsatingoff
+		waitthread maps/training_mapscripts/trenchbombs.scr::blowup 1 local.offtime local.damageradius local.pulsatingoff // waits "local.offtime" seconds after blowing up
+	}
+
+	if(local.name == 2)
+	{
+		thread otherswitch_animonly 1 turnon
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 3 local.offtime local.damageradius local.pulsatingoff // local.name local.offtime local.damageradius local.pulsatingoff
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 4 local.offtime local.damageradius local.pulsatingoff
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 5 local.offtime local.damageradius local.pulsatingoff
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 6 local.offtime local.damageradius local.pulsatingoff
+
+		wait (randomint(100) / 100.00 + 0.25)
+		thread maps/training_mapscripts/trenchbombs.scr::blowup 7 local.offtime local.damageradius local.pulsatingoff
+		waitthread maps/training_mapscripts/trenchbombs.scr::blowup 8 local.offtime local.damageradius local.pulsatingoff
+	}
+	level.trenchblewup = 0
+}
+
+if(local.manualreset != 1)
+{
+ if(local.name == 1) { thread otherswitch_animonly 2 turnoff }
+ if(local.name == 2) { thread otherswitch_animonly 1 turnoff }
+ local.switch anim turnoff
+ wait 1
+}
+if(local.manualreset == 1)
+{
+ local.switchtrig triggerable
+ local.switchtrig waittill trigger
+ local.switch anim turnoff
+ local.switch playsound alarmswitch
+ if(local.name == 1) { thread otherswitch_animonly 2 turnoff }
+ if(local.name == 2) { thread otherswitch_animonly 1 turnoff }
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.switchtrig message ("*** Resetting the alarm switch. ***")
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+}
+
+waitframe
+local.switch remove
+local.switchtrig remove
+
+thread trenchswitch local.name local.origin local.angles local.offtime local.damageradius local.pulsatingoff local.manualreset
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+otherswitch_animonly local.name local.anim:
+
+if(local.anim == "turnon")
+{
+ $("trenchbombs_trigger" + local.name) nottriggerable
+ $("trenchbombs_switch" + local.name) anim turnon
+ $("trenchbombs_switch" + local.name) playsound alarmswitch
+}
+if(local.anim == "turnoff")
+{
+ $("trenchbombs_trigger" + local.name) triggerable
+ $("trenchbombs_switch" + local.name) anim turnoff
+}
+end

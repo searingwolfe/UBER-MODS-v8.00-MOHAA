@@ -1,0 +1,81 @@
+main local.origin:
+
+local.master = spawn ScriptMaster
+local.master aliascache noise sound/amb/Amb_Cricket.wav soundparms 1.0 0.0 1.0 0.0 1000 1000 local streamed maps "m dm obj train "
+
+local.player = parm.other
+local.trig = spawn trigger_multiple
+local.trig.origin = local.origin
+local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+local.trig setthread camo_trig
+local.trig message "you have found the glue light trigger"
+local.trig wait 1
+
+while(1)
+{
+	wait 1
+	if (local.trig.origin == local.player.origin)
+	{
+		wait 2
+		local.trig remove
+	}
+}
+
+end
+
+
+camo_trig:
+self waittill trigger
+local.player=parm.other
+if (local.player.packon == 1)
+{
+end
+}
+local.player.packon = 1
+
+local.static = spawn script_model
+local.static model "items/cigarette.tik"
+local.static notsolid
+local.static.scale= 0.001
+local.static light 0 0 1 200
+local.static.origin = local.player.origin
+
+local.static glue local.player
+local.player stufftext "say I have found the glowing light trigger! I'm so colorful now!"
+local.player playsound noise
+wait 1
+
+local.team = local.player.dmteam
+while(1)
+{
+if (local.team != local.player.dmteam)
+{
+local.player_exists = 1
+break
+}
+
+if !(isAlive local.player)
+{
+local.player_exists = 1
+break
+}
+
+if !(local.player)
+{
+local.player_exists = 0
+break
+}
+
+wait 0.4
+}
+
+if (local.player_exists == 1)
+{
+local.static unglue
+// local.player show
+local.player.packon = 0
+}
+
+local.static remove
+
+end

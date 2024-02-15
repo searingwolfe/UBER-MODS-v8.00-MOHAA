@@ -1,0 +1,28 @@
+main local.origin:
+
+local.master = spawn ScriptMaster
+local.master aliascache noise sound/amb/Amb_Cricket.wav soundparms 1.0 0.0 1.0 0.0 1000 1000 local streamed maps "m dm obj train "
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( local.origin )
+local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+local.trig setthread Trigger2
+local.trig message "*** You have found the secret All Weapons trigger... ***"
+local.trig wait 1
+local.trig delay 0
+
+Trigger2:
+self waittill trigger
+local.player=parm.other
+if (local.player.isTrigger2==1)
+end
+
+local.player.isTrigger2=1
+local.player wuss
+local.player stufftext "say *** I now have all weapons!!! ***"
+local.player playsound noise
+wait 1
+
+local.player.isTrigger2=0
+end
+

@@ -1,0 +1,42 @@
+main local.origin local.angles local.color1 local.radius1 local.color2 local.radius2 local.time local.flashes:
+
+exec global/aliascache_triggersounds.scr light_switch
+
+local.eswitch = spawn script_model
+local.eswitch model "animate/electrical_switch_nopulse.tik"
+local.eswitch.origin = local.origin
+local.eswitch.angles = local.angles + ( 0 180 0 )
+local.eswitch notsolid
+
+local.eswitchtrig = spawn trigger_use
+local.eswitchtrig.origin = local.eswitch.origin
+local.eswitchtrig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+local.eswitch anim off
+local.eswitchtrig waittill trigger
+local.eswitchtrig nottriggerable
+
+local.eswitch playsound light_switch
+local.eswitch anim turn
+local.eswitch anim waittill animdone
+local.eswitch anim on
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Toggling the alarms. ***")
+	
+	exec maps/UBER_mapscripts/tunnelbase_nazi.scr::alarmsound local.color1 local.radius1 local.color2 local.radius2 local.time local.flashes
+	wait local.time
+
+////////////////////////////////////////////////////////////////////////
+
+//wait 1
+local.eswitch playsound light_switch
+local.eswitch anim off
+
+local.eswitch remove
+local.eswitchtrig remove
+
+thread main local.origin local.angles local.color1 local.radius1 local.color2 local.radius2 local.time local.flashes
+end

@@ -1,0 +1,104 @@
+main local.origin local.angles local.wallclip local.barbwirewall local.rotatetime local.r local.g local.b local.triggeredonce: 
+													  // leave trigeredonce empty when using "exec" in main map script.
+exec global/aliascache_triggersounds.scr track_switch
+exec global/aliascache_triggersounds.scr training_gate
+
+local.tswitch = spawn script_model
+local.tswitch model "animate/trainswitch.tik"
+local.tswitch.origin = local.origin
+local.tswitch.angles = local.angles
+local.tswitch anim idle
+local.tswitch notsolid
+
+local.tswitchtrig = spawn trigger_use
+local.tswitchtrig.origin = local.tswitch.origin
+local.tswitchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+if(local.triggeredonce != 1) 
+{ 
+ local.tswitch model "animate/trainswitch_pulsating.tik"
+ local.tswitchtrig triggerable
+ local.tswitchtrig waittill trigger
+ local.tswitchtrig nottriggerable
+ local.tswitch.model = "animate/trainswitch.tik"
+}
+local.tswitch anim move
+local.tswitchtrig nottriggerable 
+
+local.random1 = randomint(2)
+if(local.random1 == 0) { local.tswitch playsound trackswitch1 }
+if(local.random1 == 1) { local.tswitch playsound trackswitch2 }
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.tswitchtrig message ("*** Lowering the barbwire wall. ***") 	
+
+	$(local.wallclip) notsolid
+	exec maps/training_mapscripts/tentwall_lasers.scr::off
+
+	$(local.barbwirewall) playsound closewoodgate // looks/sounds better if these playsounds are reversed
+	$(local.barbwirewall) time local.rotatetime
+	$(local.barbwirewall) rotatexup 175
+	$(local.barbwirewall) waitmove
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.tswitchtrig triggerable
+local.tswitchtrig waittill trigger
+local.tswitchtrig nottriggerable 
+
+	local.tswitchtrig message ("*** Raising the barbwire wall. ***") // this is meant for "tentwall_lasers.scr::on", but "raising" message must be placed back here in code.
+
+waitframe
+local.tswitch.angles = local.tswitch.angles + ( 0 180 0 )
+local.angles = local.tswitch.angles
+local.tswitch remove
+local.tswitchtrig remove
+
+local.tswitch = spawn script_model
+local.tswitch model "animate/trainswitch_pulsating.tik"
+local.tswitch.origin = local.origin
+local.tswitch.angles = local.angles
+local.tswitch anim idle
+local.tswitch notsolid
+
+local.tswitchtrig = spawn trigger_use
+local.tswitchtrig.origin = local.tswitch.origin
+local.tswitchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.tswitch anim move
+local.tswitchtrig nottriggerable 
+
+local.random2 = randomint(2)
+if(local.random2 == 0) { local.tswitch playsound trackswitch1 }
+if(local.random2 == 1) { local.tswitch playsound trackswitch2 }
+
+/////////////////////////////////////////////*** add code here ***//////
+
+	local.tswitchtrig message ("*** Lowering the barbwire wall. ***") // this is actually "raising" the barbwire wall, but for some reason "lowering" must be placed here
+									  // for the trigger to print the correct messages.	
+	$(local.wallclip) solid
+	exec maps/training_mapscripts/tentwall_lasers.scr::on local.rotatetime local.r local.g local.b
+
+	$(local.barbwirewall) playsound openwoodgate
+	$(local.barbwirewall) time local.rotatetime
+	$(local.barbwirewall) rotatexdown 175
+	$(local.barbwirewall) waitmove
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.tswitchtrig triggerable
+local.tswitchtrig waittill trigger
+local.tswitchtrig nottriggerable
+
+waitframe
+local.tswitch.angles = local.tswitch.angles + ( 0 -180 0 )
+local.angles = local.tswitch.angles
+local.tswitch remove
+local.tswitchtrig remove
+
+thread main local.origin local.angles local.wallclip local.barbwirewall local.rotatetime local.r local.g local.b 1 // set and keep triggeredonce = 1 after script's first run.
+end
+

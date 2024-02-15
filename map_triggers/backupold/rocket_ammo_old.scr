@@ -1,0 +1,122 @@
+main local.origin0 local.origin1 local.origin2 local.origin3 local.origin4 local.origin5 local.origin6 local.origin7 local.origin8 local.origin9:
+
+local.master = spawn ScriptMaster
+local.master aliascache bazooka_snd_pickup sound/weapons/foley/AmmoPUHeavy1.wav soundparms 1.3 0.2 0.8 0.2 160 1000 item loaded maps "m dm obj"
+local.master2 = spawn ScriptMaster
+local.master2 aliascache panzerschreck_snd_pickup sound/weapons/foley/AmmoPUHeavy1.wav soundparms 1.3 0.2 0.8 0.2 160 1000 item loaded maps "m dm obj"
+
+level.spot2[0] = ( local.origin0 ) + ( 0 0 15 ) 
+level.spot2[1] = ( local.origin1 ) + ( 0 0 15 )  
+level.spot2[2] = ( local.origin2 ) + ( 0 0 15 )   
+level.spot2[3] = ( local.origin3 ) + ( 0 0 15 ) 
+level.spot2[4] = ( local.origin4 ) + ( 0 0 15 ) 
+level.spot2[5] = ( local.origin5 ) + ( 0 0 15 ) 
+level.spot2[6] = ( local.origin6 ) + ( 0 0 15 ) 
+level.spot2[7] = ( local.origin7 ) + ( 0 0 15 ) 
+level.spot2[8] = ( local.origin8 ) + ( 0 0 15 ) 
+level.spot2[9] = ( local.origin9 ) + ( 0 0 15 ) 
+
+
+local.random = randomint(level.spot2.size )
+
+local.marker5 = spawn script_model
+local.marker5 model "weapons/bazooka.tik"
+local.marker5.origin = level.spot2[local.random] + ( 0 0 10 )
+local.marker5.angles = ( 0 0 0 )
+local.marker5 scale 0.9
+local.marker5 light .5 0 1 100
+local.marker5 notsolid
+local.marker5 time 15
+local.marker5 thread Rotatex
+
+local.marker6 = spawn script_model
+local.marker6 model "weapons/panzerschreck.tik"
+local.marker6.origin = level.spot2[local.random]
+local.marker6.angles = ( 0 0 0 )
+local.marker6 scale 0.9
+local.marker6 light 0 0 1 40
+local.marker6 notsolid
+local.marker6 time 15
+local.marker6 thread Rotatexx
+
+local.trig2 = spawn trigger_multiple 
+local.trig2.origin = level.spot2[local.random]
+local.trig2 setsize ( -10 -10 0 ) ( 10 10 40 ) 
+local.trig2 message "*** Spawned some rocket ammo, pick them up... ****"
+local.trig2 setthread health-start
+
+
+while(1)
+{
+	local.trig2 waittill trigger
+	local.marker5 hide
+	local.marker6 hide
+	local.trig2 nottriggerable
+	local.random = randomint(level.spot2.size ) 
+
+	local.marker5.origin = level.spot2[local.random]
+	local.marker6.origin = level.spot2[local.random]
+	local.trig2.origin = level.spot2[local.random]
+
+	wait 1
+	local.marker5 show
+	local.marker6 show
+	local.trig2 triggerable
+}
+end
+
+
+health-start:
+local.player = parm.other
+
+local.random2 = randomint(2)
+if(local.random2 == 0)
+{
+	local.object = spawn weapons/bazooka.tik
+	local.object.origin = local.player
+	local.object.angles = ( 270 0 0 )
+	local.object scale 1.5
+	local.object notsolid
+	local.player iprint "Randomized type: +1 Bazooka ammo spawned."
+}
+if(local.random2 == 1)
+{
+	local.object2 = spawn weapons/panzerschreck.tik
+	local.object2.origin = local.player
+	local.object2.angles = ( 270 0 0 )
+	local.object2 scale 1.5
+	local.object2 notsolid
+	local.player iprint "Randomized type: +1 Panzerschreck ammo spawned."
+}
+
+local.player stufftext "say *** Rocket Ammo Spot is on the move!!! ***"
+local.player playsound bazooka_snd_pickup
+local.player playsound panzerschreck_snd_pickup
+local.trig2 triggerable
+wait 5
+local.object remove
+local.object2 remove
+end 
+
+
+
+Rotatex:
+
+	while(self)
+	{
+		self.angles = (self.angles + ( 05 -03 07 ))
+		waitframe
+	}
+
+end
+
+Rotatexx:
+
+	while(self)
+	{
+		self.angles = (self.angles + ( -05 03 -07 ))
+		waitframe
+	}
+
+end
+ 

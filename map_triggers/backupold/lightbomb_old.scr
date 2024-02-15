@@ -1,0 +1,207 @@
+
+main local.origin:
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( local.origin )
+local.trig setsize ( -70 -70 -50 ) ( 70 70 50 )
+local.trig setthread boomerweenie
+local.trig message "*** You Got A Light Bomb! ***"
+local.trig wait 0
+local.trig delay 0
+
+local.rocket1 = spawn script_model 
+local.rocket1 model "emitters/electric_panelmelt.tik"
+local.rocket1.origin =  ( local.origin ) + ( 0 0 55 )
+local.rocket1.scale = 1.25
+local.rocket1 light 0 1 1 125
+local.rocket1 rotatey 50
+local.rocket1 time 10
+local.rocket1 notsolid
+end
+
+
+cheat:
+local.player=parm.other
+if(local.player.ischeats==1)
+end
+
+local.player.ischeats=0
+wait .5
+if(local.player.isfiredboomerweenie == 1)
+{
+local.laser21 remove
+local.laser22 remove
+local.thing remove
+local.thing2 remove
+local.thing3 remove
+local.player.isfiredboomerweenie=0
+local.player.istake=0
+}
+
+
+wait .5
+local.player.ischeats=1
+local.player respawn
+end
+
+boomerweenie:
+local.player=parm.other
+if(local.player.isfiredboomerweenie==1)
+end
+
+local.player.isfiredboomerweenie=1
+local.player iprint "**Press 'left/right-click' To Throw A Bomb!!**"
+local.player playsound plantbomb1
+
+huddraw_alpha 101 0
+huddraw_virtualsize 101 1
+huddraw_alpha 101 .8
+huddraw_font 101 "verdana-12"
+huddraw_color 101 0 .5 0
+huddraw_rect 101 -190 232 200 14 
+huddraw_string 101 "Light Bomb:   Equipped"
+
+
+	local.thing = spawn script_object
+	local.thing model fx/corona_red.tik
+	local.thing.scale = 0.7
+	local.thing attach local.player "tag_weapon_right"
+	local.thing2 = spawn script_object
+	local.thing2 model static/corona_util.tik
+	local.thing2.scale = 1
+	local.thing2 attach local.player "tag_weapon_right"
+	local.thing3 = spawn script_object
+	local.thing3 model fx/corona_orange.tik
+	local.thing3.scale = 0.35
+	local.thing3 attach local.player "tag_weapon_right"
+
+
+if ((isalive local.player) && (local.player.fireheld==1))
+local.player.counter = 1
+while ((isalive local.player) && (local.player.fireheld==0))
+wait .1
+
+
+if(local.player.dmteam == "spectator")
+{
+local.laser21 remove
+local.laser22 remove
+local.thing remove
+local.thing2 remove
+local.thing3 remove
+local.player.isfiredboomerweenie=0
+local.player.istake=0
+huddraw_string 101 ""
+}
+
+if(local.player.health <= 0)
+{
+local.laser21 remove
+local.laser22 remove
+local.thing remove
+local.thing2 remove
+local.thing3 remove
+local.player.isfiredboomerweenie=0
+local.player.istake=0
+huddraw_string 101 ""
+}
+
+if(local.player.isfiredboomerweenie==0)
+end
+
+
+local.groundtarget = spawn script_origin
+local.groundspot_target = spawn script_origin
+
+local.fwd_vec = angles_toforward local.player.viewangles
+local.start = local.player gettagposition "Bip01 Head"
+
+local.range = 20240
+huddraw_string 101 "Light Bomb:   Launched"
+
+local.groundtarget.origin = trace (local.start + local.fwd_vec * 64) (local.start + local.fwd_vec * local.range )
+
+			local.laser21 = spawn script_model 
+			local.laser21 model "static/corona_orange.tik" targetname "boomerweenie"
+			local.laser21.origin = local.start
+			local.laser21.angles = local.player.angles + ( 0 90 0 )
+			local.laser21.scale = 2
+			local.laser21 notsolid
+			local.laser21 light 0 1 0 100
+
+			local.laser22 = spawn script_model 
+			local.laser22 model "fx/corona_red.tik"
+			local.laser22.scale = 5
+			local.laser22.origin = local.laser21.origin
+			local.laser22 notsolid
+			local.laser22 light 0 0.8 0.8 250
+			local.laser22 glue local.laser21
+
+			local.laser23 = spawn script_model 
+			local.laser23 model "static/corona_util.tik"
+			local.laser23.scale = 7
+			local.laser23.origin = local.laser21.origin
+			local.laser23 notsolid
+			local.laser23 glue local.laser22
+
+
+local.thing remove
+local.thing2 remove
+local.thing3 remove
+
+	$boomerweenie physics_off
+
+local.showspot = 1
+
+local.laser21 playsound firetouch1
+local.laser21 loopsound fire_large
+local.laser22 loopsound fireplace //snd_b_zing9
+
+
+local.laser21 time 1
+local.laser21 moveto local.groundtarget.origin
+local.laser21 waitmove
+
+local.Exp21 = spawn "fx/tankshellexplosion.tik"
+local.Exp22 = spawn "animate/fx_mortar_water.tik"
+local.Exp21.origin = local.groundtarget.origin
+local.Exp21.scale = 1
+local.Exp21 light 0 1 0 350
+local.Exp21 anim start
+local.Exp22.origin = local.groundtarget.origin
+local.Exp22.scale = 1
+local.Exp22 light .5 1 0 350
+local.Exp22 anim start
+huddraw_string 101 "Light Bomb:   Exploded"
+wait .2
+local.Exp21 anim stop
+local.Exp22 anim stop
+local.Exp21 remove
+local.Exp22 remove
+
+
+
+local.laser21 stoploopsound
+local.laser22 stoploopsound
+local.laser21 remove
+local.laser22 remove
+local.laser23 remove
+huddraw_string 101 ""
+
+
+if((local.player isTouching local.Exp21) && (local.player.health <= 0))
+{
+
+}
+local.Exp21 anim stop
+local.Exp21 remove
+local.Exp22 anim stop
+local.Exp22 remove
+
+
+local.groundtarget remove
+local.groundspot_target remove
+wait .1
+
+local.player.isfiredboomerweenie=0
+end

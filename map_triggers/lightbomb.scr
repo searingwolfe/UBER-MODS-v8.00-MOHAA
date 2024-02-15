@@ -1,0 +1,372 @@
+main local.origin0 local.origin1 local.origin2 local.origin3 local.origin4 local.origin5 local.origin6 local.origin7 local.origin8 local.origin9:
+
+exec global/aliascache_triggersounds.scr lightbomb
+
+level.spot_lbomb[0] = ( local.origin0 ) + ( 0 0 50 )
+if(local.origin1 != NIL) { level.spot_lbomb[1] = ( local.origin1 ) + ( 0 0 50 ) }
+if(local.origin2 != NIL) { level.spot_lbomb[2] = ( local.origin2 ) + ( 0 0 50 ) }
+if(local.origin3 != NIL) { level.spot_lbomb[3] = ( local.origin3 ) + ( 0 0 50 ) }
+if(local.origin4 != NIL) { level.spot_lbomb[4] = ( local.origin4 ) + ( 0 0 50 ) }
+if(local.origin5 != NIL) { level.spot_lbomb[5] = ( local.origin5 ) + ( 0 0 50 ) }
+if(local.origin6 != NIL) { level.spot_lbomb[6] = ( local.origin6 ) + ( 0 0 50 ) }
+if(local.origin7 != NIL) { level.spot_lbomb[7] = ( local.origin7 ) + ( 0 0 50 ) }
+if(local.origin8 != NIL) { level.spot_lbomb[8] = ( local.origin8 ) + ( 0 0 50 ) }
+if(local.origin9 != NIL) { level.spot_lbomb[9] = ( local.origin9 ) + ( 0 0 50 ) }
+
+local.random = randomint(level.spot_lbomb.size )
+local.randomold = local.random
+
+local.trig = spawn trigger_use
+local.trig.origin = level.spot_lbomb[local.random]
+local.trig setsize ( -30 -30 -20 ) ( 30 30 50 )
+local.trig setthread boomerweenie
+//local.trig message "*** You Got A Light Bomb! ***"
+local.trig wait 0
+local.trig delay 0
+local.trig.pickedup = 0
+
+local.rocket1 = spawn script_model
+local.rocket1 model "emitters/electric_panelmelt.tik"
+local.rocket1.origin =  level.spot_lbomb[local.random]
+local.rocket1.scale = 1.25
+local.rocket1 light 0 0 1 55
+//local.rocket1 rotatey 50
+//local.rocket1 time 10
+local.rocket1 notsolid
+//local.rocket1 thread Rotatex
+
+level waittill spawn
+
+local.rocket1.targetname = ("lightbomb_weapon" + local.rocket1.entnum)
+exec global/flickerrotate.scr local.rocket1.targetname ( 0 0.75 0.75 ) 125 17 25 25
+
+while(1)
+{
+	local.trig waittill trigger
+	//local.rocket1 hide
+	local.trig nottriggerable
+
+	waitframe // allows local.trig.pickedup to update first
+	local.randomold = local.random
+	local.random = randomint(level.spot_lbomb.size ) 
+
+	if(local.randomold == local.random) { local.random = randomint(level.spot_lbomb.size)
+	if(local.randomold == local.random) { local.random = randomint(level.spot_lbomb.size) 
+	if(local.randomold == local.random) { local.random = randomint(level.spot_lbomb.size) 
+	if(local.randomold == local.random) { local.random = randomint(level.spot_lbomb.size) 
+	if(local.randomold == local.random) { local.random = randomint(level.spot_lbomb.size) 
+	} } } } }
+
+	if(local.trig.pickedup != 0)
+	{
+		local.rocket1.origin = level.spot_lbomb[local.random]
+		local.trig.origin = level.spot_lbomb[local.random]
+	}
+	local.trig.pickedup = 0
+	//local.rocket1 show
+	local.trig triggerable
+}
+end
+
+Rotatex:
+
+	while(self)
+	{
+		self.angles = (self.angles + ( 05 -03 07 ))
+		self light (randomfloat 10 / 100) (randomfloat 25 / 100 + 0.75) (randomfloat 25 / 100 + 0.75) 125
+		waitframe
+	}
+end
+
+boomerweenie:
+
+local.player=parm.other
+if(local.player.whileloop != 1) { local.player thread itemnotattached_fix }
+
+if(local.player.isfiredboomerweenie == 1 || local.player.dead == 1)
+{
+	if(local.player.dead != 1) { local.player iprint "Cannot pick up. You are holding something already." }
+	self.pickedup = 0
+	self message ""
+	end
+}
+
+self.pickedup = 1
+self message "*** You got a light bomb! ***"
+local.player.isfiredboomerweenie = 1
+local.player iprint "*** Hold USE + Right-click to throw a light bomb. ***"
+
+//local.player playsound plantbomb1
+local.random2 = randomint(5)
+if(local.random2 == 0) { local.player playsound lbpickup1 }
+if(local.random2 == 1) { local.player playsound lbpickup2 }
+if(local.random2 == 2) { local.player playsound lbpickup3 }
+if(local.random2 == 3) { local.player playsound lbpickup4 }
+if(local.random2 == 4) { local.player playsound lbpickup5 }
+
+ihuddraw_alpha local.player 101 0
+ihuddraw_virtualsize local.player 101 1
+ihuddraw_alpha local.player 101 .8
+ihuddraw_font local.player 101 "verdana-12"
+ihuddraw_color local.player 101 0 .85 .85
+ihuddraw_rect local.player 101 -200 232 200 14 
+ihuddraw_string local.player 101 "Light Bomb:   Equipped"
+
+	local.thing = spawn script_object
+	local.thing model fx/corona_red.tik
+	local.thing.scale = 0.175
+	local.thing attach local.player "Bip01 R Hand" //"tag_weapon_right"
+	local.thing2 = spawn script_object
+	local.thing2 model static/corona_util.tik
+	local.thing2.scale = 0.25
+	local.thing2 attach local.player "Bip01 R Hand" //"tag_weapon_right"
+	local.thing3 = spawn script_object
+	local.thing3 model static/corona_orange.tik
+	local.thing3.scale = 0.225
+	local.thing3 attach local.player "Bip01 R Hand" //"tag_weapon_right"
+
+local.team = local.player.dmteam
+while (isalive local.player && local.player.dmteam == local.team && (local.player.fireheld == 0 || local.player.useheld == 0 || local.player.placing_killstreak_old == 1))
+waitframe
+
+if(local.player == NULL) { end }
+if(local.player.dmteam != local.team || local.player.health <= 0)
+{
+//local.laser21 remove
+//local.laser22 remove
+local.thing remove
+local.thing2 remove
+local.thing3 remove
+local.player.isfiredboomerweenie = 0
+local.player.istake=0
+ihuddraw_string local.player 101 ""
+}
+
+if(local.player.isfiredboomerweenie == 0)
+end
+
+local.groundtarget = spawn script_origin //targetname "lightbombweap_groundtarget"
+local.groundspot_target = spawn script_origin //targetname "lightbombweap_groundspot_target"
+
+local.fwd_vec = angles_toforward local.player.viewangles
+local.start = local.player gettagposition "eyes bone"
+
+local.range = 20240
+ihuddraw_string local.player 101 "Light Bomb:   Launched"
+
+local.groundtarget.origin = trace (local.start + local.fwd_vec * 64) (local.start + local.fwd_vec * local.range )
+
+	if(local.fwd_vec[2] <= 0) { local.height = local.fwd_vec[2] * 60 }
+	if(local.fwd_vec[2] > 0) { local.height = 0 }
+
+	local.sin = (waitthread global/math.scr::sine local.player.angles[1]) * 25   // spawns bomb 25 units in front of player, to avoid collision with player's head.
+	local.cos = (waitthread global/math.scr::cosine local.player.angles[1]) * 25 // somehow "notsolid" doesn't fix that issue.
+
+	local.laser21 = spawn script_model
+	local.laser21 model "static/corona_orange.tik"
+	local.laser21.origin = local.start + ( local.cos local.sin 25 ) + ( 0 0 local.height )
+	local.laser21.angles = ( local.player.angles[0] 0 local.player.angles[2] ) // local.player.angles; models become mis-aligned at some yaw-angles, so player.angles[1] = 0 is used.         
+	local.laser21.scale = 2
+	local.laser21 notsolid
+	local.laser21 light 0 1 0 85
+
+	local.laser22 = spawn script_model
+	local.laser22 model "fx/corona_red.tik"
+	local.laser22.scale = 5
+	local.laser22.origin = local.laser21.origin
+	local.laser22.angles = local.player.angles // corona_reds are in the same place for all yaw-angles, unlike _orange and _util.
+	local.laser22 notsolid
+	local.laser22 light 0 0.8 0.8 250
+	local.laser22 glue local.laser21
+
+	local.laser23 = spawn script_model targetname ("lightbombweap" + local.player.entnum) // make sure these targetnames are different (for blowing up planes),
+	local.laser23 model "static/corona_util.tik"		      			      // then have a for-loop checking $player.size times for lightbombs.
+	local.laser23.scale = 7
+	local.laser23.origin = local.laser21.origin
+	local.laser23.angles = ( local.player.angles[0] 0 local.player.angles[2] )
+	local.laser23 notsolid
+	local.laser23 glue local.laser22
+	local.laser23 light 1 1 1 0.01
+	local.laser23 rendereffects "+viewlensflare"
+
+local.thing remove
+local.thing2 remove
+local.thing3 remove
+
+local.laser21 physics_off
+local.laser22 physics_off
+local.laser23 physics_off
+
+local.showspot = 1
+
+local.laser21 playsound fireplace1
+//local.laser21 loopsound fire_large
+//local.laser22 loopsound fireplace //snd_b_zing9
+local.laser21 loopsound river1
+
+	local.laser21 thread movestuck_fix local.groundtarget.origin local.laser21 local.laser22 local.laser23 local.groundtarget local.groundspot_target local.player
+
+local.originold = local.groundtarget.origin
+
+local.laser21 time 0.35 // if this is changed, make sure to also change local.n in the "movestuck_fix" thread.
+local.laser21 moveto local.groundtarget.origin
+local.laser21 waitmove
+
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
+	{									 // if $player[local.i] cansee local.laser21 360 was removed, since sometimes bomb can be partially inside a wall,
+		if(local.laser21 != NULL && vector_length(local.laser21.origin - $player[local.i].origin) < 325) // which now allows giant bombs to kill people through walls
+		{
+			if(local.player == NULL) { $player[local.i] volumedamage 10 }
+			if(local.player != NULL)
+			{
+				$player[local.i] damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but 300damage.tik does
+				if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			}
+		}
+	}
+	local.Exp21 = spawn "fx/300damage.tik" // also does 10 radiusdamage
+	if(local.blewup != 1) { local.Exp21 radiusdamage 0 }
+
+	local.Exp22 = spawn "animate/fx_mortar_water.tik"
+	local.Exp23 = spawn "emitters/fx_oceanspray.tik"
+	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
+	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
+	local.Exp21.scale = 1
+	local.Exp21 light 0 1 0 450
+	local.Exp21 anim start
+	if(local.groundtarget != NULL) { local.Exp22.origin = local.groundtarget.origin }
+	if(local.groundtarget == NULL) { local.Exp22.origin = local.originold }
+	local.Exp22.scale = 1
+	local.Exp22 light .5 1 0 350
+	local.Exp22 anim start
+	if(local.groundtarget != NULL) { local.Exp23.origin = local.groundtarget.origin + ( 0 0 35 ) }
+	if(local.groundtarget == NULL) { local.Exp23.origin = local.originold }
+	local.Exp23.scale = 1.2
+	local.Exp23 anim start
+	ihuddraw_string local.player 101 "Light Bomb:   Exploded"
+
+exec global/earthquake.scr .25 1 0 0
+wait 0.05
+local.Exp21 playsound artyexpwater1
+//local.Exp22 playsound grenade_exp_water2
+local.random2 = randomint(2)
+if(local.random2 == 0)
+{
+	local.Exp21 playsound water_explosion1
+      local.Exp22 playsound water_explosion11
+}
+if(local.random2 == 1)
+{
+	local.Exp21 playsound water_explosion2
+      local.Exp22 playsound water_explosion22
+}
+local.Exp23 playsound wavecrash
+waitframe
+
+local.player.isfiredboomerweenie=0
+ihuddraw_string local.player 101 ""
+
+if(local.Exp21 != NULL) { local.Exp21 remove }
+if(local.Exp22 != NULL) { local.Exp22 remove }
+if(local.Exp23 != NULL) { local.Exp23 remove }
+
+if(local.laser21 != NULL) { local.laser21 remove }
+if(local.laser22 != NULL) { local.laser22 remove }
+if(local.laser23 != NULL) { local.laser23 remove }
+
+if(local.groundtarget != NULL) { local.groundtarget remove }
+if(local.groundspot_target != NULL) { local.groundspot_target remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+itemnotattached_fix: // only fixes "isfiredboomerweenie" after player dies or changes team.
+
+	self.whileloop = 1
+	local.team = self.dmteam
+
+	while(isalive self && self.dmteam == local.team && self.dmteam != "spectator" && level.change_team_score != 1) { wait 0.1 }
+
+	if(self == NULL) { end }
+	self.isfiredboomerweenie = 0
+	self.whileloop = 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+movestuck_fix local.origin local.laser21 local.laser22 local.laser23 local.groundtarget local.groundspot_target local.player: 
+			    
+ local.n = 0			    // if bomb is fired at a tank entity, for example, sometimes the bomb will get stuck inside the tank and never blow up.
+
+ while(self != NULL && self.origin != local.origin) // when the bomb takes too long to explode, this thread forces the bomb to explode and reset the trigger.
+ {
+	if(local.n == 5) // 5 * (wait 0.1) = 0.5 seconds.
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
+		{
+			if(vector_length(local.laser21.origin - $player[local.i].origin) < 325 && $player[local.i] cansee local.laser21 360)
+			{
+				if(local.player != NULL) { $player[local.i] damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				if(local.player == NULL) { $player[local.i] volumedamage 10 }
+			}
+		}
+		local.Exp21 = spawn "fx/300damage.tik"
+		local.Exp22 = spawn "animate/fx_mortar_water.tik"
+		local.Exp23 = spawn "emitters/fx_oceanspray.tik"
+		local.Exp21.origin = self.origin // local.origin explodes bomb at groundspot origin, not at current bomb's origin (self).
+		local.Exp21.scale = 1
+		local.Exp21 light 0 1 0 450
+		local.Exp21 anim start
+		local.Exp22.origin = self.origin
+		local.Exp22.scale = 1
+		local.Exp22 light .5 1 0 350
+		local.Exp22 anim start
+		local.Exp23.origin = self.origin + ( 0 0 35 )
+		local.Exp23.scale = 1.2
+		local.Exp23 anim start
+		ihuddraw_string local.player 101 "Light Bomb:   Exploded"
+		
+		wait 0.05
+		local.Exp21 playsound artyexpwater1
+		//local.Exp22 playsound grenade_exp_water2
+		local.random2 = randomint(2)
+		if(local.random2 == 0)
+		{
+			local.Exp21 playsound water_explosion1
+		      local.Exp22 playsound water_explosion11
+			
+		}
+		if(local.random2 == 1)
+		{
+			local.Exp21 playsound water_explosion2
+		      local.Exp22 playsound water_explosion22
+		}
+		local.Exp23 playsound wavecrash
+		waitframe
+		
+		local.Exp21 anim stop
+		local.Exp22 anim stop
+		local.Exp23 anim stop
+		local.Exp21 remove
+		local.Exp22 remove
+		local.Exp23 remove
+
+		local.laser21 stoploopsound
+		local.laser22 stoploopsound
+		local.laser23 stoploopsound
+		local.laser21 remove
+		local.laser22 remove
+		local.laser23 remove
+		ihuddraw_string local.player 101 ""
+
+		local.groundtarget remove
+		local.groundspot_target remove
+		end 
+	}
+	if(local.n >= 5 || local.laser21.origin == NIL) { end } // run the n==5 if-statement only once, then end.
+							       // also end if $lightbombweap has been removed already.
+	local.n++
+ 	wait 0.1
+ }
+end

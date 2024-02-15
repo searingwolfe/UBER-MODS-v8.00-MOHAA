@@ -1,0 +1,57 @@
+main local.origin local.angles local.name local.name2:
+
+exec global/aliascache_triggersounds.scr alarm_switch
+
+local.switch = spawn script_model
+local.switch model "animate/alarmswitch.tik"
+local.switch.origin = local.origin
+local.switch.angles = local.angles
+local.switch notsolid
+
+local.switchtrig = spawn trigger_use
+local.switchtrig.origin = local.switch.origin
+local.switchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.switchtrig waittill trigger
+local.switchtrig nottriggerable
+local.switch anim turnon
+local.switch playsound alarmswitch
+
+if(local.name == NULL || local.name == "all") { level.flags[allspotlights] = 1 }
+else if(local.name == "all" && local.name2 == "rainbow") { level.flags[allspotlights_rainbow] = 1 }
+
+if(local.name2 != "rainbow")
+{
+	level.spotlight[local.name] = 1 
+
+	if(local.name != "all") { local.switchtrig message ("*** Randomizing a new spotlight color. ***") }
+	if(local.name == "all") { local.switchtrig message ("*** Randomizing a new spotlight color for all spotlights. ***") }
+	wait 1
+	local.switch anim turnoff
+	wait 1
+}
+if(local.name2 == "rainbow")
+{
+	level.spotlight_rainbow[local.name] = 1
+
+	if(local.name != "all") { local.switchtrig message ("*** Rainbow spotlight colors turned ON. ***") }
+	if(local.name == "all") { local.switchtrig message ("*** Rainbow spotlight colors turned ON for all spotlights. ***") }
+	local.player = parm.other
+	local.switchtrig triggerable
+
+	local.switchtrig waittill trigger
+	if(local.name != "all") { local.switchtrig message ("*** Rainbow spotlight colors turned OFF. ***") }
+	if(local.name == "all") { local.switchtrig message ("*** Rainbow spotlight colors turned OFF for all spotlights. ***") }
+	local.switchtrig nottriggerable
+
+	local.switch playsound alarmswitch
+	local.switch anim turnoff
+	level.spotlight_rainbow[local.name] = 0
+	wait 1
+}
+
+local.switch remove
+local.switchtrig remove
+
+thread main local.origin local.angles local.name local.name2
+end
