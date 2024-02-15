@@ -1,0 +1,224 @@
+main:
+	self thread plane_explode
+end
+
+plane_crashing:
+
+	if(self.plane == NIL || self.plane == NULL)
+	{
+		end
+	}
+
+	self.flying = 0
+	self thread plane_crash
+	local.plane = self.plane
+
+	local.flyingexplosion = spawn "models/emitters/fireandsmoke.tik"			
+	local.flyingexplosion glue self.plane
+	local.flyingexplosion.origin = self.plane.origin
+	if(self.plane.model == "models/vehicles/c47fly.tik") { local.flyingexplosion.scale = self.plane.scale * 2 }
+	else { local.flyingexplosion.scale = self.plane.scale }
+	local.flyingexplosion anim start
+	local.flyingexplosion notsolid
+
+	local.flyingsmoke = spawn "models/emitters/plane_smoke.tik"			
+	local.flyingsmoke glue self.plane
+	local.flyingsmoke.origin = self.plane.origin
+	if(self.plane.model == "models/vehicles/c47fly.tik") { local.flyingsmoke.scale = self.plane.scale * 2 }
+	else { local.flyingsmoke.scale = self.plane.scale }
+	local.flyingsmoke anim start
+	local.flyingsmoke notsolid
+
+	local.now = self.plane.angles[0]
+	local.end = local.now + 40
+
+	for(local.i=0;local.i<=45 ;local.i+=2)
+	{
+		waitframe
+		if(local.plane == NIL || local.plane == NULL)
+		{
+			break
+		}
+		else
+		{
+			local.plane.angles = ( local.i local.plane.angles[1] local.plane.angles[2] )
+		}
+	}
+
+	while(local.plane != NIL && local.plane != NULL) { waitframe }
+
+	local.flyingsmoke remove
+	local.flyingexplosion remove
+end	
+
+plane_crash:
+
+	local.plane = self.plane
+	local.scale = self.plane.scale
+
+	if(local.plane != NULL)
+	{
+		local.hitthing = self
+
+		while(local.hitthing == self || local.hitthing.targetname == "planebomb")
+		{
+			local.plane waittill touch
+			local.hitthing = parm.other
+		}
+		
+		if(self != NULL) { self thread plane_explode local.scale }
+		else { local.plane thread plane_explode_null }
+	}
+
+end	
+
+plane_explode local.scale:
+
+	self solid
+	local.plane = self.plane
+	local.entnum = self.entnum
+
+	if(self.plane != NIL && self.plane != NULL)
+	{
+		local.new_uberround = self.plane.new_uberround
+		local.origin = local.plane.origin 
+		self.plane explode
+		self.plane remove
+	}
+	else { local.origin = self.origin }
+
+	if(self.plane != NIL && self.plane != NULL && self.plane.model == "models/vehicles/c47fly.tik")
+	{
+		local.radius = 1000 * local.scale
+		local.expscale = 3.00 * local.scale
+	}
+	else
+	{
+		local.radius = 550 * local.scale
+		local.expscale = 1.50 * local.scale
+	}
+	if(local.expscale < 0.6) { local.expscale = 0.6 }
+
+	local.Exp = spawn "emitters/mortar_higgins.tik"
+	local.Exp.origin = local.origin
+	local.Exp.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.Exp light 1 0 1 local.radius
+	local.Exp anim start
+	local.Exp.scale = local.expscale
+	local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik"
+	local.Exp2.origin = local.origin
+	local.Exp2 anim start
+	local.Exp2.scale = local.expscale
+	
+	if(self.in_para_drop != 1 && local.new_uberround != 1)
+	{
+		self damage local.Exp2 15000 local.Exp2 (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1
+	}
+
+	exec global/earthquake.scr .35 2 0 0
+	radiusdamage local.origin 500 local.radius
+	local.Exp playsound artyexp_sand
+	local.Exp2 playsound explodeplane
+
+	local.Exp anim start
+	local.Exp2 anim start
+	wait 0.1
+	local.Exp remove	
+	local.Exp2 remove
+	
+	if(self != NULL) { self.flying = 0 }
+	if($("planehit" + local.entnum) != NULL) { $("planehit" + local.entnum) remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+plane_crashing_null:
+
+	self thread plane_crash_null
+
+	local.flyingexplosion = spawn "models/emitters/fireandsmoke.tik"			
+	local.flyingexplosion glue self
+	local.flyingexplosion.origin = self.origin
+	if(self.model == "models/vehicles/c47fly.tik") { local.flyingexplosion.scale = self.scale * 2 }
+	else { local.flyingexplosion.scale = self.scale }
+	local.flyingexplosion.scale = self.scale
+	local.flyingexplosion anim start
+	local.flyingexplosion notsolid
+
+	local.flyingsmoke = spawn "models/emitters/plane_smoke.tik"			
+	local.flyingsmoke glue self
+	local.flyingsmoke.origin = self.origin
+	if(self.model == "models/vehicles/c47fly.tik") { local.flyingsmoke.scale = self.scale * 2 }
+	else { local.flyingsmoke.scale = self.scale }
+	local.flyingsmoke.scale = self.scale
+	local.flyingsmoke anim start
+	local.flyingsmoke notsolid
+
+	local.now = self.angles[0]
+	local.end = local.now + 40
+
+	for(local.i=0;local.i<=45 ;local.i+=2)
+	{
+		waitframe
+		if(self==NULL)
+		{
+			break
+		}
+		else
+		{
+			self.angles = ( local.i self.angles[1] self.angles[2] )
+		}
+	}
+
+	while(self)
+	{
+		waitframe
+	}
+
+	local.flyingsmoke remove
+	local.flyingexplosion remove
+end	
+
+plane_crash_null:
+
+	self waittill touch
+	self thread plane_explode_null
+end	
+
+plane_explode_null:
+
+	local.origin = self.origin
+	local.scale = self.scale
+	local.model = self.model
+	self explode
+	self remove
+
+	if(local.model == "models/vehicles/c47fly.tik") { local.radius = 1000 * local.scale }
+	else { local.radius = 550 * local.scale }
+
+	if(local.model == "models/vehicles/c47fly.tik") { local.expscale = 3.00 * local.scale }
+	else { local.expscale = 1.50 * local.scale }
+	if(local.expscale < 0.6) { local.expscale = 0.6 }
+
+	local.Exp = spawn "emitters/mortar_higgins.tik"
+	local.Exp.origin = local.origin
+	local.Exp.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.Exp light 1 0 1 local.radius
+	local.Exp anim start
+	local.Exp.scale = local.expscale
+	local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik"
+	local.Exp2.origin = local.origin
+	local.Exp2 anim start
+	local.Exp2.scale = local.expscale
+
+	exec global/earthquake.scr .35 2 0 0
+	radiusdamage local.origin 500 local.radius
+	local.Exp playsound artyexp_sand
+	local.Exp2 playsound explodeplane
+
+	local.Exp anim start
+	local.Exp2 anim start
+	wait 0.1
+	local.Exp remove	
+	local.Exp2 remove
+end
