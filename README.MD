@@ -667,8 +667,8 @@ v7.93 (1-26-2023): - New killstreak added: Airstrikes. After 5 kills in a row, p
 - Place any script examples before "level waittill spawn". Change "kills" parameter as needed (number of kills in a killstreak, without dying or changing teams).
 - Additional level parameters such as "number of planes" (2 by default), number of bombs dropped (25 by default), and color & scale & alpha of lasers at top of this killstreak script.
 
-Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).
-Airstrike Example: exec killstreaks/airstrikes.scr 5 8
+		Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).
+		Airstrike Example: exec killstreaks/airstrikes.scr 5 8
 
 - M2L1 fully modded.
 
