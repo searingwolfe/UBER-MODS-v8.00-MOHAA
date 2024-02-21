@@ -10,6 +10,10 @@ This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run 
 
 #
 
+### Table of Contents
+
+[Essential CVARS for UBER MODS Servers](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-cvars-for-uber-mods-servers)
+
 # Essential CVARS for UBER MODS Servers
 
 This new CVAR allows for switching between the current 3 uber game modes (besides FFA or TDM) before loading a new map.<br>
