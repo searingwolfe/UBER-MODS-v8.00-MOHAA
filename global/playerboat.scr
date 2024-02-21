@@ -118,6 +118,7 @@ triggered:
 
 	local.player = parm.other
 	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { end }
+
 	if(self.vehicle != NULL)
 	{
 		if(self.vehicle.driver != NIL && self.vehicle.passengers.size < self.vehicle.seats)
@@ -153,13 +154,13 @@ playergetin:
 	self.driver notsolid
 	if(self.model == "models/vehicles/uboat.tik")
 	{
-		self.driver iprint ("Lean Left/Right = look behind. Hold USE = exit.")
+		self.driver iprint ("Lean Left/Right = look behind. Hold USE(e) = exit.")
 		self.driver iprint ("FIRE Primary = shoot rockets. FIRE Secondary = throw grenades.")
 	}
 	else
 	{
 		self.driver iprint ("Lean Left/Right = look left/right.")
-		self.driver iprint ("Hold USE = exit. Hold FIRE = look behind.")
+		self.driver iprint ("Hold USE(e) = exit. Hold FIRE = look behind.")
 	}
 
 	self attachdriverslot 0 self.driver
@@ -177,7 +178,7 @@ playergetin:
 		{
 			self.driver.viewangles = ( 10 self.angles[1] 0 )
 	
-			if(local.holdtime >= 20) // hold USE for 1 second.
+			if(local.holdtime >= 20) // hold USE(e) for 1 second.
 			{
 				self thread driverreset
 				self thread vehiclereset
@@ -447,11 +448,11 @@ passengers:
 
 	local.player forcelegsstate STAND
 	//local.player hide
-	local.player noclip
-	local.player nodamage
-	local.player notsolid
+	//local.player noclip
+	//local.player nodamage
+	//local.player notsolid
 	local.player iprint ("Hold FIRE = look around.")
-	local.player iprint ("Hold USE = exit vehicle.")
+	local.player iprint ("Hold USE(e) = exit vehicle.")
 	local.player.origin = self.origin
 	local.player.passenger = 1
 	local.PI = 3.14159265359
@@ -497,12 +498,12 @@ passengers:
 			}
 			else { local.player.velocity = ( 0 0 0 ) }
 	
-			if(local.holdtime >= 20) // hold USE for 1 second.
+			if(local.holdtime >= 20) // hold USE(e) for 1 second.
 			{
 				if(local.player.isdog != 1) { local.player show }
 				local.player solid
 				local.player takedamage
-				local.player noclip
+				//local.player noclip
 				local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) ) // using player's origin might prevent passengers getting stuck inside each other
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
@@ -527,7 +528,7 @@ passengers:
 			if(local.player.isdog != 1) { local.player show }
 			local.player solid
 			local.player takedamage
-			local.player noclip
+			//local.player noclip
 			if(local.player.dmteam == local.team) // if the passenger did not switch teams
 			{
 				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units

@@ -174,11 +174,12 @@ triggered:
 
 	local.player = parm.other
 	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { end }
+
 	if(self.vehicle != NULL)
 	{
-		if(self.vehicle.driver != NIL && (self.vehicle.turretplayer == NIL || self.vehicle.turretplayer == NULL))
+		if(self.vehicle.driver != NIL)
 		{
-			if(self.vehicle.gun != NIL && self.vehicle.gun != NULL) { self.vehicle thread turretslot local.player; end }
+			if(self.vehicle.gun != NIL && self.vehicle.gun != NULL && (self.vehicle.turretplayer == NIL || self.vehicle.turretplayer == NULL)) { self.vehicle thread turretslot local.player; end }
 			if(self.vehicle.passengers.size < self.vehicle.seats) { self.vehicle thread passengers }
 		}
 		if(self.vehicle.driver == NIL)
@@ -211,7 +212,7 @@ playergetin:
 	if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
 	if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
 	if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn.") }
-	self.driver iprint ("Hold USE = exit, hold FIRE = rear-view mirror.")
+	self.driver iprint ("Hold USE(e) = exit, hold FIRE = rear-view mirror.")
 
 	self attachdriverslot 0 self.driver //attachpassengerslot //attachturretslot
 	self thread dummyavatar
@@ -227,7 +228,7 @@ playergetin:
 		{
 			self.driver.viewangles = ( 10 self.angles[1] 0 )
 
-			if(local.holdtime >= 20) // hold USE for 1 second.
+			if(local.holdtime >= 20) // hold USE(e) for 1 second.
 			{
 				self thread driverreset
 				self thread vehiclereset
@@ -635,11 +636,11 @@ passengers:
 
 	local.player forcelegsstate STAND
 	//local.player hide
-	local.player noclip
-	local.player nodamage
-	local.player notsolid
+	//local.player noclip
+	//local.player nodamage
+	//local.player notsolid
 	local.player iprint ("Hold FIRE = look around.")
-	local.player iprint ("Hold USE = exit vehicle.")
+	local.player iprint ("Hold USE(e) = exit vehicle.")
 	local.player.origin = self.origin
 	local.player.passenger = 1
 	local.PI = 3.14159265359
@@ -685,13 +686,22 @@ passengers:
 			}
 			else { local.player.velocity = ( 0 0 0 ) }
 	
-			if(local.holdtime >= 20) // hold USE for 1 second.
+			if(local.holdtime >= 20) // hold USE(e) for 1 second.
 			{
 				if(local.player.isdog != 1) { local.player show }
 				local.player solid
 				local.player takedamage
-				local.player noclip
-				local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) ) // using player's origin might prevent passengers getting stuck inside each other
+				//local.player noclip
+				if(self != NULL && self.model == "models/vehicles/jeep.tik" && self.turretplayer != NIL && self.turretplayer != NULL)
+				{
+					local.sin = local.sin / local.distoffset * 25 // prevent passengers exiting a jeep from getting stuck inside a turretplayer
+					local.cos = local.cos / local.distoffset * 25
+					local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )		
+				}
+				else  // using player's origin might prevent passengers getting stuck inside each other
+				{
+					local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) )
+				}
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
 				local.player thread wallstuck_fix
@@ -715,7 +725,7 @@ passengers:
 			if(local.player.isdog != 1) { local.player show }
 			local.player solid
 			local.player takedamage
-			local.player noclip
+			//local.player noclip
 			if(local.player.dmteam == local.team) // if the passenger did not switch teams
 			{
 				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units

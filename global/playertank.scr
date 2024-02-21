@@ -165,21 +165,22 @@ end
 
 triggered:
 
-	self nottriggerable
 	local.player = parm.other
 	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { self triggerable; end }
-	if(local.player.isdog == 1)
+
+	if(self.tank != NULL)
 	{
-		local.player iprint ("Dogs cannot drive tanks.") // set other exceptions here
-		self triggerable
-		end
+		if(self.tank.driver != NIL)
+		{
+			if(self.tank.gun2 != NIL && self.tank.gun2 != NULL && (self.tank.turretplayer == NIL || self.tank.turretplayer == NULL)) { self.tank thread turretslot_2nd local.player; end }
+			//if(self.tank.passengers.size < self.tank.seats) { self.tank thread passengers } // no passenger seats on tanks
+		}
+		if(self.tank.driver == NIL)
+		{
+			if(local.player.isdog != 1) { self.tank thread playergetin }
+			if(local.player.isdog == 1) { local.player iprint ("Dogs cannot drive vehicles.") } // set other exceptions here
+		}
 	}
-	if(self.tank != NULL && (self.tank.turretplayer == NIL || self.tank.turretplayer == NULL))
-	{
-		if(self.tank.driver != NIL && self.tank.driver != NULL && self.tank.gun2 != NIL && self.tank.gun2 != NULL) { self.tank thread turretslot_2nd local.player }
-		if(self.tank.driver == NIL || self.tank.driver == NULL) { self.tank thread playergetin }
-	}
-	self triggerable
 end
 
 playergetin:
@@ -199,7 +200,7 @@ playergetin:
 	self.driver hide
 	self.driver nodamage
 	self.driver notsolid
-	self.driver iprint ("*** Hold USE for 1 second to exit the tank.*** ")
+	self.driver iprint ("*** Hold USE(e) for 1 second to exit the tank.*** ")
 
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
@@ -217,7 +218,7 @@ playergetin:
 
 		while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.useheld == 1 && self.driver.dead != 1 && level.change_team_score != 1)
 		{
-			if(local.holdtime >= 20) // hold USE for 1 second.
+			if(local.holdtime >= 20) // hold USE(e) for 1 second.
 			{
 				self thread driverreset
 				self thread tankreset local.groundtarget
