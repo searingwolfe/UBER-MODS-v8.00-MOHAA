@@ -1,4 +1,4 @@
-*Current Version: 7.93 - Updated: 1/26/2024*
+*Current Version: 7.94 - Updated: 2/21/2024*
 
 # How To Install / Uninstall
 
@@ -167,8 +167,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 | exec cvars/cybsnd.scr      | "cybsnd_score 1" | print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won). |
 |       | "cybsnd_info 1" | print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance. |
 |       | "cybsnd_debug 1" | print once per second the Allies/Axis team count (living players) and Allies/Axis team total. If these values are inaccurate, then the mod has broken somehow (wait for the next the round, or reload the map). |
-| exec cvars/coord_pointer.scr      | "coord_pointer 27" | "g_ubergametype bb" = Base-Builder gametype. |
-|       | "coord_pointer Searingwolfe" |  |
+| exec cvars/coord_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console). Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places. |
 | exec cvars/ubergametype.scr      | "g_ubergametype bb" | "g_ubergametype bb" = Base-Builder gametype. |
 |       | "g_ubergametype cyb" | Cyber Attack gametype. |
 |       | "g_ubergametype snd" | Search & Destroy gametype. |
@@ -473,16 +472,17 @@ velocity of additional mines spawned, bullet damage for sentry turrets, turret l
 - Place any script examples before "level waittill spawn". Change coords & angles as needed.
 
 - Available drivable tanks: kingtank, panzer_tank, panzer_tank_europe. (tigertank & tigertankdsrt cannot be driven, since turret model completely blocks player's screen).
-- Available drivable boats: higginsxtrahull (higgins boats).
+- Available drivable boats: higginsxtrahull (higgins boats), uboat.
 - Available drivable vehicles: bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
 gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
 
 - Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All):
 - 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats.
 
-- For drivable vehicles: Hold FIRE = look behind, Hold USE for 1 second = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
-- For drivable tanks: Press FIRE = shoot turret, Hold USE for 1 second = exit.
-- For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Hold USE for 1 second = exit.
+- For drivable vehicles: Hold FIRE = look behind, Hold USE(e) for 1 second = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
+- For drivable tanks: Press FIRE = shoot turret, Hold USE(e) for 1 second = exit.
+- For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Hold USE(e) for 1 second = exit.
+- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Hold USE(e) for 1 second = exit, Lean Left/Right = look behind.
 
 - Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
 - Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
@@ -493,8 +493,9 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 		Vehicle Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, initial headlights (0 = off, 1 = on), no headlights (1 = keep them off).<br>
 		Vehicle Example: exec global/playervehicle.scr jeep vehicles/jeep.tik ( -2541 2297 -255 ) ( 0 40 0 ) 250 400 45 1
 
-		Boat Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time.<br>
-		Boat Example: exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( -6415 -3016 -380 ) ( 0 173.5 0 ) 250 250 45
+		Boat Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, boat scale.<br>
+		Boat Example (a): exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( -6415 -3016 -380 ) ( 0 173.5 0 ) 250 250 45
+		Boat Example (b): exec global/playerboat.scr boat2 vehicles/uboat.tik ( -913 3598 -400 ) ( 0 -90 0 ) 250 40 45 1.0
 
 ---------------
 
@@ -527,7 +528,7 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C.
 
 ---------------
 
@@ -596,11 +597,8 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - NOTE: Tank treads should be roughly horizontal before going onto the laser road, otherwise the tank could fly up into the sky and explode!
 - NOTE: Players driving some vehicles with windshields (such as mercedes), cannot see any lasers through the windshield.
 
-- Player spawns added and distributed more widely across the Allies/Axis spawns (none near the big building).
-- Invisible walls block prevent any players or projectiles from going under the map or going behind rock cliffs and shooting through them.
 - Some teles allow players to stand on rock cliffs or platforms on top of large rocks, to shoot players from high above them.
 - Alarm switches in the dead-end halls behind the openable doors each blow up a bangalore outside the door.
-- Cyber Attack and Search & Destroy bombs and bombsites added to the map. Base-Builder Allies/Axis labels fixed in the map script.
 
 - New airstrikes script (global/bomberplane.scr) simplifies adding them into maps. Only a splinepath is needed; bomb drop coords are automated and drop closer to splinepath's central line.
 - Parameters: path targetname, team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike).
@@ -647,6 +645,7 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - The light house fence has a vehicle teleporter allowing vehicles to go through the fence. Be careful not to drive facing the cliff edge.
 - Any vehicles that accidentally fall off the cliff will be destroyed.
 
+- Elevator script reworked to operate much faster. Teles added above and below the elevator to escape if trapped in the shaft.
 - Minen (entmint) bombs on the top-floor Allies spawn can be blown up with grenades.
 - Looping sounds added to all transformers and the red HVAC machine in Allies spawn; transformers can also be destroyed.
 - Toilets can be flushed in Allies spawn, and the dripping water spigot (bucket near it) can be turned on/off.
@@ -654,8 +653,8 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - Static opeltrucks in the bottom-floor Allies spawn can be turned on/off. While on, hold USE for 1 second to honk horn; hold USE for 1-2 seconds to turn on/off headlights.
 - The lighthouse can be turned on/off with the train switch in Axis spawn.
 
-- Elevator script reworked to operate much faster. Teles added above and below the elevator to escape if trapped in the shaft.
 - Some teles allow players to stand on rock cliffs or platforms on top of large rocks, to shoot players from high above them.
+- Bombsites in Search & Destroy will move closer to defending team's spawn each time the gamemode changes sides (when "level.changesides" changes).
 
 ---------------
 
@@ -663,8 +662,8 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - 5 bangalore wallbombs: 1 in Allies spawn, 2 in main center building, and 2 in Axis spawn. Airstrikes launch randomly between 90 and 180 seconds.
 - These airstrikes use global/bomberplane_nospline.scr and require level.bomberplane_map_setsizes to be defined before running these threads, since origin & angles are randomized per airstrike.
 
-	level.bomberplane_map_setsize1 = ( -6935 -4375 0 )	// just like a .tik file, adjust these map_setsizes so the planes aren't dropping bombs outside of the map (also includes skybox height).
-	level.bomberplane_map_setsize2 = ( 5935 7415 2100 )	// start at ( 0 0 0 ) on the map. setsize1 must have - numbers, and setsize2 must have + numbers.
+		level.bomberplane_map_setsize1 = ( -6935 -4375 0 )	// just like a .tik file, adjust these map_setsizes so the planes aren't dropping bombs outside of the map (also includes skybox height).
+		level.bomberplane_map_setsize2 = ( 5935 7415 2100 )	// start at ( 0 0 0 ) on the map. setsize1 must have - numbers, and setsize2 must have + numbers.
 
 - The flat snow-covered cliff behind the main middle building can be driven/walked on, as well as the higher cliff next to the Allies spawn.
 - Vehicle teles allow tanks/vehicles to travel across the middle fence and on top of the flat snow-covered cliff.
@@ -673,6 +672,67 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 - Various looping sounds added inside the buildings for airvents, humming transformers, etc. The paper documents can be blown up with a grenade. 
 - The large generator in the 2nd floor main building can be turned on/off with a nearby electrical switch. 3 radios across the map can also be turned on/off to play static or music.
+
+---------------
+
+- M2L2A fully modded. 3 flyable planes, 4 higgins boats, 4 uboats, 3 jetpacks, 2 flak88s, 1 nebelwerfer, 1 tank and 3 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
+- 6 bangalore wallbombs mostly in Allies spawn; 2 of these alarm switches keep a nearby red light on until the switches have reset. Airstrikes are not included in this level, since half of the level is inside.
+
+- Drivable uboats added into global/playerboat.scr. Similar to drivable higgins boats, the uboats have 5 extra passenger seats that allow passengers to stand on the uboat's upper platforms.
+- Uboat drivers can press Primary FIRE to shoot a large tank shell projectile in a horizontal line, or press Secondary FIRE to throw grenades in front of the uboat. These projectiles will not hurt teammates.
+
+		Uboat Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, boat scale.
+		Uboat Example: exec global/playerboat.scr boat2 vehicles/uboat.tik ( -913 3598 -400 ) ( 0 -90 0 ) 250 40 45 1.0
+
+- A vehicle tele (thick red lasers) allows vehicles to travel through the metal doors that separate the Allies spawn and uboat area, instead of using the single door near the ocean.
+- NOTE: The walls on maps M2L2A, M2L2B, M2L2C are glitchier than normal for vehicles. Driving at an angle into walls will get vehicles stuck inside them (if player exits the vehicle inside a wall, they will auto-respawn after 3 seconds).
+
+- The naxos prototype in the scientists' room can be blown up with grenades.
+- The crane's loopsound is louder. A spotlight is mounted on the outer wall of the crane's metal basket, with nearby tele to enter/exit this basket.
+- The airtanks in the bottom-floor Alies spawn can be turned on/off. Sound entities added to 6 air vents.
+
+- Red and green lasers added to the rooftops near the ocean, indicating solid walls (green) and roof-edges that players can jump off from (red).
+
+---------------
+
+- M2L2B fully modded. 4 flyable planes, 4 higgins boats, 4 uboats, 4 jetpacks, 1 flak88, 1 nebelwerfer, 1 tank and 3 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
+- 4 bangalore wallbombs, 2 inside the uboat sub, and 2 between other uboat docks. 1 set of bangalore wallbombs triggered via detonator on top of the uboat sub. Airstrikes are not included in this level.
+
+- A vehicle tele allows vehicles to travel through a metal gate to a normally inaccessable uboat dock.
+
+- Numerous sound entities added inside the uboat sub: air vents, generators, transformers, water dripping near the toilet. Press USE(e) near the toilet to flush it. Sound entities added to 3 air vents outside the sub.
+- Two radios in the uboat sub can also play music by pressing USE(e) a few times.
+
+- Red and green lasers added to the rooftops near the ocean, indicating solid walls (green) and roof-edges that players can jump off from (red).
+
+---------------
+
+- M2l2C fully modded. 4 flyable planes, 5 higgins boats, 4 uboats, 5 jetpacks, 2 flak88s, 2 nebelwerfers, 1 tank and 6 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
+- 3 bangalore wallbombs, 2 in Axis spawn, 1 in Allies spawn. 2 sets of bangalore wallbombs triggered via detonator on top of both uboat subs. Airstrikes are not included in this level.
+
+- A vehicle tele allows vehicles to travel through a metal gate to a normally inaccessable uboat dock.
+- Another vehicle tele allows travel between the large white platform in the ocean and the roomy garage behind the Axis spawn. Vehicles can travel through the adjacent metal fence without teleporting.
+- These are the best, most portable versions of vehicle teles. Parameters allow for any array size of lasers, teleporting alignment along X or Y axis, and teleporting speed
+
+		Parameters: origin, setsize 1, setsize 2, laser array, teleporting alignment (NIL = none, 0 = 0-180 axis, 1 = 90-270 axis), vehicle height after teleporting (default/NIL = 0), teleporting speed (default/NIL = 25).
+
+		Example: thread vehicle_tele ( 4193 -1119 -511 ) ( -222 -680 -10 ) ( 222 680 355 ) local.lasers 1 0 50
+
+		local.lasers[1] = thread spawnlaser ( -1507 -6227 -511 ) ( -1507 -6227 -262 ) ( 1 0 0 ) 3 // origin, endpoint, initial color, scale
+		local.lasers[2] = thread spawnlaser ( -1507 -6224 -259 ) ( -1507 -6464 -259 ) ( 1 0 0 ) 3
+		local.lasers[3] = thread spawnlaser ( -1507 -6461 -262 ) ( -1507 -6461 -511 ) ( 1 0 0 ) 3
+		thread vehicle_tele ( -1502 -6344 -511 ) ( -30 -115 -10 ) ( 30 115 200 ) local.lasers 0
+
+- 4 ladders added to the 2 docked uboats for players to climb up/down them. Players must be looking directly at ladder, and must be looking up/down more than 30 degrees to climb these ladders.
+- Adjust the "offset" parameter if desired, or if player is getting stuck on stuff while climbing the ladder.
+
+		Parameters: origin, angle for players to attach, ladder setsize1, ladder setsize2, optional offset distance away from ladder (lower = players hands closer to ladder, higher = further away, default = 14). If > 18, players cannot climb the ladder.
+
+		Example: exec global/spawnladder.scr ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 )
+		Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 ) 10
+
+- Sound entities added to 12 air vents throughout the uboat docks. Tranformer and red HVAC sounds added in Axis spawn. 3 more air vent sounds added in the vents above the Axis spawn.
+- Red and green lasers added to the rooftops near the ocean, indicating solid walls (green) and roof-edges that players can jump off from (red).
 
 ---------------
 
