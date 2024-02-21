@@ -601,9 +601,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - Alarm switches in the dead-end halls behind the openable doors each blow up a bangalore outside the door.
 
 - New airstrikes script (global/bomberplane.scr) simplifies adding them into maps. Only a splinepath is needed; bomb drop coords are automated and drop closer to splinepath's central line.
-- Parameters: path targetname, team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike).
-- Example: exec global/bomberplane.scr bomberpath allies 2 150 0 16 3.2
-- Example: exec global/bomberplane.scr bomberpath allies 2 150 1
+		Parameters: path targetname, team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike).
+		Example: exec global/bomberplane.scr bomberpath allies 2 150 0 16 3.2
+		Example: exec global/bomberplane.scr bomberpath allies 2 150 1
 
 - level.bomberplane_health = 200     // these are defaults set inside global/bomberplane.scr
 - level.bomberplane_bombspeed = 0.25 // speed multiplier; higher = bombs drop horizontally further away from plane's splinepath (default = 0.5)
