@@ -391,7 +391,9 @@ rocket local.pos:
 	local.shell notsolid //if they are solid when they hit things like tanks or anyhting that gets in the way it makes bashes it out the way
 	local.shell scale .5
 
-	local.shell speed 2000
+	local.speed = sqrt (self.plane.velocity[0] * self.plane.velocity[0] + self.plane.velocity[1] * self.plane.velocity[1] + self.plane.velocity[2] * self.plane.velocity[2])
+	local.shell speed (2000 + local.speed)
+
 	local.shell moveto local.pos
 	local.shell waitmove	
 	self thread explode local.shell.origin local.shell

@@ -109,7 +109,9 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 		local.vehicle attachmodel models/vehicles/sdkfz_shield.tik "Box02" 1 ("shielddummy_" + local.vehicle.entnum) 1 -1 -1 -1 -1 ( -42 106 4.25 ) //( +backward -forward, +up -down, +left -right )
 		$("shielddummy_" + local.vehicle.entnum).angles = ( 180 0 -90 )
 	}
-*/
+*/										// "local.player.touching_playervehicle" or "$player[1].touching_playervehicle" can be included in trigger setthreads
+	if(level.touching_playervehicle != 1) { thread touching_playervehicle }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
+
 	if(level.remove_viewmodels != 1) { thread remove_viewmodels }
 	level.remove_viewmodels = 1
 end
@@ -138,7 +140,8 @@ vehiclereset: // vehicle animations must be set each time a new vehicle spawns (
 		self thread illuminate "right"
 	}
 	self thread healthboost
-	removeclass Camera
+	//removeclass Camera // also removes PlayerIntermission and other func_cameras
+	if(level.removeclass_camera != 1) { thread removeclass_camera }
 end
 
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
@@ -216,12 +219,14 @@ playergetin:
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
 		local.holdtime = 0
-		self.driver.viewangles = ( 10 self.angles[1] 0 )
+		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
 
 		while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.useheld == 1 && self.driver.dead != 1 && level.change_team_score != 1)
 		{
 			self.driver.viewangles = ( 10 self.angles[1] 0 )
-	
+
 			if(local.holdtime >= 20) // hold USE for 1 second.
 			{
 				self thread driverreset
@@ -256,8 +261,8 @@ playergetin:
 
 			if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind)
 			{
-				if(self.driver.viewangles[1] == self.angles[1] + 180) { self.velocity = self.velocity + self.forwardvector * self.vehiclespeed * -1 }
-				else { self.velocity = self.velocity + self.forwardvector * self.vehiclespeed } // make vehicles drive faster, only when holding W (forward key)
+				if(self.driver.driving_state_backward == 1) { self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -1 }
+				else { self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed } // make vehicles drive faster, only when holding W (forward key)
 			}
 		}
 		waitframe
@@ -290,12 +295,14 @@ driverreset local.status:
 	if(local.status != 1) { cueplayer }				// reattaches camera to player's head
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
+	self.driver forcetorsostate STAND
 
 	if(self.driver.dmteam != spectator)
 	{
 		self.driver show
 		self.driver solid
 		self.driver takedamage
+		self.driver forcetorsostate STAND
 		if(local.status != 1 && local.status != 2)
 		{
 			if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/bmwbike.tik") { self.driver.origin = self.origin + ( 0 0 100 ) }
@@ -493,6 +500,8 @@ turretslot local.player:
 	self.turretplayer = local.player
 	self.turretplayer.passenger = 1
 	self.turretplayer.remove_viewmodel = 0
+	self.turretplayer forcetorsostate TURRET_START
+
 	self unlock
 	self.gun unlock
 	self attachturretslot 0 local.player
@@ -547,6 +556,7 @@ turretplayer_reset local.team local.player:
 	local.player.scale = 1
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
+	local.player forcetorsostate STAND
 
 	if(isalive local.player && local.player.dmteam != "spectator")
 	{
@@ -650,7 +660,11 @@ passengers:
 			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
 			else { local.player.viewangles = self.angles }
 		}
-		if(self.velocity != ( 0 0 0 )) { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed } // keep passengers inside the vehicles
+		if(self.velocity != ( 0 0 0 ))
+		{
+			if(self.driver.driving_state_backward == 1) { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed * -1 }
+			else { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed } // keep passengers inside the vehicles
+		}
 		else { local.player.velocity = ( 0 0 0 ) }
 
 		while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && local.player.useheld == 1)
@@ -664,7 +678,11 @@ passengers:
 			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
 			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) }
 			else { local.player.viewangles = self.angles }
-			if(self.velocity != ( 0 0 0 )) { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed }
+			if(self.velocity != ( 0 0 0 ))
+			{
+				if(self.driver.driving_state_backward == 1) { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed * -1 }
+				else { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed } // keep passengers inside the vehicles
+			}
 			else { local.player.velocity = ( 0 0 0 ) }
 	
 			if(local.holdtime >= 20) // hold USE for 1 second.
@@ -1150,6 +1168,69 @@ wallstuck_fix:
 		waitframe
 	}
 	if(self != NULL) { self.wallstuck_fixing = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+touching_playervehicle local.vehicles:
+
+	level.touching_playervehicle = 1
+
+	if(local.vehicles == NIL) // only run once when map starts. leave local.vehicles = NIL or empty at first.
+	{
+		local.a = 0
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == DrivableVehicle && local.entity.model == "models/vehicles/higginsxtrahull.tik")
+			{
+				local.vehicles[local.a] = local.entity.targetname
+				local.a++
+			}
+			if(local.e % 14 == 0) { waitframe }
+		}
+		if(local.vehicles.size < 1) { end }
+	}
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			$player[local.i].touching_playervehicle = 0 // ensures that only one boat needs to be touched for touching_playervehicle = 1.
+		}
+
+		for(local.a = 0; local.a <= local.vehicles.size; local.a++)
+		{
+			for(local.s = 1; $(local.vehicles[local.a]) != NULL && local.s <= $(local.vehicles[local.a]).size; local.s++) // sometimes, two vehicles with the same targetname can exist
+			{													// for 1 or 2 frames. this for-loop prevents any console errors.
+				for(local.i = 1; local.i <= $player.size; local.i++)
+				{
+					if($player[local.i] istouching $(local.vehicles[local.a])[local.s]) { $player[local.i].touching_playervehicle = 1 }
+				}
+			}
+		}
+		waitframe
+	}
+
+	thread touching_playervehicle local.vehicles
+end
+
+////////////////////////////////////////////////////////////////////////
+
+removeclass_camera:
+
+	level.removeclass_camera = 1
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == "Camera" && local.entity.targetname == "") { local.entity remove }
+			waitframe
+		}
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

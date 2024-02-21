@@ -488,9 +488,12 @@ get_movement:
 				waitframe
 				waitframe 
 				waitframe
-				if(self != NULL) { local.position = self getposition }
-				if(local.position == offground) { self.dog_anim = dog_leap } // crouching, but still falls.
-				else if(local.position == crouching && local.movement == standing) { self.dog_anim = dog_rest }
+				if(self != NULL)
+				{
+					local.position = self getposition
+					if(local.position == offground) { self.dog_anim = dog_leap } // crouching, but still falls.
+					else if(local.position == crouching && local.movement == standing) { self.dog_anim = dog_rest }
+				}
 			}
 
 			if(self != NULL && !isalive self)
@@ -513,7 +516,7 @@ get_movement:
 				end
 			}
 
-			if(self.fireheld == 1 && self.useheld == 0 && self.held != 1)
+			if(self != NULL && self.fireheld == 1 && self.useheld == 0 && self.held != 1)
 			{
 				local.dog_anim = self.dog_anim
 				self.held = 1
@@ -533,7 +536,7 @@ get_movement:
 				}
 			}
 
-			if(self.fireheld == 1 && self.useheld == 1 && self.held2 != 1) // if player is Left/Right-clicking while holding USE, only bark.
+			if(self != NULL && self.fireheld == 1 && self.useheld == 1 && self.held2 != 1) // if player is Left/Right-clicking while holding USE, only bark.
 			{
 				local.dog_anim = self.dog_anim
 				self.held2 = 1
@@ -542,8 +545,8 @@ get_movement:
 				wait .20
 				if(self != NULL) { self.dog_anim = local.dog_anim }
 			}
-			if(self.fireheld != 1) { self.held = 0; self.held2 = 0 }
-			if(self.passenger == 1) { self.dog_anim = dog_stand_idle } // if dog is a passenger of a vehicle, don't run
+			if(self != NULL && self.fireheld != 1) { self.held = 0; self.held2 = 0 }
+			if(self != NULL && self.passenger == 1) { self.dog_anim = dog_stand_idle } // if dog is a passenger of a vehicle, don't run
 		}
 		waitframe
 		if(self != NULL && self.inventory.size > 0) { self takeall } // in case they pick up some weapons	

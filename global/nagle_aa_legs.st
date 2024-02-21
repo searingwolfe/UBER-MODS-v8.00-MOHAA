@@ -1292,7 +1292,7 @@ state VEHICLE_START
 {
 	legs
 	{
-		unarmed_idle : default
+		//unarmed_idle : default
 	}
 	
 	states
@@ -1305,7 +1305,7 @@ state VEHICLE_USING
 {
 	legs
 	{
-		unarmed_idle : default
+		//unarmed_idle : default
 	}
 	
 	states
@@ -1320,7 +1320,7 @@ state VEHICLE_TURRET_START
 {
 	legs
 	{
-		unarmed_idle : default
+		//unarmed_idle : default
 	}
 	
 	states
@@ -1333,8 +1333,8 @@ state VEHICLE_TURRET_USING
 {
 	legs
 	{
-		unarmed_idle	: TURRET_TYPE "MG42"
-		unarmed_idle	: default
+		//unarmed_idle	: TURRET_TYPE "MG42"
+		//unarmed_idle	: default
 	}
 	
 	states
@@ -1354,8 +1354,8 @@ state TURRET_START
 {
 	legs
 	{
-		unarmed_idle : TURRET_TYPE "MG42"
-		unarmed_idle : default
+		//unarmed_idle : TURRET_TYPE "MG42"
+		//unarmed_idle : default
 	}
 	
 	states
@@ -1368,8 +1368,8 @@ state TURRET_USING
 {
 	legs
 	{
-		unarmed_idle : TURRET_TYPE "MG42"
-		unarmed_idle : default
+		//unarmed_idle : TURRET_TYPE "MG42"
+		//unarmed_idle : default
 	}
 	
 	states
@@ -1950,8 +1950,8 @@ state DOG_TURRET_START
 
 	legs
 	{
-	  unarmed_idle : TURRET_TYPE "MG42"
-	  unarmed_idle : default
+	  //unarmed_idle : TURRET_TYPE "MG42"
+	  //unarmed_idle : default
 	}	
 
 	states
@@ -1965,8 +1965,8 @@ state DOG_TURRET_USING
 
 	legs
 	{
-	  unarmed_idle : TURRET_TYPE "MG42"
-	  unarmed_idle : default
+	  //unarmed_idle : TURRET_TYPE "MG42"
+	  //unarmed_idle : default
 	}
 	
 	states

@@ -83,7 +83,8 @@ ResetNebel:
 	self.trigenter = local.trig
 	self.corona = 0
 	self thread healthboost // allows visible players using the nebelwerfer to be shot & killed
-	removeclass Camera
+	//removeclass Camera // also removes PlayerIntermission and other func_cameras
+	if(level.removeclass_camera != 1) { thread removeclass_camera }
 end
 
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
@@ -495,6 +496,23 @@ ImDead:
 	self.nebelwerfer.triginst triggerable // for some reason, removing this prevents a new one from spawning
 	self remove
 	thread main local.turret local.health local.resettime local.origin local.angles
+end
+
+////////////////////////////////////////////////////////////////////////
+
+removeclass_camera:
+
+	level.removeclass_camera = 1
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == "Camera" && local.entity.targetname == "") { local.entity remove }
+			waitframe
+		}
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

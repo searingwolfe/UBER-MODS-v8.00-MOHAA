@@ -3337,11 +3337,11 @@ state LADDER_IDLE_LEFT
 		GET_OFF_LADDER_BOTTOM	      : FORWARD !LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		GET_OFF_LADDER_BOTTOM	      : BACKWARD LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		
-		LADDER_UP_RIGHT			: FORWARD LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
-		LADDER_UP_RIGHT			: BACKWARD !LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
+		LADDER_UP_RIGHT			: FORWARD LOOKING_UP "-30"
+		LADDER_UP_RIGHT			: BACKWARD !LOOKING_UP "-30"
 		
-		LADDER_DOWN_LEFT			: FORWARD !LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
-		LADDER_DOWN_LEFT			: BACKWARD LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
+		LADDER_DOWN_LEFT			: FORWARD !LOOKING_UP "-30"
+		LADDER_DOWN_LEFT			: BACKWARD LOOKING_UP "-30"
 	}
 }
 
@@ -3377,11 +3377,11 @@ state LADDER_IDLE_RIGHT
 		GET_OFF_LADDER_BOTTOM	      : FORWARD !LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		GET_OFF_LADDER_BOTTOM	      : BACKWARD LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		
-		LADDER_UP_LEFT			: FORWARD LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
-		LADDER_UP_LEFT			: BACKWARD !LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
+		LADDER_UP_LEFT			: FORWARD LOOKING_UP "-30"
+		LADDER_UP_LEFT			: BACKWARD !LOOKING_UP "-30"
 		
-		LADDER_DOWN_RIGHT			: FORWARD !LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
-		LADDER_DOWN_RIGHT			: BACKWARD LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
+		LADDER_DOWN_RIGHT			: FORWARD !LOOKING_UP "-30"
+		LADDER_DOWN_RIGHT			: BACKWARD LOOKING_UP "-30"
 	}
 }
 
@@ -3525,114 +3525,6 @@ state GENERIC_USE
 		STAND	: default
 	}
 }
-
-
-//==============================================================================
-//==============================================================================
-//
-// Vehicles
-//
-//==============================================================================
-
-state VEHICLE_PUTAWAY
-{
-	entrycommands
-	{
-		deactivateweapon righthand
-	}
-	
-	states
-	{
-		VEHICLE_IDLE			: default
-	}
-}
-
-state VEHICLE_START
-{
-	
-	states
-	{
-		VEHICLE_PUTAWAY			: PUTAWAYMAIN	// Basic put weapon away move.
-		VEHICLE_IDLE			: default
-	}
-}
-
-state VEHICLE_TURRET_IDLE
-{
-	entrycommands
-	{
-		modheight "duck"
-		moveposflags "crouching"
-	}
-
-	exitcommands
-	{
-		modheight "stand"
-		moveposflags "standing"
-	}
-
-	movetype anim
-	
-	action
-	{
-		aagun_idle	  			: VEHICLE_TYPE "aagun"
-		flak88_idle	  			: VEHICLE_TYPE "flak88"
-		nebelwerfer_idle  		: VEHICLE_TYPE "nebelwerfer"
-		granatwerfer_idle 		: VEHICLE_TYPE "granatwerfer"
-		vehicle_idle	  		: default
-	}
-	
-	states
-	{
-		VEHICLE_USE	  			: +USE
-		STAND		  			: !IS_USING_VEHICLE
-	}
-}
-
-state VEHICLE_NORMAL_IDLE
-{
-	movetype anim
-	
-	action
-	{
-		vehicle_idle	   		: default
-	}
-	
-	states
-	{
-		VEHICLE_USE				: +USE
-		STAND					: !IS_USING_VEHICLE
-	}
-}
-
-
-state VEHICLE_IDLE
-{
-	states
-	{
-		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "aagun"
-		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "flak88"
-		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "nebelwerfer"
-		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "granatwerfer"
-		VEHICLE_NORMAL_IDLE		: default
-	}
-}
-
-state VEHICLE_USE
-{
-	movetype anim
-
-	action
-	{
-		vehicle_idle			: default
-	}
-
-	states
-	{
-		VEHICLE_IDLE			: default
-	}
-}
-
 
 //==============================================================================
 //==============================================================================
@@ -4558,6 +4450,188 @@ state DOG_TORSO
                }
 }
 
-//====================================================================================================================
-// DOG STATES END
-//====================================================================================================================
+//==============================================================================
+//==============================================================================
+//
+// Vehicles
+//
+//==============================================================================
+
+state VEHICLE_PUTAWAY
+{
+	entrycommands
+	{
+		deactivateweapon righthand
+	}
+	
+	states
+	{
+		VEHICLE_IDLE			: default
+	}
+}
+
+state VEHICLE_START
+{
+	states
+	{
+		VEHICLE_PUTAWAY			: PUTAWAYMAIN	// Basic put weapon away move.
+		STAND				: KILLED
+		VEHICLE_IDLE			: default
+	}
+}
+
+state VEHICLE_TURRET_IDLE
+{
+	entrycommands
+	{
+		modheight "duck"
+		moveposflags "crouching"
+	}
+
+	exitcommands
+	{
+		modheight "stand"
+		moveposflags "standing"
+	}
+
+	movetype anim
+	
+	action
+	{
+		aagun_idle	  		: VEHICLE_TYPE "aagun"
+		flak88_idle	  		: VEHICLE_TYPE "flak88"
+		nebelwerfer_idle  		: VEHICLE_TYPE "nebelwerfer"
+		granatwerfer_idle 		: VEHICLE_TYPE "granatwerfer"
+		vehicle_idle	  		: default
+	}
+	
+	states
+	{
+		VEHICLE_USE	  		: +USE
+		STAND		  		: !IS_USING_VEHICLE
+	}
+}
+
+state VEHICLE_NORMAL_IDLE
+{
+	movetype anim
+
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "IN_VEHICLE"
+	}
+	
+	action
+	{
+		vehicle_idle	   			: default
+	}
+	
+	states
+	{
+		VEHICLE_USE				: +USE
+		STAND					: !IS_USING_VEHICLE
+		STAND					: KILLED
+		VEHICLE_BACKWARD			: RUN BACKWARD
+		VEHICLE_FORWARD 			: RUN FORWARD
+		VEHICLE_LOOK_LEFT			: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT			: RUN STRAFE_RIGHT
+	}
+}
+
+
+state VEHICLE_IDLE
+{
+	states
+	{
+		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "aagun"
+		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "flak88"
+		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "nebelwerfer"
+		VEHICLE_TURRET_IDLE		: VEHICLE_TYPE "granatwerfer"
+		VEHICLE_NORMAL_IDLE		: default
+	}
+}
+
+state VEHICLE_USE
+{
+	movetype anim
+
+	action
+	{
+		vehicle_idle			: default
+	}
+
+	states
+	{
+		VEHICLE_IDLE			: default
+	}
+}
+
+state VEHICLE_BACKWARD
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "BACKWARD_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+	}
+}
+
+state VEHICLE_FORWARD 
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "FORWARD_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+	}
+}
+
+state VEHICLE_LOOK_RIGHT
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "RIGHT_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+		VEHICLE_IDLE			: !STRAFE_RIGHT
+	}
+}
+
+state VEHICLE_LOOK_LEFT
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "LEFT_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+		VEHICLE_IDLE			: !STRAFE_LEFT
+	}
+}

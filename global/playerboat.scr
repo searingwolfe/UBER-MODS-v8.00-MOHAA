@@ -1,4 +1,4 @@
-main local.name local.model local.origin local.angles local.health local.boatspeed local.resettime local.gotout:
+main local.name local.model local.origin local.angles local.health local.boatspeed local.resettime local.scale local.gotout:
 
 	if(local.model == NIL) { wait 1; println("----- ERROR playerboat.scr: 'model' parameter is missing!"); end }
 	if(local.model[0] != "m" && local.model[1] != "o" && local.model[2] != "d" && local.model[3] != "e" && local.model[4] != "l" && local.model[5] != "s")
@@ -21,7 +21,7 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] != 1)) { wait 1; println("----- ERROR playerboat.scr: health must be greater than 0."); end }
 	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] == 1)) { end } // end when in rare cases, a 2nd vehicle with local.health = 0 could spawn after getting destroyed
 
-	local.desmodel = models/vehicles/higgins_damage.tik
+	if(local.model == "models/vehicles/higginsxtrahull.tik") { local.desmodel = models/vehicles/higgins_damage.tik }
 
 	local.vehicle = spawn local.model targetname (local.name) // scriptmasters are already added in ubersound.scr
 	local.vehicle.name = local.name
@@ -31,6 +31,12 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 	local.vehicle.health = local.health
 	local.vehicle.boatspeed = local.boatspeed
 	local.vehicle.resettime = local.resettime
+	if(local.scale == NIL || local.vehicle.model != "models/vehicles/uboat.tik") { local.vehicle.scale = 1 }
+	else
+	{
+		local.vehicle.scale = local.scale
+		local.vehicle setsize ( -(2000 * local.scale) -(150 * local.scale) 0 ) ( (1820 * local.scale) (150 * local.scale) (140 * local.scale) )
+	}
 
 	if(local.vehicle.classname != "DrivableVehicle") { local.vehicle remove; wait 1; println("----- ERROR playerboat.scr: .tik model is not a DrivableVehicle."); end }
 
@@ -57,6 +63,17 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 		level.vehiclescriptmaster[local.vehicle.model] = 1
 		level.vehiclescriptmaster[local.model] = 1
 	}
+
+	if(local.vehicle.model == "models/vehicles/uboat.tik")
+	{
+		local.vehicle turnrate 1
+		local.vehicle attachmodel models/emitters/fancyfire.tik "Box01" 1 (local.name + "_tag_barrel") 1 -1 -1 -1 -1 ( 0 211 565 ) //( +left -right, +up -down, +forward -backward )
+		$(local.name + "_tag_barrel") notsolid
+		$(local.name + "_tag_barrel") hide
+		local.vehicle.gun = $(local.name + "_tag_barrel")
+
+		local.vehicle thread boatstuck_inwall_fix
+	}
 										// "local.player.touching_playerboat" or "$player[1].touching_playerboat" can be included in trigger setthreads
 	if(level.touching_playerboat != 1) { thread touching_playerboat }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
 end
@@ -66,7 +83,8 @@ end
 vehiclereset:
 
 	self thread healthboost
-	removeclass Camera
+	//removeclass Camera // also removes PlayerIntermission and other func_cameras
+	if(level.removeclass_camera != 1) { thread removeclass_camera }
 end
 
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
@@ -84,7 +102,8 @@ vehicletrigger:
 	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
 	local.trig = spawn trigger_use targetname (self.name + "_trig")
 	local.trig.origin = self.origin
-	local.trig setsize ( -130 -130 -30 ) ( 130 130 100 )
+	if(self.model != "models/vehicles/uboat.tik") { local.trig setsize ( -130 -130 -30 ) ( 130 130 100 ) }
+	else { local.trig setsize ( -(2000 * self.scale) -(150 * self.scale) -(10 * self.scale) ) ( (1820 * self.scale) (150 * self.scale) (200 * self.scale) ) }
 	local.trig.vehicle = self
 	local.trig setthread triggered
 
@@ -129,11 +148,19 @@ playergetin:
 	self thread seatstuff
 
 	self.driver forcelegsstate STAND
-	self.driver hide
+	//self.driver hide
 	self.driver nodamage
 	self.driver notsolid
-	self.driver iprint ("Lean Left/Right = look left/right.")
-	self.driver iprint ("Hold USE = exit, hold FIRE = look behind.")
+	if(self.model == "models/vehicles/uboat.tik")
+	{
+		self.driver iprint ("Lean Left/Right = look behind. Hold USE = exit.")
+		self.driver iprint ("FIRE Primary = shoot rockets. FIRE Secondary = throw grenades.")
+	}
+	else
+	{
+		self.driver iprint ("Lean Left/Right = look left/right.")
+		self.driver iprint ("Hold USE = exit. Hold FIRE = look behind.")
+	}
 
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
@@ -142,7 +169,9 @@ playergetin:
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
 		local.holdtime = 0
-		self.driver.viewangles = ( 10 self.angles[1] 0 )
+		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
 
 		while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.useheld == 1 && self.driver.dead != 1 && level.change_team_score != 1)
 		{
@@ -161,17 +190,20 @@ playergetin:
 		}
 		if(self != NULL && isalive self.driver && self.driver.dmteam == local.team)
 		{
-			if(self.driver.useheld != 1)
+			if(self.driver.useheld != 1 && self.model == "models/vehicles/uboat.tik")
 			{
-				if(self.driver.fireheld == 1 && self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
-				if(self.driver.fireheld != 1 && self.driver.leanleftheld == 1 && self.driver.leanrightheld != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
-				if(self.driver.fireheld != 1 && self.driver.leanleftheld != 1 && self.driver.leanrightheld == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
+				if(self.driver.fireheld == 1 && self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1)
+				{
+					if(self.driver.secfireheld != 1) { self thread firegun } 
+					else { self thread firesecondary }
+				}
+				if(self.driver.fireheld != 1 && (self.driver.leanleftheld == 1 || self.driver.leanrightheld == 1)) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
 			}
 
 			if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind)
 			{
 				self.driver loopsound riverdrive
-				if(self.driver.viewangles[1] == self.angles[1] + 180) { self.velocity = self.velocity + self.forwardvector * self.boatspeed * -1 }
+				if(self.driver.driving_state_backward == 1) { self.velocity = self.velocity + self.forwardvector * self.boatspeed * -1 }
 				else { self.velocity = self.velocity + self.forwardvector * self.boatspeed } // make vehicles drive faster, only when holding W (forward key)
 			}
 			if(self.velocity == ( 0 0 0 )) { self.driver loopsound wavelaps }
@@ -181,7 +213,7 @@ playergetin:
 
 	if(self != NULL) // spawn in the new vehicle and remove the old one.
 	{
-		thread main self.name self.model self.origin self.angles self.health self.boatspeed self.resettime 1
+		thread main self.name self.model self.origin self.angles self.health self.boatspeed self.resettime self.scale 1
 
 		if(self.driver != NIL && self.driver != NULL)
 		{
@@ -206,13 +238,15 @@ driverreset local.status:
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
 
-	local.outheight = 150 // if this is 100 or lower and the boat is still moving after the player gets out, the player will be run over by the boat and killed.
+	if(self.model == "models/vehicles/uboat.tik") { local.outheight = 200 }
+	else { local.outheight = 150 } // if this is 100 or lower and the boat is still moving after the player gets out, the player will be run over by the boat and killed.
 
 	if(self.driver.dmteam != spectator)
 	{
 		self.driver show
 		self.driver solid
 		self.driver takedamage
+		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
 		if(local.status != 1 && local.status != 2)
 		{
 			self.driver.origin = self.origin + ( 0 0 local.outheight )
@@ -236,7 +270,7 @@ vehicledamage:
 		{
 			local.c = local.c + 2
 			self playsound damage_vehicle
-			//if(local.c == 2) { exec global/earthquake.scr .2 3 0 0 } // if tank is getting constantly damaged per frame, stop earthquake from spamming. (removed, since it was still getting annoying)
+			//if(local.c == 2) { exec global/earthquake.scr .2 3 0 0 } // if boat is getting constantly damaged per frame, stop earthquake from spamming. (removed, since it was still getting annoying)
 		}
 	}
 end
@@ -246,42 +280,91 @@ vehicledeath:
 	self waittill death // when waiting until "death", vehicle is not NULL yet
 	self playsound explode_truck
 
+	if(self.desmodel == NIL) { self.desmodel = self.model }
 	local.desvehicle = spawn script_model
 	local.desvehicle.origin = self.origin + ( 0 0 -25 )
 	local.desvehicle.scale = self.scale
 	local.desvehicle model self.desmodel
 
+	if(self.model != "models/vehicles/uboat.tik") { local.distance = -100 }
+	else { local.distance = 355; local.distance2 = 675 }
+
+	local.PI = 3.14159265359
+	local.degrees = self.angles[1]
+	if(local.degrees >= 180) { local.degrees -= 360 }
+	local.radians = local.degrees * (local.PI / 180)
+
+	local.sin = (sin local.radians) * local.distance * local.desvehicle.scale
+	local.cos = (cos local.radians) * local.distance * local.desvehicle.scale
+
 	local.r = randomint(2)
 	if(local.r == 0) { local.one = 1 }
 	if(local.r == 1) { local.one = -1 }
-	local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
 
-	local.distance = -100
-	local.PI = 3.14159265359
-	local.degrees = self.angles[1]
-	if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
-	local.radians = local.degrees * (local.PI / 180)
+	if(self.model == "models/vehicles/uboat.tik")
+	{
+		local.desvehicle.angles = self.angles + ( 0 0 ((randomint(20) + 15) * local.one) )
+		local.sin2 = (sin local.radians) * local.distance2 * -1 * local.desvehicle.scale
+		local.cos2 = (cos local.radians) * local.distance2 * -1 * local.desvehicle.scale
+		local.height = 150 * local.desvehicle.scale
 
-	local.sin = (sin local.radians) * local.distance
-	local.cos = (cos local.radians) * local.distance
+		local.degrees0 = self.angles[0]
+		if(local.degrees0 >= 180) { local.degrees0 -= 360 }
+		local.radians0 = local.degrees0 * (local.PI / 180)
+		local.offset = (tan local.radians0) * local.distance * local.desvehicle.scale
+		local.offset2 = (tan local.radians0) * local.distance2 * -1 * local.desvehicle.scale
 
-	local.fire = spawn script_model
-	local.fire model "models/emitters/fancyfire.tik"
-	local.fire.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
-	local.fire.angles = ( 270 0 0 )
-	local.fire.scale = 1
-	local.fire anim start
-	local.fire notsolid
-	local.smoke = spawn script_model
-	local.smoke model "models/emitters/linger_smoke.tik"
-	local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
-	local.smoke.angles = ( 270 0 0 )
-	local.smoke.scale = 0.7
-	local.smoke anim start
-	local.smoke notsolid
+		local.fire = spawn script_model
+		local.fire model "models/emitters/fancyfire.tik"
+		local.fire.origin = local.desvehicle.origin + ( local.cos local.sin (local.height - local.offset) )
+		local.fire.angles = ( 270 0 0 )
+		local.fire.scale = 5 * local.desvehicle.scale
+		local.fire anim start
+		local.fire notsolid
+		local.smoke = spawn script_model
+		local.smoke model "models/emitters/linger_smoke.tik"
+		local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin (local.height - local.offset) )
+		local.smoke.angles = ( 270 0 0 )
+		local.smoke.scale = 3.5 * local.desvehicle.scale
+		local.smoke anim start
+		local.smoke notsolid
+		local.fire2 = spawn script_model
+		local.fire2 model "models/emitters/fancyfire.tik"
+		local.fire2.origin = local.desvehicle.origin + ( local.cos2 local.sin2 (local.height - local.offset2) )
+		local.fire2.angles = ( 270 0 0 )
+		local.fire2.scale = 5 * local.desvehicle.scale
+		local.fire2 anim start
+		local.fire2 notsolid
+		local.smoke2 = spawn script_model
+		local.smoke2 model "models/emitters/linger_smoke.tik"
+		local.smoke2.origin = local.desvehicle.origin + ( local.cos2 local.sin2 (local.height - local.offset2) )
+		local.smoke2.angles = ( 270 0 0 )
+		local.smoke2.scale = 3.5 * local.desvehicle.scale
+		local.smoke2 anim start
+		local.smoke2 notsolid
+	}
+	else
+	{
+		local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
 
-	self thread driverreset 1					// local.status = 1
-	self thread mainreset local.desvehicle local.fire local.smoke	// waiting self.resettime seconds until a new vehicle is spawned in
+		local.fire = spawn script_model
+		local.fire model "models/emitters/fancyfire.tik"
+		local.fire.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
+		local.fire.angles = ( 270 0 0 )
+		local.fire.scale = 1
+		local.fire anim start
+		local.fire notsolid
+		local.smoke = spawn script_model
+		local.smoke model "models/emitters/linger_smoke.tik"
+		local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
+		local.smoke.angles = ( 270 0 0 )
+		local.smoke.scale = 0.7
+		local.smoke anim start
+		local.smoke notsolid
+	}
+
+	self thread driverreset 1								// local.status = 1
+	self thread mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2	// waiting self.resettime seconds until a new vehicle is spawned in
 
 	if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
 	self.driver = NIL
@@ -289,20 +372,23 @@ vehicledeath:
 	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
 	self remove
 	exec global/earthquake.scr .35 2 0 0
-	radiusdamage local.desvehicle.origin 500 600
+	if(local.desvehicle.model == "models/vehicles/uboat.tik") { radiusdamage local.desvehicle.origin 500 1000 }
+	else { radiusdamage local.desvehicle.origin 500 600 }
 
 	local.boom = spawn script_model
 	local.boom model "models/emitters/mortar_higgins.tik"
 	local.boom.origin = local.desvehicle.origin + ( 0 0 25 )
 	local.boom.angles = ( 0 -90 0 ) + ( 260 0 0 )
-	local.boom.scale = 1.0
+	if(local.desvehicle.model == "models/vehicles/uboat.tik") { local.boom.scale = 2.5 }
+	else { local.boom.scale = 1.0 }
 	local.boom anim start
 	local.boom notsolid
 
 	local.debris = spawn script_model
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = local.desvehicle.origin + ( 0 0 25 )
-	local.debris.scale = 0.8
+	if(local.desvehicle.model == "models/vehicles/uboat.tik") { local.debris.scale = 2.0 }
+	else { local.debris.scale = 0.8 }
 	local.debris anim start
 	local.debris notsolid
 	waitframe
@@ -310,7 +396,7 @@ vehicledeath:
 	local.debris remove
 end
 
-mainreset local.desvehicle local.fire local.smoke:
+mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2:
 
 	if(self.resettime == NIL || self.resettime <= 0) { end }
 
@@ -321,14 +407,17 @@ mainreset local.desvehicle local.fire local.smoke:
 	local.health = self.max_health // self.max_health is the local.health initially given to the vehicle
 	local.boatspeed = self.boatspeed
 	local.resettime = self.resettime
+	local.scale = self.scale
 
 	while(self != NULL) { waitframe }
 	wait local.resettime
 
 	if(local.fire != NIL && local.fire != NULL) { local.fire remove }
 	if(local.smoke != NIL && local.smoke != NULL) { local.smoke remove }
+	if(local.fire2 != NIL && local.fire2 != NULL) { local.fire2 remove }
+	if(local.smoke2 != NIL && local.smoke2 != NULL) { local.smoke2 remove }
 	local.desvehicle remove
-	thread main local.name local.model level.boat_initorigin[local.name] level.boat_initangles[local.name] local.health local.boatspeed local.resettime
+	thread main local.name local.model level.boat_initorigin[local.name] level.boat_initangles[local.name] local.health local.boatspeed local.resettime local.scale
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -383,7 +472,11 @@ passengers:
 			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
 			else { local.player.viewangles = self.angles }
 		}
-		if(self.velocity != ( 0 0 0 )) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed } // keep passengers inside the vehicles
+		if(self.velocity != ( 0 0 0 ))
+		{
+			if(self.driver.driving_state_backward == 1) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed * -1 }
+			else { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed } // keep passengers inside the vehicles
+		}
 		else { local.player.velocity = ( 0 0 0 ) }
 
 		while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && local.player.useheld == 1)
@@ -397,7 +490,11 @@ passengers:
 			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
 			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) }
 			else { local.player.viewangles = self.angles }
-			if(self.velocity != ( 0 0 0 )) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed }
+			if(self.velocity != ( 0 0 0 ))
+			{
+				if(self.driver.driving_state_backward == 1) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed * -1 }
+				else { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed } // keep passengers inside the vehicles
+			}
 			else { local.player.velocity = ( 0 0 0 ) }
 	
 			if(local.holdtime >= 20) // hold USE for 1 second.
@@ -447,55 +544,245 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+firegun:
+
+	if(self.firing_gun == 1) { end }
+	self.firing_gun = 1
+
+	self thread projectile
+	self playsound uboat_snd_fire //panzerschrecksndfire
+	self playsound uboat_reload
+
+	self.boatsmokecount = 0
+	self thread smokey
+
+	wait 5
+	if(self != NULL) { self.firing_gun = 0 }
+end
+
+firesecondary:
+
+	if(self.firing_gun2 == 1) { end }
+	self.firing_gun2 = 1
+
+	self thread projectile 1
+	self playsound grenadethrow
+
+	wait 1
+	if(self != NULL) { self.firing_gun2 = 0 }
+end
+
+smokey:
+
+	self.boatsmoking = 1
+	local.targetname = self.targetname
+
+	local.smoke = spawn script_model
+	local.smoke model "fx/fx_cannonsmoke.tik"
+	self.gun = $(self.name + "_tag_barrel")
+	local.smoke.origin = self.gun.origin
+
+	while(self != NULL && self.boatsmokecount < 120)
+	{
+		local.smoke.origin = self.gun.origin
+		self.boatsmokecount++
+		local.boatsmokecount = self.boatsmokecount
+		waitframe
+	}
+
+	local.c = 0
+	while($(local.targetname) == NULL) // boat is always removed after a player exits the boat, wait for the boat to respawn before continuing smokecount
+	{
+		if(local.c >= 10) // remove the smoke sooner if the boat was destroyed
+		{
+			if(local.smoke != NULL) { local.smoke remove }
+			end
+		}
+		local.c++
+		waitframe
+	}
+
+	$(local.targetname).boatsmoking = 1
+	$(local.targetname).boatsmokecount = local.boatsmokecount
+	$(local.targetname).gun = $(local.targetname + "_tag_barrel")
+
+	while($(local.targetname) != NULL && $(local.targetname).gun != NULL && $(local.targetname).boatsmokecount < 120)
+	{
+		local.smoke.origin = $(local.targetname).gun.origin
+		$(local.targetname).boatsmokecount++
+		waitframe	
+	}
+
+	if(local.smoke != NULL) { local.smoke remove }
+	if($(local.targetname) != NULL) { $(local.targetname).boatsmoking = 0; $(local.targetname).boatsmokecount = 0 }
+end
+
+projectile local.secondary:
+
+	local.player = self.driver // used for the for-loop later
+	self.gun = $(self.name + "_tag_barrel")
+
+	local.projectile = spawn script_model
+	if(local.secondary == 1)
+	{
+		if(local.player.dmteam == "axis") { local.projectile model "projectiles/steilhandgranate_primary.tik" }
+		else { local.projectile model "projectiles/M2FGrenade_primary.tik" }
+	}
+	else { local.projectile model "projectiles/tigercannonshell.tik" } // "projectiles/panzerschreckshell.tik"
+	local.projectile.origin = self.gun.origin
+	local.projectile light 0 1 0 400
+	local.projectile.scale = 1
+	local.projectile solid
+	local.projectile physics_on    // need this for gravity and waittill touch to work.
+	local.projectile.scale = 3
+
+	if(local.secondary == 1)
+	{
+		local.projectile playsound grenadethrow
+		local.projectile.angles = ( -90 self.angles[1] 0 )
+		local.projectile thread rotate
+
+		local.projectile gravity 0.8
+		local.fwd_vec = angles_toforward self.angles
+		local.projectile.velocity = ( local.fwd_vec[0] local.fwd_vec[1] 0.500 ) * 950 // local.fwd_vec[2] = 0.500 = 45 degrees facing upward
+	}
+	else
+	{
+		local.projectile loopsound rocketfireloop
+		local.projectile.angles = ( 0 (self.angles[1] + 180) 0 )
+
+		local.projectile gravity 0
+		local.projectile.velocity = (angles_toforward self.angles) * 6000
+	}
+
+	if(local.secondary == 1) { wait 3 }
+	else { local.projectile waittill touch }
+
+	local.projectile.velocity = ( 0 0 0 )
+	local.explode = spawn "fx/explosionTIGERshell.tik" // "fx/explosionPANZERIVshell.tik"
+	local.explode.origin = local.projectile.origin
+	local.explode.scale = 1
+	local.explode light 1 0 0 600
+	local.explode anim idle
+	//local.explode playsound bazooka_exp // already included in explosionPANZERIVshell
+
+	if(self != NULL && local.projectile istouching self) { local.blewup = 0 }
+	else { local.blewup = 1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
+	{
+		if(vector_length(local.explode.origin - $player[local.i].origin) < 500) // without "cansee", these rockets can kill people through walls
+		{
+			if(local.player == NULL) { $player[local.i] volumedamage 500 }
+			if(local.player != NULL)
+			{
+				if(local.blewup == 1) // uboat drivers cannot be killed by their own rockets.
+				{
+					$player[local.i] damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // by default, "damage" does not hurt teammates
+				}
+				else { local.blewup = 0 }
+
+				if($player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			}
+		}
+	}
+	if(local.blewup == 1) { radiusdamage local.explode.origin 500 500 } // 110 200
+	local.projectile remove
+	wait 0.2 // keeps the explosion light visible longer
+	local.explode remove
+end
+
+rotate:
+
+	while(self != NULL && self.velocity != ( 0 0 0 ))
+	{
+		self.angles = (self.angles + ( 3 0 0 ))
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
 seatstuff:
 
-	self.seats = 9
+	if(self.model == "models/vehicles/higginsxtrahull.tik")
+	{
+		self.seats = 9
 
-	self.degree_offset[1] = 25.796		// [1] = front passenger. [2] = back right, [3], [4], [5] = front right. [6] = front left, [7], [8], [9] = back left
-	self.dist_offset[1] = 133.282
-	self.height_offset[1] = 50
+		self.degree_offset[1] = 25.796		// [1] = front passenger. [2] = back right, [3], [4], [5] = front right. [6] = front left, [7], [8], [9] = back left
+		self.dist_offset[1] = 133.282
+		self.height_offset[1] = 50
 
-	self.degree_offset[5] = 170.198 // very front right
-	self.dist_offset[5] = 218.976
-	self.height_offset[5] = 50
-	self.degree_offset[4] = 137.859
-	self.dist_offset[4] = 163.920
-	self.height_offset[4] = 50
-	self.degree_offset[3] = 142.595
-	self.dist_offset[3] = 63.107
-	self.height_offset[3] = 50
-	self.degree_offset[2] = 51.896
-	self.dist_offset[2] = 48.277
-	self.height_offset[2] = 50 // back right
+		self.degree_offset[5] = 170.198 // very front right
+		self.dist_offset[5] = 218.976
+		self.height_offset[5] = 50
+		self.degree_offset[4] = 137.859
+		self.dist_offset[4] = 163.920
+		self.height_offset[4] = 50
+		self.degree_offset[3] = 142.595
+		self.dist_offset[3] = 63.107
+		self.height_offset[3] = 50
+		self.degree_offset[2] = 51.896
+		self.dist_offset[2] = 48.277
+		self.height_offset[2] = 50 // back right
 
-	self.degree_offset[6] = -168.554 // very front left
-	self.dist_offset[6] = 218.308
-	self.height_offset[6] = 50
-	self.degree_offset[7] = -161.461
-	self.dist_offset[7] = 136.358
-	self.height_offset[7] = 50
-	self.degree_offset[8] = -136.768
-	self.dist_offset[8] = 63.300
-	self.height_offset[8] = 50
-	self.degree_offset[9] = -54.647
-	self.dist_offset[9] = 53.714
-	self.height_offset[9] = 50 // back left
+		self.degree_offset[6] = -168.554 // very front left
+		self.dist_offset[6] = 218.308
+		self.height_offset[6] = 50
+		self.degree_offset[7] = -161.461
+		self.dist_offset[7] = 136.358
+		self.height_offset[7] = 50
+		self.degree_offset[8] = -136.768
+		self.dist_offset[8] = 63.300
+		self.height_offset[8] = 50
+		self.degree_offset[9] = -54.647
+		self.dist_offset[9] = 53.714
+		self.height_offset[9] = 50 // back left
+	}
+	if(self.model == "models/vehicles/uboat.tik")
+	{
+		self.seats = 5
+
+		self.degree_offset[1] = 22.158		// [1], [2] = right, left front captain platform, [3] = back of captain platform, [4], [5] = right side (facing forward), left side of middle platform
+		self.dist_offset[1] = 120
+		self.height_offset[1] = 322
+		self.degree_offset[2] = -22.158
+		self.dist_offset[2] = 120
+		self.height_offset[2] = 322
+
+		self.degree_offset[3] = 0
+		self.dist_offset[3] = 270
+		self.height_offset[3] = 322
+		self.playerang_offset[3] = 180	// this keeps the passenger facing 180 behind the driver's angles by default
+
+		self.degree_offset[4] = 10
+		self.dist_offset[4] = 413
+		self.height_offset[4] = 235
+		self.playerang_offset[4] = -90
+		self.degree_offset[5] = -10
+		self.dist_offset[5] = 413
+		self.height_offset[5] = 235
+		self.playerang_offset[5] = 90
+	}
 end
-			// run "exec global/playerboat::test boat_01" in any map .scr script, or any boat's targetname other than "boat_01".
+			// run "exec global/playerboat.scr::test boat_01" in any map .scr script, or any boat's targetname other than "boat_01". make sure the boat's angles is ( 0 0 0 )
 test local.targetname:	// player[1] can now stand anywhere on the boat and easily calculate the desired passenger seat's "degree_offset" and "dist_offset" for the "seatstuff" thread.
 
 	while($player.size < 1) { waitframe }
 	while($player.size >= 1)
 	{
+		if($(local.targetname) == NULL) { wait 2; iprintlnbold("$" + local.targetname + " = NULL"); println("$" + local.targetname + " = NULL"); break }
+
 		local.v1 = ( $(local.targetname).origin[0] $(local.targetname).origin[1] 0 )
 		local.v2 = ( $player[1].origin[0] $player[1].origin[1] 0 )
 
 		local.v = vector_length(local.v1 - local.v2)
 		local.a = vector_toangles(local.v1 - local.v2)
-		local.a2 = local.a[1] + 180
+		if($(local.targetname).model != "models/vehicles/uboat.tik") { local.a2 = local.a[1] + 180 }
+		else { local.a2 = local.a[1] }
 		if(local.a2 >= 180) { local.a2 -= 360 }
 
-		iprintlnbold("dist = " + local.v + " ... degree = " + local.a2)
+		iprintlnbold("degree = " + local.a2 + " ... dist = " + local.v)
 		wait 2
 	}
 	thread test local.targetname
@@ -558,6 +845,21 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+boatstuck_inwall_fix:
+
+	while(self != NULL)
+	{
+		if((self.angles[0] <= 340 && self.angles[0] >= 20) || (self.angles[2] <= 340 && self.angles[2] >= 20))
+		{
+			killent self.entnum
+			break
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
 touching_playerboat local.vehicles:
 
 	level.touching_playerboat = 1
@@ -604,6 +906,23 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+removeclass_camera:
+
+	level.removeclass_camera = 1
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == "Camera" && local.entity.targetname == "") { local.entity remove }
+			waitframe
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
 scriptmaster local.model:
 
 level.mapname = getcvar "mapname"
@@ -613,6 +932,21 @@ if(level.boatscriptmaster != 1)
 {
 	local.master aliascache wavelaps sound/amb/Wave_Laps1.wav soundparms 1.0 0.0 1.0 0.0 200 4000 auto loaded maps level.mapname
 	local.master aliascache riverdrive sound/amb/Amb_River.wav soundparms 2.0 0.0 1.0 0.0 200 4000 auto loaded maps level.mapname
+	local.master aliascache impact_leavewater sound/null.wav soundparms 0.7 0.4 1.0 0.5 100 1600 auto loaded maps level.mapname
+}
+
+if(level.boatscriptmaster2 != 1 && local.model == "models/vehicles/uboat.tik")
+{
+	local.master aliascache rocketfireloop sound/amb/Amb_FirePlace.wav soundparms 2.0 0.0 1.0 0.0 400 5000 auto loaded maps level.mapname
+	local.master aliascache grenadethrow sound/weapons/foley/Grenade_Throw.wav soundparms 0.9 0.2 0.8 0.2 400 5000 weapon loaded maps level.mapname
+	//local.master aliascache panzerschrecksndfire sound/weapons/fire/PanzershrekFire2.wav soundparms 1.5 0.0 0.92 0.15 500 9000 weapon loaded maps level.mapname
+
+	local.master aliascache uboat_reload sound/weapons/fire/TankFire1.wav soundparms 1.5 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache uboat_snd_fire1 sound/weapons/fire/TankCannonFire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache uboat_snd_fire2 sound/weapons/fire/Flak88Fire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache uboat_snd_fire3 sound/weapons/fire/Flak88Fire3.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache uboat_snd_fire4 sound/weapons/fire/Flak88Fire4.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	level.boatscriptmaster2 = 1
 }
 
 local.soundtype = 2

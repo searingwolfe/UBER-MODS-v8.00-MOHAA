@@ -10,6 +10,7 @@ exec cvars/findclass.scr
 exec cvars/findmodel.scr
 exec cvars/drawpath.scr
 exec cvars/cybsnd.scr
+exec cvars/coord_pointer.scr
 exec cvars/ubergametype.scr
 exec cvars/adminstuff.scr
 
@@ -115,6 +116,21 @@ thread crates
 
 level waittill spawn
 
+
+
+//exec global/victory_podium.scr::test ( -687 -1112 5 ) -90			// testing purposes only; spawn and show the podium crates.
+//exec global/victory_podium.scr::fireworks ( -687 -1112 5 ) -90 300 2.5 0.8	// testing purposes only; launch fireworks continuously.
+
+// origin, angle for podium players, camera origin (or "auto"), camera angles (or "auto"), time duration of fireworks (5 = 00:05 seconds of map time remaining to end game; 0 or NIL = no fireworks), ...
+// ... distance until exploding (default = 300), particle time (default = 2.5), explosion scale (default = 0.8)
+//
+exec global/victory_podium.scr ( -687 -1112 5 ) -90 auto auto 5
+
+//wait 70
+// runs immediately for "timeduration" seconds while launching fireworks, then ends the map. NOTE: the "main" thread must run first too!
+//
+//exec global/victory_podium.scr::map_ended ( -687 -1112 5 ) -90 300 2.5 0.8 7 // origin, angle for podium players, distance until exploding, particle time, explosion scale, time duration until map ends
+
 while(level.bbactive == 1) { wait 1 }
 
 if(getcvar("g_throwingknives") == "1")
@@ -179,4 +195,7 @@ crates:
 	local.crate1.origin = ( -124 -1764 121 ) // starting point
 	local.crate1.angles = ( 0 0 0 )
 	local.crate1 solid
+end
+
+clickitem_fail:
 end

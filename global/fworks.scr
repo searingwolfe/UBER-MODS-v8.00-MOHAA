@@ -58,10 +58,11 @@ Launch:
 	local.coron3 thread blink
 
 	// Trailing smoke
-	self.rocket.fire = spawn script_model model "emitters/pipe_steam.tik" scale "2.0"	 //"static/corona_orange.tik" scale "1.0"
+	self.rocket.fire = spawn script_model model "projectiles/bazookashell_dm.tik" scale "1.00"
 	self.rocket.fire.origin = self.rocket.origin
-	self.rocket.fire.angles = ( -90 0 0 )
+	self.rocket.fire.angles = ( 90 0 0 )
 	self.rocket.fire bind self.rocket
+	self.rocket.fire hide
 
 	// Fire up and lift off
 	self.rocket playsound fwork_launch
@@ -107,7 +108,7 @@ explode_rocket local.rocket:
 
 
 	// Light up the sky
-	local.fx[1] light 1 .8 .6 4500
+	local.fx[1] light (randomint(6) + 5.000 / 10) (randomint(7) + 4.000 / 10) (randomint(8) + 3.000 / 10) 4500 // 1 .8 .6 4500
 	wait .1
 	local.fx[1] light 0 0 0 0
 
@@ -122,8 +123,8 @@ make_fworks local.origin local.count:
 	{
 		local.typeint = randomint(2)+1
 
-		if(local.typeint == 1) { local.fworkary[local.c] = waitthread spawn local.origin "fx/corona_red.tik" 5 }
-		else { local.fworkary[local.c] = waitthread spawn local.origin "static/corona_orange.tik" 3.5 }
+		if(local.typeint == 1) { local.fworkary[local.c] = waitthread spawn local.origin "fx/corona_red.tik" 2.5 }
+		else { local.fworkary[local.c] = waitthread spawn local.origin "static/corona_orange.tik" 1.75 }
 		
 		local.fworkary[local.c].angles = ( 0 90 0 )
 	}
@@ -136,7 +137,7 @@ firefx local.fx:
 		local.fx[local.i] show
 		local.fx[local.i] physics_on
 		local.fx[local.i].velocity = waitthread get_velocity local.fx[local.i]
-		local.fx[local.i] light 1 (randomfloat 50 / 100) 0 600
+		local.fx[local.i] light 1 (randomfloat 50 / 100) 0 300
 	}
 end
 
@@ -154,25 +155,25 @@ get_velocity local.fwork:
 	switch (local.destination)
 	{
 		case 1:
-		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * -240 + local.fwork.upvector * 800
+		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * -240 + local.fwork.upvector * 300
 		break
 		case 2:
-		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * -160 + local.fwork.upvector * 800
+		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * -160 + local.fwork.upvector * 400
 		break
 		case 3:
-		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * -80 + local.fwork.upvector * 800
+		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * -80 + local.fwork.upvector * 500
 		break
 		case 4:
-		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 0 + local.fwork.upvector * 800
+		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 0 + local.fwork.upvector * 600
 		break
 		case 5:
-		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 80 + local.fwork.upvector * 800
+		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 80 + local.fwork.upvector * 500
 		break
 		case 6:
-		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 160 + local.fwork.upvector * 800
+		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 160 + local.fwork.upvector * 400
 		break
 		case 7:
-		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 240 + local.fwork.upvector * 800
+		local.velocity = local.fwork.forwardvector * -300 + local.fwork.leftvector * 240 + local.fwork.upvector * 300
 		break
 	}
 end local.velocity
@@ -188,6 +189,7 @@ spawn local.origin local.model local.scale local.tgname:
 	local.spawn notsolid
 	local.spawn hide
 	local.spawn targetname local.tgname
+	local.spawn gravity 0.5
 end local.spawn
 
 blink:

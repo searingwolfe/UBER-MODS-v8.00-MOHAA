@@ -2,23 +2,8 @@ exec global/respawn_stuck_fix.scr
 
 level.mapname = getcvar "mapname"
 local.master = spawn scriptmaster
-
-if(level.mapname[0] == "m" || level.mapname == "dm/mohdm1" || level.mapname == "dm/mohdm4")
-{
-local.master aliascache manon_pain01 sound/dialogue/Generic/A/damage/dfr_damage_01n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_pain02 sound/dialogue/Generic/A/damage/dfr_damage_02n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_pain03 sound/dialogue/Generic/A/damage/dfr_damage_03n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_pain04 sound/dialogue/Generic/A/damage/dfr_damage_04n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_death1 sound/dialogue/Generic/A/death/dfr_death_01n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_death2 sound/dialogue/Generic/A/death/dfr_death_04n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_death3 sound/dialogue/Generic/A/death/dfr_death_03n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_death4 sound/dialogue/Generic/A/death/dfr_death_02n.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-}
-if(level.mapname == "training")
-{
 local.master aliascache manon_pain sound/null.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
 local.master aliascache manon_death sound/null.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-}
 
 cache models/animate/hidden_cabinet_a.tik
 cache models/animate/hidden_cabinet_b.tik
@@ -117,6 +102,7 @@ cache models/miscobj/book_closed_thin_green.tik
 cache models/miscobj/book_closed_thin_red.tik
 cache models/miscobj/drinkglass.tik
 
+cache models/weapons/m2frag_grenade_sp.tik
 cache models/weapons/colt45.tik
 cache models/weapons/p38.tik
 cache models/weapons/silencedpistol.tik
@@ -142,6 +128,8 @@ cache models/player/allied_manon.tik
 cache models/player/allied_manon_fps.tik
 cache models/player/allied_pilot.tik
 cache models/player/allied_pilot_fps.tik
+cache models/player/allied_sas.tik
+cache models/player/allied_sas_fps.tik
 cache models/player/american_army.tik
 cache models/player/american_army_fps.tik
 cache models/player/american_ranger.tik
@@ -150,8 +138,9 @@ cache models/player/german_afrika_officer.tik
 cache models/player/german_afrika_officer_fps.tik
 cache models/player/german_afrika_private.tik
 cache models/player/german_afrika_private_fps.tik
+cache models/player/german_elite_officer.tik
+cache models/player/german_elite_officer_fps.tik
 cache models/player/german_elite_sentry.tik
-cache models/player/german_elite_sentry_fps.tik
 cache models/player/german_elite_sentry_fps.tik
 cache models/player/german_kradshutzen.tik
 cache models/player/german_kradshutzen_fps.tik
@@ -173,18 +162,17 @@ cache models/player/german_wehrmacht_officer.tik
 cache models/player/german_wehrmacht_officer_fps.tik
 cache models/player/german_wehrmacht_soldier.tik
 cache models/player/german_wehrmacht_soldier_fps.tik
+cache models/player/german_winter_1.tik
+cache models/player/german_winter_1_fps.tik
+cache models/player/german_winter_2.tik
+cache models/player/german_winter_2_fps.tik
 cache models/player/german_worker.tik
 cache models/player/german_worker_fps.tik
-cache models/player/german_winter_2.tik
 
 //cache models/player/allied_oss.tik // these tikis are missing, so caches are removed
 //cache models/player/allied_oss_fps.tik
 //cache models/player/german_elite_gestapo.tik
 //cache models/player/german_elite_gestapo_fps.tik
-//cache models/player/german_winter1.tik
-//cache models/player/german_winter1_fps.tik
-//cache models/player/german_winter2.tik
-//cache models/player/german_winter2_fps.tik
 
 cache models/vehicles/kingtank.tik 
 //cache models/vehicles/tigertank.tik // kingtank, tigertank, jeep caches will spam the console if driving them
@@ -310,3 +298,9 @@ cache models/fx/water_ripple_still.tik
 cache models/fx/water_splash_drop.tik
 cache models/fx/water_spray.tik
 cache models/fx/water_trail_bubble.tik
+
+	level waittill spawn
+
+	wait 0.5
+	local.datetime = getdate("%D") + " " + gettime(0)
+	println(local.datetime)

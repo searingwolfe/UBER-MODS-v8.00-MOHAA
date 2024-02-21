@@ -1,0 +1,59 @@
+// Spawn an invisible ladder trigger_multiple.
+// Players must be looking directly at ladder, and must be looking up/down more than 30 degrees to climb ladder.
+//
+// Ideally, player's hands should not go behind the ladder when climbing (use 3rd person to check your hands). Ignore this for curved ladder steps (i.e. on uboats).
+// Adjust the "offset" parameter if desired, or if player is getting stuck on stuff while climbing the ladder.
+//
+// Parameters: origin, angle for players to attach, ladder setsize1, ladder setsize2, ...
+// ... optional offset distance away from ladder (lower = players hands closer to ladder, higher = further away, default = 14). If > 18, players cannot climb the ladder.
+//
+// Example: exec global/spawnladder.scr ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 )
+// Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 ) 10
+
+main local.origin local.angle local.setsize1 local.setsize2 local.offset:
+
+	if(local.origin == NIL) { wait 1; println("----- ERROR global/spawnladder.scr: 'origin' parameter is missing!"); end }
+	if(local.angle == NIL) { wait 1; println("----- ERROR global/spawnladder.scr: 'angle' parameter is missing!"); end }
+	if(local.setsize1 == NIL) { wait 1; println("----- ERROR global/spawnladder.scr: 'setsize1' parameter is missing!"); end }
+	if(local.setsize2 == NIL) { wait 1; println("----- ERROR global/spawnladder.scr: 'setsize2' parameter is missing!"); end }
+	if(local.setsize1[0] > 0 || local.setsize1[1] > 0 || local.setsize1[2] > 0) { wait 1; println("----- ERROR global/spawnladder.scr: 'setsize1' values must be <= 0."); end }
+	if(local.setsize2[0] < 0 || local.setsize2[1] < 0 || local.setsize2[2] < 0) { wait 1; println("----- ERROR global/spawnladder.scr: 'setsize2' values must be >= 0."); end }
+	if(local.offset == NIL) { local.offset = 14 } // default
+	if(local.offset != NIL && local.offset > 18) { local.offset = 18 } // max
+
+	local.ladder = spawn trigger_multiple
+	local.ladder.origin = local.origin
+	local.ladder.angle = local.angle
+	local.ladder setsize local.setsize1 local.setsize2
+	local.ladder.height = local.setsize2[2]
+	local.ladder.offset = local.offset
+	local.ladder setthread ladder
+end local.ladder
+
+ladder:
+
+	local.player = parm.other
+	if(local.player.angle < self.angle - 30 || local.player.angle > self.angle + 30 || (local.player.viewangles[0] > -30 && local.player.viewangles[0] < 30) || !(local.player istouching self) || local.player.climbing_ladder == 1 || local.player.dead == 1 || !isalive local.player || local.player.dmteam == "spectator") { end }
+	if(local.player.origin[2] >= self.origin[2] + self.height) { end }
+
+	local.player.angle = self.angle
+	local.player.origin = ( self.origin[0] self.origin[1] local.player.origin[2] ) + (( self.forwardvector[0] self.forwardvector[1] 0 ) * self.offset * -1) // forwardvector * -1 = backwardvector
+	local.player.climbing_ladder = 1
+	local.player forcetorsostate GET_ON_LADDER
+	local.player thread status_check self
+end
+
+status_check local.ladder:
+
+	local.team = self.dmteam
+	while(isalive self && self.dmteam == local.team && self.dead != 1 && self istouching local.ladder)
+	{
+		self.angle = local.ladder.angle
+		waitframe
+	}
+	if(self != NULL)
+	{
+		self.climbing_ladder = 0
+		if(isalive self && self.dmteam != "spectator" && self.dead != 1) { self forcetorsostate STAND } // in case they get pushed off the ladder
+	}
+end

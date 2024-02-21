@@ -11,7 +11,10 @@ main2: // keep newly respawned players from getting stuck inside each other.
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if($player[local.i] != NULL && !isalive $player[local.i] && $player[local.i].respawn_stuck_check != 1) { $player[local.i] thread respawn_stuck_check }
+			if($player[local.i] != NULL && (!isalive $player[local.i] || $player[local.i].fellundermap == 1) && $player[local.i].respawn_stuck_check != 1)
+			{
+				$player[local.i] thread respawn_stuck_check
+			}
 		}
 		waitframe
 	}

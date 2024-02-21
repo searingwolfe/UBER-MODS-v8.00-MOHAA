@@ -38,9 +38,14 @@ exec cvars/cybsnd.scr		// "cybsnd_score 1" cvar, to print the current Cyber Atta
 				// spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance.
 				// "cybsnd_debug 1" cvar, to print once per second the Allies/Axis team count (living players) and Allies/Axis team total.
 				//
+exec cvars/coord_pointer.scr	// "coord_pointer" cvar.	"coord_pointer [27 or Searingwolfe]" = give/take a coord pointer to $player[27] or the player with the name "Searingwolfe".
+				//				Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console).
+				//				Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places.
+				//
 exec cvars/ubergametype.scr	// "g_ubergametype" cvar. 	"g_ubergametype bb" = Base-Builder gametype.
 				//				"g_ubergametype cyb" = Cyber Attack gametype.
 				//				"g_ubergametype snd" = Search & Destroy gametype.
+				//				"g_ubergametype ft" = Freeze-Tag gametype.
 				//				"g_ubergametype 0" or "" = none, regular TDM or FFA (based on g_gametype).
 				// "g_ubermods" cvar.		"g_ubermods 2" = default, all UBER mods enabled.
 				//				"g_ubermods 1" = No crates or teles, fewer triggers for multiplayer maps. Crates & teles, but no extra mods for singleplayer maps.
@@ -50,10 +55,10 @@ exec cvars/ubergametype.scr	// "g_ubergametype" cvar. 	"g_ubergametype bb" = Bas
 				//
 exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuously kill $player[27].
 				//				"hacker_kill Searingwolfe" = continuously kill the player with the name "Searingwolfe".
-				//				"hacker_takeall [27 or Searingwolfe]" = continuously take all their keys.
+				//				"hacker_takeall [27 or Searingwolfe]" = continuously take all their weapons.
 				//				"spectator [27 or Searingwolfe]" = continuously force them into spectator.
 				//
-				// "votekick" cvar.		"votekick [27 or Searingwolfe]" = all players vote to kick: Hold USE Key + Lean Left = VOTE NO (default), Hold USE Key + Lean Right = VOTE YES.
+				// "votekick" cvar.		"votekick [27 or Searingwolfe]" = all players vote to kick: Hold USE(e) key + Lean Left = VOTE NO (default), Hold USE(e) key + Lean Right = VOTE YES.
 				//
 				// "noclip2" cvar.		"noclip2 [27 or Searingwolfe]" = noclip around the map; still works if "cheats" = "0"; $player[1] client num = 1.
 				//				other hidden CVARS: "nodamage [27 or Searingwolfe]", "takedamage ", "show ", "hide ", "wuss2 " ("hide" makes a player invisible to wallhacks).
@@ -61,7 +66,7 @@ exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuousl
 				// "addkills" cvar.		"addkills [27 or Searingwolfe]" = add one kill to $player[27].
 				// "adddeaths" cvar.		"adddeaths [27 or Searingwolfe]" = add one death to $player[27].
 				//
-				// "coord2" cvar.		print all players' coords & angles to a "main/cvars/coords.txt" file (must create this file for CVAR to work).
+				// "coord2" cvar.		print $player[1]'s coords & angles to a "main/cvars/coords.txt" file (must create this file for CVAR to work).
 				//				"coord2 entity" or "coord2 1" = print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line.
 				//				"coord2 trigger" = print "( 0 0 0 ) " coords format on the same line.
 				//				"coord2 spawn" = print ""0 0 0" "angle" "0"" coords format on a new line.
@@ -132,6 +137,20 @@ level waittill prespawn
 	exec global/fastsky.scr 0
 	$world farplane 150000
 	$world farplane_color ( 0.6784 0.8353 0.9686 )
+
+//exec global/victory_podium.scr::test ( 220 -41 48 ) -90			// testing purposes only; spawn and show the podium crates.
+//exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90			// testing purposes only; launch fireworks continuously.
+
+// origin, angle for podium players, camera origin (or "auto"), camera angles (or "auto"), time duration of fireworks (5 = 00:05 seconds of map time remaining to end game; 0 or NIL = no fireworks), ...
+// ... distance until exploding (default = 300), particle time (default = 2.5), explosion scale (default = 0.8)
+//
+exec global/victory_podium.scr ( 220 -41 48 ) -90 auto auto 5
+
+//wait 70
+// runs immediately for "timeduration" seconds while launching fireworks, then ends the map. NOTE: the "main" thread must run first too!
+//
+//level.VP_winnertype = "allies" // or "axis" to optionally only show podium winners from that team.
+//exec global/victory_podium.scr::map_ended ( 220 -41 48 ) -90 300 2.5 0.8 7 // origin, angle for podium players, distance until exploding, particle time, explosion scale, time duration until map ends
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
@@ -265,5 +284,8 @@ exec alienx/basebuild.scr::basebuild ( 443.83 2650.43 384.13 ) "statweapons/mg42
 exec alienx/basebuild.scr::basebuild ( 743.83 2450.43 384.13 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
 exec alienx/basebuild.scr::basebuild ( 643.83 2650.43 384.13 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
 exec alienx/basebuild.scr::basebuild ( 543.83 2650.43 384.13 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+end
+
+clickitem_fail:
 end
 

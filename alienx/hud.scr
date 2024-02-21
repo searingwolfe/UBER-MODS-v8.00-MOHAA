@@ -1,18 +1,19 @@
 main:
 
 	local.gametype = int(getcvar("g_gametype"))
-	if(local.gametype != 1 && local.gametype != 2 && local.gametype != 3 && local.gametype != 4) { iprintlnbold("ended"); end }
+	if(local.gametype != 1 && local.gametype != 2 && local.gametype != 3 && local.gametype != 4) { end }
 
 	while($player.size < 1) { wait 1 }
 	while($player.size >= 1)
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if($player[local.i].huddraw != 1)
+			if($player[local.i].huddraw != 1 && $player[local.i] getconnstate != 1)
 			{
 				$player[local.i] thread huddraw local.gametype
 				$player[local.i].huddraw = 1
 			}
+			if($player[local.i] getconnstate == 1) { $player[local.i].huddraw = 0 }
 		}
 		wait 3
 	}
@@ -77,9 +78,5 @@ huddraw local.gametype:
 	if(level.bombsites == NIL) { ihuddraw_rect 		self 34 -260 165 50 14 }
 	else if(level.bombsites >= 1) { ihuddraw_rect   	self 34 -260 253 50 14 }
 	if(getcvar("g_ubergametype") == "ft") { ihuddraw_rect   self 34 -260 253 50 14 }
-	ihuddraw_string 					self 34 ("Killstreaks: 3, 5, 7, 9 Kills.")
-
-
-	wait 1
-	
+	ihuddraw_string 					self 34 ("Killstreaks: 3, 5, 7, 9 Kills.")	
 end

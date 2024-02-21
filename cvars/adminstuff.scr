@@ -5,6 +5,8 @@ main:
 
 	thread samename_fix
 
+	thread anti_hacks
+
 	setcvar "votekick" "0"
 	thread votekick
 
@@ -14,8 +16,6 @@ main:
 	setcvar "hacker_kill" "0"
 	setcvar "hacker_takeall" "0"
 	setcvar "spectator" "0"
-
-	thread anti_hacks
 
 	thread coord2
 
@@ -31,6 +31,7 @@ main:
 	thread adddeaths
 
 	local.result = registerev connected cvars/adminstuff.scr::check_player_stufftexts
+	local.result2 = registerev disconnected cvars/adminstuff.scr::date_time_timezone
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -138,6 +139,10 @@ end
 
 check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
 
+	if(local.player == NULL) { end }
+
+	thread date_time_timezone
+
 	local.player.checking_stufftexts = 1
 	local.name = netname local.player
 	local.n = 0
@@ -152,7 +157,7 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 	{
 		if(netname local.player == local.name)
 		{
-			iprintlnbold("Auto-kicked " + netname local.player + " for joining with stufftext hacks.")
+			println("----- Auto-kicked " + netname local.player + " for joining with stufftext hacks.")
 			stuffsrv("clientkickr " + (getclientnum local.player) + " \"Auto-kicked for joining with stufftext hacks.\"")
 			end
 		}
@@ -165,6 +170,92 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 		local.player.checking_stufftexts = 0
 		if(netname local.player != local.name) { local.player stufftext ("name " + local.name) }
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+date_time_timezone:
+
+	local.datetime = getdate("%D") + " " + gettime(0)
+	println(local.datetime)
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks" cvar phrases, auto-kick them for joining with preloaded hacks
+
+	local.hacks = makeArray // add more if needed
+		te_dietouch
+		f0rc3m0d3l
+		ib_wallhack
+		ib_doshoot
+		ib_doaim
+		ib_esp
+		ib_hud
+		dis4_chams
+		r_picmap
+		r_p1cm1p
+		r_p1cmap
+		as_forcemodel
+		cg_3rd_perzon
+		cg_forcefucka
+		xx_forcemodel
+		xx_3rd_person
+		e_Zoom
+		e_Chams
+		e_WESP
+		e_Glow
+		e_NoFog
+		e_TriggerBot
+		e_WireChams
+		e_Tr
+		doaim
+		aimsetting
+		wallhack
+		chams
+		wb_
+		cr_
+	endArray
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			for(local.c = 0; local.c < $player[local.i].userinfo.size; local.c++)
+			{
+				for(local.h = 1; local.h <= local.hacks.size; local.h++)
+				{
+					if($player[local.i].userinfo[local.c] == local.hacks[local.h][1][0]) // simulate a strstr() function to see if one string exists inside of another.
+					{
+						local.kick = 1
+						for(local.s = 0; local.s < local.hacks[local.h][1].size; local.s++)
+						{
+							if(local.c + local.s >= $player[local.i].userinfo.size || $player[local.i].userinfo[local.c + local.s] != local.hacks[local.h][1][local.s])
+							{
+								local.kick = 0
+								break
+							}
+						}
+					}
+					if(local.kick == 1 && $player[local.i] != NULL)
+					{
+						println("----- Auto-kicked " + netname $player[local.i] + " for joining with cvar hacks.")
+						stuffsrv("clientkickr " + (local.i - 1) + " \"Auto-kicked for joining with cvar hacks.\"")
+						local.break = 1
+						break
+					}
+				}
+			if(local.break == 1) { break }
+			}			
+		}
+		waitframe
+	}
+	thread anti_hacks
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -468,97 +559,21 @@ end
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks" cvar phrases, auto-kick them for joining with preloaded hacks
-
-	local.hacks = makeArray // add more if needed
-		te_dietouch
-		f0rc3m0d3l
-		ib_wallhack
-		ib_doshoot
-		ib_doaim
-		ib_esp
-		ib_hud
-		dis4_chams
-		r_picmap
-		r_p1cm1p
-		r_p1cmap
-		as_forcemodel
-		cg_3rd_perzon
-		cg_forcefucka
-		xx_forcemodel
-		xx_3rd_person
-		e_Zoom
-		e_Chams
-		e_WESP
-		e_Glow
-		e_NoFog
-		e_TriggerBot
-		e_WireChams
-		e_Tr
-		doaim
-		aimsetting
-		wallhack
-		chams
-		wb_
-		cr_
-	endArray
-
-	while($player.size < 1) { waitframe }
-	while($player.size >= 1)
-	{
-		for(local.i = 1; local.i <= $player.size; local.i++)
-		{
-			for(local.c = 0; local.c < $player[local.i].userinfo.size; local.c++)
-			{
-				for(local.h = 1; local.h <= local.hacks.size; local.h++)
-				{
-					if($player[local.i].userinfo[local.c] == local.hacks[local.h][1][0]) // simulate a strstr() function to see if one string exists inside of another.
-					{
-						local.kick = 1
-						for(local.s = 0; local.s < local.hacks[local.h][1].size; local.s++)
-						{
-							if(local.c + local.s >= $player[local.i].userinfo.size || $player[local.i].userinfo[local.c + local.s] != local.hacks[local.h][1][local.s])
-							{
-								local.kick = 0
-								break
-							}
-						}
-					}
-					if(local.kick == 1 && $player[local.i] != NULL)
-					{
-						iprintlnbold("Auto-kicked " + netname $player[local.i] + " for joining with cvar hacks.")
-						stuffsrv("clientkickr " + (local.i - 1) + " \"Auto-kicked for joining with cvar hacks.\"")
-						local.break = 1
-						break
-					}
-				}
-			if(local.break == 1) { break }
-			}			
-		}
-		waitframe
-	}
-	thread anti_hacks
-end
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-
 coord2:
 
 	while(getcvar("coord2") != "1" && getcvar("coord2") != "entity" && getcvar("coord2") != "trigger" && getcvar("coord2") != "spawn") { waitframe }
 
-	for(local.i = 1; local.i <= $player.size; local.i++)
+	if($player.size >= 1 && $player[1] != NULL)
 	{
-		local.angle = int($player[local.i].angles[1])
+		local.angle = int($player[1].angles[1])
 		if(local.angle > 180) { local.angle = local.angle - 360 }
 
 		if(getcvar("coord2") != "spawn")
 		{ 
 			local.tempstr = "( "
-			local.tempstr = local.tempstr + string(int($player[local.i].origin[0])) + " " 
-			local.tempstr = local.tempstr + string(int($player[local.i].origin[1])) + " "
-			local.tempstr = local.tempstr + string(int($player[local.i].origin[2])) + " ) "
+			local.tempstr = local.tempstr + string(int($player[1].origin[0])) + " " 
+			local.tempstr = local.tempstr + string(int($player[1].origin[1])) + " "
+			local.tempstr = local.tempstr + string(int($player[1].origin[2])) + " ) "
 
 			if(getcvar("coord2") == "entity" || getcvar("coord2") == "1")
 			{
@@ -568,9 +583,9 @@ coord2:
 		}
 		else
 		{
-			local.tempstr = "\"" + string($player[local.i].origin[0]) + " " 
-			local.tempstr = local.tempstr + string($player[local.i].origin[1]) + " "
-			local.tempstr = local.tempstr + string($player[local.i].origin[2]) + "\""
+			local.tempstr = "\"origin\" \"" + string($player[1].origin[0]) + " " 
+			local.tempstr = local.tempstr + string($player[1].origin[1]) + " "
+			local.tempstr = local.tempstr + string($player[1].origin[2]) + "\""
 			local.tempstr = local.tempstr + " \"angle\" \"" + local.angle + "\""
 		}
 
@@ -580,9 +595,11 @@ coord2:
 		else { local.result = fputs local.file (local.tempstr + "\n") }
 		local.result = fclose local.file
 
-		$player[local.i] iprint local.tempstr
-		println("----- $player[" + local.i + "]: " + local.tempstr)
+		$player[1] iprint local.tempstr
+		println("----- $player[" + 1 + "]: " + local.tempstr)
 	}
+	else { println("----- ERROR. $player[1] does not exist!") }
+
 	if(getcvar("coord2") != "0") { setcvar "coord2" "0" }
   	thread coord2
 end

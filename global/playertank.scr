@@ -142,7 +142,8 @@ tankreset local.groundtarget: // tank turret must be reset each time a new tank 
 		local.groundtarget remove
 	}
 	local.groundtarget_gun2 remove
-	removeclass Camera // when exiting any drivable tanks, a "Camera" entity is left behind (likely from the VehicleTurretGun); remove this to prevent Camera entities from building up over time.
+	//removeclass Camera // also removes PlayerIntermission and other func_cameras
+	if(level.removeclass_camera != 1) { thread removeclass_camera } // when exiting any drivable tanks, a "Camera" entity is left behind (likely from the VehicleTurretGun); remove this to prevent Camera entities from building up over time.
 end
 
 tanktrigger:
@@ -271,6 +272,7 @@ driverreset local.death local.newteam local.changescore:
 		self.driver show
 		self.driver solid
 		self.driver takedamage
+		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
 		if(local.death != 1 && local.changescore != 1)
 		{
 			if(local.newteam != 1) { self.driver.origin = self.origin + ( 0 0 200 ) }
@@ -444,11 +446,14 @@ turretslot_2nd local.player:
 		local.player iprint ("An enemy player is driving this vehicle!")
 		end
 	}
+
 	self.turretplayer = local.player
 	//self.turretplayer hide
 	self.turretplayer.scale = 0.5
 	self.turretplayer.passenger = 1
 	self.turretplayer.remove_viewmodel = 0
+	self.turretplayer forcetorsostate TURRET_START
+
 	self unlock
 	self.gun unlock
 	self.gun2 unlock
@@ -507,6 +512,7 @@ turretplayer_reset local.team local.player:
 	local.player.scale = 1
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
+	local.player forcetorsostate STAND
 
 	if(isalive local.player && local.player.dmteam != "spectator")
 	{
@@ -643,6 +649,23 @@ wallstuck_fix:
 		waitframe
 	}
 	if(self != NULL) { self.wallstuck_fixing = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+removeclass_camera:
+
+	level.removeclass_camera = 1
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == "Camera" && local.entity.targetname == "") { local.entity remove }
+			waitframe
+		}
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

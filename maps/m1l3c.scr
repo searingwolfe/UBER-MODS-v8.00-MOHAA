@@ -11,6 +11,7 @@ exec cvars/findmodel.scr
 exec cvars/drawpath.scr
 exec cvars/cybsnd.scr
 exec cvars/playerspawns.scr
+exec cvars/coord_pointer.scr
 exec cvars/ubergametype.scr
 exec cvars/adminstuff.scr
 
@@ -77,6 +78,7 @@ level waittill prespawn
 
 	level.script = maps/m1l3c.scr
 	exec global/ambient.scr m1l3c
+	exec global/door_locked.scr
 	exec global/exploder.scr
 	//exec global/barrel.scr::explosive_barrel
 
@@ -84,6 +86,8 @@ level waittill prespawn
 	exec global/fastsky.scr 0
 	$world farplane 150000
 	$world farplane_color ( 0.04314 0.05882 0.16471 )
+
+exec global/victory_podium.scr ( -1266 -2469 230 ) 180 auto auto 5
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
@@ -185,6 +189,7 @@ thread alarmswitch2 ( 140 -2463 413 ) ( 0 90 0 ) 60 450 2
 	thread minenbombs ( -4424 -5851 797 ) 125 400 620 40
 	thread vehicles_undermap
 	thread vehicle_tele ( 1 0 0 ) ( 0 1 0 ) 150
+	thread touching_ocean ocean
 }
 	thread elevatorplayers_fellout
 
@@ -670,7 +675,7 @@ vehicle_tele local.color1 local.color2 local.distance:
 	local.trigshot2 setthread tele_shot2
 
 	local.PI = 3.14159265359
-	local.height = 80	// keep this larger than 75, otherwise halftracks cannot pass through the vehicle_tele (only because there's 2 teles, and both are at an unusual angle).
+	local.height = 30
 
 	while(local.trig != NULL)
 	{
@@ -683,10 +688,11 @@ vehicle_tele local.color1 local.color2 local.distance:
 					local.degrees = $(local.vehicles[local.a])[local.s].angles[1]
 					if(local.degrees >= 180) { local.degrees -= 360 }
 					local.radians = local.degrees * (local.PI / 180)
-
 					local.sin = (sin local.radians) * local.distance
 					local.cos = (cos local.radians) * local.distance
-					$(local.vehicles[local.a])[local.s].origin = trace ($(local.vehicles[local.a])[local.s].origin) ($(local.vehicles[local.a])[local.s].origin + ( local.cos local.sin local.height )) 0
+
+					local.fwd_vec = (angles_toforward $(local.vehicles[local.a])[local.s].angles) * 25
+					$(local.vehicles[local.a])[local.s].origin = trace ($(local.vehicles[local.a])[local.s].origin + local.fwd_vec) ($(local.vehicles[local.a])[local.s].origin + ( local.cos local.sin local.height )) 0
 
 					thread lasers_telesuccess local.laser1 local.laser2 local.laser3 local.laser4 local.laser5 local.color1 local.color2
 				}
@@ -840,16 +846,28 @@ end
 
 waterdeath: // ".touching_playerboat" variable comes from the "touching_playerboat" thread in "global/playerboat.scr"
 
-	//$ocean volumedamage 999999 // do not use volumedamage to kill vehicles, otherwise server will crash. use "istouching $ocean" and "damage" to kill them
+	//$ocean volumedamage 999999 // do not use volumedamage to kill vehicles, otherwise server will crash. use "istouching $ocean" and "damage" to kill them in a separate thread
+end
 
-	local.player = parm.other
-	if(local.player.driving != 1 && local.player.flying != 1 && local.player.touching_playerboat != 1)
+touching_ocean local.ocean:
+
+	while(1)
 	{
-		local.player iprint "You fell under the map."
-		local.player iprint "Teleporting to the surface."
-		local.player respawn	// killent local.player.entnum
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1)
+			{
+				if($player[local.i] istouching $(local.ocean) && $player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i].touching_playerboat != 1 && $player[local.i].fellundermap != 1)
+				{
+					$player[local.i] iprint "You fell under the map."
+					$player[local.i] iprint "Teleporting to the surface."
+					$player[local.i] respawn	// killent local.player.entnum
 	
-		local.player thread fellundermap // don't need this if "local.player kill" is used instead.
+					$player[local.i] thread fellundermap // don't need this if "local.player kill" is used instead.
+				}
+			}
+		}
+		waitframe
 	}
 end
 
@@ -880,7 +898,10 @@ alarmswitch1 local.origin local.angles local.offtime local.damageradius local.pu
 	local.switchtrig nottriggerable
 	local.switch anim turnon
 	local.switch playsound alarmswitch
- 	//local.switchtrig message ("*** Blowing up some bangalores. ***")
+
+ 		//local.switchtrig message ("*** Blowing up some bangalores. ***")
+ 		local.player = parm.other
+ 		local.player iprint ("*** Blowing up some bangalores. ***")
 
 	wait (randomint(50) / 50.00 + 0.25)
 	thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb4 local.offtime local.damageradius local.pulsatingoff
@@ -926,7 +947,10 @@ alarmswitch2 local.origin local.angles local.offtime local.damageradius local.pu
 	local.switchtrig nottriggerable
 	local.switch anim turnon
 	local.switch playsound alarmswitch
- 	//local.switchtrig message ("*** Blowing up some bangalores. ***")
+
+ 		//local.switchtrig message ("*** Blowing up some bangalores. ***")
+ 		local.player = parm.other
+ 		local.player iprint ("*** Blowing up some bangalores. ***")
 
 	wait (randomint(50) / 50.00 + 0.25)
 	thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb7 local.offtime local.damageradius local.pulsatingoff
@@ -1933,4 +1957,7 @@ end
 elevator_failsafe:
 end
 s2_lifesaver:
+end
+
+clickitem_fail:
 end

@@ -66,7 +66,8 @@ ResetFlak local.groundtarget:
 	self.trigenter = local.trig
 	self.corona = 0
 	self thread healthboost
-	removeclass Camera
+	//removeclass Camera // also removes PlayerIntermission and other func_cameras
+	if(level.removeclass_camera != 1) { thread removeclass_camera }
 end
 
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
@@ -319,6 +320,23 @@ dummydriver:
 	while(self != NULL && self.fplayer != NIL && self.fplayer != NULL) { waitframe }
 
 	if($("driverdummy_" + self.entnum) != NULL) { $("driverdummy_" + self.entnum) remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+removeclass_camera:
+
+	level.removeclass_camera = 1
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == "Camera" && local.entity.targetname == "") { local.entity remove }
+			waitframe
+		}
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

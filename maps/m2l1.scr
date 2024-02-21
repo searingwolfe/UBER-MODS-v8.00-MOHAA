@@ -11,6 +11,7 @@ exec cvars/findmodel.scr
 exec cvars/drawpath.scr
 exec cvars/cybsnd.scr
 exec cvars/playerspawns.scr
+exec cvars/coord_pointer.scr
 exec cvars/ubergametype.scr
 exec cvars/adminstuff.scr
 
@@ -85,7 +86,9 @@ level waittill prespawn
 	setcvar "r_fastsky" "0"
 	exec global/fastsky.scr 0
 	$world farplane 150000
-	$world farplane_color ( .8 .8 .8 )
+	$world farplane_color ( 0.6784 0.8353 0.9686 ) //( .8 .8 .8 )
+
+exec global/victory_podium.scr ( 3424 4459 -63 ) -90 auto auto 5
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
@@ -140,12 +143,12 @@ exec global/playervehicle.scr sdkfz1 vehicles/sdkfz.tik ( -663 -3570 487 ) ( 0 9
 exec global/playervehicle.scr m3halftrack vehicles/m3.tik ( 1885 -2340 481 ) ( 0 180 0 ) 250 40 45 1
 
 local.r1 = randomint(3); local.r2 = randomint(3)
-if(local.r1 == 0) { exec global/playervehicle.scr eurocar vehicles/european_car_grey.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }	// middle side
-if(local.r1 == 1) { exec global/playervehicle.scr eurocar vehicles/european_car_silver.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }
-if(local.r1 == 2) { exec global/playervehicle.scr eurocar vehicles/european_car_tan.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }
-if(local.r2 == 0) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_green.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
-if(local.r2 == 1) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_grey.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
-if(local.r2 == 2) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_red3.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
+//if(local.r1 == 0) { exec global/playervehicle.scr eurocar vehicles/european_car_grey.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }	// middle side
+//if(local.r1 == 1) { exec global/playervehicle.scr eurocar vehicles/european_car_silver.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }
+//if(local.r1 == 2) { exec global/playervehicle.scr eurocar vehicles/european_car_tan.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }
+//if(local.r2 == 0) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_green.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
+//if(local.r2 == 1) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_grey.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
+//if(local.r2 == 2) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_red3.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
 exec global/playervehicle.scr mercedes vehicles/mercedes.tik ( 3340 2851 512 ) ( 0 -90 0 ) 250 400 45 1
 exec global/playervehicle.scr jeep_bench vehicles/jeep_bench.tik ( 2270 32 448 ) ( 0 0 0 ) 250 400 45 1
 
@@ -567,6 +570,7 @@ radio_music local.origin local.angles:
 	local.radio model "miscobj/radio_military.tik"
 	local.radio.origin = local.origin
 	local.radio.angles = local.angles
+	local.radio.scale = 0.001
 	
 	local.trig = spawn trigger_use
 	local.trig.origin = local.radio.origin
@@ -595,7 +599,7 @@ radio_music local.origin local.angles:
 	local.radio remove
 	local.trig remove
 
-	thread radio_music local.origin local.angles local.ctrlroom
+	thread radio_music local.origin local.angles
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1192,6 +1196,7 @@ cratesstuff local.model local.origin local.angles local.hide local.scale local.t
 	if(local.hide == 1) { local.ent hide }
 	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
 	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
+	if(local.ent.model == "models/vehicles/uboat.tik") { local.ent setsize ( -2200 -250 0 ) ( 2200 250 582 ) }
 end
 
 solidclip local.origin local.setsize1 local.setsize2 local.angle local.targetname:
@@ -1251,7 +1256,7 @@ level waittill spawn
   		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1556 7363 -31 ) -90		// for search & destroy only, team parameter doesn't matter
   		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 3299 1118 474 ) 180		// make sure to include initial bombsites before the while-loop begins.
 	}
-	if(level.changesides == 1) // xis are planting (allies bombsite origins)
+	if(level.changesides == 1) // axis are planting (allies bombsite origins)
 	{
   		waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2454 -2732 452 ) 0
   		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 737 622 489 ) 90
@@ -1292,7 +1297,7 @@ bb_objects:
 level waittill prespawn
 
 //allies
-exec alienx/basebuild.scr::basebuild ( -1909.39 -2961.18 500.04 ) "vehicles/bp44train.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1909.39 -2961.18 500.04 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( -1909.39 -2861.18 500.04 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( -1909.39 -2761.18 500.04 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
 exec alienx/basebuild.scr::basebuild ( -1909.39 -2661.18 500.04 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
@@ -1304,14 +1309,14 @@ exec alienx/basebuild.scr::basebuild ( -1909.39 -2161.18 500.04 ) "static/bookca
 exec alienx/basebuild.scr::basebuild ( -1909.39 -2061.18 500.04 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
 
 //half allies, half axis
-exec alienx/basebuild.scr::basebuild ( 2150.08 -1198.65 448.13 ) "static/screwdriver.tik" 1 0 1 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 2150.08 -1098.65 448.13 ) "animate/bangalore.tik" 1 1 0 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 2150.08 -998.65 448.13 ) "animate/alarmswitch.tik" 1 1 .5 0 90 .25 0 0 1
-exec alienx/basebuild.scr::basebuild ( 2150.08 -898.65 448.13 ) "animate/radiobomb.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2150.08 -1198.65 448.13 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2150.08 -1098.65 448.13 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2150.08 -998.65 448.13 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2150.08 -898.65 448.13 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 2150.08 -798.65 448.13 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
 exec alienx/basebuild.scr::basebuild ( 2150.08 -698.65 448.13 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
-exec alienx/basebuild.scr::basebuild ( 2150.08 -598.65 448.13 ) "static/scr536.tik" 1 0 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 2152.27 -498.03 448.13 ) "animate/explosive.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2150.08 -598.65 448.13 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2152.27 -498.03 448.13 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 2128.10 -398.84 448.13 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 2128.08 -298.65 448.13 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
 

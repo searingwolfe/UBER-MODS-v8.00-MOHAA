@@ -1661,11 +1661,12 @@ new_player_hud:
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if($player[local.i].HUDcybsnd != 1)
+			if($player[local.i].HUDcybsnd != 1 && $player[local.i] getconnstate != 1)
 			{
 				$player[local.i] thread huddraw
 				$player[local.i].HUDcybsnd = 1
 			}
+			if($player[local.i] getconnstate == 1) { $player[local.i].huddraw = 0 }
 		}
 		wait 3
 	}

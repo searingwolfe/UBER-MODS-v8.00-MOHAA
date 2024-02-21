@@ -1,0 +1,135 @@
+// A vehicle tele allows vehicles to travel through walls/gates to a normally inaccessable area.
+// Lasers can be spawned into a local.lasers array via the "spawnlaser" thread in this script (paramters: origin, endpoint, initial color, scale).
+//
+// The optional teleporting alignment parameter forces vehicles to move along the 0-180 degree axis or 90-270 degree axis, preventing them from falling out of the map when teleporting across long distances.
+// A solid floor entity is required for teleporters across long distances through map walls, to keep the teleporting vehicles from blowing up or falling endlessly into the void.
+//
+// Parameters: origin, setsize 1, setsize 2, laser array (or NIL if no lasers), teleporting alignment (NIL = none, 0 = 0-180 axis, 1 = 90-270 axis), vehicle height after teleporting (default/NIL = 0), ...
+// ... teleporting speed (default/NIL = 25, max = 300), spawn solid floor (0 or NIL = no, 1 = yes).
+//
+// Example: exec global/vehicle_tele.scr ( 4193 -1119 -511 ) ( -222 -680 -10 ) ( 222 680 355 ) local.lasers 1 0 50 1
+//
+//	local.lasers[1] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6227 -511 ) ( -1507 -6227 -262 ) ( 1 0 0 ) 3 // origin, endpoint, initial color, scale
+//	local.lasers[2] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6224 -259 ) ( -1507 -6464 -259 ) ( 1 0 0 ) 3
+//	local.lasers[3] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6461 -262 ) ( -1507 -6461 -511 ) ( 1 0 0 ) 3
+//	exec global/vehicle_tele.scr ( -1502 -6344 -511 ) ( -30 -115 -10 ) ( 30 115 200 ) local.lasers 0
+
+main local.origin local.setsize1 local.setsize2 local.lasers local.align local.height local.speed local.spawnfloor:
+
+	wait 1 // wait for everything in the map to spawn first
+
+	local.a = 0
+	for(local.e = 0; local.e <= 868; local.e++)
+	{
+		local.entity = getentity(local.e)
+		if(local.entity != NULL && (local.entity.classname == VehicleTank || local.entity.classname == DrivableVehicle))
+		{
+			local.vehicles[local.a] = local.entity.targetname
+			local.a++
+		}
+		if(local.e % 14 == 0) { waitframe }
+	}
+	if(local.vehicles.size < 1) { end }
+
+	if(local.height == NIL) { local.height = 0 }
+	if(local.speed == NIL || local.speed < 0) { local.speed = 25 } // increase this to speed up vehicles traveling through teleporter.
+	else if(local.speed > 300) { local.speed = 300 }
+	if(local.spawnfloor == 1) { thread solidclip local.origin local.setsize1 ( local.setsize2[0] local.setsize2[1] 0 ) }
+
+	local.trigshot = spawn trigger_multiple spawnflags 128
+	local.trigshot.origin = local.origin
+ 	local.trigshot setsize local.setsize1 local.setsize2
+	local.trigshot.color1 = ( 1 0 0 )
+	local.trigshot.lasers = local.lasers
+	local.trigshot setthread tele_shot
+
+	local.PI = 3.14159265359
+	while(local.trig != NULL)
+	{
+		for(local.a = 0; local.a <= local.vehicles.size; local.a++)
+		{
+			for(local.s = 1; $(local.vehicles[local.a]) != NULL && local.s <= $(local.vehicles[local.a]).size; local.s++)
+			{
+				if($(local.vehicles[local.a])[local.s] != NULL && $(local.vehicles[local.a])[local.s] istouching local.trigshot && $(local.vehicles[local.a])[local.s].driver != NIL)
+				{
+					local.degrees = $(local.vehicles[local.a])[local.s].angles[1] // don't subtract degrees by 360 if > 180, otherwise align if-statements may not work.
+					local.radians = local.degrees * (local.PI / 180)
+
+					if(local.align == 0)
+					{
+						if(local.radians >= 1.5 * local.PI || local.radians < 0.5 * local.PI) { local.radians = 0; local.degrees = 0 }
+						if(local.radians >= 0.5 * local.PI && local.radians < 1.5 * local.PI) { local.radians = local.PI; local.degrees = 180 }
+					}
+					else if(local.align == 1)
+					{
+						if(local.radians >= 0 && local.radians < local.PI) { local.radians = 0.5 * local.PI; local.degrees = 90 }
+						if(local.radians >= local.PI && local.radians < 2 * local.PI) { local.radians = 1.5 * local.PI; local.degrees = -90 }
+					}
+					else { if(local.degrees >= 180) { local.degrees -= 360 } }
+
+					local.sin = (sin local.radians) * 300 // 300 = maximum size of vehicles/tanks
+					local.cos = (cos local.radians) * 300
+					local.fwd_vec = (angles_toforward ( 0 local.degrees 0 ))
+					$(local.vehicles[local.a])[local.s].angle = local.degrees
+
+					if(local.align != NIL) { $(local.vehicles[local.a])[local.s].origin = trace ($(local.vehicles[local.a])[local.s].origin + local.fwd_vec * local.speed) ($(local.vehicles[local.a])[local.s].origin + local.fwd_vec * 300 + ( 0 0 local.height )) 0 }
+					else { $(local.vehicles[local.a])[local.s].origin += ( local.cos local.sin local.height ) }
+
+					local.trigshot thread lasers_telesuccess local.lasers ( 1 0 0 ) ( 0 1 0 )
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+tele_shot:
+
+	if(self.lasers_telesuccess == 1) { end }
+	self nottriggerable
+	if(self.lasers != NIL) { self.lasers color ( 1 1 1 ) }
+	waitframe
+	if(self.lasers != NIL) { self.lasers color self.color1 }
+	self triggerable
+end
+
+lasers_telesuccess local.lasers local.color1 local.color2:
+
+	if(self.lasers_telesuccess == 1) { end }
+	self.lasers_telesuccess = 1
+
+	if(local.lasers != NIL) { local.lasers color local.color2 }
+	wait 0.5
+	if(local.lasers != NIL) { local.lasers color local.color1 }
+	self.lasers_telesuccess = 0
+end
+
+//-----------------------------------------------------------------------------
+
+spawnlaser local.origin local.endpoint local.color local.scale:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
+
+solidclip local.origin local.setsize1 local.setsize2:
+
+	local.clip = spawn script_object
+	local.clip.origin = local.origin
+	local.clip setsize local.setsize1 local.setsize2
+	local.clip.angle = 0
+	local.clip solid
+	local.clip nodamage
+end

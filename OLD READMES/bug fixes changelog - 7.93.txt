@@ -1,0 +1,51 @@
+<><><> Updates & Bug Fixes <><><>
+
+v7.93 (1-27-2023): - New killstreak added: Airstrikes. After 5 kills in a row, players can Hold USE(e) + Lean Left/Right to laze a target for the airstrike, then Hold USE(e) + FIRE to call the airstrike.
+
+- Laser arrows indicate the direction that airstrike planes will follow. Bombs drop from the planes continuously (traveling -8200 to 8200 units from player's origin, 16400 units total).
+- Dropped bombs that kill players count as scoreponts and cannot damage teammates (but can kill them if driving vehicles).
+- The airplanes can only be shot down by enemy players after shooting them 8+ times. Any crashing planes can kill any players.
+- The killstreaks/airstrikes.scr uses the new global/bomberplane_nospline.scr to make planes follow a straight line path without any splinepath nodes.
+
+- Throwing knives, Giant Bombs & Light Bombs will no longer be thrown/launched immediately after launching/placing down a killstreak (must first let go of USE(e) + FIRE).
+- Improved script on chain-reaction explosions for explodable killstreaks, and ensured that scorepoints for kills across chain-reactions are correctly applied (killstreaks/damagehandler.scr).
+
+- Added global/respawn_stuck_fix.scr to global/dmprecache.scr for all maps, for preventing any 2 players from getting stuck inside each other after respawning.
+- Flyable planes' bullets & rockets, as well as Giant Bombs & Light Bombs no longer deal damage to teammates or deal radiusdamage if they explode near a teammate (unless in FFA or g_teamdamage = 1).
+
+- Major changes in adminstuff.scr: "stufftext" commands replaced with stuffsrv("banip...") or stuffsrv("clientkickr...") due to some hackers modding their game files and preventing stufftexts from affecting them.
+- Changed CVARS: "hacker_kill [1 or playername]", "hacker_takeall [1 or playername]", "spectator [1 or playername]" cvars will do these commands continuously until "hacker_kill 0" or similar is entered into console.
+- Other hidden CVARS: "votekick []", "noclip2 []", "wuss2 []", "nodamage []", "takedamage []", "show []", "hide []".
+
+- Same-Name Fix: prevents two players from having the same name. Anyone who still tries to copy someone else's name (20 attempts) will get auto-banned.
+- Anti-Hacks: any player that joins whose .userinfo has one of the "local.hacks" cvar phrases in the makearray in adminstuff.scr, auto-kick them for joining with preloaded hacks (example: "\cg_wallhack\0\")
+- Anti-Stufftext-Hacks: checks if newly-joined players' names can be changed via stufftext command. If their name cannot be changed, auto-kick them for joining with stufftext-hacks.
+
+---------------
+
+- Place any script examples before "level waittill spawn". Change "kills" parameter as needed (number of kills in a killstreak, without dying or changing teams).
+- Additional level parameters such as "number of planes" (2 by default), number of bombs dropped (25 by default), and color & scale & alpha of lasers at top of this killstreak script.
+
+Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).
+Airstrike Example: exec killstreaks/airstrikes.scr 5 8
+
+---------------
+
+- M2L1 fully modded. 5 flyable planes, 1 flak88, 1 nebelwerfer, 4 tanks and 12 vehicles added to the map. 3 sets of radiobomb-walkies, 4 extra throwing knives also added.
+- 5 bangalore wallbombs: 1 in Allies spawn, 2 in main center building, and 2 in Axis spawn. Airstrikes launch randomly between 90 and 180 seconds.
+- These airstrikes use global/bomberplane_nospline.scr and require level.bomberplane_map_setsizes to be defined before running these threads, since origin & angles are randomized per airstrike.
+
+	level.bomberplane_map_setsize1 = ( -6935 -4375 0 )	// just like a .tik file, adjust these map_setsizes so the planes aren't dropping bombs outside of the map (also includes skybox height).
+	level.bomberplane_map_setsize2 = ( 5935 7415 2100 )	// start at ( 0 0 0 ) on the map. setsize1 must have - numbers, and setsize2 must have + numbers.
+
+- The flat snow-covered cliff behind the main middle building can be driven/walked on, as well as the higher cliff next to the Allies spawn.
+- Vehicle teles allow tanks/vehicles to travel across the middle fence and on top of the flat snow-covered cliff.
+- The metal gate at the Allies spawn can be opened/closed from both sides using the red-pulsing train switch.
+- Every 60 to 180 seconds, a train (2 to 4 train cars) quickly drives across the train tracks behind the Allies spawn, killing anyone that gets run over.
+
+- Various looping sounds added inside the buildings for airvents, humming transformers, etc. The paper documents can be blown up with a grenade. 
+- The large generator in the 2nd floor main building can be turned on/off with a nearby electrical switch. 3 radios across the map can also be turned on/off to play static or music.
+- Player spawns added and distributed more widely across the Allies/Axis spawns. Invisible walls block prevent any players or projectiles from going under the map or going behind rock cliffs and shooting through them.
+- Bombsites in Search & Destroy will move closer to defending team's spawn each time the gamemode changes sides (when "level.changesides" changes).
+
+<><><> <><><>

@@ -919,7 +919,7 @@ state RAISE_WEAPON
 	{
 		exec global/ac/spawn_detect.scr 1
 		//exec global/modelfix.scr	// old script, keep this commented out to stop players crashing server using an fps expoit, giving this error:
-		viewmodelanim pullout		// ERROR: Stopping due to possible infinite torso state loop
+		viewmodelanim pullout		// "ERROR: Stopping due to possible infinite torso state loop"
 		//exec skill_balancer/player_thread.scr
 		// just to make sure nothing funky's 
 		// attached that shouldn't be.
@@ -930,15 +930,15 @@ state RAISE_WEAPON
 	states
 	{
 		RAISE_PISTOL		: IS_NEW_WEAPONCLASS "mainhand" "pistol"
-		RAISE_RIFLE			: IS_NEW_WEAPONCLASS "mainhand" "rifle"
+		RAISE_RIFLE		: IS_NEW_WEAPONCLASS "mainhand" "rifle"
 		RAISE_GRENADE		: IS_NEW_WEAPONCLASS "mainhand" "grenade"
-		RAISE_SMG			: IS_NEW_WEAPONCLASS "mainhand" "smg"
-		RAISE_MG			: IS_NEW_WEAPONCLASS "mainhand" "mg"
+		RAISE_SMG		: IS_NEW_WEAPONCLASS "mainhand" "smg"
+		RAISE_MG		: IS_NEW_WEAPONCLASS "mainhand" "mg"
 //		RAISE_PISTOL		: IS_NEW_WEAPONCLASS "mainhand" "item" // hold all items like a pistol for now
-		RAISE_HEAVY			: IS_NEW_WEAPONCLASS "mainhand" "heavy"
+		RAISE_HEAVY		: IS_NEW_WEAPONCLASS "mainhand" "heavy"
 		RAISE_PAPERS		: IS_NEW_WEAPON "mainhand" "Papers"
 		
-//		RAISE_RIFLE			: default
+//		RAISE_RIFLE		: default
 		RAISE_NOANIM		: default
 	}
 }
@@ -2491,11 +2491,11 @@ state LADDER_IDLE_LEFT
 		GET_OFF_LADDER_BOTTOM	: FORWARD !LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		GET_OFF_LADDER_BOTTOM	: BACKWARD LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		
-		LADDER_UP_RIGHT			: FORWARD LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
-		LADDER_UP_RIGHT			: BACKWARD !LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
+		LADDER_UP_RIGHT			: FORWARD LOOKING_UP "-30"
+		LADDER_UP_RIGHT			: BACKWARD !LOOKING_UP "-30"
 		
-		LADDER_DOWN_LEFT		: FORWARD !LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
-		LADDER_DOWN_LEFT		: BACKWARD LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
+		LADDER_DOWN_LEFT		: FORWARD !LOOKING_UP "-30"
+		LADDER_DOWN_LEFT		: BACKWARD LOOKING_UP "-30"
 		
 //		LADDER_SLIDE			: CROUCH
 		
@@ -2537,11 +2537,11 @@ state LADDER_IDLE_RIGHT
 		GET_OFF_LADDER_BOTTOM	: FORWARD !LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		GET_OFF_LADDER_BOTTOM	: BACKWARD LOOKING_UP "-30" CAN_GET_OFF_LADDER_BOTTOM
 		
-		LADDER_UP_LEFT			: FORWARD LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
-		LADDER_UP_LEFT			: BACKWARD !LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
+		LADDER_UP_LEFT			: FORWARD LOOKING_UP "-30"
+		LADDER_UP_LEFT			: BACKWARD !LOOKING_UP "-30"
 		
-		LADDER_DOWN_RIGHT		: FORWARD !LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
-		LADDER_DOWN_RIGHT		: BACKWARD LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
+		LADDER_DOWN_RIGHT		: FORWARD !LOOKING_UP "-30"
+		LADDER_DOWN_RIGHT		: BACKWARD LOOKING_UP "-30"
 		
 //		LADDER_SLIDE			: CROUCH
 
@@ -2703,80 +2703,6 @@ state GENERIC_USE
 	}
 }
 
-
-//==============================================================================
-//==============================================================================
-//
-// Vehicles
-//
-//==============================================================================
-
-state VEHICLE_PUTAWAY
-{
-	entrycommands
-	{
-		deactivateweapon righthand
-	}
-	
-	states
-	{
-		VEHICLE_IDLE	: default
-	}
-}
-
-state VEHICLE_START
-{
-//	movetype anim
-	
-//	action
-//	{
-//		vehicle_idle			: default
-//	}
-	
-	states
-	{
-		VEHICLE_PUTAWAY	: PUTAWAYMAIN	// Basic put weapon away move.
-		VEHICLE_IDLE	: default
-	}
-}
-
-state VEHICLE_IDLE
-{
-	movetype anim
-	
-	action
-	{
-		vehicle_idle	: default
-	}
-	
-	states
-	{
-		VEHICLE_USE		: +USE
-		STAND			: !IS_USING_VEHICLE
-	}
-}
-
-state VEHICLE_USE
-{
-	movetype anim
-
-//	entrycommands
-//	{
-//		usestuff
-//	}
-
-	action
-	{
-		vehicle_idle			: default
-	}
-
-	states
-	{
-		VEHICLE_IDLE	: default
-	}
-}
-
-
 //==============================================================================
 //==============================================================================
 //
@@ -2786,11 +2712,6 @@ state VEHICLE_USE
 
 state TURRET_PUTAWAY
 {
-	entrycommands
-	{
-
-	}
-
 	entrycommands
 	{
 		deactivateweapon righthand
@@ -2804,8 +2725,6 @@ state TURRET_PUTAWAY
 
 state TURRET_START
 {
-
-
 //	movetype anim
 
 	entrycommands
@@ -2880,7 +2799,6 @@ state TURRET_END
 //		TURRET_IDLE	: default
 //	}
 //}
-
 
 
 
@@ -3493,6 +3411,126 @@ state DOG_TORSO
                }
 }
 
-//====================================================================================================================
-// DOG STATES END
-//====================================================================================================================
+//==============================================================================
+//==============================================================================
+//
+// Vehicles
+//
+//==============================================================================
+
+state VEHICLE_PUTAWAY
+{
+	entrycommands
+	{
+		deactivateweapon righthand
+	}
+	
+	states
+	{
+		VEHICLE_IDLE	: default
+	}
+}
+
+state VEHICLE_START
+{
+	states
+	{
+		VEHICLE_PUTAWAY	: PUTAWAYMAIN	// Basic put weapon away move.
+		STAND		: KILLED
+		VEHICLE_IDLE	: default
+	}
+}
+
+state VEHICLE_IDLE
+{
+	movetype anim
+
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "IN_VEHICLE"
+	}
+	
+	action
+	{
+		vehicle_idle	: default
+	}
+	
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+	}
+}
+
+state VEHICLE_BACKWARD
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "BACKWARD_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+	}
+}
+
+state VEHICLE_FORWARD 
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "FORWARD_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+	}
+}
+
+state VEHICLE_LOOK_RIGHT
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "RIGHT_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+		VEHICLE_IDLE			: !STRAFE_RIGHT
+	}
+}
+
+state VEHICLE_LOOK_LEFT
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "LEFT_RUN"
+	}
+
+	states
+	{
+		STAND				: KILLED
+		VEHICLE_BACKWARD		: RUN BACKWARD
+		VEHICLE_FORWARD 		: RUN FORWARD
+		VEHICLE_LOOK_LEFT		: RUN STRAFE_LEFT 
+		VEHICLE_LOOK_RIGHT		: RUN STRAFE_RIGHT
+		VEHICLE_IDLE			: !STRAFE_LEFT
+	}
+}

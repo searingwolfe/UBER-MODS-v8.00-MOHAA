@@ -22,6 +22,8 @@ main local.name local.origin local.angles local.light local.thrown local.remove:
 	local.trigger show
 	if(local.light == 1) { local.trigger light 0 1 0 35 }
 	local.trigger.name = local.name
+	if(local.name != NIL) { local.trigger.targetname = ("throwingknife_" + local.name) }
+	else { local.trigger.targetname = "throwingknife_NIL" }
 
 	local.trigger setthread pickup
 
@@ -89,9 +91,9 @@ scan_player local.name local.originold local.anglesold:
 	local.team = self.dmteam
 	while(isalive self && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
  	{
-		if(self != NULL && (self.useheld != 1 || self.fireheld != 1)) { local.holding = 0 }
+		if(self != NULL && (self.useheld != 1 || self.fireheld != 1 || self.secfireheld != 1)) { local.holding = 0 }
 
-		while(isalive self && local.holding != 1 && self.useheld == 1 && self.fireheld == 1 && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
+		while(isalive self && local.holding != 1 && self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1 && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
 		{
 			if(self != NULL && self.knivesheld >= 1 && self.knivesheld <= 3 && self.driving != 1 && self.flying != 1 && self.isfiredboomerweenie != 1 && self.placing_killstreak_old != 1)
 			{
