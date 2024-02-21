@@ -1,5 +1,21 @@
 *Current Version: 7.94 - Updated: 2/21/2024*
 
+### Table of Contents
+
+[How To Install / Uninstall](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#how-to-install--uninstall)
+[Essential CVARS for UBER MODS Servers](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-cvars-for-uber-mods-servers)
+[In-Game Menu Skin](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#in-game-menu-skin)
+[Elgan's Admin Pro Menu](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#elgans-admin-pro-menu)
+[Essential UBER BASEBUILDER Info](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-uber-basebuilder-info)
+[UBER CVARS Scripts Info](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#uber-cvars-scripts-info)
+[Essential CYBER ATTACK / SEARCH & DESTROY / FREEZE TAG Info](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-cyber-attack--search--destroy--freeze-tag-info)
+[Killstreak Rewards](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#killstreak-rewards)
+[Drivable Vehicles / Usable Statweapons](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#drivable-vehicles--usable-statweapons)
+[Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+[Updates & Bug Fixes](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#updates--bug-fixes)
+
+#
+
 # How To Install / Uninstall
 
 - Delete any and all older UBER MODS .pk3 files.<br>
@@ -9,10 +25,6 @@
 This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run in a dedicated server.
 
 #
-
-### Table of Contents
-
-[Essential CVARS for UBER MODS Servers](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-cvars-for-uber-mods-servers)
 
 # Essential CVARS for UBER MODS Servers
 
