@@ -601,6 +601,7 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - Alarm switches in the dead-end halls behind the openable doors each blow up a bangalore outside the door.
 
 - New airstrikes script (global/bomberplane.scr) simplifies adding them into maps. Only a splinepath is needed; bomb drop coords are automated and drop closer to splinepath's central line.
+
 		Parameters: path targetname, team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike).
 		Example: exec global/bomberplane.scr bomberpath allies 2 150 0 16 3.2
 		Example: exec global/bomberplane.scr bomberpath allies 2 150 1
@@ -756,35 +757,99 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 
 # Updates & Bug Fixes
 
-v7.93 (1-26-2023): - New killstreak added: Airstrikes. After 5 kills in a row, players can Hold USE(e) + Lean Left/Right to laze a target for the airstrike, then Hold USE(e) + FIRE to call the airstrike.
+v7.94 (2-21-2023): - Major script updates. 3 more singleplayer maps now fully modded.
+- All drivable vehicles and boats can now drive in reverse much easier than before, simply by holding MOVE BACKWARD (S) key. This also works when holding FIRE to look behind.
+- Players driving vehicls or boats can also hold MOVE LEFT (A) or MOVE RIGHT (D) to look left or right, only while not driving (controlled by global/playervehicle_movement.scr, which reads current VEHICLE states from nangle_aa_torso.st).
 
-- Laser arrows indicate the direction that airstrike planes will follow. Bombs drop from the planes continuously (traveling -8200 to 8200 units from player's origin, 16400 units total).
-- Dropped bombs that kill players count as scoreponts and cannot damage teammates (but can kill them if driving vehicles).
-- The airplanes can only be shot down by enemy players after shooting them 8+ times. Any crashing planes can kill any players.
-- The killstreaks/airstrikes.scr uses the new global/bomberplane_nospline.scr to make planes follow a straight line path without any splinepath nodes.
+- The global/nangle_aa_torso.st & legs.st (bt and sh too) statefiles include updated VEHICLE states for looking left/right and reversing (the +JUMP case does not work for drivers in vehicles).
+- In the 3 "legs.st" statefiles, the "unarmed_idle" animations are commented out to prevent "Warning: Can't find player animation 'unarmed_idle'" from printing to console when entering/exiting vehicles/tanks.
+- For LADDER_UP/DOWN_LEFT/RIGHT states, the CAN_CLIMB_UP/DOWN_LADDER conditions are removed, allowing some Trigger_Use entities (i.e. in M2L2C) to serve as ladders when "local.player = parm.other; local.player forcetorsostate GET_ON_LADDER" is included in their setthreads.
 
-- Throwing knives, Giant Bombs & Light Bombs will no longer be thrown/launched immediately after launching/placing down a killstreak (must first let go of USE(e) + FIRE).
-- Improved script on chain-reaction explosions for explodable killstreaks, and ensured that scorepoints for kills across chain-reactions are correctly applied (killstreaks/damagehandler.scr).
+- Vehicle & boat passengers can now shoot while riding (hold Secondary FIRE to look around), and be shot/killed.
+- Fixed jeeps & sdkfz halftracks not allowing other passengers to hop in when a player is using the 30cal turret.
 
-- Added global/respawn_stuck_fix.scr to global/dmprecache.scr for all maps, for preventing any 2 players from getting stuck inside each other after respawning.
-- Flyable planes' bullets & rockets, as well as Giant Bombs & Light Bombs no longer deal damage to teammates or deal radiusdamage if they explode near a teammate (unless in FFA or g_teamdamage = 1).
+- Throwing knives, Giant Bombs, Light Bombs, and killstreaks can only be placed/thrown with USE(e) + Secondary FIRE (right-click, zoom).
+- Doing USE(e) + Primary FIRE does not work anymore, but holding down both USE(e) + Primary FIRE + Secondary FIRE (holding left-click + right-click) does still work.
 
-- Major changes in adminstuff.scr: "stufftext" commands replaced with stuffsrv("banip...") or stuffsrv("clientkickr...") due to some hackers modding their game files and preventing stufftexts from affecting them.
-- Changed CVARS: "hacker_kill [1 or playername]", "hacker_takeall [1 or playername]", "spectator [1 or playername]" cvars will do these commands continuously until "hacker_kill 0" or similar is entered into console.
-- Other hidden CVARS: "votekick []", "noclip2 []", "wuss2 []", "nodamage []", "takedamage []", "show []", "hide []".
+- Fixed tank shell projectiles not shooting straight for some angles. The projectile will now always shoot directly at the crosshairs' target, greatly improving accuracy.
 
-- Same-Name Fix: prevents two players from having the same name. Anyone who still tries to copy someone else's name (20 attempts) will get auto-banned.
-- Anti-Hacks: any player that joins whose .userinfo has one of the "local.hacks" cvar phrases in the makearray in adminstuff.scr, auto-kick them for joining with preloaded hacks (example: "\cg_wallhack\0\")
-- Anti-Stufftext-Hacks: checks if newly-joined players' names can be changed via stufftext command. If their name cannot be changed, auto-kick them for joining with stufftext-hacks.
+- Bazooka & Panzerschreck rockets deal much more damage now, but only in a 100 unit radius (for destroying vehicles & flak88s easier). Panzerschreck rockets now shoot in straight lines (same as Bazooka). Projectile scale and light radii reduced too.
+
+- New CVAR added: cvars/coord_pointer.scr. Type "coord_pointer [player number or player name]" into console to give/take a coord pointer.
+- i.e. "coord_pointer 1". Giving $player[1] a coord_pointer. The "origin + angle" are also saved to a "cvars/coords.txt" file.
+- The laser pointer for iprints & console-prints "origin + angle" of the pointed target, in integer form. Double-click in the same exact spot to print "origin + angle" in 3 decimal places.
+- NOTE: You may need to be noclipping or in spectator for double-clicking to work, since player is alive and always breathing.
+
+- Flyable planes' rockets will now always move faster than their plane's speed. Rocket speed = 2000 * plane speed; plane speed = sqrt(velocity[0]^2 + velocity[1]^2 + velocity[2]^2).
+- Flyable planes' bullets & rockets no longer deal damage to teammates or deal radiusdamage if they explode near a teammate (unless in FFA or g_teamdamage = 1).
+- Flyable planes cannot shoot their MG42 or 30 Cal with Secondary FIRE (right-click, zoom) anymore, since Secondary FIRE already makes them drop bombs.
+- Potentially fixed the rare bug when a player flying a plane blows up, but instead of dying, the player survives and is invisible for a few seconds.
+
+- Added date & time console-printing after loading a new map, and after a player connects/disconnects (for qconsole.log'ing purposes). Current time prints in 24:00:00-hour format.
+
+- Server auto-reopen scripts added to the UBER MODS's .zip file for both Windows & Linux (README for these files included in the Server Auto-Reopen Scripts folder). 
 
 ---------------
 
-- Place any script examples before "level waittill spawn". Change "kills" parameter as needed (number of kills in a killstreak, without dying or changing teams).
-- Additional level parameters such as "number of planes" (2 by default), number of bombs dropped (25 by default), and color & scale & alpha of lasers at top of this killstreak script.
+- New global/victory_podium.scr script spawns 3 crates for creating a 1st, 2nd, 3rd place podium for those with the highest kills in the game.
+- The podium spawns dummy player models for the 3 winners, based on highest kills, on their respective podium spots (1st on top of 2 crates, 2nd on one crate, 3rd on the floor).
+- If 2+ winners have the same kills, the player with the lowest deaths will be deemed the actual winner.
+- If 2+ winners still have the same kills and deaths, then the player who joined first (the lowest clientnum) will be deemed the actual winner.
 
-		Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).
-		Airstrike Example: exec killstreaks/airstrikes.scr 5 8
+- This script also spawns an intermission camera, and launches fireworks when all players are teleported to the camera near the end of the map (based on "timeduration" parameter).
+- If "timeduration" is set as 0 or NIL, then fireworks will not launch, since all while-loops end when the map's intermission actually begins (when scoreboard is visible, fading to black, changing maps).
 
-- M2L1 fully modded.
+- If camera origin & camera angles are set to "auto", then the script will automatically set the camera's origin & angles roughly 550 units away from "angle" parameter facing forward, with camera's angle +180 degrees from "angle" and looking 17 degrees upward.
 
- 
+		Parameters: origin, angle for podium players, camera origin (or "auto"), camera angles (or "auto"), time duration of fireworks (5 = 00:05 seconds of map time remaining to end game; 0 or NIL = no fireworks), ...
+		... distance until exploding (default = 300), particle time (default = 2.5), explosion scale (default = 0.8).
+
+		Example: exec global/victory_podium.scr ( 220 -41 48 ) -90 auto auto 5
+
+- For testing where the podium will be, run "exec global/victory_podium.scr::test ( 220 -41 48 ) -90" and change origin + angle to spawn 3 visible solid crates.
+- For testing only the fireworks, run "exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90" and change origin + angle to continuously launch fireworks (to check distance, particle time, explosion scale, etc).
+
+		exec global/victory_podium.scr::test ( 220 -41 48 ) -90		// testing purposes only; spawn and show the podium crates.
+		exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90	// testing purposes only; launch fireworks continuously.
+
+- NOTE: If setcvar "timelimit" "0" or "", then the podium winners threads will never run, since the map will never end.
+- An optional thread ends the game immediately for "timeduration" seconds while launching fireworks, then ends the map.
+- NOTE: the "main" thread must run first too! ("exec global/victory_podium.scr ( -700 -1200 -3 ) -90 auto auto 5") must have executed already, otherwise the intermission camera will be missing.
+
+		Parameters: origin, angle for podium players, distance until exploding, particle time, explosion scale, time duration until map ends.
+		Example: exec global/victory_podium.scr::map_ended ( -700 -1200 -3 ) -90 300 2.5 0.8 7
+
+Before the ::map_ended line, an optional "level.VP_winnertype = allies" or "axis" can be included to only show podium winners from that team (i.e. for a custom OBJ gametype).
+
+---------------
+
+- New global/spawnladder.scr script spawns an invisible ladder trigger_multiple. Players must be looking directly at ladder, and must be looking up/down more than 30 degrees to climb these ladders.
+- Ideally, player's hands should not go behind the ladder when climbing (use 3rd person to check your hands). Ignore this for curved ladder steps (i.e. on uboats).
+- Adjust the "offset" parameter if desired, or if player is getting stuck on stuff while climbing the ladder.
+
+		Parameters: origin, angle for players to attach, ladder setsize1, ladder setsize2, optional offset distance away from ladder (lower = players hands closer to ladder, higher = further away, default = 14). If > 18, players cannot climb the ladder.
+
+		Example: exec global/spawnladder.scr ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 )
+		Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 ) 10
+
+---------------
+
+- New global/vehicle_tele.scr script allows vehicles to travel through walls/gates to a normally inaccessable area.
+- Lasers can be spawned into a local.lasers array via the "spawnlaser" thread in this script (paramters: origin, endpoint, initial color, scale).
+
+- The optional teleporting alignment parameter forces vehicles to move along the 0-180 degree axis or 90-270 degree axis, preventing them from falling out of the map when teleporting across long distances.
+- A solid floor entity is required for teleporters across long distances through map walls, to keep the teleporting vehicles from blowing up or falling endlessly into the void.
+
+		Parameters: origin, setsize 1, setsize 2, laser array (or NIL if no lasers), teleporting alignment (NIL = none, 0 = 0-180 axis, 1 = 90-270 axis), vehicle height after teleporting (default/NIL = 0), ...
+		... teleporting speed (default/NIL = 25, max = 300), spawn solid floor (0 or NIL = no, 1 = yes).
+
+		Example: exec global/vehicle_tele.scr ( 4193 -1119 -511 ) ( -222 -680 -10 ) ( 222 680 355 ) local.lasers 1 0 50 1
+
+		local.lasers[1] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6227 -511 ) ( -1507 -6227 -262 ) ( 1 0 0 ) 3 // origin, endpoint, initial color, scale
+		local.lasers[2] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6224 -259 ) ( -1507 -6464 -259 ) ( 1 0 0 ) 3
+		local.lasers[3] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6461 -262 ) ( -1507 -6461 -511 ) ( 1 0 0 ) 3
+		exec global/vehicle_tele.scr ( -1502 -6344 -511 ) ( -30 -115 -10 ) ( 30 115 200 ) local.lasers 0
+
+---------------
+
+- M2l2A fully modded. M2l2B fully modded. M2l2C fully modded. [Details in "Singleplayer Map Mods"]
