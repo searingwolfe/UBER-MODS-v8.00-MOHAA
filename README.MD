@@ -18,7 +18,8 @@
 
 # How To Install / Uninstall
 
-- From GitHub: click the green "<> Code", download .zip file. All contents within the "UBER-MODS-v8.00-MOHAA" folder need to be copy-pasted outside this folder (all contents directly in the .zip).
+- From GitHub: click the green "<> Code", download .zip file.
+- All contents within the "UBER-MODS-v8.00-MOHAA" folder inside the .zip need to be copy-pasted outside this folder (all contents directly in the .zip).
 - Once all contents are copy-pasted outside this folder, delete the folder.
 - Change the .zip filetype to .pk3.
 - Delete any and all older UBER MODS .pk3 files.<br>
