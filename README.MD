@@ -20,8 +20,8 @@
 
 - From GitHub: click the green "<> Code", download .zip file, and change .zip filetype to .pk3.
 - Delete any and all older UBER MODS .pk3 files.<br>
-- If packed in a .zip, unpack the .pk3 files. Copy the .pk3 files and paste them in the "Medal of Honor/main" folder (same folder as Pak0.pk3, Pak1.pk3, Pak2.pk3).<br>
-- Uninstall by deleting the .pk3 mod files from the "main" folder.
+- Copy the .pk3 file and paste it in "Medal of Honor/main" folder (same folder as Pak0.pk3, Pak1.pk3, Pak2.pk3).<br>
+- Uninstall by deleting the .pk3 mod file from the "main" folder.
 
 This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run in a dedicated server.
 
