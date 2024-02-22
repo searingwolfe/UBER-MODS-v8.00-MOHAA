@@ -18,6 +18,7 @@
 
 # How To Install / Uninstall
 
+- From GitHub: download .zip file and change filename to .pk3.
 - Delete any and all older UBER MODS .pk3 files.<br>
 - If packed in a .zip, unpack the .pk3 files. Copy the .pk3 files and paste them in the "Medal of Honor/main" folder (same folder as Pak0.pk3, Pak1.pk3, Pak2.pk3).<br>
 - Uninstall by deleting the .pk3 mod files from the "main" folder.
