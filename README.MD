@@ -20,7 +20,7 @@
 
 - From GitHub: click the green "<> Code", download .zip file.
 - All contents within "UBER-MODS-v8.00-MOHAA" folder inside the .zip need to be copy-pasted outside this folder (all contents directly in the .zip).
-- Once all contents are copy-pasted outside this folder, delete the folder.
+- Once all contents are copy-pasted outside this folder, delete the "UBER-MODS-v8.00-MOHAA" folder.
 - Change the .zip filetype to .pk3.
 - Delete any and all older UBER MODS .pk3 files.<br>
 - Move the .pk3 file to your "Medal of Honor/main" folder (same folder as Pak0.pk3, Pak1.pk3, Pak2.pk3).<br>
