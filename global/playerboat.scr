@@ -76,6 +76,9 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 	}
 										// "local.player.touching_playerboat" or "$player[1].touching_playerboat" can be included in trigger setthreads
 	if(level.touching_playerboat != 1) { thread touching_playerboat }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
+
+	if(level.check_player_kills != 1) { local.result = registerev damage killstreaks/damagehandler.scr } // for giving kills/score when players shoot/kill passengers.
+	level.check_player_kills = 1
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -90,9 +93,29 @@ end
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
 
 	local.health = self.health
-	while(self != NULL && self.health > 0) // prevent regular bullets from killing vehicles (depends on initial health; i.e. if 250 health, vehicle can still be killed by 2 grenades or a shotgun blast)
+	while(self != NULL && self.health > 0)
 	{
-		self.health = local.health
+		if(self.passengers != NIL && self.passengers.size >= 1)
+		{
+			if(self.health < local.health && self.shooter != NIL && self.shooter != NULL)
+			{
+				local.damage = ((local.health - self.health) / self.passengers.size)
+				for(local.i = 1; local.i <= self.passengers.size; local.i++)
+				{
+					self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+				self.shooter = NIL
+			}
+
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self)
+				{
+					self.passengers damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
 		waitframe
 	}
 end
@@ -446,11 +469,13 @@ passengers:
 	if(self.dist_offset[local.s] == NIL) { end }
 	local.distoffset = self.dist_offset[local.s]
 
+	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
+	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
 	local.player forcelegsstate STAND
 	//local.player hide
 	//local.player noclip
 	//local.player nodamage
-	//local.player notsolid
+	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
 	local.player iprint ("Hold FIRE = look around.")
 	local.player iprint ("Hold USE(e) = exit vehicle.")
 	local.player.origin = self.origin
@@ -460,6 +485,7 @@ passengers:
 
 	while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
 	{
+		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
 		local.holdtime = 0
 		local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
 		if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
@@ -470,18 +496,19 @@ passengers:
 		local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
 		if(local.player.fireheld != 1)
 		{
-			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) } // some boats' passengers should not face forward (view is blocked)
 			else { local.player.viewangles = self.angles }
 		}
 		if(self.velocity != ( 0 0 0 ))
 		{
 			if(self.driver.driving_state_backward == 1) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed * -1 }
-			else { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed } // keep passengers inside the vehicles
+			else { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed } // keep passengers inside the boats
 		}
 		else { local.player.velocity = ( 0 0 0 ) }
 
 		while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && local.player.useheld == 1)
 		{
+			local.player anim unarmed_stand_idle
 			local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
 			if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
 			local.radians = local.degrees * (local.PI / 180)
@@ -489,21 +516,26 @@ passengers:
 			local.cos = (cos local.radians) * self.dist_offset[local.s]
 
 			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
-			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) }
-			else { local.player.viewangles = self.angles }
+			if(local.player.fireheld != 1)
+			{
+				if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) }
+				else { local.player.viewangles = self.angles }
+			}
 			if(self.velocity != ( 0 0 0 ))
 			{
 				if(self.driver.driving_state_backward == 1) { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed * -1 }
-				else { local.player.velocity = local.player.velocity + self.forwardvector * self.vehiclespeed } // keep passengers inside the vehicles
+				else { local.player.velocity = local.player.velocity + self.forwardvector * self.boatspeed } // keep passengers inside the boats
 			}
 			else { local.player.velocity = ( 0 0 0 ) }
 	
 			if(local.holdtime >= 20) // hold USE(e) for 1 second.
 			{
 				if(local.player.isdog != 1) { local.player show }
+				local.player give "models/items/binoculars.tik"
 				local.player solid
 				local.player takedamage
 				//local.player noclip
+				local.player forcetorsostate STAND
 				local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) ) // using player's origin might prevent passengers getting stuck inside each other
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
@@ -525,10 +557,12 @@ passengers:
 		local.player.passenger = 0
 		if(local.player.dmteam != spectator)
 		{
+			if(isalive local.player) { local.player give "models/items/binoculars.tik" }
 			if(local.player.isdog != 1) { local.player show }
 			local.player solid
 			local.player takedamage
 			//local.player noclip
+			local.player forcetorsostate STAND
 			if(local.player.dmteam == local.team) // if the passenger did not switch teams
 			{
 				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units
@@ -538,6 +572,14 @@ passengers:
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 	
 				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1)) { local.player damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			}
+
+			local.origin = local.player.origin
+			while(local.player != NULL && !isalive local.player && local.player.dmteam != "spectator")
+			{
+				local.player.origin = local.origin // for some reason, passengers' dead bodies would move forward across the ground until they hit a wall.
+				local.player droptofloor
+				waitframe
 			}
 		}
 	}
