@@ -2,6 +2,10 @@
 //
 main local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.entity:
 
+	if(local.entity.classname == DrivableVehicle && local.inflictor != NULL && local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1")) { local.entity.shooter = local.inflictor; end }
+
+//-----------------------------------------------------------------------------
+
 	// end if attacker is player_owner's teammate, or player_owner himself.
 	if(local.entity.player_owner == NIL || local.entity.player_owner == NULL || local.inflictor == NULL || local.entity.player_owner == local.inflictor || (local.entity.player_owner.dmteam == local.inflictor.dmteam && getcvar("g_gametype") != "1")) { end }
 
@@ -15,11 +19,6 @@ main local.target local.inflictor local.damage local.position local.direction lo
 
 	local.maxplayers = int(getcvar("sv_maxclients"))
 	if(local.inflictor.entnum <= local.maxplayers - 1) { local.entity.enemy_killer = local.inflictor }
-
-//-----------------------------------------------------------------------------
-
-	// allow chain-reaction explosions to count as kills.
-	//if(local.entity.targetname == "sentry_turret" || local.entity.targetname == "claymore" || local.entity.targetname == "cluster_mine") { local.entity waitthread chain_reaction }
 
 //-----------------------------------------------------------------------------
 
