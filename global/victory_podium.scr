@@ -23,9 +23,9 @@
 // An optional thread ends the game immediately for "timeduration" seconds while launching fireworks, then ends the map.
 // NOTE: the "main" thread must run first too! ("exec global/victory_podium.scr ( -700 -1200 -3 ) -90 auto auto 5") must have executed already, otherwise the intermission camera will be missing.
 //
-// Parameters: origin, angle for podium players, distance until exploding, particle time, explosion scale, time duration until map ends.
+// Parameters: origin, angle for podium players, time duration until map ends (0 to end now), distance until exploding, particle time, explosion scale.
 //
-// Example: exec global/victory_podium.scr::map_ended ( -700 -1200 -3 ) -90 300 2.5 0.8 7
+// Example: exec global/victory_podium.scr::map_ended ( -700 -1200 -3 ) -90 7
 //
 // Before the ::map_ended line, an optional "level.VP_winnertype = allies" or "axis" can be included to only show podium winners from that team (i.e. for a custom OBJ gametype).
 //
@@ -67,6 +67,10 @@ main local.podium_origin local.podium_angle local.camera_origin local.camera_ang
 	thread victory_podium local.podium_origin local.podium_angle 	// initialize the podium
 	thread countdown local.podium_origin local.podium_angle local.timeduration local.distance local.particletime local.explosionscale // wait until intermission begins
 	thread sound
+
+	while(game.game == NIL) { waitframe }
+	if(game.game == "AA" && level.registerev_intermission != 1) { local.result = registerev intermission global/victory_podium.scr::intermission }
+	level.registerev_intermission = 1
 end
 
 //-----------------------------------------------------------------------------
@@ -126,16 +130,19 @@ map_ended local.origin local.angle local.timeduration local.distance local.parti
 	level.VP_mapended = 1
 	if($intermission_camera == NULL || $victory_podium == NULL) { wait 1; println("----- ERROR victory_podium.scr: 'main' thread has never been executed!"); end }
 
-	for(local.i = 1; local.i <= $player.size; local.i++)
+	if(local.timeduration != 0)
 	{
-		if($player[local.i].dmteam != "spectator")
+		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			fadein 0.5 0 0 0 1
-			wait 0.1
-			freezeplayer
-			$player nodamage
-			$player hide
-			cuecamera $intermission_camera
+			if($player[local.i].dmteam != "spectator")
+			{
+				fadein 0.5 0 0 0 1
+				wait 0.1
+				freezeplayer
+				$player nodamage
+				$player hide
+				cuecamera $intermission_camera
+			}
 		}
 	}
 
@@ -175,30 +182,33 @@ spawn_victors:
 	$victory_podium show
 
 	local.p = 1
-	for(local.i = 1; local.i <= $player.size; local.i++)
+	for(local.i = 1; local.i <= int(getcvar("sv_maxclients")); local.i++)
 	{
-		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && $player[local.i].dmteam != "spectator")
+		if(local.i <= $player.size && $player[local.i] != NULL && $player[local.i] getconnstate != 1 && $player[local.i].dmteam != "spectator")
 		{
-			if(level.VP_winnertype == "allies" && $player[local.i].dmteam == "allies") { local.players_init[local.p] = $player[local.i] }
-			else if(level.VP_winnertype == "axis" && $player[local.i].dmteam == "axis") { local.players_init[local.p] = $player[local.i] }
-			else { local.players_init[local.p] = $player[local.i] }
+			if(level.VP_winnertype == "allies" && $player[local.i].dmteam == "allies") { local.players_init[local.p] = $player[local.i]; local.p++ }
+			else if(level.VP_winnertype == "axis" && $player[local.i].dmteam == "axis") { local.players_init[local.p] = $player[local.i]; local.p++ }
+			else { local.players_init[local.p] = $player[local.i]; local.p++ }
 		}
 	}
 	local.first_player = waitthread get_winning_player local.players_init
 	for(local.i = 1; local.i <= local.players_init.size; local.i++)
 	{
-		if(local.first_player == local.players_init[local.i]) { local.players_init[local.i] = NIL }
+		if(local.players_init[local.i] == local.first_player) { local.players_init[local.i] = NIL }
 	}
+
 	local.second_player = waitthread get_winning_player local.players_init
 	for(local.i = 1; local.i <= local.players_init.size; local.i++)
 	{
-		if(local.second_player == local.players_init[local.i]) { local.players_init[local.i] = NIL }
+		if(local.players_init[local.i] == local.second_player) { local.players_init[local.i] = NIL }
 	}
+
 	local.third_player = waitthread get_winning_player local.players_init
 	for(local.i = 1; local.i <= local.players_init.size; local.i++)
 	{
-		if(local.third_player == local.players_init[local.i]) { local.players_init[local.i] = NIL }
+		if(local.players_init[local.i] == local.third_player) { local.players_init[local.i] = NIL }
 	}
+	if(local.second_player == local.third_player) { local.third_player = NIL } // only for 2 or fewer players in the game.
 
 	if(local.first_player != NIL && local.first_player != NULL)
 	{
@@ -239,15 +249,22 @@ end
 get_winning_player local.players_init:
 
 	local.highest_kills = -9999999
-	for(local.i = 1; local.i <= local.players_init.size; local.i++)
+	for(local.i = 1; local.i <= int(getcvar("sv_maxclients")); local.i++)
 	{
-		if(local.players_init[local.i] getkills > local.highest_kills) { local.highest_kills = local.players_init[local.i] getkills }
+		if(local.players_init[local.i] != NIL && local.players_init[local.i] != NULL && local.players_init[local.i] getkills > local.highest_kills)
+		{
+			local.highest_kills = local.players_init[local.i] getkills
+		}
 	}
 
 	local.p = 1
-	for(local.i = 1; local.i <= local.players_init.size; local.i++)
+	for(local.i = 1; local.i <= int(getcvar("sv_maxclients")); local.i++)
 	{
-		if(local.players_init[local.i] getkills >= local.highest_kills) { local.players[local.p] = local.players_init[local.i] }
+		if(local.players_init[local.i] != NIL && local.players_init[local.i] != NULL && local.players_init[local.i] getkills >= local.highest_kills)
+		{
+			local.players[local.p] = local.players_init[local.i]
+			local.p++
+		}
 	}
 
 	if(local.players.size == 1) { local.player = local.players[1] }
@@ -256,13 +273,20 @@ get_winning_player local.players_init:
 		local.lowest_deaths = 9999999
 		for(local.i = 1; local.i <= local.players.size; local.i++)
 		{
-			if(local.players[local.i] getdeaths < local.lowest_deaths) { local.lowest_deaths = local.players[local.i] getdeaths }
+			if(local.players[local.i] != NIL && local.players[local.i] != NULL && local.players[local.i] getdeaths < local.lowest_deaths)
+			{
+				local.lowest_deaths = local.players[local.i] getdeaths
+			}
 		}
 
 		local.p = 1
 		for(local.i = 1; local.i <= local.players.size; local.i++)
 		{
-			if(local.players[local.i] getdeaths <= local.lowest_deaths) { local.players_2[local.p] = local.players[local.i] }
+			if(local.players[local.i] != NIL && local.players[local.i] != NULL && local.players[local.i] getdeaths <= local.lowest_deaths)
+			{
+				local.players_2[local.p] = local.players[local.i]
+				local.p++
+			}
 		}
 
 		local.player = local.players_2[1]
@@ -311,7 +335,7 @@ huddraw local.first_player local.second_player local.third_player:
 	huddraw_alpha 4 1
 	huddraw_font 4 "facfont-10"
 	huddraw_color 4 1 1 0
-	huddraw_rect 4 100 205 600 20
+	huddraw_rect 4 100 170 600 20
 
 	if(local.first_player != NIL && local.first_player != NULL)
 	{
@@ -329,7 +353,7 @@ huddraw local.first_player local.second_player local.third_player:
 		huddraw_alpha 3 1
 		huddraw_font 3 "facfont-10"
 		huddraw_color 3 .75 .75 .75
-		huddraw_rect 3 100 220 600 20
+		huddraw_rect 3 100 195 600 20
 		huddraw_string 3 ("Second Place: " + netname local.second_player)
 	}
 
@@ -339,7 +363,7 @@ huddraw local.first_player local.second_player local.third_player:
 		huddraw_alpha 2 1
 		huddraw_font 2 "facfont-10"
 		huddraw_color 2 .5 .5 .5
-		huddraw_rect 2 100 235 600 20
+		huddraw_rect 2 100 220 600 20
 		huddraw_string 2 ("Third Place: " + netname local.third_player)
 	}
 end
@@ -516,6 +540,17 @@ blink:
 		wait .5
 		if(self != NULL) { self show }
 	}
+end
+
+//-----------------------------------------------------------------------------
+
+intermission local.type:
+
+	if(int(local.type) != 0 || int(level.time) < 60) { end }
+	if($intermission_camera == NULL) { wait 1; println("----- ERROR victory_podium.scr: $intermission_camera could not be found!"); end }
+	if($victory_podium == NULL) { wait 1; println("----- ERROR victory_podium.scr: $victory_podium could not be found!"); end }
+
+	exec global/victory_podium.scr::map_ended $victory_podium[1].origin $victory_podium[1].angle 0 300 2.5 0.8
 end
 
 //-----------------------------------------------------------------------------

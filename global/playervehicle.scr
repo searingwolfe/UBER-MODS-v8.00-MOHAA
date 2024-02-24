@@ -235,7 +235,8 @@ playergetin:
 	if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
 	if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
 	if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn.") }
-	self.driver iprint ("Hold USE(e) = exit, hold FIRE = rear-view mirror.")
+	self.driver iprint ("JUMP = exit vehicle, hold FIRE = rear-view mirror.")
+	self.driver.driving_state_jump = 0
 
 	self attachdriverslot 0 self.driver //attachpassengerslot //attachturretslot
 	self thread dummyavatar
@@ -246,22 +247,15 @@ playergetin:
 		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
-
-		while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.useheld == 1 && self.driver.dead != 1 && level.change_team_score != 1)
+		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
 		{
-			self.driver.viewangles = ( 10 self.angles[1] 0 )
-
-			if(local.holdtime >= 20) // hold USE(e) for 1 second.
-			{
-				self thread driverreset
-				self thread vehiclereset
-				self.driver thread wallstuck_fix
-				self.driver = NIL
-				break
-			}
-			local.holdtime++
-			waitframe
+			self thread driverreset
+			self thread vehiclereset
+			self.driver thread wallstuck_fix
+			self.driver = NIL
+			break
 		}
+
 		if(self != NULL && isalive self.driver && self.driver.dmteam == local.team)
 		{
 			if(self.driver.useheld != 1)
@@ -523,7 +517,9 @@ turretslot local.player:
 	self.turretplayer = local.player
 	self.turretplayer.passenger = 1
 	self.turretplayer.remove_viewmodel = 0
+	self.turretplayer.driving_state_jump = 0
 	self.turretplayer forcetorsostate TURRET_START
+	self.turretplayer iprint ("JUMP = exit turret.")
 
 	self unlock
 	self.gun unlock
@@ -538,18 +534,11 @@ turretslot local.player:
 	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1)
 	{
 		if(local.player.fireheld == 1) { self.gun playsound sndfire30cal }
-		local.holdtime = 0
-		while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.useheld == 1 && local.player.dead != 1 && level.change_team_score != 1)
+
+		if(self.turretplayer.driving_state_jump == 1)
 		{
-			if(local.player.fireheld == 1) { self.gun playsound sndfire30cal }
-			if(local.holdtime >= 20)
-			{
-				self waitthread turretplayer_reset local.team local.player
-				end
-			}
-			local.origin = self.origin
-			local.holdtime++
-			waitframe
+			self waitthread turretplayer_reset local.team local.player
+			end
 		}
 		if(self != NULL) { local.origin = self.origin }
 		waitframe
@@ -559,6 +548,7 @@ turretslot local.player:
 	if(local.player != NULL)
 	{
 		local.player.passenger = 0
+		local.player.driving = 0
 		local.player.remove_viewmodel = 1
 		local.player.scale = 1
 		//local.player show
@@ -576,6 +566,7 @@ turretplayer_reset local.team local.player:
 	}
 
 	local.player.passenger = 0
+	local.player.driving = 0
 	local.player.scale = 1
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
@@ -663,10 +654,11 @@ passengers:
 	//local.player noclip
 	//local.player nodamage
 	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
-	local.player iprint ("Hold FIRE = look around.")
-	local.player iprint ("Hold USE(e) = exit vehicle.")
+	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE = look around.")
 	local.player.origin = self.origin
 	local.player.passenger = 1
+	local.player.driving = 1 // should help with other scripts.
+	local.player.driving_state_jump = 0
 	local.PI = 3.14159265359
 	local.driver = self.driver
 
@@ -680,68 +672,45 @@ passengers:
 		local.sin = (sin local.radians) * self.dist_offset[local.s]
 		local.cos = (cos local.radians) * self.dist_offset[local.s]
 
-		local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
-		if(local.player.fireheld != 1)
-		{
-			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
-			else { local.player.viewangles = self.angles }
-		}
+		if(self.driver.driving_state_backward == 1) { local.direction = -1 }
+		else { local.direction = 1 }
 		if(self.velocity != ( 0 0 0 ))
 		{
-			if(self.driver.driving_state_backward == 1) { local.player.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -1 }
-			else { local.player.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed } // make vehicles drive faster, only when holding W (forward key)
+			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
 		}
-		else { local.player.velocity = ( 0 0 0 ) }
+		else { local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) }
 
-		while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && local.player.useheld == 1)
+		if(local.player.fireheld != 1)
 		{
-			local.player anim unarmed_stand_idle
-			local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
-			if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
-			local.radians = local.degrees * (local.PI / 180)
-			local.sin = (sin local.radians) * self.dist_offset[local.s]
-			local.cos = (cos local.radians) * self.dist_offset[local.s]
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
+			else { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) }
+		}
 
-			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] )
-			if(local.player.fireheld != 1)
+		if(local.player.driving_state_jump == 1) // Press JUMP to exit vehicle.
+		{
+			if(local.player.isdog != 1) { local.player show }
+			local.player give "models/items/binoculars.tik"
+			local.player solid
+			local.player takedamage
+			//local.player noclip
+			local.player forcetorsostate STAND
+			if(self != NULL && self.model == "models/vehicles/jeep.tik" && self.turretplayer != NIL && self.turretplayer != NULL)
 			{
-				if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = self.angles + ( 0 self.playerang_offset[local.s] 0 ) }
-				else { local.player.viewangles = self.angles }
+				local.sin = local.sin / local.distoffset * 25 // prevent passengers exiting a jeep from getting stuck inside a turretplayer
+				local.cos = local.cos / local.distoffset * 25
+				local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )		
 			}
-			if(self.velocity != ( 0 0 0 ))
+			else  // using player's origin prevents passengers getting stuck inside each other
 			{
-				if(self.driver.driving_state_backward == 1) { local.player.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -1 }
-				else { local.player.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed }
+				local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) )
 			}
-			else { local.player.velocity = ( 0 0 0 ) }
-	
-			if(local.holdtime >= 20) // hold USE(e) for 1 second.
-			{
-				if(local.player.isdog != 1) { local.player show }
-				local.player give "models/items/binoculars.tik"
-				local.player solid
-				local.player takedamage
-				//local.player noclip
-				local.player forcetorsostate STAND
-				if(self != NULL && self.model == "models/vehicles/jeep.tik" && self.turretplayer != NIL && self.turretplayer != NULL)
-				{
-					local.sin = local.sin / local.distoffset * 25 // prevent passengers exiting a jeep from getting stuck inside a turretplayer
-					local.cos = local.cos / local.distoffset * 25
-					local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )		
-				}
-				else  // using player's origin might prevent passengers getting stuck inside each other
-				{
-					local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) )
-				}
-				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
 				local.player thread wallstuck_fix
-				self.passengers[local.s] = NIL
-				local.player.passenger = 0
-				end
-			}
-			local.holdtime++
-			waitframe
+			self.passengers[local.s] = NIL
+			local.player.passenger = 0
+			local.player.driving = 0
+			end
 		}
 		waitframe
 	}
@@ -751,6 +720,7 @@ passengers:
 	{
 		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
 		local.player.passenger = 0
+		local.player.driving = 0
 		if(local.player.dmteam != spectator)
 		{
 			if(isalive local.player) { local.player give "models/items/binoculars.tik" }

@@ -200,7 +200,8 @@ playergetin:
 	self.driver hide
 	self.driver nodamage
 	self.driver notsolid
-	self.driver iprint ("*** Hold USE(e) for 1 second to exit the tank.*** ")
+	self.driver iprint ("JUMP = exit tank.")
+	self.driver.driving_state_jump = 0
 
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
@@ -216,19 +217,15 @@ playergetin:
 		local.range = 10240
 		local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * local.range) 0
 
-		while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.useheld == 1 && self.driver.dead != 1 && level.change_team_score != 1)
+		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
 		{
-			if(local.holdtime >= 20) // hold USE(e) for 1 second.
-			{
-				self thread driverreset
-				self thread tankreset local.groundtarget
-				self.driver thread wallstuck_fix
-				self.driver = NIL
-				break
-			}
-			local.holdtime++
-			waitframe
+			self thread driverreset
+			self thread tankreset local.groundtarget
+			self.driver thread wallstuck_fix
+			self.driver = NIL
+			break
 		}
+
 		if(self != NULL && isalive self.driver && self.driver.fireheld == 1 && self.firingshell != 1)
 		{
 			self thread fire_tank_sound
@@ -453,7 +450,9 @@ turretslot_2nd local.player:
 	self.turretplayer.scale = 0.5
 	self.turretplayer.passenger = 1
 	self.turretplayer.remove_viewmodel = 0
+	self.turretplayer.driving_state_jump = 0
 	self.turretplayer forcetorsostate TURRET_START
+	self.turretplayer iprint ("JUMP = exit turret.")
 
 	self unlock
 	self.gun unlock
@@ -471,18 +470,11 @@ turretslot_2nd local.player:
 	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1)
 	{
 		if(local.player.fireheld == 1) { self.gun2 playsound tankfire30cal }
-		local.holdtime = 0
-		while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.useheld == 1 && local.player.dead != 1 && level.change_team_score != 1)
+
+		if(self.turretplayer.driving_state_jump == 1)
 		{
-			if(local.player.fireheld == 1) { self.gun2 playsound tankfire30cal }
-			if(local.holdtime >= 20)
-			{
-				self waitthread turretplayer_reset local.team local.player
-				end
-			}
-			local.origin = self.origin
-			local.holdtime++
-			waitframe
+			self waitthread turretplayer_reset local.team local.player
+			end
 		}
 		if(self != NULL) { local.origin = self.origin }
 		waitframe
