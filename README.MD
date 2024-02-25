@@ -498,12 +498,12 @@ velocity of additional mines spawned, bullet damage for sentry turrets, turret l
 gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
 
 - Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All):
-- 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats.
+- 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats, 5 for uboats.
 
-- For drivable vehicles: Hold FIRE = look behind, Hold USE(e) for 1 second = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
-- For drivable tanks: Press FIRE = shoot turret, Hold USE(e) for 1 second = exit.
-- For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Hold USE(e) for 1 second = exit.
-- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Hold USE(e) for 1 second = exit, Lean Left/Right = look behind.
+- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
+- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit.
+- For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Press JUMP = exit.
+- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Press JUMP = exit, Lean Left/Right = look behind.
 
 - Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
 - Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
@@ -778,15 +778,21 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 
 # Updates & Bug Fixes
 
-v7.94 (2-21-2023): - Major script updates. 3 more singleplayer maps now fully modded.
+v7.94 (2-24-2023): - Major script updates. 3 more singleplayer maps now fully modded.
 - All drivable vehicles and boats can now drive in reverse much easier than before, simply by holding MOVE BACKWARD (S) key. This also works when holding FIRE to look behind.
 - Players driving vehicls or boats can also hold MOVE LEFT (A) or MOVE RIGHT (D) to look left or right, only while not driving (controlled by global/playervehicle_movement.scr, which reads current VEHICLE states from nangle_aa_torso.st).
 
-- The global/nangle_aa_torso.st & legs.st (bt and sh too) statefiles include updated VEHICLE states for looking left/right and reversing (the +JUMP case does not work for drivers in vehicles).
+- Vehicle & boat passengers can now shoot while riding (hold Secondary FIRE to look around), and be shot/killed.
+
+- Press JUMP to exit vehicles/boats/tanks in any driver seat, passenger seat, or vehicle turret seat (not using USE(e) anymore).
+
+- The global/nangle_aa_torso.st & legs.st (bt and sh too) statefiles include updated VEHICLE states for looking left/right and reversing.
+- VEHICLE_PASSENGER state (replaces STAND) & numerous _V state variants (copies of states from STAND) prevent camera jittering for passengers.
 - In the 3 "legs.st" statefiles, the "unarmed_idle" animations are commented out to prevent "Warning: Can't find player animation 'unarmed_idle'" from printing to console when entering/exiting vehicles/tanks.
+
 - For LADDER_UP/DOWN_LEFT/RIGHT states, the CAN_CLIMB_UP/DOWN_LADDER conditions are removed, allowing some Trigger_Use entities (i.e. in M2L2C) to serve as ladders when "local.player = parm.other; local.player forcetorsostate GET_ON_LADDER" is included in their setthreads.
 
-- Vehicle & boat passengers can now shoot while riding (hold Secondary FIRE to look around), and be shot/killed.
+- Improved passenger origin placements to keep players in their seats while vehicles of various speeds are moving.
 - Fixed jeeps & sdkfz halftracks not allowing other passengers to hop in when a player is using the 30cal turret.
 
 - Throwing knives, Giant Bombs, Light Bombs, and killstreaks can only be placed/thrown with USE(e) + Secondary FIRE (right-click, zoom).
@@ -837,8 +843,8 @@ v7.94 (2-21-2023): - Major script updates. 3 more singleplayer maps now fully mo
 - An optional thread ends the game immediately for "timeduration" seconds while launching fireworks, then ends the map.
 - NOTE: the "main" thread must run first too! ("exec global/victory_podium.scr ( -700 -1200 -3 ) -90 auto auto 5") must have executed already, otherwise the intermission camera will be missing.
 
-		Parameters: origin, angle for podium players, distance until exploding, particle time, explosion scale, time duration until map ends.
-		Example: exec global/victory_podium.scr::map_ended ( -700 -1200 -3 ) -90 300 2.5 0.8 7
+		Parameters: origin, angle for podium players, time duration until map ends (0 to end now), distance until exploding, particle time, explosion scale.
+		Example: exec global/victory_podium.scr::map_ended ( -700 -1200 -3 ) -90 7
 
 Before the ::map_ended line, an optional "level.VP_winnertype = allies" or "axis" can be included to only show podium winners from that team (i.e. for a custom OBJ gametype).
 
