@@ -788,7 +788,7 @@ v7.94 (2-24-2023): - Major script updates. 3 more singleplayer maps now fully mo
 
 - The global/nangle_aa_torso.st & legs.st (bt and sh too) statefiles include updated VEHICLE states for looking left/right and reversing.
 	- VEHICLE_PASSENGER state (replaces STAND) & numerous _V state variants (copies of states from STAND) prevent camera jittering for passengers.
-- In the 3 "legs.st" statefiles, the "unarmed_idle" animations are commented out to prevent "Warning: Can't find player animation 'unarmed_idle'" from printing to console when entering/exiting vehicles/tanks.
+	- In the 3 "legs.st" statefiles, the "unarmed_idle" animations are commented out to prevent "Warning: Can't find player animation 'unarmed_idle'" from printing to console when entering/exiting vehicles/tanks.
 
 - For LADDER_UP/DOWN_LEFT/RIGHT states, the CAN_CLIMB_UP/DOWN_LADDER conditions are removed, allowing some Trigger_Use entities (i.e. in M2L2C) to serve as ladders when "local.player = parm.other; local.player forcetorsostate GET_ON_LADDER" is included in their setthreads.
 
