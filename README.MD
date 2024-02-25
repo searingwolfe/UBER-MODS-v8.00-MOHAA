@@ -787,7 +787,7 @@ v7.94 (2-24-2023): - Major script updates. 3 more singleplayer maps now fully mo
 - Press JUMP to exit vehicles/boats/tanks in any driver seat, passenger seat, or vehicle turret seat (not using USE(e) anymore).
 
 - The global/nangle_aa_torso.st & legs.st (bt and sh too) statefiles include updated VEHICLE states for looking left/right and reversing.
-- VEHICLE_PASSENGER state (replaces STAND) & numerous _V state variants (copies of states from STAND) prevent camera jittering for passengers.
+	- VEHICLE_PASSENGER state (replaces STAND) & numerous _V state variants (copies of states from STAND) prevent camera jittering for passengers.
 - In the 3 "legs.st" statefiles, the "unarmed_idle" animations are commented out to prevent "Warning: Can't find player animation 'unarmed_idle'" from printing to console when entering/exiting vehicles/tanks.
 
 - For LADDER_UP/DOWN_LEFT/RIGHT states, the CAN_CLIMB_UP/DOWN_LADDER conditions are removed, allowing some Trigger_Use entities (i.e. in M2L2C) to serve as ladders when "local.player = parm.other; local.player forcetorsostate GET_ON_LADDER" is included in their setthreads.
@@ -796,16 +796,17 @@ v7.94 (2-24-2023): - Major script updates. 3 more singleplayer maps now fully mo
 - Fixed jeeps & sdkfz halftracks not allowing other passengers to hop in when a player is using the 30cal turret.
 
 - Throwing knives, Giant Bombs, Light Bombs, and killstreaks can only be placed/thrown with USE(e) + Secondary FIRE (right-click, zoom).
-- Doing USE(e) + Primary FIRE does not work anymore, but holding down both USE(e) + Primary FIRE + Secondary FIRE (holding left-click + right-click) does still work.
+	- Doing USE(e) + Primary FIRE does not work anymore, but holding down both USE(e) + Primary FIRE + Secondary FIRE (holding left-click + right-click) does still work.
 
 - Fixed tank shell projectiles not shooting straight for some angles. The projectile will now always shoot directly at the crosshairs' target, greatly improving accuracy.
 
 - Bazooka & Panzerschreck rockets deal much more damage now, but only in a 100 unit radius (for destroying vehicles & flak88s easier). Panzerschreck rockets now shoot in straight lines (same as Bazooka). Projectile scale and light radii reduced too.
 
-- New CVAR added: cvars/coord_pointer.scr. Type "coord_pointer [player number or player name]" into console to give/take a coord pointer.
-- i.e. "coord_pointer 1". Giving $player[1] a coord_pointer. The "origin + angle" are also saved to a "cvars/coords.txt" file.
-- The laser pointer for iprints & console-prints "origin + angle" of the pointed target, in integer form. Double-click in the same exact spot to print "origin + angle" in 3 decimal places.
-- NOTE: You may need to be noclipping or in spectator for double-clicking to work, since player is alive and always breathing.
+- New CVAR added: cvars/coord_pointer.scr:
+	- Type "coord_pointer [player number or player name]" into console to give/take a coord pointer.
+	- i.e. "coord_pointer 1". Giving $player[1] a coord_pointer. The "origin + angle" are also saved to a "cvars/coords.txt" file.
+	- The laser pointer for iprints & console-prints "origin + angle" of the pointed target, in integer form. Double-click in the same exact spot to print "origin + angle" in 3 decimal places.
+	- NOTE: You may need to be noclipping or in spectator for double-clicking to work, since player is alive and always breathing.
 
 - Flyable planes' rockets will now always move faster than their plane's speed. Rocket speed = 2000 * plane speed; plane speed = sqrt(velocity[0]^2 + velocity[1]^2 + velocity[2]^2).
 - Flyable planes' bullets & rockets no longer deal damage to teammates or deal radiusdamage if they explode near a teammate (unless in FFA or g_teamdamage = 1).
