@@ -1,4 +1,4 @@
-*Current Version: 7.94 - Updated: 2/25/2024*
+*Current Version: 7.95 - Updated: 4/12/2024*
 
 ### Table of Contents
 
@@ -549,7 +549,21 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3.
+
+---------------
+
+- Training fully modded [See READMES old/README 4 (training map mods).txt for mod-specific info].
+- g_ubergametype "0" or "": Main Training script mods, where blowing up the tank unlocks doors to the 1st gunrange, doing 4 objectives unlocks the 2nd gunrange, doing 2 more spawns the final key for the final door.
+- in the training.scr script, exec maps/training_mapscripts/tank_m3_replace.scr drive, the "drive" can be replaced with "static" for a nondrivable tank, spawning Allies explosives for them to blow up the tank.
+
+- g_ubergametype "bb", "cyb", "snd", "ft": all doors are unlocked, all crate stairs now visible, all player spawns are enabled.
+Almost all mods are removed except for the drivable tanks and valve switches for moving tables behind the final gunrange.
+
+- g_ubergametype "bb": teles, crates, and tables added for going behind walls, moving around behind walls.
+
+- g_ubergametype "cyb", "snd", or "ft": no teles for going behind walls or objects behind them, all decoration objects now visible.
+Some mods added: airstrike radio triggrs, fire field detonators, field bombs detonator, trench bombs alarm switches, radio music triggers, truck/halftrack sound triggers.
 
 ---------------
 
@@ -758,17 +772,31 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- Training fully modded [See READMES old/README 4 (training map mods).txt for mod-specific info].
-- g_ubergametype "0" or "": Main Training script mods, where blowing up the tank unlocks doors to the 1st gunrange, doing 4 objectives unlocks the 2nd gunrange, doing 2 more spawns the final key for the final door.
-- in the training.scr script, exec maps/training_mapscripts/tank_m3_replace.scr drive, the "drive" can be replaced with "static" for a nondrivable tank, spawning Allies explosives for them to blow up the tank.
+- M2l3 fully modded. 4 flyable planes, 1 flak88, 1 nebelwerfer, 3 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, 5 extra throwing knives also added.
+- 1 set of bangalore wallbombs (two-way switch) between the truck garage and Axis spawn outdoors. Airstrikes are not included in this level.
 
-- g_ubergametype "bb", "cyb", "snd", "ft": all doors are unlocked, all crate stairs now visible, all player spawns are enabled.
-Almost all mods are removed except for the drivable tanks and valve switches for moving tables behind the final gunrange.
+- The train's splinepath is extended along the curved railroad, and extended from the train tunnel. The tunnel itself is extended all the way to the map's edge.
+- Press USE(e) near the train and the fence to ride in the train. The train moves automatically. Hold USE(e) for 1 second to exit the train (only when outside of the "player_clip" brushes).
+	- Any players that exit the train while it's moving will appear on top of the train. Press USE(e) while looking down to re-enter the train. Walking too close to the edge of a moving train will kill the player.
+	- When the train arrives and fully stops, all players inside the train-front and the train cab will automatically exit the train and teleported to the ground.
+	- Players/vehicles/tanks that touch the moving train will be killed/destroyed.
+- Up to 2 players (teammates only, does not work in FFA) can ride in the front of the train (the bp44train.tik model), and they must hop in before the train is moving too fast.
+	- The 2 train-front riders can shoot from the train's windows, and aim by holding FIRE(zoom). These players can be shot/killed by other players shooting at the train's windows too.
+- Up to 20 players (5 rows, 4 columns) can ride in the train cab, regardless of teammates. The riders can shoot and aim by holding FIRE(zoom), or exit the train cab by holding USE(e).
+	- When train starts moving (only when a player gets into the train-front, the bp44train), all players inside the train cab will be locked into 1 of 20 available seats.
+	- If all seats are filled, the extra players are teleported back outside of the cab on the ground.
+	- If players on opposite teams are riding in the train cab together, anywhere they shoot will cause damage to their riding enemies since the damage-respoding trigger covers the whole cab's interior.
+	- The train cab rider in the 1st seat (middle row, closest to door) can toggle opening/closing the solid traincab door by Leaning Left/Right
+	- If the train cab door is closed, players inside the cab cannot be shot/killed or shoot/kill others.
 
-- g_ubergametype "bb": teles, crates, and tables added for going behind walls, moving around behind walls.
+- 2 vehicle teles for vehicles to enter/exit the truck garage. Various extra roads outlined by lasers spawned in extra map areas.
+- Other lasers on the rooftops help prevent players from falling off edges.
 
-- g_ubergametype "cyb", "snd", or "ft": no teles for going behind walls or objects behind them, all decoration objects now visible.
-Some mods added: airstrike radio triggrs, fire field detonators, field bombs detonator, trench bombs alarm switches, radio music triggers, truck/halftrack sound triggers.
+- Thick green lasers on the ground outline "player_clip" brushes from the map's .bsp (brushes cannot be removed), since players cannot walk through them.
+- Vehicles/tanks can drive through them, but players that exit them while inside these brushes will get trapped (respawned after 3 seconds).
+- Building rooftops and ledges are solified with "script_origin"s and accessible via teles from the ground (glitching can occur when standing still. To reduce entity count, smaller "script_model"s were not used).
+
+- Numerous sound entities added throughout the Allies spawn and truck garage: 3 generators, 16 transformers, 8 air vents.
 
 ---------------
 
@@ -778,106 +806,91 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 
 # Updates & Bug Fixes
 
-v7.94 (2-24-2023): - Major script updates. 3 more singleplayer maps now fully modded.
-- All drivable vehicles and boats can now drive in reverse much easier than before, simply by holding MOVE BACKWARD (S) key. This also works when holding FIRE to look behind.
-- Players driving vehicls or boats can also hold MOVE LEFT (A) or MOVE RIGHT (D) to look left or right, only while not driving (controlled by global/playervehicle_movement.scr, which reads current VEHICLE states from nangle_aa_torso.st).
+v7.95 (4-12-2023): - Various player-damaging scripts modified for giving scorepoints to player killers and preventing teammates from being killed by vehicle/tank/boat/plane weapons or explosions.
 
-- Vehicle & boat passengers can now shoot while riding (hold Secondary FIRE to look around), and be shot/killed.
+- Press JUMP to exit nebelwerfers and flak88s now, along with other drivable stuff; hold FIRE(zoom) to look around.
+- Players driving uboats can now lean left/right to aim turret projectiles up/down (only while moving), instead of only shooting them in a horizontal line (a laser is visible while adjusting aim). Lean left/right while not moving to look behind.
 
-- Press JUMP to exit vehicles/boats/tanks in any driver seat, passenger seat, or vehicle turret seat (not using USE(e) anymore).
+- Claymore, Cluster Mine, Sentry Turret killstreaks will respond to enemies driving vehicles/tanks/boats, flying planes, riding as passengers, and riding as turret players, properly giving kills/scorepoints for most scenarios.
+- Sentry Turrets will not shoot at players driving vehicles/tanks/boats if there are no other passengers or turret players, since drivers cannot be killed with bullets.
 
-- The global/nangle_aa_torso.st & legs.st (bt and sh too) statefiles include updated VEHICLE states for looking left/right and reversing.
-	- VEHICLE_PASSENGER state (replaces STAND) & numerous _V state variants (copies of states from STAND) prevent camera jittering for passengers.
-	- In the 3 "legs.st" statefiles, the "unarmed_idle" animations are commented out to prevent "Warning: Can't find player animation 'unarmed_idle'" from printing to console when entering/exiting vehicles/tanks.
+- Giant Bombs, Light Bombs, Nebelwerfers, Flak88s, Flyable planes' bullets/rockets/ejected planes, uboat projectiles, airstrike bombs killing players that are riding in vehicles/tanks/boats/planes will properly give kills/scorepoints to the player that launched projectiles from them.
+- Tank & Flak88 projectiles will give kills/scorepoints to the player that launched them for most other cases too.
+- Bangalore wall bombs & Radiobomb Walkies also give kills/scorepoints to the player that triggered them.
 
-- For LADDER_UP/DOWN_LEFT/RIGHT states, the CAN_CLIMB_UP/DOWN_LADDER conditions are removed, allowing some Trigger_Use entities (i.e. in M2L2C) to serve as ladders when "local.player = parm.other; local.player forcetorsostate GET_ON_LADDER" is included in their setthreads.
+- Ensured that players cannot attempt to get into vehicles whose passenger seats are all occupied.
+- Improved player reset threads when exiting vehicles/tanks/boats to better avoid players getting stuck in them when on sharply-angled sloped terrain.
 
-- Improved passenger origin placements to keep players in their seats while vehicles of various speeds are moving.
-- Fixed jeeps & sdkfz halftracks not allowing other passengers to hop in when a player is using the 30cal turret.
+- Vehicle/tank "_trig" triggers are now glued to their vehicles/tanks, so vehicles/tanks and their triggers are at the exact same origin initially.
+- Tank setsizes readjusted (mainly kingtank.tik). Tank cannons are now solid.
 
-- Throwing knives, Giant Bombs, Light Bombs, and killstreaks can only be placed/thrown with USE(e) + Secondary FIRE (right-click, zoom).
-	- Doing USE(e) + Primary FIRE does not work anymore, but holding down both USE(e) + Primary FIRE + Secondary FIRE (holding left-click + right-click) does still work.
+- Revamped Tank & Flak88 shooting by replacing their original projectiles (causing radiusdamage from $world after exploding) with scripted ones (modifying tank cannon .tiks) that give kills/scorepoints to the driver when needed.
+- Tank & Flak88 projectiles will no longer deal radiusdamage and kill teammates if exploding too close to at least 1 teammate, even if they're driving or riding in something.
 
-- Fixed tank shell projectiles not shooting straight for some angles. The projectile will now always shoot directly at the crosshairs' target, greatly improving accuracy.
+- Flyable planes that players eject from (on fire and crashing) will no longer deal radiusdamage and kill teammates if exploding too close to at least 1 teammate, even if they're driving or riding in something.
+- Players who switch teams during first-flight instructions will no longer be teleported back to the plane trigger for flying a plane (flight is cancelled).
 
-- Bazooka & Panzerschreck rockets deal much more damage now, but only in a 100 unit radius (for destroying vehicles & flak88s easier). Panzerschreck rockets now shoot in straight lines (same as Bazooka). Projectile scale and light radii reduced too.
-
-- New CVAR added: cvars/coord_pointer.scr:
-	- Type "coord_pointer [player number or player name]" into console to give/take a coord pointer.
-	- i.e. "coord_pointer 1". Giving $player[1] a coord_pointer. The "origin + angle" are also saved to a "cvars/coords.txt" file.
-	- The laser pointer for iprints & console-prints "origin + angle" of the pointed target, in integer form. Double-click in the same exact spot to print "origin + angle" in 3 decimal places.
-	- NOTE: You may need to be noclipping or in spectator for double-clicking to work, since player is alive and always breathing.
-
-- Flyable planes' rockets will now always move faster than their plane's speed. Rocket speed = 2000 * plane speed; plane speed = sqrt(velocity[0]^2 + velocity[1]^2 + velocity[2]^2).
-- Flyable planes' bullets & rockets no longer deal damage to teammates or deal radiusdamage if they explode near a teammate (unless in FFA or g_teamdamage = 1).
-- Flyable planes cannot shoot their MG42 or 30 Cal with Secondary FIRE (right-click, zoom) anymore, since Secondary FIRE already makes them drop bombs.
-- Potentially fixed the rare bug when a player flying a plane blows up, but instead of dying, the player survives and is invisible for a few seconds.
-
-- Added date & time console-printing after loading a new map, and after a player connects/disconnects (for qconsole.log'ing purposes). Current time prints in 24:00:00-hour format.
-
-- Server auto-reopen scripts added to the UBER MODS's .zip file for both Windows & Linux (README for these files included in the Server Auto-Reopen Scripts folder). 
+- cvars/adminstuff.scr script now uses admins' IPs in a level array variable (top of script) to prevent admins from getting auto-kicked for same-name fix & stufftext-check threads (or make sure $player[admin clientnum + 1] isadmin == 1).
 
 ---------------
 
-- New global/victory_podium.scr script spawns 3 crates for creating a 1st, 2nd, 3rd place podium for those with the highest kills in the game.
-- The podium spawns dummy player models for the 3 winners, based on highest kills, on their respective podium spots (1st on top of 2 crates, 2nd on one crate, 3rd on the floor).
-- If 2+ winners have the same kills, the player with the lowest deaths will be deemed the actual winner.
-- If 2+ winners still have the same kills and deaths, then the player who joined first (the lowest clientnum) will be deemed the actual winner.
+- The new script, global/ambience_mp.scr, recreates ambience sound changes between different environments in singleplayer maps, for multiplayer purposes.
+	- Originally, global/ambient.scr would run only the "normal" soundtrack (from music/[map name].mus in Pak0.pk3), or switch between soundtracks if $player walked through any $interior or $exterior triggers.
+	- Players that are inside of a volume will run stufftext "tmstop; tmloop [music filepath]" only if the music filepath is different from their current playing music.
+	- Players will only change music once per 40 frames, preventing spamming when standing at ambience volume borders.
+	- The script can also make players run stufftext "s_musicvolume 1" if local.forcemaxvolume = 1 in the main script, to ensure that all players hear the ambience.
+	- Music volume must be greater than 0% to hear these ambient sounds.
+	- If debug iprint = 1 (local.debug = 1), players will iprint music filepath each time a new ambient sound plays, and music will change faster (once per frame).
+	- If a player walks into an area where 2+ volumes are still overlapping (should never happen, but runs if the script failed to see the overlap), the player's origin is printed and the script ends.
+	- Ambience volumes are like triggers, but triggers aren't actually spawned. They should fill the whole interior of a building, or whatever 3D region that players will hear interior ambience within it (or other special ambiences).
+	- Circular volumes (light houses), curved or diagonal walls (not along X-Y axis) will require several small rectangular volumes stacked like pancakes to fill in these interior areas.
 
-- This script also spawns an intermission camera, and launches fireworks when all players are teleported to the camera near the end of the map (based on "timeduration" parameter).
-- If "timeduration" is set as 0 or NIL, then fireworks will not launch, since all while-loops end when the map's intermission actually begins (when scoreboard is visible, fading to black, changing maps).
+- Main script parameters: outside/exterior ambient music filepath, force max volume (0 = no, 1 = yes), debug iprint (0 = no, 1 = iprint music, change music faster).
+	- First, create a "level.spawnambs = makeArray" and add various ambience volumes, starting with origin and both -/+ setsizes, then the music to be played inside it.
+	- Then, run "exec global/ambience_mp.scr local.music" where "local.music" = ambience music filepath for outdoors music to be played (the default ambience to play when players are outside all other 	volumes).
+	- If any 2 volumes are overlapping and/or touching in all 3 axes (x,y,z), then the 2nd volume is removed and replaced with 0s in the makeArray.
+	- Errors print suggestions for fixing a volume's setsizes or origin if any volume is deleted.
+	- If level.spawnamb does not exist or doesn't have any volumes, the map's ambience will default to "local.music".
 
-- If camera origin & camera angles are set to "auto", then the script will automatically set the camera's origin & angles roughly 550 units away from "angle" parameter facing forward, with camera's angle +180 degrees from "angle" and looking 17 degrees upward.
+		Parameters: origin, setsize 1, setsize 2, indoors ambient music filepath.
+		Example:
+				ambience: // make sure the spawnamb volumes are not touching or overlapping!!!
 
-		Parameters: origin, angle for podium players, camera origin (or "auto"), camera angles (or "auto"), time duration of fireworks (5 = 00:05 seconds of map time remaining to end game; 0 or NIL = no fireworks), ...
-		... distance until exploding (default = 300), particle time (default = 2.5), explosion scale (default = 0.8).
+					level.spawnamb = makeArray // map M2L1.
+						( -1903 -3775 380 ) ( 0 0 0 ) ( 351 351 379 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[1]
+						( -73 2415 360 ) ( 0 -911 0 ) ( 1528 0 423 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[2]
+						( 1455 3343 380 ) ( -1487 -927 0 ) ( 0 0 226 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[3]
+						( 2816 7879 -307 ) ( 0 -1108 0 ) ( 1455 0 882 ) sound/amb_stereo/Amb_M2_SubFacility.mp3		// amb[4]
+					endArray
 
-		Example: exec global/victory_podium.scr ( 220 -41 48 ) -90 auto auto 5
-
-- For testing where the podium will be, run "exec global/victory_podium.scr::test ( 220 -41 48 ) -90" and change origin + angle to spawn 3 visible solid crates.
-- For testing only the fireworks, run "exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90" and change origin + angle to continuously launch fireworks (to check distance, particle time, explosion scale, etc).
-
-		exec global/victory_podium.scr::test ( 220 -41 48 ) -90		// testing purposes only; spawn and show the podium crates.
-		exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90	// testing purposes only; launch fireworks continuously.
-
-- NOTE: If setcvar "timelimit" "0" or "", then the podium winners threads will never run, since the map will never end.
-- An optional thread ends the game immediately for "timeduration" seconds while launching fireworks, then ends the map.
-- NOTE: the "main" thread must run first too! ("exec global/victory_podium.scr ( -700 -1200 -3 ) -90 auto auto 5") must have executed already, otherwise the intermission camera will be missing.
-
-		Parameters: origin, angle for podium players, time duration until map ends (0 to end now), distance until exploding, particle time, explosion scale.
-		Example: exec global/victory_podium.scr::map_ended ( -700 -1200 -3 ) -90 7
-
-Before the ::map_ended line, an optional "level.VP_winnertype = allies" or "axis" can be included to only show podium winners from that team (i.e. for a custom OBJ gametype).
-
----------------
-
-- New global/spawnladder.scr script spawns an invisible ladder trigger_multiple. Players must be looking directly at ladder, and must be looking up/down more than 30 degrees to climb these ladders.
-- Ideally, player's hands should not go behind the ladder when climbing (use 3rd person to check your hands). Ignore this for curved ladder steps (i.e. on uboats).
-- Adjust the "offset" parameter if desired, or if player is getting stuck on stuff while climbing the ladder.
-
-		Parameters: origin, angle for players to attach, ladder setsize1, ladder setsize2, optional offset distance away from ladder (lower = players hands closer to ladder, higher = further away, default = 14). If > 18, players cannot climb the ladder.
-
-		Example: exec global/spawnladder.scr ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 )
-		Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 90 ( -1 -10 0 ) ( 1 10 250 ) 10
+					exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3
+					//exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 1 // outdoors music filepath, force max music volume, debug iprint.
+				end
 
 ---------------
 
-- New global/vehicle_tele.scr script allows vehicles to travel through walls/gates to a normally inaccessable area.
-- Lasers can be spawned into a local.lasers array via the "spawnlaser" thread in this script (paramters: origin, endpoint, initial color, scale).
+- M2l3 fully modded. 4 flyable planes, 1 flak88, 1 nebelwerfer, 3 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, 5 extra throwing knives also added.
+- 1 set of bangalore wallbombs (two-way switch) between the truck garage and Axis spawn outdoors. Airstrikes are not included in this level.
 
-- The optional teleporting alignment parameter forces vehicles to move along the 0-180 degree axis or 90-270 degree axis, preventing them from falling out of the map when teleporting across long distances.
-- A solid floor entity is required for teleporters across long distances through map walls, to keep the teleporting vehicles from blowing up or falling endlessly into the void.
+- The train's splinepath is extended along the curved railroad, and extended from the train tunnel. The tunnel itself is extended all the way to the map's edge.
+- Press USE(e) near the train and the fence to ride in the train. The train moves automatically. Hold USE(e) for 1 second to exit the train (only when outside of the "player_clip" brushes).
+	- Any players that exit the train while it's moving will appear on top of the train. Press USE(e) while looking down to re-enter the train. Walking too close to the edge of a moving train will kill the player.
+	- When the train arrives and fully stops, all players inside the train-front and the train cab will automatically exit the train and teleported to the ground.
+	- Players/vehicles/tanks that touch the moving train will be killed/destroyed.
+- Up to 2 players (teammates only, does not work in FFA) can ride in the front of the train (the bp44train.tik model), and they must hop in before the train is moving too fast.
+	- The 2 train-front riders can shoot from the train's windows, and aim by holding FIRE(zoom). These players can be shot/killed by other players shooting at the train's windows too.
+- Up to 20 players (5 rows, 4 columns) can ride in the train cab, regardless of teammates. The riders can shoot and aim by holding FIRE(zoom), or exit the train cab by holding USE(e).
+	- When train starts moving (only when a player gets into the train-front, the bp44train), all players inside the train cab will be locked into 1 of 20 available seats.
+	- If all seats are filled, the extra players are teleported back outside of the cab on the ground.
+	- If players on opposite teams are riding in the train cab together, anywhere they shoot will cause damage to their riding enemies since the damage-respoding trigger covers the whole cab's interior.
+	- The train cab rider in the 1st seat (middle row, closest to door) can toggle opening/closing the solid traincab door by Leaning Left/Right
+	- If the train cab door is closed, players inside the cab cannot be shot/killed or shoot/kill others.
 
-		Parameters: origin, setsize 1, setsize 2, laser array (or NIL if no lasers), teleporting alignment (NIL = none, 0 = 0-180 axis, 1 = 90-270 axis), vehicle height after teleporting (default/NIL = 0), ...
-		... teleporting speed (default/NIL = 25, max = 300), spawn solid floor (0 or NIL = no, 1 = yes).
+- 2 vehicle teles for vehicles to enter/exit the truck garage. Various extra roads outlined by lasers spawned in extra map areas.
+- Other lasers on the rooftops help prevent players from falling off edges.
 
-		Example: exec global/vehicle_tele.scr ( 4193 -1119 -511 ) ( -222 -680 -10 ) ( 222 680 355 ) local.lasers 1 0 50 1
+- Thick green lasers on the ground outline "player_clip" brushes from the map's .bsp (brushes cannot be removed), since players cannot walk through them.
+- Vehicles/tanks can drive through them, but players that exit them while inside these brushes will get trapped (respawned after 3 seconds).
+- Building rooftops and ledges are solified with "script_origin"s and accessible via teles from the ground (glitching can occur when standing still. To reduce entity count, smaller "script_model"s were not used).
 
-		local.lasers[1] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6227 -511 ) ( -1507 -6227 -262 ) ( 1 0 0 ) 3 // origin, endpoint, initial color, scale
-		local.lasers[2] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6224 -259 ) ( -1507 -6464 -259 ) ( 1 0 0 ) 3
-		local.lasers[3] = thread global/vehicle_tele.scr::spawnlaser ( -1507 -6461 -262 ) ( -1507 -6461 -511 ) ( 1 0 0 ) 3
-		exec global/vehicle_tele.scr ( -1502 -6344 -511 ) ( -30 -115 -10 ) ( 30 115 200 ) local.lasers 0
-
----------------
-
-- M2l2A fully modded. M2l2B fully modded. M2l2C fully modded. [Details in "Singleplayer Map Mods"]
+- Numerous sound entities added throughout the Allies spawn and truck garage: 3 generators, 16 transformers, 8 air vents.
