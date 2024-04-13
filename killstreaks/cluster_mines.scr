@@ -257,7 +257,7 @@ targetplayers local.player_owner: // cannot use "local.owner" since it is a read
 		{
 			local.dist = vector_length(self.origin - $player[local.i].origin)
 
-			if(local.dist < level.mines_radius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && self cansee $player[local.i] 360 && $player[local.i].spectator_choseteam_notyetspawned != 1)
+			if(local.dist < level.mines_radius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && (self cansee $player[local.i] 360 || ($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && self cansee $player[local.i].drivingent 360)) && $player[local.i].spectator_choseteam_notyetspawned != 1)
 			{
 				if($player[local.i] == local.player_owner) { self.owner_in_danger = 1 }
 
@@ -291,9 +291,33 @@ dead:
 		local.maxplayers = int(getcvar("sv_maxclients"))
 		for(local.i = 1; local.i <= local.maxplayers; local.i++)
 		{
-			if(self.mines.killplayers[local.i] == 1 && isalive $player[local.i]) { $player[local.i] damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			if(self.mines.killplayers[local.i] == 1 && isalive $player[local.i])
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+				{
+					$player[local.i] damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = self.player_owner
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
 		}
-		if(self.mines.owner_in_danger == 1) { self.player_owner damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		if(self.mines.owner_in_danger == 1)
+		{
+			if(self.player_owner.driving != 1 && self.player_owner.flying != 1)
+			{
+				self.player_owner damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+			}
+			else if(self.player_owner.drivingent != NIL && self.player_owner.drivingent != NULL)
+			{
+				self.player_owner.drivingent.shooter = self.player_owner
+				if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				else { self.player_owner.drivingent damage self.player_owner level.mines_damage self.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			}
+		}
 	}
 	if(self.mines.killplayers == NIL && self.enemy_killer == NIL) { radiusdamage self.origin level.mines_damage level.mines_radius }
 
@@ -303,9 +327,18 @@ dead:
 		{
 			local.dist = vector_length(self.origin - $player[local.i].origin)
 
-			if(local.dist < level.mines_radius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && self cansee $player[local.i] 360 && $player[local.i].spectator_choseteam_notyetspawned != 1 && ($player[local.i].dmteam != self.enemy_killer.dmteam || getcvar("g_gametype") == "1"))
+			if(local.dist < level.mines_radius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && $player[local.i].spectator_choseteam_notyetspawned != 1 && ($player[local.i].dmteam != self.enemy_killer.dmteam || getcvar("g_gametype") == "1"))
 			{
-				$player[local.i] damage self.enemy_killer level.mines_damage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				if(self cansee $player[local.i] 360)
+				{
+					$player[local.i] damage self.enemy_killer level.mines_damage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && self cansee $player[local.i].drivingent 360)
+				{
+					$player[local.i].drivingent.shooter = self.enemy_killer
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self.enemy_killer level.mines_damage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage self.enemy_killer level.mines_damage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
 			}
 		}
 	}

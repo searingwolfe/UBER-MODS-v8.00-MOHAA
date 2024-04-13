@@ -191,6 +191,40 @@ blowup local.name local.offtime local.damageradius local.pulsatingoff:
 	if(local.pulsatingoff == 1) { $(trenchbangalore + local.name) hide }
 
 	radiusdamage $(trenchexplode + local.name).origin 300 local.damageradius
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so explosions can count as score/kills
+	{
+		if(vector_length($("trenchexplode" + local.name).origin - $player[local.i].origin) <= local.damageradius)
+		{
+			if(self == NIL || self == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee $("trenchdebris" + local.name) 360)
+				{
+					$player[local.i] damage $world 300 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 300 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 300 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != self && $player[local.i].dmteam == self.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee $("trenchdebris" + local.name) 360)
+				{
+					$player[local.i] damage self 300 self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = self
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 300 self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage self 300 self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	if(local.blewup == 1) { radiusdamage $("trenchexplode" + local.name).origin 300 local.damageradius }
 
 	local.random1 = randomint(2)
 	if(local.random1 == 0) { $(trenchbangalore + local.name) playsound explode_wood_small1 }

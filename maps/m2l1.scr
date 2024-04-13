@@ -187,7 +187,7 @@ exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 1439 2455 520
 exec maps/training_mapscripts/bangalore_wallbomb.scr bb4 ( 167 1471 579 ) ( 60 -90 0 ) 100 0
 exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 56 1504 520 ) ( 0 90 0 ) bb4 60 450 2
 exec maps/training_mapscripts/bangalore_wallbomb.scr bb5 ( -1535 -3713 719 ) ( 60 0 0 ) 100 0
-exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -1552 -3646 655 ) ( 0 180 0 ) bb5 60 450 2
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -1629 -3424 655 ) ( 0 -90 0 ) bb5 60 450 2
 
 	thread trainswitch ( -1980 -3418 484 ) ( 0 -90 0 ) 5
 
@@ -203,10 +203,10 @@ exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -1552 -3646 6
 	thread vehicle_tele 300 30 ( 1820 916 625 ) ( -30 -315 -250 ) ( 30 340 0 ) local.laser1 local.laser2 local.laser3
 	// vehicle_tele parameters: tele distance, tele height from ground, tele origin, tele setsize1, tele setsize2, laser1, laser2, laser3.
 
-	local.laser4 = thread spawnlaser ( -2280 2193 619 ) ( -2280 2193 448 ) ( 1 0 0 ) 3
-	local.laser5 = thread spawnlaser ( -2280 2190 622 ) ( -2280 2859 622 ) ( 1 0 0 ) 3
-	local.laser6 = thread spawnlaser ( -2280 2856 619 ) ( -2280 2856 448 ) ( 1 0 0 ) 3
-	thread vehicle_tele 300 180 ( -2280 2523.5 625 ) ( -30 -330 -250 ) ( 30 330 0 ) local.laser4 local.laser5 local.laser6
+	local.laser4 = thread spawnlaser ( -2264 2193 619 ) ( -2264 2193 448 ) ( 1 0 0 ) 3
+	local.laser5 = thread spawnlaser ( -2264 2190 622 ) ( -2264 2859 622 ) ( 1 0 0 ) 3
+	local.laser6 = thread spawnlaser ( -2264 2856 619 ) ( -2264 2856 448 ) ( 1 0 0 ) 3
+	thread vehicle_tele 300 180 ( -2280 2523.5 625 ) ( -30 -350 -250 ) ( 30 350 0 ) local.laser4 local.laser5 local.laser6
 
 	thread airstrikes_alternate
 }
@@ -219,6 +219,7 @@ if(getcvar("g_ubermods") == "1")
 level waittill spawn
 
 	thread consoleprint
+	thread ambience
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -231,6 +232,21 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( 1170 2716 488 ) ( 0 -180 0 )
 	exec global/throwingknife.scr k4 ( 3705 6966 220 ) ( 0 90 0 )
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( -1903 -3775 380 ) ( 0 0 0 ) ( 351 351 379 ) sound/amb_stereo/Amb_M2_SnowInt.mp3
+ 
+		( -73 2415 360 ) ( 0 -911 0 ) ( 1528 0 423 ) sound/amb_stereo/Amb_M2_SnowInt.mp3
+
+		( 1455 3343 380 ) ( -1487 -927 0 ) ( 0 0 226 ) sound/amb_stereo/Amb_M2_SnowInt.mp3
+
+		( 2816 7879 -307 ) ( 0 -1108 0 ) ( 1455 0 882 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -570,7 +586,7 @@ radio_music local.origin local.angles:
 	local.radio model "miscobj/radio_military.tik"
 	local.radio.origin = local.origin
 	local.radio.angles = local.angles
-	local.radio.scale = 0.001
+	local.radio.scale = 1
 	
 	local.trig = spawn trigger_use
 	local.trig.origin = local.radio.origin
@@ -984,7 +1000,7 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/tele.scr ( -5685 -2531 486 ) ( -5775 -2398 1168 ) 1
 	exec map_triggers/tele.scr ( -3867 -2674 498 ) ( -3791 -2568 1168 ) 1
 	exec map_triggers/tele.scr ( -2446 -2071 459 ) ( -2542 -2042 1168 ) 1
-	exec map_triggers/tele.scr ( -2464 622 454 ) ( -2644 609 1168 ) 1
+	exec map_triggers/tele.scr ( -2440 544 454 ) ( -2644 609 1168 ) 1
 	exec map_triggers/tele.scr ( 1199 2063 624 ) ( 1199 2063 888 ) 1
 
 	exec map_triggers/tele.scr ( 1999 -1777 499 ) ( 1962 -1810 888 ) 0

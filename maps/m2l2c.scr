@@ -170,10 +170,10 @@ exec global/playerboat.scr uboat4 vehicles/uboat.tik ( 3475 3750 -700 ) ( 0 180 
 
 exec server_planes/trigger.scr ( -3669 -815 -511 ) "allies" 1 1 ( -3450 -815 -11 )	// team (only 1 per modelpair), flying plane scale, modelpair, starting origin (default = origin + 500)
 exec server_planes/trigger.scr ( 1471 -6219 -511 ) "axis" 1 0 ( 1471 -6219 -100 )	// Allies/Axis modelpair: 0 = p47/fockwulf, 1 = stuka_dsrt/stuka, 2 = c47 for both teams
-exec server_planes/trigger.scr ( 3741 1736 -511 ) "axis" 1 1
+exec server_planes/trigger.scr ( 3755 3506 -511 ) "axis" 1 1
 exec server_planes/trigger.scr ( -959 -6216 -507 ) "allies" 1 0 ( -959 -6216 -100 )
 
-exec global/playernebelwerfer.scr NIL 200 45 ( 3755 3506 -511 ) ( 0 180 0 )
+exec global/playernebelwerfer.scr NIL 200 45 ( 3741 1736 -511 ) ( 0 180 0 )
 exec global/playernebelwerfer.scr NIL 200 45 ( 2401 -5759 -663 ) ( 0 90 0 )
 exec global/playerflak88.scr NIL 200 45 ( 2759 -4505 -627 ) ( 0 -90 0 ) 0 ( 0 45 0 )
 exec global/playerflak88.scr NIL 200 45 ( 260 -5042 -627 ) ( 0 -90 0 ) 0 ( 0 45 0 )
@@ -226,6 +226,7 @@ thread detonatorswitch ( 2669 -3328 -448 ) ( 0 90 0 ) 60 450 2 bb7 bb8 bb9
 level waittill spawn
 
 	thread consoleprint
+	thread ambience
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -242,6 +243,24 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k7 ( -3421 -6228 -511 ) ( 0 180 0 )
 	exec global/throwingknife.scr k8 ( 3769 -3863 -303 ) ( 0 180 0 )
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( 3333 -3525 -96 ) ( -8000 -8000 -1000 ) ( 0 1140 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+
+		( 3334 -3525 -97 ) ( 0 -2202 -1000 ) ( 8000 1141 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 3334 -3525 -96 ) ( 0 -2202 0 ) ( 8000 1141 350 ) sound/amb_stereo/Amb_M2_VentInt.mp3
+		( 3334 -3525 255 ) ( 0 -2202 0 ) ( 8000 1141 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+
+		( 3334 -5728 -96 ) ( 0 -8000 -1000 ) ( 8000 0 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 3334 -2383 -96 ) ( -2535 0 -1000 ) ( 8000 1742 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 798 -1651 -511 ) ( -8000 -733 -1000 ) ( 0 0 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( -3871 -1650 -511 ) ( -8000 0 -1000 ) ( 0 3535 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_04.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -374,18 +393,18 @@ detonatorswitch local.origin local.angles local.offtime local.damageradius local
 	local.r = randomint(2)
 	if(local.r == 0)
 	{
-		thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb1 local.offtime local.damageradius local.pulsatingoff
+		local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb1 local.offtime local.damageradius local.pulsatingoff
 		wait (randomint(100) / 100.00 + 0.25)
-		thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb2 local.offtime local.damageradius local.pulsatingoff
+		local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb2 local.offtime local.damageradius local.pulsatingoff
 	}
 	else
 	{
-		thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb2 local.offtime local.damageradius local.pulsatingoff
+		local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb2 local.offtime local.damageradius local.pulsatingoff
 		wait (randomint(100) / 100.00 + 0.25)
-		thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb1 local.offtime local.damageradius local.pulsatingoff	
+		local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb1 local.offtime local.damageradius local.pulsatingoff	
 	}
 	wait (randomint(100) / 100.00 + 0.25)
-	waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb3 local.offtime local.damageradius local.pulsatingoff
+	local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.bb3 local.offtime local.damageradius local.pulsatingoff
 
 	local.detonator remove
 	local.detonatortrig remove
@@ -632,8 +651,8 @@ if(getcvar("g_ubergametype") != "bb")
 
 	exec map_triggers/tele.scr ( 3671 -3148 -511 ) ( 3616 -3148 -511 ) 1
 	exec map_triggers/tele.scr ( 3687 -4078 -511 ) ( 3680 -4079 -303 ) 1
-	exec map_triggers/tele.scr ( 4209 -4344 -77 ) ( 4178 -4345 -13 ) 0
-	exec map_triggers/tele.scr ( 5021 -3572 -253 ) ( 5028 -3603 -77 ) 0
+	exec map_triggers/telecrouch.scr ( 4209 -4344 -77 ) ( 4178 -4345 -13 ) 0 1 0
+	exec map_triggers/telecrouch.scr ( 5021 -3572 -253 ) ( 5028 -3603 -77 ) 0 1 0
 	exec map_triggers/tele.scr ( 4220 -4127 -77 ) ( 4220 -4088 -77 ) 1
 	exec map_triggers/tele.scr ( 4220 -4512 -77 ) ( 4220 -4551 -77 ) 1
 	exec map_triggers/tele.scr ( 3647 -3811 -77 ) ( 3608 -3810 -77 ) 1

@@ -121,7 +121,7 @@ if(getcvar("g_ubermods") == "2")
 
 exec map_triggers/lightbomb.scr ( 985 4293 -15 ) ( 3233 4136 -30 ) ( 3158 3309 -71 ) ( 5365 3187 -97 ) ( 4374 2177 -79 ) ( 3491 1067 -52 ) ( 4020 1375 -135 ) ( 2361 -186 143 ) ( 2518 4175 19 ) ( 5149 3965 -200 )
 exec map_triggers/bomb.scr ( 3681 2194 240 ) ( 2788 3119 328 ) ( 5337 3151 286 ) ( 3294 1869 520 ) ( 1312 4057 792 ) ( 2550 -385 296 ) ( 1551 -279 867 ) ( 4296 3306 184 ) ( 3176 3964 472 ) ( 5201 455 -207 )
-exec map_triggers/grenade_ammo.scr ( 2244 4274 -233 ) ( 3922 563 -300 ) ( 2130 -758 -247 ) ( 4946 1363 -347 ) ( 3564 2233 -208 ) ( 4212 3375 -281 ) ( 2995 4334 -239 ) ( 3151 3301 -247 ) ( 3470 1930 -257 ) ( 4160 -32 -279 )
+exec map_triggers/grenade_ammo.scr ( 2244 4274 -233 ) ( 3922 563 -300 ) ( 2130 -758 -247 ) ( 4946 1363 -347 ) ( 3564 2233 -208 ) ( 4212 3375 -281 ) ( 3067 4334 -239 ) ( 3151 3301 -247 ) ( 3470 1930 -257 ) ( 4160 -32 -279 )
 exec map_triggers/rocket_ammo.scr ( 2368 2909 16 ) ( 3005 4416 136 ) ( 3496 2856 -39 ) ( 4138 4235 168 ) ( 4376 1848 -167 ) ( -3242 3094 -51 ) ( 3000 520 -159 ) ( -13 279 -355 ) ( 4652 1844 -111 ) ( 3147 1227 206 )
 exec map_triggers/snowball_ammo.scr ( 3204 1385 561 ) ( 4407 1200 408 ) ( 4198 2137 456 ) ( 4111 4569 504 ) ( 2747 4147 633 ) ( 835 -211 175 ) ( -5006 1917 20 ) ( 4167 1884 432 ) ( 943 4056 800 ) ( 3642 4784 -219 )
 exec map_triggers/health.scr ( 665 5 -279 ) ( 5680 -43 -350 ) ( 2025 1150 -327 ) ( 5671 1936 -312 ) ( 990 3713 -115 ) ( -1353 3752 -87 ) ( 3867 4657 -139 ) ( 2943 2198 -300 ) ( 5585 2991 -289 ) ( 4373 1847 -314 )
@@ -184,6 +184,8 @@ exec maps/UBER_mapextras/obj1_cratesstuff.scr::craterfire
 
 level waittill spawn
 
+	thread ambience
+
 while(level.bbactive == 1) { wait 1 }
 
 if(getcvar("g_throwingknives") == "1")
@@ -195,6 +197,37 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( 3790 3278 -63 ) ( 0 180 0 ) 
 	exec global/throwingknife.scr k4 ( 3989 2157 -79 ) ( 0 180 0 )
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( 1304 -223 -400 ) ( 0 0 0 ) ( 287 302 393 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 1304 -223 -6 ) ( 0 0 0 ) ( 287 194 25 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 1304 -223 20 ) ( 0 0 0 ) ( 287 144 50 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 1304 -223 71 ) ( 0 0 0 ) ( 287 94 50 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 1304 -223 132 ) ( 0 0 0 ) ( 287 44 50 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+
+		( 1447 -28 -6 ) ( -110 0 0 ) ( 110 107 25 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 1447 -28 20 ) ( -85 0 0 ) ( 85 107 50 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 1447 -28 71 ) ( -35 0 0 ) ( 35 107 50 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+
+		( 2308 4061 -300 ) ( 0 0 0 ) ( 93 252 300 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 2402 3968 -300 ) ( 0 0 0 ) ( 329 345 300 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 2308 3982 1 ) ( 0 0 0 ) ( 423 331 234 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+
+		( 2952 3968 -350 ) ( 0 0 0 ) ( 447 495 302 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 2952 3968 -47 ) ( 0 0 0 ) ( 232 495 174 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 3185 4288 -47 ) ( 0 0 0 ) ( 214 175 174 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+
+		( 3984 1464 -450 ) ( 0 0 0 ) ( 415 407 450 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+
+		( 4399 2152 -400 ) ( -415 0 0 ) ( 0 323 312 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 4399 2476 -400 ) ( -176 0 0 ) ( 0 104 312 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+		( 4399 2581 -400 ) ( -415 0 0 ) ( 0 170 312 ) sound/amb_stereo/Amb_M5_TownInt.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M5_TownExt_2.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,25 @@
 main:
 
+//-----------------------------------------------------------------------------
+//----- Add admin IP addresses here, or make sure that $player[admin's clientnum] isadmin == 1 (logged in as server admin)
+//----- to prevent "Same Name Fix" & "Check Player Stufftexts" threads from kicking them.
+//-----------------------------------------------------------------------------
+
+	level.admin_IPs = makeArray	// do not include :port extensions
+		10.1.10.250 		// LAN ip admins
+		10.1.10.251
+		192.192.168.168 	// not-LAN ip admins
+		// add
+		// more
+		// IPs
+		// here
+	endArray
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
 	if(level.check_player_IPs != 1) { thread IP_addresses }
 	level.check_player_IPs = 1
 
@@ -38,24 +58,14 @@ end
 
 samename_fix:
 
-	local.admin_IPs = makeArray	// do not include :port extensions
-		10.1.10.250 		// LAN ip admins
-		10.1.10.251
-		73.196.169.239 	// not-LAN ip admins
-		// add
-		// more
-		// IPs
-		// here
-	endArray
-
 	while($player.size < 2) { waitframe }
 	while($player.size >= 2)
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			for(local.p = 1; local.p <= local.admin_IPs.size; local.p++)
+			for(local.p = 1; local.p <= level.admin_IPs.size; local.p++)
 			{
-				if($player[local.i].IP_address_init == local.admin_IPs[local.p][1] || $player[local.i] isadmin == 1)
+				if($player[local.i].IP_address_init == level.admin_IPs[local.p][1] || $player[local.i] isadmin == 1)
 				{
 					$player[local.i].admin_name_priority = 1
 				}
@@ -139,7 +149,13 @@ end
 
 check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
 
-	if(local.player == NULL) { end }
+	while(local.player != NULL && local.player.IP_address_init == NIL) { waitframe }
+	if(local.player == NULL || local.player isadmin == 1) { end }
+
+	for(local.p = 1; local.p <= level.admin_IPs.size; local.p++)
+	{
+		if(local.player.IP_address_init == level.admin_IPs[local.p][1]) { end }
+	}
 
 	thread date_time_timezone
 
@@ -153,12 +169,12 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 		local.n++
 		wait 0.15
 	}
-	if(local.player != NULL)
+	if(local.player != NULL && local.player )
 	{
 		if(netname local.player == local.name)
 		{
 			println("----- Auto-kicked " + netname local.player + " for joining with stufftext hacks.")
-			stuffsrv("clientkickr " + (getclientnum local.player) + " \"Auto-kicked for joining with stufftext hacks.\"")
+			stuffsrv("clientkickr " + (getclientnum local.player) + " \"joining with stufftext hacks.\"")
 			end
 		}
 		else { local.player stufftext ("name " + local.name) }
@@ -245,7 +261,7 @@ anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks
 					if(local.kick == 1 && $player[local.i] != NULL)
 					{
 						println("----- Auto-kicked " + netname $player[local.i] + " for joining with cvar hacks.")
-						stuffsrv("clientkickr " + (local.i - 1) + " \"Auto-kicked for joining with cvar hacks.\"")
+						stuffsrv("clientkickr " + (local.i - 1) + " \"joining with cvar hacks.\"")
 						local.break = 1
 						break
 					}
@@ -649,7 +665,7 @@ wuss2:
 	{
 		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
 		{
-			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && ($player[local.i].driving != 1 || $player[local.i].passenger == 1) && $player[local.i].flying != 1)
 			{
 				$player[local.i] wuss
 				println("----- $player[" + local.i + "] wuss2")

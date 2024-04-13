@@ -1,5 +1,5 @@
-main:
-	
+main local.team:
+
 	self hide
 	self notsolid
 
@@ -15,9 +15,9 @@ main:
 	for(local.i = 1; local.i <= game.plane_instructions.size; local.i++)
 	{
 		if(self == NULL || self getconnstate == 1) { end }
-		if(self != NULL && self.useheld != 1)
+		if(self != NULL && self.useheld != 1 && self.dmteam == local.team && level.change_team_score != 1)
 		{
-			self waitthread printmsg game.plane_instructions[local.i][1]  game.plane_instructions[local.i][2]
+			self waitthread printmsg game.plane_instructions[local.i][1]  game.plane_instructions[local.i][2] local.team
 		}
 	}
 
@@ -27,11 +27,11 @@ main:
 end	
 		
 
-printmsg local.msg local.duration:
+printmsg local.msg local.duration local.team:
 
 	local.duration = int local.duration
 
-	if(self.useheld!=1)
+	if(self.useheld != 1 && self.dmteam == local.team && level.change_team_score != 1)
 	{	
 		self iprint local.msg 1
 		wait local.duration

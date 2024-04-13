@@ -189,6 +189,7 @@ if(getcvar("g_ubermods") == "1")
 level waittill spawn
 
 	thread consoleprint
+	thread ambience
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -201,6 +202,17 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( -5115 959 -23 ) ( 0 90 0 )
 	exec global/throwingknife.scr k4 ( -135 1151 -23 ) ( 0 -90 0 )
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+
+		( -5647 976 -120 ) ( 0 0 0 ) ( 479 431 223 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -2879 6856 -200 ) ( 0 0 0 ) ( 351 474 335 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_Canyon_01.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -581,11 +593,11 @@ local.switch playsound alarmswitch
  	local.player iprint ("*** Blowing up a bangalore. ***")
 	local.r = randomint(2)
 
-	if(local.r == 0) { thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff }
-	if(local.r == 1) { thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name2 local.offtime local.damageradius local.pulsatingoff }
+	if(local.r == 0) { local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff }
+	if(local.r == 1) { local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name2 local.offtime local.damageradius local.pulsatingoff }
 	wait (randomint(15) / 10.000)
-	if(local.r == 0) { waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name2 local.offtime local.damageradius local.pulsatingoff }
-	if(local.r == 1) { waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff }
+	if(local.r == 0) { local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name2 local.offtime local.damageradius local.pulsatingoff }
+	if(local.r == 1) { local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff }
 
 local.switch anim turnoff
 wait 1
@@ -874,6 +886,9 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/tele.scr ( -1312 2831 -23 ) ( -1312 2793 288 ) 0
 	exec map_triggers/tele.scr ( 414 3215 -23 ) ( 414 3166 288 ) 0
 	exec map_triggers/tele.scr ( 3935 3215 -23 ) ( 3936 3162 288 ) 0
+
+	exec map_triggers/tele.scr ( -5136 1014 -23 ) ( -5183 1015 -23 ) 1
+	exec map_triggers/tele.scr ( -5679 1222 -23 ) ( -5632 1220 -23 ) 1
 }
 end
 

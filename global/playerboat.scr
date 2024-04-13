@@ -73,6 +73,7 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 		local.vehicle.gun = $(local.name + "_tag_barrel")
 
 		local.vehicle thread boatstuck_inwall_fix
+		local.vehicle thread turret_laser local.name
 	}
 										// "local.player.touching_playerboat" or "$player[1].touching_playerboat" can be included in trigger setthreads
 	if(level.touching_playerboat != 1) { thread touching_playerboat }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
@@ -102,9 +103,10 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				local.damage = ((local.health - self.health) / self.passengers.size)
 				for(local.i = 1; local.i <= self.passengers.size; local.i++)
 				{
-					self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 				}
-				self.shooter = NIL
 			}
 
 			for(local.i = 1; local.i <= $player.size; local.i++)
@@ -116,8 +118,15 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 			}
 		}
 		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(self.shooter != NIL) { self thread shooter_NIL }
 		waitframe
 	}
+end
+
+shooter_NIL:
+
+	waitframe
+	self.shooter = NIL
 end
 
 vehicletrigger:
@@ -128,13 +137,8 @@ vehicletrigger:
 	if(self.model != "models/vehicles/uboat.tik") { local.trig setsize ( -130 -130 -30 ) ( 130 130 100 ) }
 	else { local.trig setsize ( -(2000 * self.scale) -(150 * self.scale) -(10 * self.scale) ) ( (1820 * self.scale) (150 * self.scale) (200 * self.scale) ) }
 	local.trig.vehicle = self
+	local.trig glue self
 	local.trig setthread triggered
-
-	while(self != NULL && local.trig != NULL) // sometimes a high-velocity object (non-projectile) pushes the vehicle away from its trigger.
-	{
-		if(self.origin != local.trig.origin) { local.trig.origin = self.origin } // keep the vehicle and its trigger together.
-		waitframe
-	}
 end
 
 triggered:
@@ -166,7 +170,9 @@ playergetin:
 	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1) { end }
 	self.driver = local.player
 	self.driver.driving = 1
+	self.driver.drivingent = self
 	local.driver = self.driver
+	self.player_owner = self.driver
 
 	self.passengers[1] = NIL // initialize as array to make size = 0 instead of size = -1
 	self thread seatstuff
@@ -178,18 +184,18 @@ playergetin:
 	self.driver.driving_state_jump = 0
 	if(self.model == "models/vehicles/uboat.tik")
 	{
-		self.driver iprint ("JUMP = exit boat. Lean Left/Right = look behind.")
-		self.driver iprint ("FIRE Primary = shoot rockets. FIRE Secondary = throw grenades.")
+		self.driver iprint ("Lean Left/Right = aim turret down/up. Lean Left/Right (while not moving) = look behind.")
+		self.driver iprint ("JUMP = exit boat. FIRE Primary = shoot rockets. FIRE Secondary = throw grenades.")
 	}
 	else { self.driver iprint ("JUMP = exit boat. Hold FIRE = look behind.") }
 
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
 	self.driver loopsound wavelaps
+	self.turretlaser_offset = 0
 
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
-		local.holdtime = 0
 		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
@@ -204,15 +210,49 @@ playergetin:
 
 		if(self != NULL && isalive self.driver && self.driver.dmteam == local.team)
 		{
-			if(self.driver.useheld != 1 && self.model == "models/vehicles/uboat.tik")
+			if(self.model == "models/vehicles/uboat.tik")
 			{
-				if(self.driver.fireheld == 1 && self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1)
+				if(self.turretlaser != NIL && self.turretlaser != NULL)
 				{
-					if(self.driver.secfireheld != 1) { self thread firegun } 
-					else { self thread firesecondary }
+					local.fwd_vec = angles_toforward ( (self.angles[0] + self.turretlaser_offset) self.angles[1] self.angles[2] )
+					local.start = $(self.targetname + "_tag_barrel").origin
+					local.groundtarget = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * 10240) 0
+
+					self.turretlaser.origin = $(self.targetname + "_tag_barrel").origin
+					self.turretlaser endpoint local.groundtarget
 				}
-				if(self.driver.fireheld != 1 && (self.driver.leanleftheld == 1 || self.driver.leanrightheld == 1)) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
+
+				if(self.driver.useheld != 1)
+				{
+					if(self.driver.fireheld == 1)
+					{
+						if(self.driver.secfireheld != 1) { self thread firegun } 
+						else { self thread firesecondary }
+					}
+	
+					if(self.driver.fireheld != 1 && (self.driver.leanleftheld == 1 || self.driver.leanrightheld == 1))
+					{
+						if(self.velocity == ( 0 0 0 )) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
+						else if(self.turretlaser != NIL && self.turretlaser != NULL)
+						{
+							if(self.driver.leanleftheld != 1 && self.driver.leanrightheld == 1)
+							{
+								if(self.turretlaser_offset > -15) { self.turretlaser activate; self.turretlaser_offset -= 0.25 }
+								else { self.turretlaser deactivate; self.turretlaser_offset = -15 }
+							}
+	
+							if(self.driver.leanleftheld == 1 && self.driver.leanrightheld != 1)
+							{
+								if(self.turretlaser_offset < 3) { self.turretlaser activate; self.turretlaser_offset += 0.25 }
+								else { self.turretlaser deactivate; self.turretlaser_offset = 3 }
+							}
+							if(self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1) { self.turretlaser deactivate }
+						}
+					}
+					else { self.turretlaser deactivate }
+				}
 			}
+			if(self.driver.fireheld == 1 && self.model != "models/vehicles/uboat.tik") { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
 
 			if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind)
 			{
@@ -232,7 +272,7 @@ playergetin:
 		if(self.driver != NIL && self.driver != NULL)
 		{
 			if(self.driver.dmteam == local.team && level.change_team_score != 1) { self thread driverreset }
-			if(self.driver.dmteam != local.team || level.change_team_score == 1) { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle
+			if(self.driver.dmteam != local.team || level.change_team_score == 1) { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle.
 			self thread vehiclereset
 		}
 		if(self.turretplayer != NIL && self.turretplayer != NULL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer }
@@ -241,7 +281,7 @@ playergetin:
 		self remove
 	}
 	waitframe
-	if(local.driver != NULL) { local.driver.driving = 0; local.driver stoploopsound }
+	if(local.driver != NULL) { local.driver.driving = 0; local.driver.drivingent = NIL; local.driver stoploopsound }
 end
 
 driverreset local.status:
@@ -252,7 +292,7 @@ driverreset local.status:
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
 
-	if(self.model == "models/vehicles/uboat.tik") { local.outheight = 200 }
+	if(self.model == "models/vehicles/uboat.tik") { local.outheight = 180 }
 	else { local.outheight = 120 } // if this is 100 or lower and the boat is still moving after the player gets out, the player will be run over by the boat and killed.
 
 	if(self.driver.dmteam != spectator)
@@ -263,7 +303,7 @@ driverreset local.status:
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
 		if(local.status != 1 && local.status != 2)
 		{
-			self.driver.origin = self.origin + ( 0 0 local.outheight )
+			self.driver.origin = self.origin + (angles_toup self.angles * local.outheight)
 			self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
 		}
 	}
@@ -380,7 +420,7 @@ vehicledeath:
 	self thread driverreset 1								// local.status = 1
 	self thread mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2	// waiting self.resettime seconds until a new vehicle is spawned in
 
-	if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
+	self thread kill_riders
 	self.driver = NIL
 
 	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
@@ -408,6 +448,31 @@ vehicledeath:
 	waitframe
 	local.boom remove
 	local.debris remove
+end
+
+kill_riders:
+
+	if(self.passengers.size >= 1)
+	{
+		for(local.i = 1; local.i <= self.passengers.size; local.i++)
+		{
+			if(self.shooter != NIL)
+			{
+				if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				else if(self.shooter != NULL) { self.passengers[local.i] damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			}
+			else { self.passengers[local.i] volumedamage 9999999 }
+		}
+	}
+
+	if(self.shooter != NIL)
+	{
+		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		else if(self.shooter != NULL) { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	}
+	else if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
 end
 
 mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2:
@@ -441,14 +506,14 @@ passengers:
 	local.player = parm.other
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & passenger could be attached to the same seat!
-	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
 
 	for(local.s = 1; local.s <= self.seats; local.s++)
 	{
 		if(self.passengers[local.s] == NIL) { self.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
 	}
-
-	local.outheight = 150
+	if(local.s > self.seats) { end } // no seats available.
 
 	if(local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
 	{
@@ -456,8 +521,10 @@ passengers:
 		local.player iprint ("An enemy player is driving this vehicle!")
 		end
 	}
+
 	if(self.dist_offset[local.s] == NIL) { end }
 	local.distoffset = self.dist_offset[local.s]
+	local.outheight = 150
 
 	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
 	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
@@ -466,18 +533,19 @@ passengers:
 	//local.player noclip
 	//local.player nodamage
 	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
-	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE = look around.")
+	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE(zoom) = look around.")
 	local.player.origin = self.origin
 	local.player.passenger = 1
+	local.player.ridingent = self
 	local.player.driving = 1 // should help with other scripts.
 	local.player.driving_state_jump = 0
 	local.PI = 3.14159265359
 	local.driver = self.driver
 
-	while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
 	{
 		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
-		local.holdtime = 0
+
 		local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
 		if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
 		local.radians = local.degrees * (local.PI / 180)
@@ -512,6 +580,7 @@ passengers:
 			local.player thread wallstuck_fix
 			self.passengers[local.s] = NIL
 			local.player.passenger = 0
+			local.player.ridingent = NIL
 			local.player.driving = 0
 			end
 		}
@@ -523,6 +592,7 @@ passengers:
 	{
 		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
 		local.player.passenger = 0
+		local.player.ridingent = NIL
 		local.player.driving = 0
 		if(local.player.dmteam != spectator)
 		{
@@ -539,8 +609,17 @@ passengers:
 	
 				local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
-	
-				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1)) { local.player damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+
+				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1))
+				{
+					if(self != NULL && self.shooter != NIL)
+					{
+						if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.player damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+					else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
 			}
 
 			local.origin = local.player.origin
@@ -648,6 +727,8 @@ projectile local.secondary:
 	local.projectile physics_on    // need this for gravity and waittill touch to work.
 	local.projectile.scale = 3
 
+	if(self != NULL) { local.projectile.player_owner = self.driver }
+
 	if(local.secondary == 1)
 	{
 		local.projectile playsound grenadethrow
@@ -655,16 +736,16 @@ projectile local.secondary:
 		local.projectile thread rotate
 
 		local.projectile gravity 0.8
-		local.fwd_vec = angles_toforward self.angles
+		local.fwd_vec = angles_toforward ( 0 self.angles[1] 0 )
 		local.projectile.velocity = ( local.fwd_vec[0] local.fwd_vec[1] 0.500 ) * 950 // local.fwd_vec[2] = 0.500 = 45 degrees facing upward
 	}
 	else
 	{
 		local.projectile loopsound rocketfireloop
-		local.projectile.angles = ( 0 (self.angles[1] + 180) 0 )
+		local.projectile.angles = ( self.turretlaser_offset (self.angles[1] + 180) 0 )
 
 		local.projectile gravity 0
-		local.projectile.velocity = (angles_toforward self.angles) * 6000
+		local.projectile.velocity = (angles_toforward ( (self.angles[0] + self.turretlaser_offset) self.angles[1] self.angles[2] )) * 6000
 	}
 
 	if(local.secondary == 1) { wait 3 }
@@ -683,18 +764,33 @@ projectile local.secondary:
 
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
 	{
-		if(vector_length(local.explode.origin - $player[local.i].origin) < 500) // without "cansee", these rockets can kill people through walls
+		if(vector_length(local.explode.origin - $player[local.i].origin) <= 500) // without "cansee", these rockets can kill people through walls
 		{
-			if(local.player == NULL) { $player[local.i] volumedamage 500 }
-			if(local.player != NULL)
+			if(local.player == NIL || local.player == NULL)
 			{
-				if(local.blewup == 1) // uboat drivers cannot be killed by their own rockets.
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.projectile 360)
 				{
-					$player[local.i] damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // by default, "damage" does not hurt teammates
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1
 				}
-				else { local.blewup = 0 }
-
-				if($player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				}
+			}
+			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.projectile 360)
+				{
+					$player[local.i] damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.player
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+					else { $player[local.i].drivingent damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				}
 			}
 		}
 	}
@@ -711,6 +807,27 @@ rotate:
 		self.angles = (self.angles + ( 3 0 0 ))
 		waitframe
 	}
+end
+
+turret_laser local.name:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color ( 1 0 0 )
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser deactivate	
+	local.laser scale 1.0
+	local.laser notsolid
+	local.laser.origin = $(local.name + "_tag_barrel").origin
+	local.laser endpoint $(local.name + "_tag_barrel").origin
+	self.turretlaser = local.laser
+
+	while(self != NULL) { waitframe }
+	local.laser remove
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -847,6 +964,7 @@ wallstuck_fix:
 		if(local.c >= 60) // about 3 seconds
 		{
 			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
+			if(self.isdog == 1) { self hide }
 			break
 		}
 		local.c++

@@ -17,7 +17,9 @@ main local.modelpair:
 	self.no_usemedic = 1 //stop medics
 
 	self.flying = 1
+	self.flying_init = 1
 	self takedamage
+	self.drivingent = self
 
 	local.team = self.dmteam
 	self.modelpair = local.modelpair
@@ -43,12 +45,29 @@ main local.modelpair:
 	self hide
 	if(self.instructed!=1)
 	{
-		self waitexec server_planes/first_flight_instructions.scr
+		self waitexec server_planes/first_flight_instructions.scr local.team
 	}
+
 	if(self == NULL || self getconnstate == 1) { end }
+	if(self.dmteam != local.team || level.change_team_score == 1)
+	{
+		self.flying = 0
+		self.flying_init = 0
+		self.drivingent = NIL
+		self.no_usemine = 0
+		self.no_usemedic = 0
+		self physics_on
+		if(self.dmteam != "spectator")
+		{
+			self show
+			self solid
+		}
+		end
+	}
 
 	//spawn the plane
 	local.plane = spawn script_model "targetname" ("flyingplane" + self.entnum)
+	self.flying_init = 0
 
 	if(local.modelpair != 1 && local.modelpair != 2) // default
 	{
@@ -267,6 +286,7 @@ main local.modelpair:
 			if(local.origin == self.origin)
 			{
 				self exec server_planes/plane_crash.scr::plane_explode
+				self.drivingent = NIL
 				killent self.entnum
 				end
 			}
@@ -280,6 +300,7 @@ main local.modelpair:
 
 	if(self != NULL)
 	{
+		self.drivingent = NIL
 		self.no_usemine = 0 //can use a mine again
 		self.no_usemedic = 0 //
 		if(isalive self) { self.health = 100 } // bot setup

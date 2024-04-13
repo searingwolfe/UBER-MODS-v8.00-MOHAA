@@ -352,7 +352,7 @@ huddraw local.first_player local.second_player local.third_player:
 		huddraw_virtualsize 3 1
 		huddraw_alpha 3 1
 		huddraw_font 3 "facfont-10"
-		huddraw_color 3 .75 .75 .75
+		huddraw_color 3 .85 .85 .85
 		huddraw_rect 3 100 195 600 20
 		huddraw_string 3 ("Second Place: " + netname local.second_player)
 	}
@@ -362,7 +362,7 @@ huddraw local.first_player local.second_player local.third_player:
 		huddraw_virtualsize 2 1
 		huddraw_alpha 2 1
 		huddraw_font 2 "facfont-10"
-		huddraw_color 2 .5 .5 .5
+		huddraw_color 2 .7 .7 .7
 		huddraw_rect 2 100 220 600 20
 		huddraw_string 2 ("Third Place: " + netname local.third_player)
 	}
@@ -416,12 +416,16 @@ launch_firework local.origin local.distance local.particletime local.explosionsc
 	local.firework.fire.angles = ( 90 0 0 )
 	local.firework.fire bind local.firework
 	local.firework.fire hide
+	local.firework.fire loopsound fwork_sparks
 
 	// Fire up and lift off
 	local.firework playsound fwork_launch
+	local.firework loopsound fwork_steam
 	local.firework light 1 .8 .6 300
 	local.firework moveup local.distance
 	local.firework waitmove
+	local.firework stoploopsound
+	local.firework.fire stoploopsound
 
 	// BOOM!!!
 	waitthread explode_rocket local.firework local.particletime local.explosionscale
@@ -546,7 +550,7 @@ end
 
 intermission local.type:
 
-	if(int(local.type) != 0 || int(level.time) < 60) { end }
+	if(int(local.type) != 0 || level.time == NIL || int(level.time) < 60) { end }
 	if($intermission_camera == NULL) { wait 1; println("----- ERROR victory_podium.scr: $intermission_camera could not be found!"); end }
 	if($victory_podium == NULL) { wait 1; println("----- ERROR victory_podium.scr: $victory_podium could not be found!"); end }
 
@@ -565,8 +569,14 @@ sound:
 	cache models/static/corona_orange.tik
 	cache models/fx/corona_red.tik
 
-	level.mapname = getcvar "mapname"
-	local.master = spawn scriptmaster
-	local.master aliascache fwork_explo sound/weapons/explo/Explo_Bazooka2.wav soundparms 1.5 0.0 0.8 0.4 500 4000 auto loaded maps level.mapname
-	local.master aliascache fwork_launch sound/weapons/explo/Exp_LeadIn_06.wav soundparms 1.5 0.0 0.8 0.4 500 4000 auto loaded maps level.mapname
+	if(level.scriptmaster[fireworks] != 1)
+	{
+		level.mapname = getcvar "mapname"
+		local.master = spawn scriptmaster
+		local.master aliascache fwork_explo sound/weapons/explo/Explo_Bazooka2.wav soundparms 1.5 0.0 0.8 0.4 500 4000 auto loaded maps level.mapname
+		local.master aliascache fwork_launch sound/weapons/explo/Exp_LeadIn_06.wav soundparms 1.5 0.0 0.8 0.4 500 4000 auto loaded maps level.mapname
+		local.master aliascache fwork_steam sound/mechanics/Mec_SteamLoop_01.wav soundparms 1.0 0.0 1.0 0.0 300 2500 item loaded maps level.mapname
+		local.master aliascache fwork_sparks sound/mechanics/WeldingTorch.wav soundparms 1.0 0.0 1.0 0.0 200 1000 item loaded maps level.mapname
+		level.scriptmaster[fireworks] = 1
+	}
 end

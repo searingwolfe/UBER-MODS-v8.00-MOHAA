@@ -150,10 +150,6 @@ exec global/playervehicle.scr jeep vehicles/jeep.tik ( -2248.57 -4805.00 114.47 
 exec global/playervehicle.scr bmwbike vehicles/bmwbike.tik ( -1849.82 -4805.24 150.93 ) ( 0 116 0 ) 250 500 45 1
 
 exec global/playertank.scr tank1 vehicles/panzer_tank.tik ( -4845 810 450 ) ( 0 0 0 ) 1000 45
-									  
-thread ending_ceilingexplode 100 500 600
-thread vehicle_tele 100		// this allows opeltrucks specifically to pass through the vehicle-clip invisible wall at the main entrance near explosive barrels
-thread vehicle_tele2 100
 
 exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( -2669 -3302 114 ) ( 0 108 0 ) ( -2701 -3213 114 ) ( 0 18 0 ) 500 1 1 8 	// allies side, hidden at first
 exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( -5971 2353 695 ) ( 0 90 0 ) ( -6154 2271 695 ) ( 0 180 0 ) 500 1 1 8	// axis side
@@ -175,25 +171,32 @@ exec maps/training_mapscripts/bangalore_wallbomb.scr bangbomb42 ( -2880 -2577 31
 exec maps/training_mapscripts/bangalore_wallbomb.scr bangbomb43 ( -2578 -2880 319 ) ( 60 270 0 ) 100 0 
 exec maps/training_mapscripts/bangalore_wallbomb.scr bangbomb44 ( -2094 -2880 319 ) ( 60 270 0 ) 100 0
 thread detonatorswitch ( -1980 -2905 26 ) ( 0 270 0 ) 60 500 2
+									  
+	thread ending_ceilingexplode 100 500 600
+	thread vehicle_tele 100		// this allows opeltrucks specifically to pass through the vehicle-clip invisible wall at the main entrance near explosive barrels
+	thread vehicle_tele2 100
 
-thread splinepath_plane
-thread bomberplane 150 1 // every 2 mins 30 seconds, bombs (0 = off, 1 = on)
+	thread splinepath_plane
+	thread bomberplane 150 1 // every 2 mins 30 seconds, bombs (0 = off, 1 = on)
 
-thread splinepath_intro
-thread splinepath_intro2
-thread splinepath_intro3
-thread laser_prism ( 0.125 0.0 0.333 )
+	thread splinepath_intro
+	thread splinepath_intro2
+	thread splinepath_intro3
+	thread laser_prism ( 0.125 0.0 0.333 )
+
+	thread vehicles_undermap
 }
 
 if(getcvar("g_ubermods") == "1")
 {
-thread splinepath_plane
-thread bomberplane 150 0
+	thread splinepath_plane
+	thread bomberplane 150 0
 }
 
 level waittill spawn
 
 	thread consoleprint
+	thread ambience
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -214,6 +217,32 @@ if(getcvar("g_ubermods") == "2")
 	iprintlnbold("*** Vehicle Convoy has arrived! ***")
 	println("----- Vehicle Convoy has arrived!")
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( -3971 -183 250 ) ( 0 0 0 ) ( 331 558 305 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -4488 -183 250 ) ( -231 0 0 ) ( 0 206 275 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -4863 960 350 ) ( 0 0 0 ) ( 407 247 285 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -6987 1340 485 ) ( 0 0 0 ) ( 371 259 262 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -7344 2224 550 ) ( -415 0 0 ) ( 0 143 225 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -6983 2504 500 ) ( 0 0 0 ) ( 327 183 289 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -5832 1903 300 ) ( -503 0 0 ) ( 0 640 531 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -5831 1903 300 ) ( 0 -135 0 ) ( 199 144 485 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -5832 1902 300 ) ( -369 -134 0 ) ( 0 0 485 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -2176 -360 0 ) ( -16000 -16000 -8000 ) ( 0 0 8000 ) sound/amb_stereo/Amb_M1_Canyon_01.mp3
+		( -2175 -360 0 ) ( 0 -16000 -8000 ) ( 16000 16000 8000 ) sound/amb_stereo/Amb_M1_Canyon_01.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_TownExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -837,6 +866,39 @@ vehicle_tele2 local.distance:
 end
 
 ////////////////////////////////////////////////////////////////////////
+
+vehicles_undermap:
+
+	local.a = 0
+	for(local.e = 0; local.e <= 868; local.e++)
+	{
+		local.entity = getentity(local.e)
+		if(local.entity != NULL && (local.entity.classname == VehicleTank || local.entity.classname == DrivableVehicle))
+		{
+			local.vehicles[local.a] = local.entity.targetname
+			local.a++
+		}
+		if(local.e % 14 == 0) { waitframe }
+	}
+	if(local.vehicles.size < 1) { end }
+
+	while(1)
+	{
+		for(local.a = 0; local.a <= local.vehicles.size; local.a++)
+		{
+			for(local.s = 1; $(local.vehicles[local.a]) != NULL && local.s <= $(local.vehicles[local.a]).size; local.s++)
+			{
+				if($(local.vehicles[local.a])[local.s].origin[2] >= 1000 || $(local.vehicles[local.a])[local.s].origin[2] <= -125)
+				{
+					$(local.vehicles[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
 //*** --------------------------------------------
 //*** "Bomber Plane Airstrikes"
 //*** --------------------------------------------
@@ -1288,13 +1350,14 @@ alarmswitch local.origin local.angles local.offtime local.damageradius local.pul
 	local.switch anim turnon
 	local.switch playsound alarmswitch
  	//local.switchtrig message ("*** Blowing up some bangalores. ***")
+	local.player = parm.other
 
 	wait (randomint(50) / 50.00 + 0.25)
-	thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb31 local.offtime local.damageradius local.pulsatingoff
+	local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb31 local.offtime local.damageradius local.pulsatingoff
 	wait (randomint(100) / 100.00 + 0.25)
-	thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb32 local.offtime local.damageradius local.pulsatingoff
+	local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb32 local.offtime local.damageradius local.pulsatingoff
 	wait (randomint(100) / 100.00 + 0.25)
-	waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb33 local.offtime local.damageradius local.pulsatingoff
+	local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb33 local.offtime local.damageradius local.pulsatingoff
 
 	local.switch anim turnoff
 	wait 1
@@ -1326,15 +1389,16 @@ detonatorswitch local.origin local.angles local.offtime local.damageradius local
 	local.detonator anim fire
 	local.detonator playsound plungersound
  	//local.detonatortrig message ("*** Blowing up some bangalores. ***")
+	local.player = parm.other
 	
 	wait (randomint(50) / 50.00 + 0.25)
-	thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb44 local.offtime local.damageradius local.pulsatingoff
+	local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb44 local.offtime local.damageradius local.pulsatingoff
 	wait (randomint(100) / 100.00 + 0.25)
-	thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb43 local.offtime local.damageradius local.pulsatingoff
+	local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb43 local.offtime local.damageradius local.pulsatingoff
 	wait (randomint(100) / 100.00 + 0.25)
-	thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb42 local.offtime local.damageradius local.pulsatingoff
+	local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb42 local.offtime local.damageradius local.pulsatingoff
 	wait (randomint(100) / 100.00 + 0.25)
-	waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb41 local.offtime local.damageradius local.pulsatingoff
+	local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bangbomb41 local.offtime local.damageradius local.pulsatingoff
 
 	local.detonator remove
 	local.detonatortrig remove

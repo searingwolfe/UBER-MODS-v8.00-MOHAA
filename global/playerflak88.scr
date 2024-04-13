@@ -25,7 +25,7 @@ main local.turret local.health local.resettime local.origin local.angles local.r
 	local.init_angles.origin = trace (local.flak88.origin + local.fwd_vec * 56) (local.flak88.origin + local.fwd_vec * 10240) 0
 	local.flak88 setaimtarget local.init_angles
 
-	local.trig = spawn trigger_multiple spawnflags 128
+	local.trig = spawn trigger_multiple spawnflags 128 targetname "flak88_healthtrig"
 	local.trig.health = local.health // need this, otherwise trig = NULL
 	local.trig.origin = local.flak88.origin
 	local.trig setsize ( -60 -60 -50 ) ( 60 60 85 )
@@ -63,6 +63,7 @@ ResetFlak local.groundtarget:
 	local.trig.groundtarget = local.groundtarget // keep the groundtarget so the flak88 (TurretGun class) keeps its angles instead of falling backward like an mg42
 	local.trig setthread playergetin_flak
 
+	self.player_owner = NIL
 	self.trigenter = local.trig
 	self.corona = 0
 	self thread healthboost
@@ -76,8 +77,15 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 	while(self != NULL && self.dead != 1 && self.trigshot != NULL && self.trigshot.health > 0)
 	{
 		self.trigshot.health = local.health
+		if(self.trigshot.shooter != NIL) { self.trigshot thread shooter_NIL }
 		waitframe
 	}
+end
+
+shooter_NIL:
+
+	waitframe
+	self.shooter = NIL
 end
 
 playergetin_flak:
@@ -99,19 +107,23 @@ playergetin_flak:
 	local.team = self.flak88.fplayer.dmteam
 
 	if(self.flak88.init_angles != NIL && self.flak88.init_angles != NULL) { self.flak88.init_angles remove }
-	self.flak88 dmprojectile models/projectiles/tigercannonshell.tik
+	//self.flak88 dmprojectile models/projectiles/tigercannonshell.tik
 
+	self.flak88.fplayer.driving_state_jump = 0
+	self.flak88.fplayer forcetorsostate FN_START
 	self.flak88.fplayer forcelegsstate STAND
 	self.flak88.fplayer hide
 	self.flak88.fplayer notsolid
 	self.flak88.fplayer nodamage
 	//self.flak88.fplayer safeholster 1 // must "wait 1" for safeholster to work, crosshair also gets removed
 	self.flak88.fplayer.driving = 1
+	self.flak88.fplayer.drivingent = self.flak88.trigshot
 	//wait 1
-	self.flak88.fplayer physics_off
 	self.corona = 1
-	self.flak88.fplayer iprint ("*** Hold USE(e) for 1 second to exit the Flak88.*** ")
+	self.flak88.fplayer iprint ("JUMP = exit flak88 turret. Hold FIRE(zoom) = look around.")
 	self.flak88 thread dummydriver
+
+	self.flak88.player_owner = self.flak88.fplayer
 
 	local.groundtarget = spawn script_origin
 	self.flak88 setaimtarget local.groundtarget
@@ -125,7 +137,7 @@ playergetin_flak:
 		local.fwd_vec = angles_toforward self.flak88.fplayer.viewangles
 		local.start = self.flak88.fplayer gettagposition "Bip01 Head"
 		local.range = 10240
-		if(self.flak88.fplayer.viewangles != local.lookangles && self.flak88.fplayer.leanleftheld != 1 && self.flak88.fplayer.leanrightheld != 1) // if leaning, player can peek behind him without moving turret
+		if(self.flak88.fplayer.viewangles != local.lookangles && self.flak88.fplayer.secfireheld != 1) // if holding FIRE, player can look around without moving turret.
 		{
 			local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * local.range) 0
 			self.flak88 loopsound flak_snd_move
@@ -134,43 +146,39 @@ playergetin_flak:
 		local.flakangles = self.flak88.angles
 		local.lookangles = self.flak88.fplayer.viewangles
 
-		if(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.fireheld == 1 && self.flak88.flakfiredelay != 0)
+		if(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.fireheld == 1 && self.flak88.fplayer.secfireheld != 1 && self.flak88.flakfiredelay != 0)
 		{
 			self.flak88.fplayer playsound flak_snd_fire
 			self.flak88 playsound flak_reload
-			self.flak88 anim fire
+			self.flak88 anim fire_scripted // anim fire; use fire_scripted to simulate firing a round, that way a script-spawned projectile can provide kills/scorepoints.
+			self.flak88 thread projectile
 			self.flak88 thread reload_flak
 		}
 
-		while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.useheld == 1 && self.flak88.fplayer.dead != 1 && level.change_team_score != 1)
+		if(self.flak88.fplayer.driving_state_jump == 1) // Press JUMP to exit.
 		{
-			if(local.holdtime >= 10) // hold USE(e) for 1 second
-			{
-				self.flak88 stoploopsound
-				self.flak88.fplayer.origin = self.flak88.origin + ( 0 0 85 )
-				self.flak88.fplayer.viewangles = ( self.flak88.angles[0] self.flak88.angles[1] 0 )
-				self.flak88.fplayer physics_on
-				self.flak88.fplayer show
-				self.flak88.fplayer solid
-				self.flak88.fplayer takedamage
-				//self.flak88.fplayer safeholster 0
-				self.flak88.fplayer.driving = 0
-				self.flak88.fplayer = NIL
-				self.flak88 thread ResetFlak local.groundtarget
-				self remove
-				end
-			}
-			local.holdtime++
-			wait 0.1
+			self.flak88 stoploopsound
+			self.flak88.fplayer.origin = self.flak88.origin + ( 0 0 85 )
+			self.flak88.fplayer.viewangles = ( self.flak88.angles[0] self.flak88.angles[1] 0 )
+			self.flak88.fplayer show
+			self.flak88.fplayer solid
+			self.flak88.fplayer takedamage
+			//self.flak88.fplayer safeholster 0
+			self.flak88.fplayer.driving = 0
+			self.flak88.fplayer.drivingent = NIL
+			self.flak88.fplayer forcetorsostate STAND
+			self.flak88.fplayer = NIL
+			self.flak88 thread ResetFlak local.groundtarget
+			self remove
+			end
 		}
 		waitframe
 	}
 
-	if(local.player != NULL) { local.player.driving = 0 }
+	if(local.player != NULL) { local.player.driving = 0; local.player.drivingent = NIL }
 	if(self == NULL && local.player != NIL && local.player != NULL)
 	{
 		local.player takedamage
-		local.player physics_on
 		if(local.player.dmteam == spectator)
 		{
 			local.player.origin = local.player.origin + ( 0 0 85 )
@@ -194,8 +202,8 @@ playergetin_flak:
 			}
 			if(self.flak88.fplayer.dmteam != spectator) { self.flak88.fplayer solid; self.flak88.fplayer show }
 			self.flak88 stoploopsound
-			self.flak88.fplayer physics_on
 			self.flak88.fplayer takedamage
+			self.flak88.fplayer forcetorsostate STAND
 			self.flak88.fplayer = NIL
 			self.flak88 thread ResetFlak local.groundtarget
 			self remove
@@ -203,6 +211,7 @@ playergetin_flak:
 		}
 		if(self.flak88 != NULL && self.flak88.dead != 1 && (self.flak88.fplayer == NIL || self.flak88.fplayer == NULL))
 		{
+			self.flak88.fplayer forcetorsostate STAND
 			self.flak88.fplayer = NIL
 			self.flak88 thread ResetFlak local.groundtarget
 			self remove
@@ -215,7 +224,6 @@ playergetin_flak:
 			self.flak88.fplayer show
 			self.flak88.fplayer solid
 			self.flak88.fplayer takedamage
-			self.flak88.fplayer physics_on
 			
 			if(isalive self.flak88.fplayer)
 			{
@@ -223,6 +231,7 @@ playergetin_flak:
 				if(self.flak88.trigshot.killer == NIL || self.flak88.trigshot.killer == NULL) { killent self.flak88.fplayer.entnum }
 			}
 	
+			self.flak88.fplayer forcetorsostate STAND
 			self.flak88.fplayer = NIL
 			if(self.flak88.dead != 1)
 			{
@@ -241,6 +250,72 @@ reload_flak:
 	self.flakfiredelay = 0
 	wait 5
 	if(self != NULL) { self.flakfiredelay = 1 }
+end
+
+projectile:
+
+	local.player = self.fplayer // used for the for-loop later
+
+	local.rocket = spawn script_model
+	local.rocket model "projectiles/tigercannonshell.tik"
+	local.rocket.origin = self gettagposition "tag_barrel"
+	local.rocket.angles = self.angles
+	local.rocket light 0 1 0 250
+	local.rocket.scale = 2
+	local.rocket solid
+	local.rocket physics_on    // need this for gravity and waittill touch to work.
+
+	local.rocket gravity 0
+	local.rocket.velocity = (angles_toforward self.angles) * 6000
+	local.rocket waittill touch
+
+	local.rocket.velocity = ( 0 0 0 )
+	local.explode = spawn "fx/explosionTIGERshell.tik"
+	local.explode.origin = local.rocket.origin
+	local.explode.scale = 2.5
+	local.explode light 1 0 0 500
+	local.explode anim idle
+	//local.explode playsound bazooka_exp // already included in explosionTIGERshell
+
+	if(self != NULL) { local.rocket.player_owner = self.fplayer }
+
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
+	{
+		if(vector_length(local.explode.origin - $player[local.i].origin) <= 400) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.player == NIL || local.player == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.player
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
+	local.rocket remove
+	waitframe
+	local.explode remove
 end
 
 smokey:
@@ -285,6 +360,16 @@ ImDead:
 	local.debris.scale = 0.8
 	local.debris anim start
 
+	if(self.flak88.fplayer != NIL)
+	{
+		if(self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.flak88.fplayer damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.flak88.fplayer damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter != NULL) { self.flak88.fplayer damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { self.flak88.fplayer volumedamage 9999999 } // let's make sure the driver is dead.
+	}
 	local.explode playsound explode_flak88
 	radiusdamage local.explode.origin 500 750
 	exec global/earthquake.scr .35 2 0 0

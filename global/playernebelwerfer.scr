@@ -24,7 +24,7 @@ level.nebelwerfers_velocity = 2500	// 4000   for Spearhead-version projectiles
 		local.init_angles.origin = trace (local.origin + local.fwd_vec * 56) (local.origin + local.fwd_vec * 10240) 0
 		local.nebelwerfer setaimtarget local.init_angles
 	}
-	local.trig = spawn trigger_multiple spawnflags 128
+	local.trig = spawn trigger_multiple spawnflags 128 targetname "nebelwerfer_healthtrig"
 	local.trig.health = local.health // need this, otherwise trig = NULL
 	local.trig.origin = local.nebelwerfer.origin
 	local.trig setsize ( -42.5 -42.5 -1 ) ( 42.5 42.5 135 )
@@ -41,15 +41,6 @@ level.nebelwerfers_velocity = 2500	// 4000   for Spearhead-version projectiles
 	local.trig.health_init = local.health
 	local.trig.resettime_init = local.resettime
 
-	if($("pnwerfer_triginst_" + local.nebelwerfer.entnum) == NULL)
-	{
-		local.triginst = spawn trigger_multiple spawnflags 128 targetname ("pnwerfer_triginst_" + local.nebelwerfer.entnum)
-		local.triginst.origin = local.nebelwerfer.origin // this trigger allows kills to be counted as score
-		local.triginst setsize ( -40 -40 -10 ) ( 40 40 100 )
-		local.triginst setthread shotat
-		local.nebelwerfer.triginst = local.triginst
-	}
-
 	if(level.nebelscriptmaster != 1) // this only runs once
 	{
 		cache models/statweapons/nebelwerfer_d.tik
@@ -61,15 +52,6 @@ level.nebelwerfers_velocity = 2500	// 4000   for Spearhead-version projectiles
 		thread scriptmaster
 		level.nebelscriptmaster = 1
 	}
-end
-
-shotat:
-
-	self nottriggerable
-	self.shooter = parm.other
-	waitframe
-	self.shooter = NIL
-	self triggerable
 end
 
 ResetNebel:
@@ -97,8 +79,13 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 			if(self.trigshot.health < local.health)
 			{
 				local.damage = ((local.health - self.trigshot.health) / 3.000)
-				if(self.triginst == NIL || self.triginst == NULL || self.triginst.shooter == NIL || self.triginst.shooter == NULL) { self.wplayer volumedamage local.damage }
-				else { self.wplayer damage self.triginst.shooter local.damage self.triginst.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+
+				if(self.trigshot.shooter != NIL && self.trigshot.shooter != NULL)
+				{
+					if(self.trigshot.shooter.player_owner != NIL && self.trigshot.shooter.player_owner != NULL) { self.wplayer damage self.trigshot.shooter.player_owner local.damage self.trigshot.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.trigshot.shooter.owner != NIL && self.trigshot.shooter.owner != NULL) { self.wplayer damage self.trigshot.shooter.owner local.damage self.trigshot.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.wplayer damage self.trigshot.shooter local.damage self.trigshot.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				}
 			}
 
 			for(local.i = 1; local.i <= $player.size; local.i++)
@@ -110,8 +97,15 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 			}
 		}
 		if(isalive self.trigshot) { self.trigshot.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(self.trigshot.shooter != NIL) { self.trigshot thread shooter_NIL }
 		waitframe
 	}
+end
+
+shooter_NIL:
+
+	waitframe
+	self.shooter = NIL
 end
 
 playergetin_nebel:
@@ -133,17 +127,21 @@ playergetin_nebel:
 	if(self.nebelwerfer.init_angles != NIL && self.nebelwerfer.init_angles != NULL) { self.nebelwerfer.init_angles remove }
 	self.nebelwerfer dmprojectile models/projectiles/panzerschreckshell.tik // doesn't work, so a "projectile" thread is used instead
 
+	self.nebelwerfer.wplayer.driving_state_jump = 0
+	self.nebelwerfer.wplayer forcetorsostate FN_START
 	self.nebelwerfer.wplayer forcelegsstate STAND
 	//self.nebelwerfer.wplayer hide
 	//self.nebelwerfer.wplayer notsolid
 	//self.nebelwerfer.wplayer nodamage
 	//self.nebelwerfer.wplayer safeholster 1 // must "wait 1" for safeholster to work, crosshair also gets removed
 	self.nebelwerfer.wplayer.driving = 1
+	self.nebelwerfer.wplayer.drivingent = self.nebelwerfer.trigshot
 	//wait 1
-	self.nebelwerfer.wplayer physics_off
 	self.corona = 1
-	self.nebelwerfer.wplayer iprint ("*** Hold USE(e) for 1 second to exit the Nebelwerfer.*** ")
+	self.nebelwerfer.wplayer iprint ("JUMP = exit nebelwerfer. Hold FIRE(zoom) = look around.")
 	if(self.nebelwerfer.nebelfirecount == NIL) { self.nebelwerfer.nebelfirecount = 0 }
+
+	self.nebelwerfer.player_owner = self.nebelwerfer.wplayer
 
 	ihuddraw_alpha self.nebelwerfer.wplayer 77 0
 	ihuddraw_virtualsize self.nebelwerfer.wplayer 77 1
@@ -165,7 +163,7 @@ playergetin_nebel:
 		local.fwd_vec = angles_toforward self.nebelwerfer.wplayer.viewangles
 		local.start = self.nebelwerfer.wplayer gettagposition "Bip01 Head"
 		local.range = 10240
-		if(self.nebelwerfer.wplayer.viewangles != local.lookangles && self.nebelwerfer.wplayer.leanleftheld != 1 && self.nebelwerfer.wplayer.leanrightheld != 1) // if leaning, player can peek behind him without moving turret
+		if(self.nebelwerfer.wplayer.viewangles != local.lookangles && self.nebelwerfer.wplayer.secfireheld != 1) // if holding FIRE, player can look around without moving turret.
 		{
 			local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * local.range) 0
 			self.nebelwerfer.wplayer loopsound flak_snd_move
@@ -174,45 +172,40 @@ playergetin_nebel:
 		local.nebelangles = self.nebelwerfer.angles
 		local.lookangles = self.nebelwerfer.wplayer.viewangles
 
-		if(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer && self.nebelwerfer.wplayer.fireheld == 1 && self.nebelwerfer.nebelfiredelay != 0 && self.nebelwerfer.wplayer.health > 0)
+		if(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer && self.nebelwerfer.wplayer.fireheld == 1 && self.nebelwerfer.wplayer.secfireheld != 1 && self.nebelwerfer.nebelfiredelay != 0 && self.nebelwerfer.wplayer.health > 0)
 		{
 			self.nebelwerfer thread reload_nebel
 			self.nebelwerfer thread projectile
 			self.nebelwerfer waitthread fire_nebel
 		}
 
-		while(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer && self.nebelwerfer.wplayer.dmteam == local.team && self.nebelwerfer.wplayer.useheld == 1 && self.nebelwerfer.wplayer.health > 0 && self.nebelwerfer.wplayer.dead != 1 && level.change_team_score != 1)
+		if(self.nebelwerfer.wplayer.driving_state_jump == 1) // Press JUMP to exit.
 		{
-			if(local.holdtime >= 10) // hold USE(e) for 1 second
-			{
-				self.nebelwerfer.wplayer.origin = self.nebelwerfer.origin + ( 0 0 85 )
-				self.nebelwerfer.wplayer.viewangles = ( self.nebelwerfer.angles[0] self.nebelwerfer.angles[1] 0 )
-				self.nebelwerfer.wplayer physics_on
-				self.nebelwerfer.wplayer show
-				self.nebelwerfer.wplayer solid
-				self.nebelwerfer.wplayer takedamage
-				//self.nebelwerfer.wplayer safeholster 0
-				ihuddraw_string self.nebelwerfer.wplayer 77 ""
-				self.nebelwerfer.wplayer stoploopsound
-				self.nebelwerfer.wplayer.driving = 0
-				self.nebelwerfer.wplayer = NIL
-				self.nebelwerfer thread ResetNebel
-				self.nebelwerfer thread reload_nebel_auto
-				local.groundtarget remove
-				self remove
-				end
-			}
-			local.holdtime++
-			wait 0.1
+			self.nebelwerfer.wplayer.origin = self.nebelwerfer.origin + ( 0 0 85 )
+			self.nebelwerfer.wplayer.viewangles = ( self.nebelwerfer.angles[0] self.nebelwerfer.angles[1] 0 )
+			self.nebelwerfer.wplayer show
+			self.nebelwerfer.wplayer solid
+			self.nebelwerfer.wplayer takedamage
+			//self.nebelwerfer.wplayer safeholster 0
+			ihuddraw_string self.nebelwerfer.wplayer 77 ""
+			self.nebelwerfer.wplayer stoploopsound
+			self.nebelwerfer.wplayer.driving = 0
+			self.nebelwerfer.wplayer.drivingent = NIL
+			self.nebelwerfer.wplayer forcetorsostate STAND
+			self.nebelwerfer.wplayer = NIL
+			self.nebelwerfer thread ResetNebel
+			self.nebelwerfer thread reload_nebel_auto
+			local.groundtarget remove
+			self remove
+			end
 		}
 		waitframe
 	}
 
-	if(local.player != NULL) { local.player.driving = 0 }
+	if(local.player != NULL) { local.player.driving = 0; local.player.drivingent = NIL }
 	if(self == NULL && local.player != NIL && local.player != NULL)
 	{
 		local.player takedamage
-		local.player physics_on
 		ihuddraw_string local.player 77 ""
 		if(local.player.dmteam == spectator)
 		{
@@ -236,10 +229,10 @@ playergetin_nebel:
 				self.nebelwerfer.wplayer.viewangles = ( self.nebelwerfer.angles[0] self.nebelwerfer.angles[1] 0 )
 			}
 			if(self.nebelwerfer.wplayer.dmteam != spectator) { self.nebelwerfer.wplayer solid; self.nebelwerfer.wplayer show }
-			self.nebelwerfer.wplayer physics_on
 			self.nebelwerfer.wplayer takedamage
 			ihuddraw_string self.nebelwerfer.wplayer 77 ""
 			self.nebelwerfer.wplayer stoploopsound
+			self.nebelwerfer.wplayer forcetorsostate STAND
 			self.nebelwerfer.wplayer = NIL
 			self.nebelwerfer thread ResetNebel
 			self.nebelwerfer thread reload_nebel_auto
@@ -249,6 +242,7 @@ playergetin_nebel:
 		}
 		if(self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && (self.nebelwerfer.wplayer == NIL || self.nebelwerfer.wplayer == NULL))
 		{
+			self.nebelwerfer.wplayer forcetorsostate STAND
 			self.nebelwerfer.wplayer = NIL
 			self.nebelwerfer thread ResetNebel
 			self.nebelwerfer thread reload_nebel_auto
@@ -262,7 +256,6 @@ playergetin_nebel:
 			self.nebelwerfer.wplayer show
 			self.nebelwerfer.wplayer solid
 			self.nebelwerfer.wplayer takedamage
-			self.nebelwerfer.wplayer physics_on
 			ihuddraw_string self.nebelwerfer.wplayer 77 ""
 		
 			if(isalive self.nebelwerfer.wplayer)
@@ -272,6 +265,7 @@ playergetin_nebel:
 			}
 
 			self.nebelwerfer.wplayer stoploopsound
+			self.nebelwerfer.wplayer forcetorsostate STAND
 			self.nebelwerfer.wplayer = NIL
 			if(self.nebelwerfer.dead != 1)
 			{
@@ -369,21 +363,44 @@ projectile:
 	//local.explode light 1 0 0 500
 	local.explode anim idle
 	//local.explode playsound bazooka_exp // already included in explosionPANZERIVshell
-	local.blewup = 1
 
+	if(self != NULL) { local.rocket.player_owner = self.wplayer }
+
+	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
 	{
-		if(vector_length(local.explode.origin - $player[local.i].origin) < 200 && $player[local.i] cansee local.rocket 360) // "local.explode" emitters cannot be used with "cansee"
+		if(vector_length(local.explode.origin - $player[local.i].origin) <= 200) // "local.explode" emitters cannot be used with "cansee"
 		{
-			if(local.player == NULL) { $player[local.i] volumedamage 250 }
-			if(local.player != NULL)
+			if(local.player == NIL || local.player == NULL)
 			{
-				$player[local.i] damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // by default, "damage" does not hurt teammates
-				if($player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.player
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
 			}
 		}
 		if(self != NULL && vector_length(local.explode.origin - self.trigshot.origin) < 200) // suicide, if the rockets blow up too close
 		{
+			self.trigshot.shooter = self.wplayer
 			if(self.wplayer != NIL && self.wplayer != NULL) { self.trigshot damage self.wplayer self.trigshot.health self.wplayer (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
 			if(self.wplayer == NIL || self.wplayer == NULL) { self.trigshot damage $world self.trigshot.health $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
 			local.blewup = 0 // radiusdamage already included in "ImDead" thread.
@@ -449,7 +466,6 @@ ImDead:
 
 	self nottriggerable
 	self.nebelwerfer.trigenter nottriggerable
-	self.nebelwerfer.triginst nottriggerable
 	self.killer = parm.other
 	self.nebelwerfer stoploopsound
 	self.nebelwerfer stopsound
@@ -476,8 +492,18 @@ ImDead:
 	local.debris.scale = 0.8
 	local.debris anim start
 
+	if(self.nebelwerfer.wplayer != NIL)
+	{
+		if(self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.nebelwerfer.wplayer damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }	
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.nebelwerfer.wplayer damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter != NULL) { self.nebelwerfer.wplayer damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { self.nebelwerfer.wplayer volumedamage 9999999 } // let's make sure the driver is dead.
+	}
 	local.explode playsound explode_flak88
-	radiusdamage local.explode.origin 500 750
+	radiusdamage (local.explode.origin + ( 0 0 75 )) 500 750
 	exec global/earthquake.scr .35 2 0 0
 
 	self.nebelwerfer.dead = 1
@@ -493,7 +519,6 @@ ImDead:
 	self.nebelwerfer.dead = 0
 	self.nebelwerfer.nebelfirecount = 0
 	self.nebelwerfer.wplayer = NIL
-	self.nebelwerfer.triginst triggerable // for some reason, removing this prevents a new one from spawning
 	self remove
 	thread main local.turret local.health local.resettime local.origin local.angles
 end

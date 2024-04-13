@@ -63,12 +63,16 @@ Launch:
 	self.rocket.fire.angles = ( 90 0 0 )
 	self.rocket.fire bind self.rocket
 	self.rocket.fire hide
+	self.rocket.fire loopsound fwork_sparks
 
 	// Fire up and lift off
 	self.rocket playsound fwork_launch
+	self.rocket loopsound fwork_steam
 	self.rocket light 1 .8 .6 300
 	self.rocket moveup self.rocket.distance
 	self.rocket waitmove
+	self.rocket stoploopsound
+	self.rocket.fire stoploopsound
 
 	// BOOM!!!
 	waitthread explode_rocket self.rocket

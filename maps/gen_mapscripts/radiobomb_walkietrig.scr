@@ -54,7 +54,41 @@ radiobombblowup local.origin local.angles local.name:
 		local.debris.scale = 1.5
 		local.debris anim start
 
-		radiusdamage local.explosion.origin 500 level.rw_damageradius[local.name]
+		//radiusdamage local.explosion.origin 500 level.rw_damageradius[local.name]
+		local.blewup = 1
+		for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so explosions can count as score/kills
+		{
+			if(vector_length(local.explosion.origin - $player[local.i].origin) <= level.rw_damageradius[local.name])
+			{
+				if(self == NIL || self == NULL)
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.debris 360)
+					{
+						$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+				}
+				else if($player[local.i] != self && $player[local.i].dmteam == self.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+				else
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.debris 360)
+					{
+						$player[local.i] damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						$player[local.i].drivingent.shooter = self
+						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { $player[local.i].drivingent damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+				}
+			}
+		}
+		if(local.blewup == 1) { radiusdamage local.explosion.origin 500 level.rw_damageradius[local.name] }
 
 		waitframe
 		local.explosion remove
@@ -148,7 +182,7 @@ doit local.name local.origin local.angles:
 
    //self iprint ("Tuned to:   " + local.name)
    self iprint ("Hold the USE key for 2 seconds to drop/plant radiobomb: " + local.name)
-   self iprint ("CAUTION: The player holding the walkie talkie will kill you if they hold the USE key!")
+   //self iprint ("CAUTION: The player holding the walkie talkie will kill you if they hold the USE key!")
 
    if(self.isdog != 1) { self attachmodel models/animate/radiobomb.tik "Bip01 R Thigh" 0.5 ("rbomb1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 3 ) } //( -up +down, +forward -backward, +right -left )
    if(self.isdog == 1) { self.dog attachmodel models/animate/radiobomb.tik "Bip01 Spine" 0.5 ("rbomb1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 3 ) }
@@ -319,7 +353,7 @@ doit2 local.name local.origin local.angles:
 
    //self iprint ("Tuned to:   " + local.name)
    self iprint ("Hold the USE key for 2 seconds to blow up radiobomb: " + local.name)
-   self iprint ("CAUTION: You will kill the player holding the radiobomb! Wait until they drop it first.")
+   //self iprint ("CAUTION: You will kill the player holding the radiobomb! Wait until they drop it first.")
 
    if(self.isdog != 1) { self attachmodel models/static/scr536.tik "Bip01 R Thigh" 0.75 ("rwalkie1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 4 ) } //( -up +down, +forward -backward, +right -left )
    if(self.isdog == 1) { self.dog attachmodel models/static/scr536.tik "Bip01 Spine" 0.75 ("rwalkie1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 6 ) }
@@ -416,8 +450,8 @@ scan_player2 local.name:
 			if(local.detonatetimer == 0) { self stopwatch 1.5 }
 			if(local.detonatetimer >= 15)  
 			{  
-				if($("rbomb_trigger1" + local.name) != NULL) { thread radiobombblowup $("rbomb_trigger1" + local.name).origin $("rbomb_trigger1" + local.name).angles local.name }
-				if($("rbomb_trigger1" + local.name) == NULL) { thread radiobombblowup $("rbomb1_1" + local.name).origin $("rbomb1_1" + local.name).angles local.name
+				if($("rbomb_trigger1" + local.name) != NULL) { self thread radiobombblowup $("rbomb_trigger1" + local.name).origin $("rbomb_trigger1" + local.name).angles local.name }
+				if($("rbomb_trigger1" + local.name) == NULL) { self thread radiobombblowup $("rbomb1_1" + local.name).origin $("rbomb1_1" + local.name).angles local.name
 									       level.playerheld_explode[local.name] = 1 }
 
 				level.radiobomb_blowup[local.name] = 1 // this is used in case $rbomb_trigger1 = NIL (bomb still in a player's hand/waist, now called $rbomb1_1).

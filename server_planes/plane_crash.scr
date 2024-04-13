@@ -82,7 +82,7 @@ plane_explode local.scale:
 	{
 		local.new_uberround = self.plane.new_uberround
 		local.origin = local.plane.origin 
-		self.plane explode
+		//self.plane explode // removed, since the plane has its own radiusdamage when it explodes while touching a player.
 		self.plane remove
 	}
 	else { local.origin = self.origin }
@@ -112,13 +112,50 @@ plane_explode local.scale:
 	
 	if(self.in_para_drop != 1 && local.new_uberround != 1)
 	{
-		self damage local.Exp2 15000 local.Exp2 (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1
+		self damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1
 	}
 
 	exec global/earthquake.scr .35 2 0 0
-	radiusdamage local.origin 500 local.radius
 	local.Exp playsound artyexp_sand
 	local.Exp2 playsound explodeplane
+
+	local.Exp2.player_owner = self
+
+	//radiusdamage local.origin 500 local.radius
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(vector_length(local.origin - $player[local.i].origin) <= local.radius)
+		{
+			if(self == NIL || self == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i].passenger != 1)
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				}
+			}
+			else if($player[local.i] != self && $player[local.i].dmteam == self.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+				{
+					$player[local.i] damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = self
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+					else { $player[local.i].drivingent damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				}
+			}
+		}
+	}
+	if(local.blewup == 1) { radiusdamage local.origin 500 local.radius }
 
 	local.Exp anim start
 	local.Exp2 anim start
@@ -190,7 +227,7 @@ plane_explode_null:
 	local.origin = self.origin
 	local.scale = self.scale
 	local.model = self.model
-	self explode
+	//self explode
 	self remove
 
 	if(local.model == "models/vehicles/c47fly.tik") { local.radius = 1000 * local.scale }

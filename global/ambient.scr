@@ -1,4 +1,4 @@
-main local.music:
+main local.music local.print:
 
 	// from breakthrough
 	if(level.loaded_settings !=1)
@@ -46,7 +46,7 @@ main local.music:
 			level.music = local.music
 		}
 	}
-	if ( level.music != NIL )
+	if ( level.music != NIL ) // && local.startmusic == 1
 	{
 		local.string = ("music/" + level.music + ".mus")
 		soundtrack local.string
@@ -64,7 +64,7 @@ main local.music:
 	
 
 
-	println "Loading Ambient.scr"
+	println "Loading Ambient.scr..."
 
 	if ($interior == NULL)
 		level.interiors = 0
@@ -81,11 +81,11 @@ main local.music:
 
 			if (level.interior[local.i].set == NIL)
 			{
-				println ("Warning, interior at " + level.interior[local.i].origin + " has no #set")
+				if(local.print == 1) { println ("Warning, interior at " + level.interior[local.i].origin + " has no #set") }
 				level.interior[local.i].set = 1
 			}
 				else
-				println ("Spawned interior " + local.i)
+				if(local.print == 1) { println ("Spawned interior " + local.i) }
 
 			if (level.interior[local.i].haze == NIL)
 				level.interior[local.i].haze = -1
@@ -108,11 +108,11 @@ main local.music:
 
 			if (level.exterior[local.i].set == NIL)
 			{
-				println ("Warning, exterior at " + level.exterior[local.i].origin + " has no #set")
+				if(local.print == 1) { println ("Warning, exterior at " + level.exterior[local.i].origin + " has no #set") }
 				level.exterior[local.i].set = 1
 			}
 				else
-				println ("Spawned exterior " + local.i)
+				if(local.print == 1) { println ("Spawned exterior " + local.i) }
 
 			if (level.exterior[local.i].haze == NIL)
 				level.exterior[local.i].haze = -1

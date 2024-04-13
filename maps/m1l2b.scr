@@ -207,6 +207,7 @@ if(getcvar("g_ubermods") == "1")
 level waittill spawn
 
 	thread consoleprint
+	thread ambience
 
 if(getcvar("g_ubermods") == "2")
 {
@@ -224,6 +225,19 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( -1232 2577 -191 ) ( 0 180 0 )
 	exec global/throwingknife.scr k4 ( -4215 4068 -191 ) ( 0 0 0 )
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+
+		( -1168 -2688 -275 ) ( 0 -1095 0 ) ( 3207 0 259 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( 2040 -3287 -275 ) ( 0 -496 0 ) ( 71 0 259 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( 3684 -2090 0 ) ( 0 -8000 -4000 ) ( 8000 0 4000 ) sound/amb_stereo/Amb_M1_Canyon_01.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_WarehouseExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -909,44 +923,44 @@ twoswitch local.name local.origin local.angles local.offtime local.damageradius 
 			thread otherswitch_animonly sw2 turnon
 
 			wait (randomint(50) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb31 local.offtime local.damageradius local.pulsatingoff // offtime only works if using waitthread.
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb31 local.offtime local.damageradius local.pulsatingoff // offtime only works if using waitthread.
 			wait (randomint(100) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb32 local.offtime local.damageradius local.pulsatingoff
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb32 local.offtime local.damageradius local.pulsatingoff
 			wait (randomint(100) / 100.00 + 0.25)
-			waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb33 local.offtime local.damageradius local.pulsatingoff // waits "local.offtime" seconds after blowing up
+			local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb33 local.offtime local.damageradius local.pulsatingoff // waits "local.offtime" seconds after blowing up
 		}
 		if(local.name == "sw2")
 		{
 			thread otherswitch_animonly sw1 turnon
 
 			wait (randomint(50) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb33 local.offtime local.damageradius local.pulsatingoff
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb33 local.offtime local.damageradius local.pulsatingoff
 			wait (randomint(100) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb32 local.offtime local.damageradius local.pulsatingoff
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb32 local.offtime local.damageradius local.pulsatingoff
 			wait (randomint(100) / 100.00 + 0.25)
-			waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb31 local.offtime local.damageradius local.pulsatingoff
+			local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb31 local.offtime local.damageradius local.pulsatingoff
 		}
 		if(local.name == "sw3")
 		{	
 			thread otherswitch_animonly sw4 turnon
 
 			wait (randomint(50) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb41 local.offtime local.damageradius local.pulsatingoff // offtime only works if using waitthread.
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb41 local.offtime local.damageradius local.pulsatingoff // offtime only works if using waitthread.
 			wait (randomint(100) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb42 local.offtime local.damageradius local.pulsatingoff
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb42 local.offtime local.damageradius local.pulsatingoff
 			wait (randomint(100) / 100.00 + 0.25)
-			waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb43 local.offtime local.damageradius local.pulsatingoff // waits "local.offtime" seconds after blowing up
+			local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb43 local.offtime local.damageradius local.pulsatingoff // waits "local.offtime" seconds after blowing up
 		}
 		if(local.name == "sw4")
 		{
 			thread otherswitch_animonly sw3 turnon
 
 			wait (randomint(50) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb43 local.offtime local.damageradius local.pulsatingoff
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb43 local.offtime local.damageradius local.pulsatingoff
 			wait (randomint(100) / 100.00 + 0.25)
-			thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb42 local.offtime local.damageradius local.pulsatingoff
+			local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb42 local.offtime local.damageradius local.pulsatingoff
 			wait (randomint(100) / 100.00 + 0.25)
-			waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb41 local.offtime local.damageradius local.pulsatingoff
+			local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup bb41 local.offtime local.damageradius local.pulsatingoff
 		}
 
 		level.trenchblewup[local.set] = 0

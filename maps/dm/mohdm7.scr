@@ -132,6 +132,8 @@ exec maps/UBER_mapextras/dm7_cratesstuff.scr::smoke
 
 level waittill spawn
 
+	thread ambience
+
 while(level.bbactive == 1) { wait 1 }
 
 if(getcvar("g_throwingknives") == "1")
@@ -143,6 +145,39 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( -2425 2106 65 ) ( 0 180 0 ) 
 	exec global/throwingknife.scr k4 ( -2887 -118.5 -67 ) ( 0 180 0 )
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( -3344 -495 -200 ) ( 0 0 0 ) ( 1424 1230 423 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -3356 736 -200 ) ( 0 0 0 ) ( 1436 303 423 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -2423 1040 -200 ) ( 0 0 0 ) ( 503 173 423 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -3356 1040 -200 ) ( 0 0 0 ) ( 730 287 423 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -3343 1328 -200 ) ( 0 0 0 ) ( 807 757 423 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -3287 768 224 ) ( 0 0 0 ) ( 429 568 195 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -3072 1337 224 ) ( 0 0 0 ) ( 257 255 195 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -1919 304 -220 ) ( 0 0 0 ) ( 353 375 283 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -1919 680 -220 ) ( 0 0 0 ) ( 431 443 283 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -947 -427 -320 ) ( 0 0 0 ) ( 572 650 391 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -374 -617 -320 ) ( 0 0 0 ) ( 359 840 335 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -374 -617 16 ) ( 0 0 0 ) ( 94 305 191 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -1763 -1378 -400 ) ( 0 0 0 ) ( 283 466 511 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( -1479 -1239 -400 ) ( 0 0 0 ) ( 239 327 511 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( 216 1406 -230 ) ( 0 0 0 ) ( 403 577 553 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( 215 1406 -230 ) ( -63 0 0 ) ( 0 577 553 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( 666 -1279 40 ) ( 0 0 0 ) ( 1385 269 215 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( 1560 -1763 -400 ) ( 0 0 0 ) ( 191 1031 439 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( 1559 -1247 -400 ) ( -309 0 0 ) ( 0 191 439 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+
+		( -3267 -767 190 ) ( 0 0 0 ) ( 208 231 249 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_TownExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

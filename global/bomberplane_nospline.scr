@@ -195,13 +195,33 @@ bomb local.playerowner:
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
-		if(vector_length(local.boom.origin - $player[local.i].origin) < 600) // "cansee" condition removed; if somehow a teammate cannot see a bomb, they will still get killed by radiusdamage
+		if(vector_length(local.boom.origin - $player[local.i].origin) <= 600) // "cansee" condition removed; if somehow a teammate cannot see a bomb, they will still get killed by radiusdamage
 		{
-			if(local.playerowner == NIL || local.playerowner == NULL) { $player[local.i] volumedamage 300 }
+			if(local.playerowner == NIL || local.playerowner == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+				{
+					$player[local.i] damage $world 300 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 300 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 300 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.playerowner && $player[local.i].dmteam == local.playerowner.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
 			else
 			{
-				$player[local.i] damage local.playerowner 300 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // by default, "damage" does not hurt teammates
-				if($player[local.i] != local.playerowner && $player[local.i].dmteam == local.playerowner.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+				{
+					$player[local.i] damage local.playerowner 300 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.playerowner
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.playerowner 300 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.playerowner 300 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
 			}
 		}
 	}

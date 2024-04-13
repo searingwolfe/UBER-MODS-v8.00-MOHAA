@@ -3310,6 +3310,73 @@ state TURRET_GETOUT
 //}
 
 
+//==============================================================================
+//==============================================================================
+//
+// Flak88 - Nebelwerfer
+//
+//==============================================================================
+
+state FN_PUTAWAY
+{
+	entrycommands
+	{
+		deactivateweapon righthand
+	}
+	
+	states
+	{
+		FN_IDLE		: default
+	}
+}
+
+state FN_START
+{
+//	movetype anim
+
+	entrycommands
+	{
+		exec global/camper_turret.scr 1
+		exec global/check_team_swap.scr 
+	}
+	
+	states
+	{
+		FN_PUTAWAY	: PUTAWAYMAIN	// Basic put weapon away move.
+		FN_IDLE		: default
+	}
+}
+
+state FN_IDLE
+{
+	movetype anim
+
+	action
+	{
+		turret_idle	: default
+	}
+	
+	states
+	{
+		FN_GETOUT	: +JUMP
+		STAND		: KILLED
+	}
+}
+
+state FN_GETOUT
+{
+	entrycommands
+	{
+		exec global/playervehicle_movement.scr "JUMP"
+	}
+
+	states
+	{
+		FN_IDLE		: default
+	}
+}
+
+
 //mines animation
 
 state MINE

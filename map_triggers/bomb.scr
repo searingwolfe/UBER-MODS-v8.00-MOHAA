@@ -135,7 +135,7 @@ if(local.player.isfiredboomerweenie == 0)
 end
 
 local.groundtarget = spawn script_origin //targetname "bombweap_groundtarget"
-local.groundspot_target = spawn script_origin //targetname "bombweap_groundspot_target"
+local.groundtarget.player_owner = local.player
 
 local.fwd_vec = angles_toforward local.player.viewangles
 local.start = local.player gettagposition "eyes bone"
@@ -184,7 +184,7 @@ local.laser21 playsound fireplace1
 local.laser21 loopsound timer01 //snd_b_zing12
 local.laser22 loopsound fireplace1 //snd_b_zing9
 
-	local.laser21 thread movestuck_fix local.groundtarget.origin local.laser21 local.laser22 local.groundtarget local.groundspot_target local.player
+	local.laser21 thread movestuck_fix local.groundtarget.origin local.laser21 local.laser22 local.groundtarget local.player
 
 local.originold = local.groundtarget.origin
 
@@ -195,17 +195,38 @@ local.laser21 waitmove
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
 	{									// if $player[local.i] cansee local.laser21 360 was removed, since sometimes bomb can be partially inside a wall,
-		if(local.laser21 != NULL && vector_length(local.laser21.origin - $player[local.i].origin) < 425) // which now allows giant bombs to kill people through walls
+		if(local.laser21 != NULL && vector_length(local.laser21.origin - $player[local.i].origin) <= 425) // which now allows giant bombs to kill people through walls
 		{
-			if(local.player == NULL) { $player[local.i] volumedamage 250 }
-			if(local.player != NULL)
+			if(local.player == NIL || local.player == NULL)
 			{
-				$player[local.i] damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
-				if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+				{
+					$player[local.i] damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+				{
+					$player[local.i] damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.player
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
 			}
 		}
 	}
 	local.Exp21 = spawn "fx/scriptbazookaexplosion.tik" // also does 250 radiusdamage
+	local.Exp21.player_owner = local.player
 	if(local.blewup != 1) { local.Exp21 radiusdamage 0 }
 
 	local.Exp22 = spawn "animate/fx_mortar_dirt.tik"
@@ -245,7 +266,6 @@ if(local.laser21 != NULL) { local.laser21 remove }
 if(local.laser22 != NULL) { local.laser22 remove }
 
 if(local.groundtarget != NULL) { local.groundtarget remove }
-if(local.groundspot_target != NULL) { local.groundspot_target remove }
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -264,22 +284,50 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-movestuck_fix local.origin local.laser21 local.laser22 local.groundtarget local.groundspot_target local.player:
+movestuck_fix local.origin local.laser21 local.laser22 local.groundtarget local.player:
 
  local.n = 0			    // if bomb is fired at a tank entity, for example, sometimes the bomb will get stuck inside the tank and never blow up.
  while(self != NULL && self.origin != local.origin) // when the bomb takes too long to explode, this thread forces the bomb to explode and reset the trigger. 
  {
 	if(local.n == 7) // 7 * (wait 0.25) = 1.75 seconds.
 	{
-		for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
+		local.blewup = 1
+		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if(vector_length(local.laser21.origin - $player[local.i].origin) < 425 && $player[local.i] cansee local.laser21 360)
+			if(local.laser21 != NULL && vector_length(local.laser21.origin - $player[local.i].origin) <= 425)
 			{
-				if(local.player != NULL) { $player[local.i] damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-				if(local.player == NULL) { $player[local.i] volumedamage 250 }
+				if(local.player == NIL || local.player == NULL)
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+					{
+						$player[local.i] damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { $player[local.i].drivingent damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+				}
+				else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+				else
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+					{
+						$player[local.i] damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						$player[local.i].drivingent.shooter = local.player
+						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { $player[local.i].drivingent damage local.player 250 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+				}
 			}
 		}
-		local.Exp21 = spawn "fx/scriptbazookaexplosion.tik"
+		local.Exp21 = spawn "fx/scriptbazookaexplosion.tik" // also does 250 radiusdamage
+		local.Exp21.player_owner = local.player
+		if(local.blewup != 1) { local.Exp21 radiusdamage 0 }
+
 		local.Exp22 = spawn "animate/fx_mortar_dirt.tik"
 		local.Exp21.origin = self.origin // local.origin explodes bomb at groundspot origin, not at current bomb's origin (self).
 		local.Exp21.scale = 1.7
@@ -309,7 +357,6 @@ movestuck_fix local.origin local.laser21 local.laser22 local.groundtarget local.
 		ihuddraw_string local.player 102 ""
 
 		local.groundtarget remove
-		local.groundspot_target remove
 		end 
 	}
 	if(local.n >= 7 || local.laser21.origin == NIL) { end } // run the n==4 if-statement only once, then end.

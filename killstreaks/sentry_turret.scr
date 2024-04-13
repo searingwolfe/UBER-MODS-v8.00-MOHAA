@@ -4,7 +4,7 @@ main local.kills local.timealive:
 
 level.sentry_bulletdamage = 5	// damage per bullet
 level.sentry_fov = 120		// field-of-view in degrees (facing forward) to lock-on to players
-level.sentry_maxdist = 4000	// maximum range of the turret
+level.sentry_maxdist = 6000	// maximum range of the turret
 level.sentry_lockon_delay = 10	// number of frames (not seconds) until locked-on turret begins firing
 level.sentry_deaddamage = 250	// only when turret gets destroyed
 level.sentry_deadradius = 200	// only when turret gets destroyed
@@ -238,23 +238,32 @@ targetplayers local.player_owner: // cannot use "local.owner" since it is a read
 			if($player[local.i].locked_on_sentry == NIL) { $player[local.i].locked_on_sentry = 0 }
 			local.dist = vector_length(self.origin - $player[local.i].origin)
 
-			if(local.dist < level.sentry_maxdist && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && self.barreltip cansee $player[local.i] level.sentry_fov && local.dist < local.shortest_dist && $player[local.i].spectator_choseteam_notyetspawned != 1 && $player[local.i] != local.player_owner && ($player[local.i].dmteam != local.player_owner.dmteam || getcvar("g_gametype") == "1"))
+			if(local.dist < level.sentry_maxdist && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && ($player[local.i].driving != 1 || $player[local.i].turreting == 1 || $player[local.i].passenger == 1) && (self.barreltip cansee $player[local.i] level.sentry_fov || ($player[local.i].ridingent != NIL && $player[local.i].ridingent != NULL && self.barreltip cansee $player[local.i].ridingent level.sentry_fov)) && local.dist < local.shortest_dist && $player[local.i].spectator_choseteam_notyetspawned != 1 && $player[local.i] != local.player_owner && ($player[local.i].dmteam != local.player_owner.dmteam || getcvar("g_gametype") == "1"))
 			{
 				local.shortest_dist = local.dist
 				local.d = local.i
 			}
 		}
-		if(local.d != NIL && local.d <= $player.size && isalive $player[local.d] && $player[local.d].dead != 1 && $player[local.d].dmteam != "spectator" && self.barreltip cansee $player[local.d] level.sentry_fov && $player[local.d].spectator_choseteam_notyetspawned != 1 && $player[local.d] != local.player_owner && ($player[local.d].dmteam != local.player_owner.dmteam || getcvar("g_gametype") == "1"))
+		if(local.d != NIL && local.d <= $player.size && isalive $player[local.d] && $player[local.d].dead != 1 && $player[local.d].dmteam != "spectator" && ($player[local.d].driving != 1 || $player[local.d].turreting == 1 || $player[local.d].passenger == 1) && (self.barreltip cansee $player[local.d] level.sentry_fov || ($player[local.d].ridingent != NIL && $player[local.d].ridingent != NULL && self.barreltip cansee $player[local.d].ridingent level.sentry_fov)) && $player[local.d].spectator_choseteam_notyetspawned != 1 && $player[local.d] != local.player_owner && ($player[local.d].dmteam != local.player_owner.dmteam || getcvar("g_gametype") == "1"))
 		{
 			if(self.locked_on != 1)
 			{
-				self setaimtarget $player[local.d]
-				self.barreltip setaimtarget $player[local.d]
+				if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL)
+				{
+					self setaimtarget $player[local.d].plane
+					self.barreltip setaimtarget $player[local.d].plane // do not make "setaimtarget" = the "ridingent" of a vehicle passenger, otherwise BulletAttack Reborn Exceptions will crash the server.
+				}
+				else
+				{
+					self setaimtarget $player[local.d]
+					self.barreltip setaimtarget $player[local.d]
+				}
 			}
 			self.locked_on = 1
 
 			local.laser.origin = self gettagposition "tag_barrel"
-			local.laser endpoint ($player[local.d] gettagposition "eyes bone")
+			if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL) { local.laser endpoint $player[local.d].plane.origin }
+			else { local.laser endpoint ($player[local.d] gettagposition "eyes bone") }
 
 			if($player[local.d].locked_on_sentry >= level.sentry_lockon_delay)
 			{
@@ -264,8 +273,37 @@ targetplayers local.player_owner: // cannot use "local.owner" since it is a read
 				self playsound sentry_30calfire
 				local.laser color ( 1 0 1 )
 
-				if(local.player_owner == NIL || local.player_owner == NULL) { $player[local.d] damage self level.sentry_bulletdamage self (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-				else { $player[local.d] damage local.player_owner level.sentry_bulletdamage local.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				if(local.player_owner == NIL || local.player_owner == NULL)
+				{
+					if($player[local.d].flying != 1 || $player[local.d].turreting == 1)
+					{
+						$player[local.d] damage self level.sentry_bulletdamage self (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL)
+					{
+						$("planehit" + $player[local.d].entnum) damage self level.sentry_bulletdamage self (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].ridingent != NIL && $player[local.d].ridingent != NULL)
+					{
+						$player[local.d].ridingent damage self level.sentry_bulletdamage self (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+				}
+				else
+				{
+					if($player[local.d].flying != 1 || $player[local.d].turreting == 1)
+					{
+						$player[local.d] damage local.player_owner level.sentry_bulletdamage local.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL)
+					{
+						$("planehit" + $player[local.d].entnum) damage local.player_owner level.sentry_bulletdamage local.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].ridingent != NIL && $player[local.d].ridingent != NULL)
+					{
+						$player[local.d].ridingent.shooter = local.player_owner
+						$player[local.d].ridingent damage local.player_owner level.sentry_bulletdamage local.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+				}
 			}
 			$player[local.d].locked_on_sentry++
 		}
@@ -307,7 +345,21 @@ dead:
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if(vector_length(self.origin - $player[local.i].origin) <= level.sentry_deadradius) { $player[local.i] damage self.enemy_killer level.sentry_deaddamage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			local.dist = vector_length(self.origin - $player[local.i].origin)
+
+			if(local.dist < level.sentry_deadradius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && $player[local.i].spectator_choseteam_notyetspawned != 1 && ($player[local.i].dmteam != self.enemy_killer.dmteam || getcvar("g_gametype") == "1"))
+			{
+				if(self cansee $player[local.i] 360)
+				{
+					$player[local.i] damage self.enemy_killer level.sentry_deaddamage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && self cansee $player[local.i].drivingent 360)
+				{
+					$player[local.i].drivingent.shooter = self.enemy_killer
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self.enemy_killer level.sentry_deaddamage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage self.enemy_killer level.sentry_deaddamage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
 		}
 	}
 	else { radiusdamage local.explode.origin level.sentry_deaddamage level.sentry_deadradius }

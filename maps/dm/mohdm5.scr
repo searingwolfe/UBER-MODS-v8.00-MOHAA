@@ -124,6 +124,8 @@ level waittill spawn
 
 while(level.bbactive == 1) { wait 1 }
 
+	thread ambience
+
 if(getcvar("g_throwingknives") == "1")
 {
 	exec global/give_players_knives.scr 1
@@ -133,6 +135,16 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( 3353 -5934 216 ) ( 0 90 0 ) 
 	exec global/throwingknife.scr k4 ( 2638 -3156 224 ) ( 0 270 0 )
 }
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( 2208 -7463 -150 ) ( 0 0 0 ) ( 383 487 373 ) sound/amb_stereo/Amb_M2_SnowInt.mp3
+		( 576 -2239 -150 ) ( 0 0 0 ) ( 319 319 365 ) sound/amb_stereo/Amb_M2_SnowInt.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

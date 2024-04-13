@@ -159,9 +159,10 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				local.damage = ((local.health - self.health) / self.passengers.size)
 				for(local.i = 1; local.i <= self.passengers.size; local.i++)
 				{
-					self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 				}
-				self.shooter = NIL
 			}
 
 			for(local.i = 1; local.i <= $player.size; local.i++)
@@ -173,8 +174,15 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 			}
 		}
 		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(self.shooter != NIL) { self thread shooter_NIL }
 		waitframe
 	}
+end
+
+shooter_NIL:
+
+	waitframe
+	self.shooter = NIL
 end
 
 vehicletrigger:
@@ -184,13 +192,8 @@ vehicletrigger:
 	local.trig.origin = self.origin
 	local.trig setsize ( -105 -105 -5 ) ( 105 105 125 )
 	local.trig.vehicle = self
+	local.trig glue self
 	local.trig setthread triggered
-
-	while(self != NULL && local.trig != NULL) // sometimes a high-velocity object (non-projectile) pushes the vehicle away from its trigger.
-	{
-		if(self.origin != local.trig.origin) { local.trig.origin = self.origin } // keep the vehicle and its trigger together.
-		waitframe
-	}
 end
 
 triggered:
@@ -223,7 +226,9 @@ playergetin:
 	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1) { end }
 	self.driver = local.player
 	self.driver.driving = 1
+	self.driver.drivingent = self
 	local.driver = self.driver
+	self.player_owner = self.driver
 
 	self.passengers[1] = NIL // initialize as array to make size = 0 instead of size = -1
 	self thread seatstuff
@@ -235,7 +240,7 @@ playergetin:
 	if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
 	if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
 	if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn.") }
-	self.driver iprint ("JUMP = exit vehicle, hold FIRE = rear-view mirror.")
+	self.driver iprint ("JUMP = exit vehicle, hold FIRE = look behind.")
 	self.driver.driving_state_jump = 0
 
 	self attachdriverslot 0 self.driver //attachpassengerslot //attachturretslot
@@ -243,7 +248,6 @@ playergetin:
 
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
-		local.holdtime = 0
 		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
@@ -303,7 +307,7 @@ playergetin:
 		self remove
 	}
 	waitframe
-	if(local.driver != NULL) { local.driver.driving = 0 }
+	if(local.driver != NULL) { local.driver.driving = 0; local.driver.drivingent = NIL }
 end
 
 driverreset local.status:
@@ -314,6 +318,13 @@ driverreset local.status:
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
 
+	if(self.model == "models/vehicles/shermantank.tik") { local.outheight = 128 }
+	else if(self.model == "models/vehicles/bmwbike.tik" || self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik") { local.outheight = 50 }
+	else if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.outheight = 60 }
+	else if(self.model == "models/vehicles/m3.tik" || self.model == "models/vehicles/gmctruck.tik") { local.outheight = 70 }
+	else if(self.model == "models/vehicles/mercedes.tik") { local.outheight = 90 }
+	else { local.outheight = 100 }
+
 	if(self.driver.dmteam != spectator)
 	{
 		self.driver show
@@ -322,8 +333,7 @@ driverreset local.status:
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
 		if(local.status != 1 && local.status != 2)
 		{
-			if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/bmwbike.tik" || self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik" || self.model == "models/vehicles/mercedes.tik") { self.driver.origin = self.origin + ( 0 0 100 ) }
-			else { self.driver.origin = self.origin + ( 0 0 180 ) }
+			self.driver.origin = self.origin + (angles_toup self.angles * local.outheight)
 			self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
 		}
 	}
@@ -446,7 +456,7 @@ vehicledeath:
 	self thread driverreset 1					// local.status = 1
 	self thread mainreset local.desvehicle local.fire local.smoke	// waiting self.resettime seconds until a new vehicle is spawned in
 
-	if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
+	self thread kill_riders
 	self.driver = NIL
 
 	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer } // ensures that the turretplayer is alaways detached after vehicle dies
@@ -474,6 +484,42 @@ vehicledeath:
 	waitframe
 	local.boom remove
 	local.debris remove
+end
+
+kill_riders:
+
+	if(self.turretplayer != NIL && self.turretplayer != NULL)
+	{
+		if(self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.turretplayer damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.turretplayer damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter != NULL) { self.turretplayer damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { self.turretplayer volumedamage 9999999 }
+	}
+
+	if(self.passengers.size >= 1)
+	{
+		for(local.i = 1; local.i <= self.passengers.size; local.i++)
+		{
+			if(self.shooter != NIL)
+			{
+				if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				else if(self.shooter != NULL) { self.passengers[local.i] damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			}
+			else { self.passengers[local.i] volumedamage 9999999 }
+		}
+	}
+
+	if(self.shooter != NIL)
+	{
+		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		else if(self.shooter != NULL) { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	}
+	else if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
 end
 
 mainreset local.desvehicle local.fire local.smoke:
@@ -512,10 +558,12 @@ turretslot local.player:
 
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & turret player could be attached to the same seat!
-	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
 
 	self.turretplayer = local.player
 	self.turretplayer.passenger = 1
+	self.turretplayer.driving = 1
+	self.turretplayer.turreting = 1
 	self.turretplayer.remove_viewmodel = 0
 	self.turretplayer.driving_state_jump = 0
 	self.turretplayer forcetorsostate TURRET_START
@@ -527,6 +575,7 @@ turretslot local.player:
 	self.gun lock
 	self lock
 	if(self.model != "models/vehicles/jeep.tik") { self.turretplayer.scale = 0.5 } // self.turretplayer hide
+	local.player glue self.gun // keep player's angles aligned with 30cal turret.
 
 	local.driver = self.driver
 	local.team = local.player.dmteam
@@ -549,8 +598,10 @@ turretslot local.player:
 	{
 		local.player.passenger = 0
 		local.player.driving = 0
+		local.player.turreting = 0
 		local.player.remove_viewmodel = 1
 		local.player.scale = 1
+		local.player unglue
 		//local.player show
 	}
 end
@@ -565,8 +616,10 @@ turretplayer_reset local.team local.player:
 		end			// for the rejoining player to fix it: enter the turret again, or wait for the vehicle to respawn.
 	}
 
+	local.player unglue
 	local.player.passenger = 0
 	local.player.driving = 0
+	local.player.turreting = 0
 	local.player.scale = 1
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
@@ -578,6 +631,7 @@ turretplayer_reset local.team local.player:
 		self.gun unlock
 		self douse local.player
 		local.player exit
+		local.player forcelegsstate STAND
 	}
 	self lock
 	self.gun lock
@@ -597,7 +651,16 @@ turretplayer_reset local.team local.player:
 
 	if(local.player.dmteam == local.team) { local.player.origin = self.origin + ( local.cos local.sin local.outheight ) }
 
-	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver)) { local.player damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver))
+	{
+		if(self != NULL && self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.player damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	}
 end
 
 remove_viewmodels:
@@ -628,15 +691,14 @@ passengers:
 	local.player = parm.other
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & passenger could be attached to the same seat!
-	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
 
 	for(local.s = 1; local.s <= self.seats; local.s++)
 	{
 		if(self.passengers[local.s] == NIL) { self.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
 	}
-
-	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/bmwbike.tik") { local.outheight = 100 }
-	else { local.outheight = 180 }
+	if(local.s > self.seats) { end } // no seats available.
 
 	if(local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
 	{
@@ -644,8 +706,12 @@ passengers:
 		local.player iprint ("An enemy player is driving this vehicle!")
 		end
 	}
+
 	if(self.dist_offset[local.s] == NIL) { end }
 	local.distoffset = self.dist_offset[local.s]
+
+	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/bmwbike.tik") { local.outheight = 100 }
+	else { local.outheight = 180 }
 
 	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
 	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
@@ -654,18 +720,19 @@ passengers:
 	//local.player noclip
 	//local.player nodamage
 	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
-	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE = look around.")
+	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE(zoom) = look around.")
 	local.player.origin = self.origin
 	local.player.passenger = 1
+	local.player.ridingent = self
 	local.player.driving = 1 // should help with other scripts.
 	local.player.driving_state_jump = 0
 	local.PI = 3.14159265359
 	local.driver = self.driver
 
-	while(self != NULL && self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
 	{
 		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
-		local.holdtime = 0
+
 		local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
 		if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
 		local.radians = local.degrees * (local.PI / 180)
@@ -706,9 +773,10 @@ passengers:
 			}
 			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
-				local.player thread wallstuck_fix
+			local.player thread wallstuck_fix
 			self.passengers[local.s] = NIL
 			local.player.passenger = 0
+			local.player.ridingent = NIL
 			local.player.driving = 0
 			end
 		}
@@ -720,6 +788,7 @@ passengers:
 	{
 		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
 		local.player.passenger = 0
+		local.player.ridingent = NIL
 		local.player.driving = 0
 		if(local.player.dmteam != spectator)
 		{
@@ -737,7 +806,16 @@ passengers:
 				local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 	
-				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1)) { local.player damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1))
+				{
+					if(self != NULL && self.shooter != NIL)
+					{
+						if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.player damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+					else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
 			}
 
 			local.origin = local.player.origin
@@ -1183,6 +1261,7 @@ wallstuck_fix:
 		if(local.c >= 60) // about 3 seconds
 		{
 			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
+			if(self.isdog == 1) { self hide }
 			break
 		}
 		local.c++
@@ -1403,10 +1482,10 @@ if(level.vehiclescriptmaster2 != 1 && level.scriptmaster[truck_sounds] != 1 && l
 	local.master aliascache light_switch sound/items/hit_notify.wav soundparms 1.5 0.0 1.0 0.0 320 2200 auto loaded maps level.mapname	
 }
 
-if(level.vehiclescriptmaster3 != 1 && (local.model == "models/vehicles/jeep.tik" || local.model == "models/vehicles/sdkfz.tik" || local.model == "models/vehicles/sdkfz_afrika.tik"))
+if(level.vehiclescriptmastergun != 1 && (local.model == "models/vehicles/jeep.tik" || local.model == "models/vehicles/sdkfz.tik" || local.model == "models/vehicles/sdkfz_afrika.tik"))
 {
 	local.master aliascache sndfire30cal sound/weapons/fire/50CalFire2.wav soundparms 1.05 0.2 0.95 0.1 800 4000 weapon loaded maps level.mapname
-	level.vehiclescriptmaster3 = 1
+	level.vehiclescriptmastergun = 1
 }
 
 level.vehiclescriptmaster2 = 1

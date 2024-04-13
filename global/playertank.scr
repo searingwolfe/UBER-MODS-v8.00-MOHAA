@@ -102,7 +102,7 @@ tankreset local.groundtarget: // tank turret must be reset each time a new tank 
 	self.gun = self queryturretslotentity 0
 	if(self.gun == NIL || self.gun == NULL) { self spawnturret 0 self.turretmodel }
 	self.gun = self queryturretslotentity 0
-	self.gun notsolid
+	self.gun solid
 	self.gun2 = self queryturretslotentity 1
 	if(self.gun2 != NIL && self.gun2 != NULL)
 	{
@@ -151,16 +151,11 @@ tanktrigger:
 	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
 	local.trig = spawn trigger_use targetname (self.name + "_trig")
 	local.trig.origin = self.origin
-	if(self.model != vehicles/kingtank.tik && self.model != models/vehicles/kingtank.tik) { local.trig setsize ( -100 -100 -5 ) ( 100 100 100 ) }
-	if(self.model == vehicles/kingtank.tik || self.model == models/vehicles/kingtank.tik) { local.trig setsize ( -130 -130 -5 ) ( 130 130 100 ) }
+	if(self.model != vehicles/kingtank.tik && self.model != models/vehicles/kingtank.tik) { local.trig setsize ( -100 -100 -5 ) ( 100 100 160 ) }
+	if(self.model == vehicles/kingtank.tik || self.model == models/vehicles/kingtank.tik) { local.trig setsize ( -140 -140 -5 ) ( 140 140 180 ) }
 	local.trig.tank = self
+	local.trig glue self
 	local.trig setthread triggered
-
-	while(self != NULL && local.trig != NULL) // sometimes a high-velocity object (non-projectile) pushes the tank away from its trigger.
-	{
-		if(self.origin[0] != local.trig.origin[0] && self.origin[1] != local.trig.origin[1]) { local.trig.origin = self.origin } // keep the tank and its trigger together.
-		waitframe
-	}
 end
 
 triggered:
@@ -194,7 +189,9 @@ playergetin:
 	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1) { end }
 	self.driver = local.player
 	self.driver.driving = 1
+	self.driver.drivingent = self
 	local.driver = self.driver
+	self.player_owner = self.driver
 
 	self.driver forcelegsstate STAND
 	self.driver hide
@@ -209,13 +206,11 @@ playergetin:
 
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
-		local.holdtime = 0
-		//if(self.velocity != ( 0 0 0 )) { self.velocity = self.velocity + self.forwardvector * self.vehiclespeed } // does not work properly, so speed increase was removed
+		//if(self.velocity != ( 0 0 0 )) { self.velocity = self.velocity + self.forwardvector * self.vehiclespeed } // does not work properly, so speed increase was removed.
 
-		local.fwd_vec = angles_toforward self.driver.viewangles
-		local.start = self.driver gettagposition "Bip01 Head"
-		local.range = 10240
-		local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * local.range) 0
+		local.fwd_vec = angles_toforward ( self.driver.viewangles[0] self.gun.angles[1] self.driver.viewangles[2] )
+		local.start = self.gun gettagposition "tag_barrel"		// aim the groundtarget from where turret currently is, since turret rotation is slower than player's aim.
+		local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * 10240) 0
 
 		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
 		{
@@ -229,7 +224,9 @@ playergetin:
 		if(self != NULL && isalive self.driver && self.driver.fireheld == 1 && self.firingshell != 1)
 		{
 			self thread fire_tank_sound
+			self thread projectile
 		}
+		if(self.shooter != NIL) { self thread shooter_NIL }
 		waitframe
 	}
 
@@ -251,7 +248,13 @@ playergetin:
 		self remove
 	}
 	waitframe
-	if(local.driver != NULL) { local.driver.driving = 0 }
+	if(local.driver != NULL) { local.driver.driving = 0; local.driver.drivingent = NIL }
+end
+
+shooter_NIL:
+
+	waitframe
+	self.shooter = NIL
 end
 
 driverreset local.death local.newteam local.changescore:
@@ -265,6 +268,9 @@ driverreset local.death local.newteam local.changescore:
 	if(local.changescore != 1) { self.driver thread weaponfix local.newteam } // player's weapon is invisible when they exit the tank. auto-switch their weapons to make them visible again (wait until they're alive)
 	if(local.changescore == 1) { self.driver thread weaponfix2 }
 
+	if(self.model == "models/vehicles/kingtank.tik") { local.outheight = 170 }
+	else { local.outheight = 150 }
+
 	if(self.driver.dmteam != spectator)
 	{
 		self.driver show
@@ -273,7 +279,7 @@ driverreset local.death local.newteam local.changescore:
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
 		if(local.death != 1 && local.changescore != 1)
 		{
-			if(local.newteam != 1) { self.driver.origin = self.origin + ( 0 0 200 ) }
+			if(local.newteam != 1) { self.driver.origin = self.origin + (angles_toup self.angles * local.outheight) }
 			self.driver.viewangles = ( self.angles[0] self.angles[1] 0 )
 		}
 	}
@@ -297,9 +303,77 @@ fire_tank_sound:
 
 	self.tanksmokecount = 0
 	if(self.tanksmoking != 1) { self thread smokey }
-	wait 5
+	wait 5.05
 	if(self != NULL) { self.firingshell = 0 }
 end
+
+projectile:
+
+	local.player = self.driver // used for the for-loop later
+
+	local.rocket = spawn script_model
+	local.rocket model "projectiles/tigercannonshell.tik"
+	local.rocket.origin = self.gun gettagposition "tag_barrel"
+	local.rocket.angles = self.gun.angles
+	local.rocket light 0 1 0 250
+	local.rocket.scale = 2
+	local.rocket solid
+	local.rocket physics_on    // need this for gravity and waittill touch to work.
+
+	local.rocket gravity 0
+	local.angles = ( self.driver.viewangles[0] self.gun.angles[1] self.driver.viewangles[2] )
+	local.rocket.velocity = (angles_toforward local.angles) * 6000
+	local.rocket waittill touch
+
+	local.rocket.velocity = ( 0 0 0 )
+	local.explode = spawn "fx/explosionTIGERshell.tik"
+	local.explode.origin = local.rocket.origin
+	local.explode.scale = 2.5
+	local.explode light 1 0 0 500
+	local.explode anim idle
+	//local.explode playsound bazooka_exp // already included in explosionTIGERshell
+
+	if(self != NULL) { local.rocket.player_owner = self.driver }
+
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
+	{
+		if(vector_length(local.explode.origin - $player[local.i].origin) <= 400) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.player == NIL || local.player == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.player
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
+	local.rocket remove
+	waitframe
+	local.explode remove
+end
+
 
 smokey:
 
@@ -380,7 +454,7 @@ tankdeath:
 	self thread driverreset 1 		// local.death = 1
 	self thread mainreset local.destank	// waiting self.resettime seconds until a new tank is spawned in
 
-	if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
+	self thread kill_riders
 	self.driver = NIL
 
 	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer } // ensures that the turretplayer is alaways detached after tank dies
@@ -410,6 +484,42 @@ tankdeath:
 	local.debris remove
 end
 
+kill_riders:
+
+	if(self.turretplayer != NIL && self.turretplayer != NULL)
+	{
+		if(self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.turretplayer damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.turretplayer damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter != NULL) { self.turretplayer damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { self.turretplayer volumedamage 9999999 }
+	}
+
+	if(self.passengers.size >= 1)
+	{
+		for(local.i = 1; local.i <= self.passengers.size; local.i++)
+		{
+			if(self.shooter != NIL)
+			{
+				if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				else if(self.shooter != NULL) { self.passengers[local.i] damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			}
+			else { self.passengers[local.i] volumedamage 9999999 }
+		}
+	}
+
+	if(self.shooter != NIL)
+	{
+		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		else if(self.shooter != NULL) { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	}
+	else if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
+end
+
 mainreset local.destank:
 
 	if(self.resettime == NIL || self.resettime <= 0) { end }
@@ -435,7 +545,7 @@ end
 
 turretslot_2nd local.player:
 
-	if(local.player == self.driver || local.player.passenger == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+	if(local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
 
 	if(local.player.isdog == 1) { local.player iprint ("Dogs cannot use vehicle turrets."); end }
 
@@ -449,6 +559,8 @@ turretslot_2nd local.player:
 	//self.turretplayer hide
 	self.turretplayer.scale = 0.5
 	self.turretplayer.passenger = 1
+	self.turretplayer.driving = 1
+	self.turretplayer.turreting = 1
 	self.turretplayer.remove_viewmodel = 0
 	self.turretplayer.driving_state_jump = 0
 	self.turretplayer forcetorsostate TURRET_START
@@ -463,6 +575,7 @@ turretslot_2nd local.player:
 	self.gun lock
 	self lock
 	self.gun2 show
+	local.player glue self.gun2 // keep player's angles aligned with 30cal turret.
 
 	local.driver = self.driver
 	local.team = local.player.dmteam
@@ -484,8 +597,11 @@ turretslot_2nd local.player:
 	if(local.player != NULL)
 	{
 		local.player.passenger = 0
+		local.player.driving = 0
+		local.player.turreting = 0
 		local.player.remove_viewmodel = 1
 		local.player.scale = 1
+		local.player unglue
 		//local.player show
 	}
 end
@@ -501,7 +617,10 @@ turretplayer_reset local.team local.player:
 		end			// for the rejoining player to fix it: enter the turret again, or wait for the vehicle to respawn.
 	}
 
+	local.player unglue
 	local.player.passenger = 0
+	local.player.driving = 0
+	local.player.turreting = 0
 	local.player.scale = 1
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
@@ -514,6 +633,7 @@ turretplayer_reset local.team local.player:
 		self.gun2 unlock
 		self douse local.player
 		local.player exit
+		local.player forcelegsstate STAND
 	}
 	self lock
 	self.gun lock
@@ -532,7 +652,16 @@ turretplayer_reset local.team local.player:
 
 	if(local.player.dmteam == local.team) { local.player.origin = self.origin + ( local.cos local.sin 200 ) }
 
-	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver)) { local.player damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver))
+	{
+		if(self != NULL && self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.player damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	}
 end
 
 remove_viewmodels:
@@ -636,6 +765,7 @@ wallstuck_fix:
 		if(local.c >= 60) // about 3 seconds
 		{
 			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
+			if(self.isdog == 1) { self hide }
 			break
 		}
 		local.c++
