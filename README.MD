@@ -851,22 +851,20 @@ v7.95 (4-12-2023): - Various player-damaging scripts modified for giving scorepo
 	- If any 2 volumes are overlapping and/or touching in all 3 axes (x,y,z), then the 2nd volume is removed and replaced with 0s in the makeArray.
 	- Errors print suggestions for fixing a volume's setsizes or origin if any volume is deleted.
 	- If level.spawnamb does not exist or doesn't have any volumes, the map's ambience will default to "local.music".
+	- Parameters: origin, setsize 1, setsize 2, indoors ambient music filepath.
+	- Example:
+			ambience: // make sure the spawnamb volumes are not touching or overlapping!!!
 
-		Parameters: origin, setsize 1, setsize 2, indoors ambient music filepath.
+				level.spawnamb = makeArray // map M2L1.
+					( -1903 -3775 380 ) ( 0 0 0 ) ( 351 351 379 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[1]
+					( -73 2415 360 ) ( 0 -911 0 ) ( 1528 0 423 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[2]
+					( 1455 3343 380 ) ( -1487 -927 0 ) ( 0 0 226 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[3]
+					( 2816 7879 -307 ) ( 0 -1108 0 ) ( 1455 0 882 ) sound/amb_stereo/Amb_M2_SubFacility.mp3		// amb[4]
+				endArray
 
-		Example:
-				ambience: // make sure the spawnamb volumes are not touching or overlapping!!!
-
-					level.spawnamb = makeArray // map M2L1.
-						( -1903 -3775 380 ) ( 0 0 0 ) ( 351 351 379 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[1]
-						( -73 2415 360 ) ( 0 -911 0 ) ( 1528 0 423 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[2]
-						( 1455 3343 380 ) ( -1487 -927 0 ) ( 0 0 226 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[3]
-						( 2816 7879 -307 ) ( 0 -1108 0 ) ( 1455 0 882 ) sound/amb_stereo/Amb_M2_SubFacility.mp3		// amb[4]
-					endArray
-
-					exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3
-					//exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 1 // outdoors music filepath, force max music volume, debug iprint.
-				end
+				exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3
+				//exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 1 // outdoors music filepath, force max music volume, debug iprint.
+			end
 
 ---------------
 
