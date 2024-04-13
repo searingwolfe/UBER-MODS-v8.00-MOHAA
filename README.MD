@@ -853,6 +853,7 @@ v7.95 (4-12-2023): - Various player-damaging scripts modified for giving scorepo
 	- If level.spawnamb does not exist or doesn't have any volumes, the map's ambience will default to "local.music".
 	- Parameters: origin, setsize 1, setsize 2, indoors ambient music filepath.
 	- Example:
+
 			ambience: // make sure the spawnamb volumes are not touching or overlapping!!!
 
 				level.spawnamb = makeArray // map M2L1.
