@@ -260,8 +260,13 @@ playergetin_nebel:
 		
 			if(isalive self.nebelwerfer.wplayer)
 			{
-				if(self.nebelwerfer.trigshot.killer != NIL && self.nebelwerfer.trigshot.killer != NULL) { self.nebelwerfer.wplayer damage self.nebelwerfer.trigshot.killer 15000 self.nebelwerfer.trigshot.killer (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-				if(self.nebelwerfer.trigshot.killer == NIL || self.nebelwerfer.trigshot.killer == NULL) { killent self.nebelwerfer.wplayer.entnum }
+				if(self.nebelwerfer.trigshot.killer != NIL && self.nebelwerfer.trigshot.killer != NULL)
+				{
+					if(self.nebelwerfer.trigshot.killer.player_owner != NIL && self.nebelwerfer.trigshot.killer.player_owner != NULL) { self.nebelwerfer.wplayer damage self.nebelwerfer.trigshot.killer.player_owner local.damage self.nebelwerfer.trigshot.killer.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.nebelwerfer.trigshot.killer.owner != NIL && self.nebelwerfer.trigshot.killer.owner != NULL) { self.nebelwerfer.wplayer damage self.nebelwerfer.trigshot.killer.owner local.damage self.nebelwerfer.trigshot.killer.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.nebelwerfer.wplayer damage self.nebelwerfer.trigshot.killer 9999999 self.nebelwerfer.trigshot.killer (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				}
+				else { killent self.nebelwerfer.wplayer.entnum }
 			}
 
 			self.nebelwerfer.wplayer stoploopsound
@@ -354,7 +359,13 @@ projectile:
 
 	local.rocket gravity level.nebelwerfers_gravity
 	local.rocket.velocity = (angles_toforward self.angles) * level.nebelwerfers_velocity
-	local.rocket waittill touch
+
+	local.hitthing = self
+	while(local.hitthing == self || local.hitthing == self.wplayer)
+	{
+		local.rocket waittill touch
+		local.hitthing = parm.other
+	}
 
 	local.rocket.velocity = ( 0 0 0 )
 	local.explode = spawn "fx/explosionPANZERIVshell.tik"
@@ -406,9 +417,9 @@ projectile:
 			local.blewup = 0 // radiusdamage already included in "ImDead" thread.
 		}
 	}
-	if(local.blewup == 1) { radiusdamage local.explode.origin 250 200 } // 110 200
 	local.rocket remove
 	waitframe
+	if(local.blewup == 1) { radiusdamage local.explode.origin 250 200 } // 110 200
 	local.explode remove
 end
 
@@ -494,11 +505,11 @@ ImDead:
 
 	if(self.nebelwerfer.wplayer != NIL)
 	{
-		if(self.shooter != NIL)
+		if(self.killer != NIL)
 		{
-			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.nebelwerfer.wplayer damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }	
-			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.nebelwerfer.wplayer damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-			else if(self.shooter != NULL) { self.nebelwerfer.wplayer damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			if(self.killer.player_owner != NIL && self.killer.player_owner != NULL) { self.nebelwerfer.wplayer damage self.killer.player_owner 9999999 self.killer.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }	
+			else if(self.killer.owner != NIL && self.killer.owner != NULL) { self.nebelwerfer.wplayer damage self.killer.owner 9999999 self.killer.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.killer != NULL) { self.nebelwerfer.wplayer damage self.killer 9999999 self.killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 		}
 		else { self.nebelwerfer.wplayer volumedamage 9999999 } // let's make sure the driver is dead.
 	}

@@ -521,6 +521,8 @@ attach_to_traincab:
 	self.passenger = 1
 	self.driving = 1 // should help with other scripts.
 
+	self.drivingent = $choochoo_trigger
+
 	self.angles = ( 10 ($choochootrain.angles[1] + 90) $choochootrain.angles[2] )
 	self glue $("choochoo_seat_" + local.s)
 	if(self.dog != NIL && self.dog != NULL) { self.dog glue $("choochoo_seat_" + local.s) }
@@ -556,6 +558,7 @@ detach_from_traincab local.touching local.holdtime local.team:
 	self unglue
 	if(self.dog != NIL && self.dog != NULL) { self.dog unglue }
 	self.viewangles = ( self.viewangles[0] self.viewangles[1] 0 )
+	self.drivingent = NIL
 
 	if(isalive self && self.dmteam != "spectator")
 	{
@@ -755,6 +758,8 @@ train_drivers:
 	local.PI = 3.14159265359
 	local.holdtime = 0
 
+	local.player.drivingent = $("train_drivershot_" + local.s)
+
 	local.player.angles = ( 10 (self.train.angles[1] + $("train_driverslot_" + local.s).angle_offset) self.train.angles[2] )
 	local.player glue $("train_driverslot_" + local.s)
 	if(local.player.dog != NIL && local.player.dog != NULL) { local.player.dog glue $("train_driverslot_" + local.s) }
@@ -785,6 +790,7 @@ train_driver_reset local.train local.s local.holdtime local.team:
 	self unglue
 	if(self.dog != NIL && self.dog != NULL) { self.dog unglue }
 	self.viewangles = ( self.viewangles[0] self.viewangles[1] 0 )
+	self.drivingent = NIL
 
 	if(isalive self && self.dmteam != "spectator")
 	{

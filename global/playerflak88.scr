@@ -227,8 +227,13 @@ playergetin_flak:
 			
 			if(isalive self.flak88.fplayer)
 			{
-				if(self.flak88.trigshot.killer != NIL && self.flak88.trigshot.killer != NULL) { self.flak88.fplayer damage self.flak88.trigshot.killer 15000 self.flak88.trigshot.killer (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-				if(self.flak88.trigshot.killer == NIL || self.flak88.trigshot.killer == NULL) { killent self.flak88.fplayer.entnum }
+				if(self.flak88.trigshot.killer != NIL && self.flak88.trigshot.killer != NULL)
+				{
+					if(self.flak88.trigshot.killer.player_owner != NIL && self.flak88.trigshot.killer.player_owner != NULL) { self.flak88.fplayer damage self.flak88.trigshot.killer.player_owner local.damage self.flak88.trigshot.killer.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.flak88.trigshot.killer.owner != NIL && self.flak88.trigshot.killer.owner != NULL) { self.flak88.fplayer damage self.flak88.trigshot.killer.owner local.damage self.flak88.trigshot.killer.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.flak88.fplayer damage self.flak88.trigshot.killer 9999999 self.flak88.trigshot.killer (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				}
+				else { killent self.flak88.fplayer.entnum }
 			}
 	
 			self.flak88.fplayer forcetorsostate STAND
@@ -267,7 +272,13 @@ projectile:
 
 	local.rocket gravity 0
 	local.rocket.velocity = (angles_toforward self.angles) * 6000
-	local.rocket waittill touch
+
+	local.hitthing = self
+	while(local.hitthing == self || local.hitthing == self.fplayer)
+	{
+		local.rocket waittill touch
+		local.hitthing = parm.other
+	}
 
 	local.rocket.velocity = ( 0 0 0 )
 	local.explode = spawn "fx/explosionTIGERshell.tik"
@@ -312,9 +323,9 @@ projectile:
 			}
 		}
 	}
-	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
 	local.rocket remove
 	waitframe
+	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
 	local.explode remove
 end
 
@@ -362,11 +373,11 @@ ImDead:
 
 	if(self.flak88.fplayer != NIL)
 	{
-		if(self.shooter != NIL)
+		if(self.killer != NIL)
 		{
-			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.flak88.fplayer damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.flak88.fplayer damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-			else if(self.shooter != NULL) { self.flak88.fplayer damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			if(self.killer.player_owner != NIL && self.killer.player_owner != NULL) { self.flak88.fplayer damage self.killer.player_owner 9999999 self.killer.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.killer.owner != NIL && self.killer.owner != NULL) { self.flak88.fplayer damage self.killer.owner 9999999 self.killer.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.killer != NULL) { self.flak88.fplayer damage self.killer 9999999 self.killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 		}
 		else { self.flak88.fplayer volumedamage 9999999 } // let's make sure the driver is dead.
 	}

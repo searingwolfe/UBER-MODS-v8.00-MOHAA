@@ -175,11 +175,12 @@ bomb local.playerowner:
 	local.bomb gravity level.bomberplane_bombgravity
 	local.bomb.velocity = ( (self.velocity[0] * level.bomberplane_bombspeed) (self.velocity[1] * level.bomberplane_bombspeed) (self.velocity[2] * level.bomberplane_bombspeed) )
 
-	wait 0.5
-	if(local.bomb == NULL) { end }
-	local.bomb solid
-	local.bomb waittill touch
-	if(local.bomb == NULL) { end }
+	local.hitthing = self
+	while(local.hitthing == self)
+	{
+		local.bomb waittill touch
+		local.hitthing = parm.other
+	}
 	
 	local.origin = local.bomb.origin
 	//local.bomb explode // this creates its own radiusdamage
@@ -225,12 +226,12 @@ bomb local.playerowner:
 			}
 		}
 	}
-	if(local.blewup == 1) { radiusdamage local.boom.origin 300 600 }
 
 	if(self != NULL && vector_length(self.origin - local.boom.origin) <= 500) { self nodamage; self.nodamage = 1 }
 	local.boom playsound artyexp_sand
 
 	waitframe
+	if(local.blewup == 1) { radiusdamage local.boom.origin 300 600 }
 	local.boom remove
 	local.bomb remove
 	if(self != NULL && self.nodamage == 1) { self takedamage }

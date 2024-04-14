@@ -323,7 +323,13 @@ projectile:
 	local.rocket gravity 0
 	local.angles = ( self.driver.viewangles[0] self.gun.angles[1] self.driver.viewangles[2] )
 	local.rocket.velocity = (angles_toforward local.angles) * 6000
-	local.rocket waittill touch
+
+	local.hitthing = self
+	while(local.hitthing == self || local.hitthing == self.gun)
+	{
+		local.rocket waittill touch
+		local.hitthing = parm.other
+	}
 
 	local.rocket.velocity = ( 0 0 0 )
 	local.explode = spawn "fx/explosionTIGERshell.tik"
@@ -368,9 +374,9 @@ projectile:
 			}
 		}
 	}
-	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
 	local.rocket remove
 	waitframe
+	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 } // occurs one frame after impact, otherwise some scorepoints (i.e. killing players using nebelwerfers) will not count properly.
 	local.explode remove
 end
 
@@ -513,9 +519,12 @@ kill_riders:
 
 	if(self.shooter != NIL)
 	{
-		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-		else if(self.shooter != NULL) { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		if(self.driver != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter != NULL) { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
 	}
 	else if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
 end

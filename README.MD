@@ -806,7 +806,7 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 # Updates & Bug Fixes
 
-v7.95 (4-12-2023): - Various player-damaging scripts modified for giving scorepoints to player killers and preventing teammates from being killed by vehicle/tank/boat/plane weapons or explosions.
+v7.95 (4-14-2023): - Various player-damaging scripts modified for giving scorepoints to player killers and preventing teammates from being killed by vehicle/tank/boat/plane weapons or explosions.
 
 - Press JUMP to exit nebelwerfers and flak88s now, along with other drivable stuff; hold FIRE(zoom) to look around.
 - Players driving uboats can now lean left/right to aim turret projectiles up/down (only while moving), instead of only shooting them in a horizontal line (a laser is visible while adjusting aim). Lean left/right while not moving to look behind.
@@ -829,6 +829,7 @@ v7.95 (4-12-2023): - Various player-damaging scripts modified for giving scorepo
 
 - Flyable planes that players eject from (on fire and crashing) will no longer deal radiusdamage and kill teammates if exploding too close to at least 1 teammate, even if they're driving or riding in something.
 - Players who switch teams during first-flight instructions will no longer be teleported back to the plane trigger for flying a plane (flight is cancelled).
+- Flyable planes will no longer blow up if they touch a projectile owned by a teammate (not including in FFA), and kills/scorepoints will be given to the projectile's owner that touches/blows up any planes.
 
 - cvars/adminstuff.scr script now uses admins' IPs in a level array variable (top of script) to prevent admins from getting auto-kicked for same-name fix & stufftext-check threads (or make sure $player[admin clientnum + 1] isadmin == 1).
 
@@ -869,7 +870,7 @@ v7.95 (4-12-2023): - Various player-damaging scripts modified for giving scorepo
 
 ---------------
 
-- M2l3 fully modded. 4 flyable planes, 1 flak88, 1 nebelwerfer, 3 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, 5 extra throwing knives also added.
+- M2L3 fully modded. 4 flyable planes, 1 flak88, 1 nebelwerfer, 3 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, 5 extra throwing knives also added.
 - 1 set of bangalore wallbombs (two-way switch) between the truck garage and Axis spawn outdoors. Airstrikes are not included in this level.
 
 - The train's splinepath is extended along the curved railroad, and extended from the train tunnel. The tunnel itself is extended all the way to the map's edge.

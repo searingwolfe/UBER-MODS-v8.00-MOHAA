@@ -126,9 +126,12 @@ bomb:
 	local.bomb gravity level.bomberplane_bombgravity
 	local.bomb.velocity = ( (self.velocity[0] * level.bomberplane_bombspeed) (self.velocity[1] * level.bomberplane_bombspeed) (self.velocity[2] * level.bomberplane_bombspeed) )
 
-	wait 0.5
-	local.bomb solid
-	local.bomb waittill touch
+	local.hitthing = self
+	while(local.hitthing == self)
+	{
+		local.bomb waittill touch
+		local.hitthing = parm.other
+	}
 	
 	local.origin = local.bomb.origin
 	local.bomb explode

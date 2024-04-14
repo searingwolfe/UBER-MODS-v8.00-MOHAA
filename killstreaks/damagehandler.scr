@@ -1,7 +1,7 @@
 main local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.entity:
 
 	// only for killing train riders in M2L3.
-	if((getcvar("mapname") == "m2l3") && (local.entity.targetname == "train_drivershot_1" || local.entity.targetname == "train_drivershot_2" || local.entity.targetname == "choochoo_trigger") && local.inflictor != NULL && local.entity.train != NULL) { local.entity.shooter = local.inflictor; end }
+	if((getcvar("mapname") == "m2l3") && (local.entity.targetname == "train_drivershot_1" || local.entity.targetname == "train_drivershot_2" || local.entity.targetname == "choochoo_trigger") && local.inflictor != NULL) { local.entity.shooter = local.inflictor; end }
 
 //-----------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ main local.target local.inflictor local.damage local.position local.direction lo
 	if((local.entity.targetname == "flak88_healthtrig" || local.entity.targetname == "nebelwerfer_healthtrig") && local.inflictor != NULL) { local.entity.shooter = local.inflictor; end }
 
 	// give score to players who destroy vehicles/tanks with players riding in them, using explosives of various types.
-	if((local.entity.classname == DrivableVehicle || local.entity.classname == VehicleTank) && local.inflictor != NULL && local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1")) { local.entity.shooter = local.inflictor; end }
+	if((local.entity.classname == DrivableVehicle || local.entity.classname == VehicleTank) && local.inflictor != NULL && (local.entity.driver == NIL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1")))) { local.entity.shooter = local.inflictor; end }
 
 //-----------------------------------------------------------------------------
 
