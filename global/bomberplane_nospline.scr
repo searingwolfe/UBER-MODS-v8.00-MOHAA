@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////
+
 //*** --------------------------------------------
 //*** "Bomber Plane Airstrikes" - No spline path (path is randomized)
 //*** --------------------------------------------
@@ -148,7 +148,7 @@ dropbombs local.bombs local.bombswait local.offtime local.noprint local.playerow
 	wait local.bombswait
 	if(local.noprint == 1)
 	{
-		for(local.t = 1; local.t <= local.offtime; local.t++) { wait 0.1 } // ensures that every 2 planes' bombs drop in different locations
+		for(local.t = 1; local.t <= local.offtime; local.t++) { wait .1 } // ensures that every 2 planes' bombs drop in different locations
 	}
 
 	local.b = 0
@@ -156,7 +156,7 @@ dropbombs local.bombs local.bombswait local.offtime local.noprint local.playerow
 	{
 		self thread bomb local.playerowner
 		local.b++
-		wait 0.2
+		wait .2
 	}
 end
 
@@ -227,7 +227,7 @@ bomb local.playerowner:
 		}
 	}
 
-	if(self != NULL && vector_length(self.origin - local.boom.origin) <= 600) { self nodamage; local.nodamage = 1 }
+	if(self != NULL && vector_length(local.boom.origin - self.origin) <= 600) { self nodamage; local.nodamage = 1 }
 	local.boom playsound artyexp_sand
 
 	waitframe
@@ -333,7 +333,7 @@ plane_explode_null:
 
 	if(local.model == "models/vehicles/c47fly.tik") { local.expscale = 3.00 * local.scale }
 	else { local.expscale = 1.50 * local.scale }
-	if(local.expscale < 0.6) { local.expscale = 0.6 }
+	if(local.expscale < .6) { local.expscale = .6 }
 
 	local.Exp = spawn "emitters/mortar_higgins.tik"
 	local.Exp.origin = local.origin
@@ -353,7 +353,7 @@ plane_explode_null:
 
 	local.Exp anim start
 	local.Exp2 anim start
-	wait 0.1
+	wait .1
 	local.Exp remove	
 	local.Exp2 remove
 end
@@ -379,19 +379,19 @@ cache_plane_explodestuff:
 	exec global/aliascache_triggersounds.scr arty_exp_sand
 
 	local.master = spawn scriptmaster
-	local.master aliascache explodeplane1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
-	local.master aliascache explodeplane2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
-	local.master aliascache explodeplane3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
-	local.master aliascache explodeplane4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
-	local.master aliascache explodeplane5 sound/weapons/explo/Explo_MetalMed5.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps level.mapname
-	local.master aliascache leadinmp2 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps level.mapname
+	local.master aliascache explodeplane1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explodeplane5 sound/weapons/explo/Explo_MetalMed5.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache leadinmp2 sound/weapons/explo/Exp_LeadIn_07.wav soundparms .8 .2 .7 .5 160 3000 auto loaded maps level.mapname
 
 	if(level.scriptmaster[arty_exp_sand] != 1)
 	{
-		local.master aliascache artyexp_sand1 sound/weapons/explo/exp_dirt_01.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
-		local.master aliascache artyexp_sand2 sound/weapons/explo/exp_dirt_02.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
-		local.master aliascache artyexp_sand3 sound/weapons/explo/exp_dirt_03.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
-		local.master aliascache artyexp_sand4 sound/weapons/explo/exp_dirt_04.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_sand1 sound/weapons/explo/exp_dirt_01.wav soundparms .8 .3 .7 .4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_sand2 sound/weapons/explo/exp_dirt_02.wav soundparms .8 .3 .7 .4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_sand3 sound/weapons/explo/exp_dirt_03.wav soundparms .8 .3 .7 .4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_sand4 sound/weapons/explo/exp_dirt_04.wav soundparms .8 .3 .7 .4 1000 8000 weapon loaded maps level.mapname
 	}
 
 	cache models/ammo/us_bomb.tik
@@ -399,6 +399,9 @@ cache_plane_explodestuff:
 	cache models/emitters/plane_smoke.tik
 	cache models/emitters/mortar_dirt_nosound.tik
 	cache models/emitters/mortar_higgins.tik
+	cache models/vehicles/c47fly.tik
+	cache models/vehicles/p47fly.tik
+	cache models/vehicles/fockwulffly.tik
 
 	level.scriptmaster_bomberplane = 1
 end
