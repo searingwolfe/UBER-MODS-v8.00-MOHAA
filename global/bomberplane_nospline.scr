@@ -227,14 +227,14 @@ bomb local.playerowner:
 		}
 	}
 
-	if(self != NULL && vector_length(self.origin - local.boom.origin) <= 500) { self nodamage; self.nodamage = 1 }
+	if(self != NULL && vector_length(self.origin - local.boom.origin) <= 600) { self nodamage; local.nodamage = 1 }
 	local.boom playsound artyexp_sand
 
 	waitframe
-	if(local.blewup == 1) { radiusdamage local.boom.origin 300 600 }
+	if(local.blewup == 1 && local.nodamage != 1) { radiusdamage local.boom.origin 300 600 }
 	local.boom remove
 	local.bomb remove
-	if(self != NULL && self.nodamage == 1) { self takedamage }
+	if(self != NULL && local.nodamage == 1) { self takedamage }
 end
 
 bombtwist:
