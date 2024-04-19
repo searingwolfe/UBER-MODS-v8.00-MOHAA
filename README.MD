@@ -819,6 +819,7 @@ v7.95 (4-14-2023): - Various player-damaging scripts modified for giving scorepo
 - Bangalore wall bombs & Radiobomb Walkies also give kills/scorepoints to the player that triggered them.
 
 - Ensured that players cannot attempt to get into vehicles whose passenger seats are all occupied.
+- Passengers in vehicles/boats that are auto-exited by drivers getting out of them will also be checked if they're stuck in a wall. If so, the script respawns the passengers.
 - Improved player reset threads when exiting vehicles/tanks/boats to better avoid players getting stuck in them when on sharply-angled sloped terrain.
 
 - Vehicle/tank "_trig" triggers are now glued to their vehicles/tanks, so vehicles/tanks and their triggers are at the exact same origin initially.
