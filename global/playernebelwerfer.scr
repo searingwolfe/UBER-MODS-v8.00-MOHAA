@@ -105,7 +105,7 @@ end
 shooter_NIL:
 
 	waitframe
-	self.shooter = NIL
+	if(self != NULL) { self.shooter = NIL }
 end
 
 playergetin_nebel:
@@ -325,20 +325,20 @@ end
 fire_nebel:
 
 	self playsound nebelwerfer_launch
-	for(local.c = 0; local.c < 15; local.c++) // wait 0.75
+	for(local.c = 0; local.c < 15; local.c++) // wait .75
 	{
 		if(self == NULL || self.dead == 1) { break }
-		wait 0.05
+		wait .05
 	}
 end
 
 projectile:
 
 	local.player = self.wplayer // used for the for-loop later
-	local.fwd_vec = angles_toforward self.angles // fwd_vec[2] = 0 when player looks horizontal, -0.999 looking down, 0.999 looking up
+	local.fwd_vec = angles_toforward self.angles // fwd_vec[2] = 0 when player looks horizontal, -.999 looking down, .999 looking up
 	local.horizontaldist = local.fwd_vec[2] * 75
 	local.verticalboost = local.fwd_vec[2] * 40
-	if(local.fwd_vec[2] < 0) { local.horizontaldist = local.fwd_vec[2] * -1 } // horizontaldist = 0.999 looking down, 0.999 looking up
+	if(local.fwd_vec[2] < 0) { local.horizontaldist = local.fwd_vec[2] * -1 } // horizontaldist = .999 looking down, .999 looking up
 
 	local.PI = 3.14159265359
 	local.degrees = self.angles[1]
@@ -500,7 +500,7 @@ ImDead:
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = self.origin
 	local.debris notsolid
-	local.debris.scale = 0.8
+	local.debris.scale = .8
 	local.debris anim start
 
 	if(self.nebelwerfer.wplayer != NIL)
@@ -585,7 +585,7 @@ if(level.mapname != "m1l1" && level.mapname != "m3l3" && level.mapname != "m5l1a
 }
 if(level.scriptmaster_sndmove != 1)
 {
-	local.master aliascache snd_move sound/null.wav soundparms 0.4 0.2 0.9 0.2 160 1600 auto loaded maps level.mapname
+	local.master aliascache snd_move sound/null.wav soundparms .4 .2 .9 .2 160 1600 auto loaded maps level.mapname
 }
 level.scriptmaster_sndmove = 1
 end
