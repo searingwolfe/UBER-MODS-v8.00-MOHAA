@@ -889,14 +889,14 @@ v7.955 (5-28-2024): - More improvements in adminstuff.scr to prevent "stufftext"
 	- Before any bomberplane.scr or bomberplane_nospline.scr script runs, add a level.water_volumes array in the map script (example below) and add origin, setsize1, setsize2 (similar to triggers).
 	- Water volumes added to mohdm4, obj_team4, M2L2A, M2L2B, M2L2C, M3L1A, M3L1B.
 
-		water_volumes: // these are for any airstrikes that drop bombs into the ocean.
+			water_volumes: // these are for any airstrikes that drop bombs into the ocean.
 
-			level.water_volumes = makeArray // from dm/mohdm4
-				( 1407 799 32 ) ( -3039 -1654 -1000 ) ( 1920 0 10 ) // origin, setsize1, setsize2.
-				( -1632 -855 32 ) ( -8000 0 -1000 ) ( 0 3355 10 )
-				( -6050 2500 32 ) ( -8000 0 -1000 ) ( 0 8000 10 )
-			endArray
-		end
+				level.water_volumes = makeArray // from dm/mohdm4
+					( 1407 799 32 ) ( -3039 -1654 -1000 ) ( 1920 0 10 ) // origin, setsize1, setsize2.
+					( -1632 -855 32 ) ( -8000 0 -1000 ) ( 0 3355 10 )
+					( -6050 2500 32 ) ( -8000 0 -1000 ) ( 0 8000 10 )
+				endArray
+			end
 
 - Modders can now assign UBER gametypes for different maps in a single map rotation (in global/uberversion.scr), but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
 
