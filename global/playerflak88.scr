@@ -146,7 +146,7 @@ playergetin_flak:
 		local.flakangles = self.flak88.angles
 		local.lookangles = self.flak88.fplayer.viewangles
 
-		if(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.fireheld == 1 && self.flak88.fplayer.secfireheld != 1 && self.flak88.flakfiredelay != 0)
+		if(self.flak88.fplayer.fireheld == 1 && self.flak88.fplayer.secfireheld != 1 && self.flak88.flakfiredelay != 0)
 		{
 			self.flak88.fplayer playsound flak_snd_fire
 			self.flak88 playsound flak_reload
@@ -211,7 +211,6 @@ playergetin_flak:
 		}
 		if(self.flak88 != NULL && self.flak88.dead != 1 && (self.flak88.fplayer == NIL || self.flak88.fplayer == NULL))
 		{
-			self.flak88.fplayer forcetorsostate STAND
 			self.flak88.fplayer = NIL
 			self.flak88 thread ResetFlak local.groundtarget
 			self remove
@@ -364,7 +363,7 @@ ImDead:
 	local.explode anim start
 	local.explode notsolid
 	
-	local.debris = spawn script_model
+	local.debris = spawn script_model targetname "mortar_dirt_nosound"
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = self.origin
 	local.debris notsolid

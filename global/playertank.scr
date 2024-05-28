@@ -463,7 +463,7 @@ tankdeath:
 	self thread kill_riders
 	self.driver = NIL
 
-	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer } // ensures that the turretplayer is alaways detached after tank dies
+	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer 1 } // ensures that the turretplayer is alaways detached after tank dies
 
 	if(self.gun != NIL && self.gun != NULL) { self.gun remove }
 	if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 remove }
@@ -479,7 +479,7 @@ tankdeath:
 	local.boom anim start
 	local.boom notsolid
 
-	local.debris = spawn script_model
+	local.debris = spawn script_model targetname "mortar_dirt_nosound"
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = local.destank.origin
 	local.debris.scale = 1.0
@@ -615,7 +615,7 @@ turretslot_2nd local.player:
 	}
 end
 
-turretplayer_reset local.team local.player:
+turretplayer_reset local.team local.player local.dead:
 
 	if(local.player == NIL || local.player == NULL) // if turret player left the game
 	{
@@ -634,6 +634,7 @@ turretplayer_reset local.team local.player:
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
 	local.player forcetorsostate STAND
+	local.player takedamage // this prevents a rare bug that kept the turret player from ever dying again (player is somehow, but only sometimes given "nodamage"?)
 
 	if(isalive local.player && local.player.dmteam != "spectator")
 	{
@@ -649,19 +650,12 @@ turretplayer_reset local.team local.player:
 	self.gun2 lock
 	self.turretplayer = NIL
 
-	local.PI = 3.14159265359
-	local.degrees = self.angles[1] + 180
-	if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
-	local.radians = local.degrees * (local.PI / 180)
-	local.sin = (sin local.radians) * 100
-	local.cos = (cos local.radians) * 100
-
 	if(local.player.dmteam != local.team && local.player.dmteam != "spectator") { local.player respawn }
 	else { local.player.viewangles = ( self.gun.angles[0] self.gun.angles[1] 0 ) }
 
-	if(local.player.dmteam == local.team) { local.player.origin = self.origin + ( local.cos local.sin 200 ) }
+	if(local.player.dmteam == local.team) { local.player.origin = self.origin + self.forwardvector * -100 + (angles_toup self.angles * 200) }
 
-	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver))
+	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver) || local.dead == 1)
 	{
 		if(self != NULL && self.shooter != NIL)
 		{

@@ -172,14 +172,14 @@ playergetin_nebel:
 		local.nebelangles = self.nebelwerfer.angles
 		local.lookangles = self.nebelwerfer.wplayer.viewangles
 
-		if(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer && self.nebelwerfer.wplayer.fireheld == 1 && self.nebelwerfer.wplayer.secfireheld != 1 && self.nebelwerfer.nebelfiredelay != 0 && self.nebelwerfer.wplayer.health > 0)
+		if(self.nebelwerfer.wplayer.fireheld == 1 && self.nebelwerfer.wplayer.secfireheld != 1 && self.nebelwerfer.nebelfiredelay != 0)
 		{
 			self.nebelwerfer thread reload_nebel
 			self.nebelwerfer thread projectile
 			self.nebelwerfer waitthread fire_nebel
 		}
 
-		if(self.nebelwerfer.wplayer.driving_state_jump == 1) // Press JUMP to exit.
+		if(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer &&self.nebelwerfer.wplayer.driving_state_jump == 1) // Press JUMP to exit.
 		{
 			self.nebelwerfer.wplayer.origin = self.nebelwerfer.origin + ( 0 0 85 )
 			self.nebelwerfer.wplayer.viewangles = ( self.nebelwerfer.angles[0] self.nebelwerfer.angles[1] 0 )
@@ -242,7 +242,6 @@ playergetin_nebel:
 		}
 		if(self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && (self.nebelwerfer.wplayer == NIL || self.nebelwerfer.wplayer == NULL))
 		{
-			self.nebelwerfer.wplayer forcetorsostate STAND
 			self.nebelwerfer.wplayer = NIL
 			self.nebelwerfer thread ResetNebel
 			self.nebelwerfer thread reload_nebel_auto
@@ -496,7 +495,7 @@ ImDead:
 	local.explode anim start
 	local.explode notsolid
 	
-	local.debris = spawn script_model
+	local.debris = spawn script_model targetname "mortar_dirt_nosound"
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = self.origin
 	local.debris notsolid

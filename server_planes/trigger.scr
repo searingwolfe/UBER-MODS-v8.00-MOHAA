@@ -1,7 +1,7 @@
 main local.origin local.team local.scale local.modelpair local.start_pos:
 
 	if(level.planes == NIL) { exec server_planes/setup.scr }
-	if(local.origin == NIL) { wait 1; println "ERROR server_planes/trigger.scr: No origin specified."; end }
+	if(local.origin == NIL) { wait 1; println("----- ERROR server_planes/trigger.scr: 'origin' parameter is missing!"); end }
 	if(local.start_pos == NIL) { local.start_pos = local.origin + ( 0 0 500 ) }
 	if(local.team == NIL)
 	{
@@ -56,7 +56,7 @@ main local.origin local.team local.scale local.modelpair local.start_pos:
 	local.plane_trig.team = local.team
 	local.plane_trig.modelpair = local.modelpair
 	
-	local.plane_trig_shot = spawn trigger_multiple "spawnflags" "128"  "targetname" ("plane_shottrigger" + local.team + local.modelpair)
+	local.plane_trig_shot = spawn trigger_multiple "spawnflags" "128" "targetname" ("plane_shottrigger" + local.team + local.modelpair)
 	local.plane_trig_shot.origin = local.origin 
 	local.plane_trig_shot setthread shot
 	local.plane_trig_shot setsize ( -40 -40 -40 ) ( 40 40 40 ) 

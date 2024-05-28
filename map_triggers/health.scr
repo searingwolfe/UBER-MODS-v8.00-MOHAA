@@ -40,12 +40,13 @@ local.trig = spawn trigger_use
 local.trig.origin = level.spot_health[local.random]
 local.trig setsize ( -30 -30 -20 ) ( 30 30 50 )
 //local.trig message "*** Gained +200 health... ****"
-local.trig setthread health-start
+local.trig setthread health_give
 local.trig.pickedup = 0
 
 exec global/flickerrotate.scr health_boosttrig ( 0 0 .85 ) 50 5 5 15
 wait 1
 exec global/flickerrotate.scr health_boosttrig_2 ( 0 .85 0 ) 100 5 15 5 1
+thread glue local.trig local.marker local.marker2 local.random
 
 while(1)
 {
@@ -70,6 +71,7 @@ while(1)
 		local.marker.origin = level.spot_health[local.random] + ( 0 0 10 )
 		local.marker2.origin = level.spot_health[local.random]
 		local.trig.origin = level.spot_health[local.random]
+		local.trig.int = local.random
 	}
 
 	wait 0.1
@@ -79,24 +81,35 @@ while(1)
 }
 end
 
+glue local.trig local.model1 local.model2 local.r:
 
-health-start:
-local.player = parm.other
+	local.trig.int = local.r
+	while(1)
+	{
+		local.trig.origin = level.spot_health[local.trig.int]
+		local.model1.origin = level.spot_health[local.trig.int]
+		local.model2.origin = level.spot_health[local.trig.int]
+		waitframe
+	}
+end
 
-if(local.player.dead == 1)
-{
-	self.pickedup = 0
-	self message ""
-	end
-}
-self.pickedup = 1
-self message "*** Gained +200 health... ****"
+health_give:
 
-local.player volumedamage -200
-local.player stufftext "say *** Gained +200 Health!!! ***"
-local.player playsound healingnoise
-local.player playsound healingnoise2
-self triggerable
+	local.player = parm.other
+	if(local.player.dead == 1)
+	{
+		self.pickedup = 0
+		self message ""
+		end
+	}
+	self.pickedup = 1
+	self message "*** Gained +200 health... ****"
+
+	local.player volumedamage -200
+	local.player stufftext "say *** Gained +200 Health!!! ***"
+	local.player playsound healingnoise
+	local.player playsound healingnoise2
+	self triggerable
 end 
 
 Rotatex:

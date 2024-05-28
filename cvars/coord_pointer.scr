@@ -91,13 +91,24 @@ give_player_pointer:
 				{
 					local.string = ("( " + int(local.pointer.origin[0]) + " " + int(local.pointer.origin[1]) + " " + int(local.pointer.origin[2]) + " ) " + int(local.angles[1]))
 				}
-				self iprint local.string
-				println(local.string)
 
-				local.file = fopen "main/cvars/coords.txt" "a+"
-				local.return = fseek local.file 0 2
-				local.result = fputs local.file (local.string + "\n")
-				local.result = fclose local.file
+				if(self.leanleftheld == 1 || self.leanrightheld == 1)
+				{
+					self tele local.pointing_target
+					self iprint ("Teleporting to: " + local.string)
+				}
+				else
+				{
+					self iprint local.string
+					println(local.string)
+
+					local.ret = fexists "main/cvars/coords.txt"
+					if(local.ret != 1) { local.result = fnewdir "main/cvars" }
+					local.file = fopen "main/cvars/coords.txt" "a+"
+					local.return = fseek local.file 0 2
+					local.result = fputs local.file (local.string + "\n")
+					local.result = fclose local.file
+				}
 
 				self.coord_pointer_printed = 1
 				local.origin_old = local.pointer.origin

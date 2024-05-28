@@ -483,7 +483,6 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-
 vehicle_convoy local.wait:
 
 	exec global/aliascache_triggersounds.scr truck_sounds
@@ -604,6 +603,28 @@ vehicle_convoy local.wait:
 		if(local.turret != NIL) { local.turret remove }
 		//println("----- Vehicle Convoy has ended.")
 	}
+
+	thread remove_splinepath $pathintro1
+	thread remove_splinepath $pathintro2
+	thread remove_splinepath $pathintro3
+end
+
+remove_splinepath local.node:
+
+	for(local.c = 1; local.c <= 999; local.c++)
+	{
+		if(local.node != NULL)
+		{
+			if($(local.node.target) != NULL)
+			{
+				local.old = local.node
+				local.node = $(local.node.target)
+				local.old remove
+				local.c = 1
+			}
+			else { local.node remove }
+		}
+	}
 end
 
 truckhorn:
@@ -693,9 +714,9 @@ glueturret local.tank:
 			self rotatey -1.7
 			self.angles = ( local.tank.angles[0] self.angles[1] local.tank.angles[2] )
 		}
-		if(self.origin[1] < $d32.origin[1]) 
+		if(self.origin[1] < -3722) 
 		{
-			if(self.angles[1] >= $d34.angles[1]) { break }
+			if(self.angles[1] >= 255) { break }
 			self rotatey 25
 		}
 		waitframe
@@ -787,7 +808,7 @@ vehicle_tele local.distance:
 	for(local.e = 0; local.e <= 868; local.e++)
 	{
 		local.entity = getentity(local.e)
-		if(local.entity != NULL && local.entity.classname == DrivableVehicle && (local.entity.model == "models/vehicles/opeltruck.tik" || local.entity.model == "models/vehicles/opeltruckgreen.tik" || local.entity.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.entity.model == "models/vehicles/sdkfz.tik" || local.entity.model == "models/vehicles/sdkfz_afrika.tik"))
+		if(local.entity != NULL && (local.entity.classname == VehicleTank || (local.entity.classname == DrivableVehicle && local.entity.model != "models/vehicles/bmwbike.tik")))
 		{
 			local.vehicles[local.a] = local.entity.targetname
 			local.a++
@@ -1535,6 +1556,9 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/tele.scr ( -2951 -1719 279 ) ( -2842 -1696 290 ) 1
 
 	exec map_triggers/tele.scr ( -7408 2352 640 ) ( -7447 2352 640 ) 1
+
+	exec map_triggers/tele.scr ( -5681 997 668 ) ( -5680 1042 588 ) 1
+	exec map_triggers/tele.scr ( -5681 1136 588 ) ( -5680 1174 756 ) 0
 }
 end
 
@@ -2496,13 +2520,15 @@ consoleprint:
 
 	local.maxclients = int(getcvar(sv_maxclients))
 	local.nullent = 0
+	local.e = 0
 	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
 	{
 		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
-		if(local.entity != NULL && local.i >= 725) { local.warning = 1 }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
 	}
 	if(local.entity == NULL) // if entity 868 = NULL
 	{
@@ -2517,7 +2543,7 @@ consoleprint:
 	if(local.warning == 1)
 	{
 		wait 1
-		println("----- WARNING: Keep below 725 entities on SP maps for Reborn servers!")
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
 end

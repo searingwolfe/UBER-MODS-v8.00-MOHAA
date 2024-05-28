@@ -167,9 +167,12 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 
 			for(local.i = 1; local.i <= $player.size; local.i++)
 			{
-				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self)
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self && $player[local.i].passenger != 1)
 				{
-					self.passengers damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					for(local.i = 1; local.i <= self.passengers.size; local.i++)
+					{
+						self.passengers[local.i] damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
 				}
 			}
 		}
@@ -205,7 +208,19 @@ triggered:
 	{
 		if(self.vehicle.driver != NIL)
 		{
-			if(self.vehicle.gun != NIL && self.vehicle.gun != NULL && (self.vehicle.turretplayer == NIL || self.vehicle.turretplayer == NULL)) { self.vehicle thread turretslot local.player; end }
+			if(self.vehicle.gun != NIL && self.vehicle.gun != NULL && (self.vehicle.turretplayer == NIL || self.vehicle.turretplayer == NULL))
+			{
+				if(local.player.isdog != 1)
+				{
+					self.vehicle thread turretslot local.player
+					end
+				}
+				else if(self.vehicle.passengers.size >= self.vehicle.seats)
+				{
+					local.player iprint ("Dogs cannot use vehicle turrets.")
+					end
+				}
+			}
 			if(self.vehicle.passengers.size < self.vehicle.seats) { self.vehicle thread passengers }
 		}
 		if(self.vehicle.driver == NIL)
@@ -459,7 +474,7 @@ vehicledeath:
 	self thread kill_riders
 	self.driver = NIL
 
-	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer } // ensures that the turretplayer is alaways detached after vehicle dies
+	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer 1 } // ensures that the turretplayer is alaways detached after vehicle dies
 
 	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
 	if(self.gun != NIL && self.gun != NULL) { self.gun remove }
@@ -475,7 +490,7 @@ vehicledeath:
 	local.boom anim start
 	local.boom notsolid
 
-	local.debris = spawn script_model
+	local.debris = spawn script_model targetname "mortar_dirt_nosound"
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = local.desvehicle.origin
 	local.debris.scale = 0.8
@@ -609,7 +624,7 @@ turretslot local.player:
 	}
 end
 
-turretplayer_reset local.team local.player:
+turretplayer_reset local.team local.player local.dead:
 
 	if(local.player == NIL || local.player == NULL) // if turret player left the game
 	{
@@ -627,6 +642,7 @@ turretplayer_reset local.team local.player:
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
 	local.player forcetorsostate STAND
+	local.player takedamage // this prevents a rare bug that kept the turret player from ever dying again (player is somehow, but only sometimes given "nodamage"?)
 
 	if(isalive local.player && local.player.dmteam != "spectator")
 	{
@@ -640,21 +656,15 @@ turretplayer_reset local.team local.player:
 	self.gun lock
 	self.turretplayer = NIL
 
-	local.PI = 3.14159265359
-	local.degrees = self.angles[1] + 180
-	if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
-	local.radians = local.degrees * (local.PI / 180)
-	local.sin = (sin local.radians) * 100
-	local.cos = (cos local.radians) * 100
 	if(self.model == "models/vehicles/jeep.tik") { local.outheight = 100 }
 	else { local.outheight = 180 }
 
 	if(local.player.dmteam != local.team && local.player.dmteam != "spectator") { local.player respawn }
 	else { local.player.viewangles = ( self.gun.angles[0] self.gun.angles[1] 0 ) }
 
-	if(local.player.dmteam == local.team) { local.player.origin = self.origin + ( local.cos local.sin local.outheight ) }
+	if(local.player.dmteam == local.team) { local.player.origin = self.origin + self.forwardvector * -100 + (angles_toup self.angles * local.outheight) }
 
-	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver))
+	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver) || local.dead == 1)
 	{
 		if(self != NULL && self.shooter != NIL)
 		{
@@ -766,13 +776,11 @@ passengers:
 			local.player forcetorsostate STAND
 			if(self != NULL && self.model == "models/vehicles/jeep.tik" && self.turretplayer != NIL && self.turretplayer != NULL)
 			{
-				local.sin = local.sin / local.distoffset * 25 // prevent passengers exiting a jeep from getting stuck inside a turretplayer
-				local.cos = local.cos / local.distoffset * 25
-				local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )		
+				local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s] * 1.5) + (angles_toup self.angles * local.outheight)
 			}
 			else  // using player's origin prevents passengers getting stuck inside each other
 			{
-				local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) )
+				local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight)
 			}
 			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
@@ -806,7 +814,8 @@ passengers:
 				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units
 				local.cos = local.cos / local.distoffset * 25
 	
-				local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )
+				if(self != NULL) { local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight) }
+				else { local.player.origin += ( local.cos local.sin local.outheight ) }
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 				local.player thread wallstuck_fix
 	
@@ -1486,11 +1495,11 @@ if(level.vehiclescriptmaster2 != 1 && level.scriptmaster[truck_sounds] != 1 && l
 	local.master aliascache light_switch sound/items/hit_notify.wav soundparms 1.5 0 1 0 320 2200 auto loaded maps level.mapname	
 }
 
-if(level.vehiclescriptmastergun != 1 && (local.model == "models/vehicles/jeep.tik" || local.model == "models/vehicles/sdkfz.tik" || local.model == "models/vehicles/sdkfz_afrika.tik"))
+if(level.vehiclescriptmaster3 != 1)
 {
 	local.master aliascache sndfire30cal sound/weapons/fire/50CalFire2.wav soundparms 1.05 .2 .95 .1 800 4000 weapon loaded maps level.mapname
-	level.vehiclescriptmastergun = 1
 }
 
 level.vehiclescriptmaster2 = 1
+level.vehiclescriptmaster3 = 1
 end

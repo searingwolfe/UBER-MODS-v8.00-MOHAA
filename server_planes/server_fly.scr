@@ -19,7 +19,6 @@ main local.modelpair:
 	self.flying = 1
 	self.flying_init = 1
 	self takedamage
-	self.drivingent = self
 
 	local.team = self.dmteam
 	self.modelpair = local.modelpair
@@ -67,6 +66,8 @@ main local.modelpair:
 
 	//spawn the plane
 	local.plane = spawn script_model "targetname" ("flyingplane" + self.entnum)
+	local.plane.origin = self.plane_start
+	local.plane.scale = self.scale
 	self.flying_init = 0
 
 	if(local.modelpair != 1 && local.modelpair != 2) // default
@@ -89,9 +90,6 @@ main local.modelpair:
 
 	if(self.dmteam == "axis") { local.plane light 1 0 0 local.radius }
 	else { local.plane light 0 0 1 local.radius }
-
-	local.plane.origin = self.plane_start
-	local.plane.scale = self.scale
 
 	if(self.seat == NIL || local.plane.scale != self.oldplane_scale)
 	{
@@ -159,15 +157,14 @@ main local.modelpair:
 	local.plane.angles = self.viewangles
 //main loop
 	self exec server_planes/plane_crash.scr::plane_crash
-	self exec server_planes/damage.scr::shotdown_setup //setup shot by trigger
+	self waitexec server_planes/damage.scr::shotdown_setup //setup shot by trigger
+
+	self.drivingent = $("planehit" + self.entnum)
 
 	local.plane loopsound fly_snd
-
-	
 	//self exec server_planes/avatar.scr
 
 	self.z = 0
-
 	while(isalive self && self.dmteam == local.team && self.ejecting != 1 && self.flying == 1 && local.plane != NIL && local.plane != NULL && level.change_team_score != 1)
 	{
 		if(self==NIL || self==NULL)
@@ -285,8 +282,7 @@ main local.modelpair:
 		{
 			if(local.origin == self.origin)
 			{
-				self exec server_planes/plane_crash.scr::plane_explode
-				self.drivingent = NIL
+				self exec server_planes/plane_crash.scr::plane_explode local.plane.scale
 				killent self.entnum
 				end
 			}

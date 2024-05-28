@@ -4,6 +4,19 @@
 
 main local.path local.team local.planes local.offtime local.bombs local.bombswait local.end local.noprint:
 
+	if(level.water_volumes != NIL && level.water_volumes.size >= 1)
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			if(level.water_volumes[local.v][1][2] == NIL) { println("----- ERROR bomberplane.scr: level.water_volumes[" + local.v + "] has an invalid origin parameter!"); local.e = 1 }
+			if(level.water_volumes[local.v][2][2] == NIL) { println("----- ERROR bomberplane.scr: level.water_volumes[" + local.v + "] has an invalid setsize1 parameter!"); local.e = 1 }
+			if(level.water_volumes[local.v][2][0] > 0 || level.water_volumes[local.v][2][1] > 0 || level.water_volumes[local.v][2][2] > 0) { println("----- ERROR bomberplane.scr: level.water_volumes[" + local.v + "] has a setsize1 value > 0!"); local.e = 1 }
+			if(level.water_volumes[local.v][3][2] == NIL) { println("----- ERROR bomberplane.scr: level.water_volumes[" + local.v + "] has an invalid setsize2 parameter!"); local.e = 1 }
+			if(level.water_volumes[local.v][3][0] < 0 || level.water_volumes[local.v][3][1] < 0 || level.water_volumes[local.v][3][2] < 0) { println("----- ERROR bomberplane.scr: level.water_volumes[" + local.v + "] has a setsize2 value < 0!"); local.e = 1 }
+		}
+	}
+	if(local.e == 1) { end }
+
 	if(local.path == NIL) { wait 1; println("----- ERROR bomberplane.scr: parameters are missing!"); end }
 	if($(local.path) == NULL) { wait 1; println("----- ERROR bomberplane.scr: $" + local.path + " does not exist!"); end }
 	if(int(local.planes) < 0) { local.planes = local.planes * -1 }
@@ -135,15 +148,35 @@ bomb:
 	local.origin = local.bomb.origin
 	local.bomb explode
 
-	local.boom = spawn script_model
-	local.boom model emitters/mortar_dirt_nosound.tik // emitters/fx_explosion_mine.tik
+	if(level.water_volumes != NIL && level.water_volumes != 0)
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.hit_water = 1
+			}
+		}
+	}
+
+	local.boom = spawn script_model targetname "mortar_dirt_nosound"
+	if(local.hit_water == 1) { local.boom model animate/fx_mortar_water.tik }
+	else { local.boom model emitters/mortar_dirt_nosound.tik } // emitters/fx_explosion_mine.tik
 	local.boom.origin = local.origin
 	local.boom.scale = 1.5 // = 1 if using fx_explosion_mine.tik
 	local.boom anim start
 	local.boom light 1 0 0 500
 
 	if(self != NULL && vector_length(local.boom.origin - self.origin) <= 600) { self nodamage; local.nodamage = 1 }
-	local.boom playsound artyexp_sand
+	if(local.hit_water == 1) { local.boom playsound artyexp_water }
+	else { local.boom playsound artyexp_sand }
 
 	waitframe
 	if(local.nodamage != 1) { radiusdamage local.boom.origin 300 600 }
@@ -296,6 +329,12 @@ cache_plane_explodestuff:
 		local.master aliascache artyexp_sand2 sound/weapons/explo/exp_dirt_02.wav soundparms .8 .3 .7 .4 1000 8000 weapon loaded maps level.mapname
 		local.master aliascache artyexp_sand3 sound/weapons/explo/exp_dirt_03.wav soundparms .8 .3 .7 .4 1000 8000 weapon loaded maps level.mapname
 		local.master aliascache artyexp_sand4 sound/weapons/explo/exp_dirt_04.wav soundparms .8 .3 .7 .4 1000 8000 weapon loaded maps level.mapname
+	}
+	if(level.scriptmaster[arty_exp_water] != 1)
+	{
+		local.master aliascache artyexp_water1 sound/weapons/explo/exp_water_01.wav soundparms 1.0 0.2 0.8 0.4 1000 8000 weapon loaded maps level.mapname	
+		local.master aliascache artyexp_water2 sound/weapons/explo/exp_water_02.wav soundparms 1.0 0.2 0.8 0.4 1000 8000 weapon loaded maps level.mapname
+		local.master aliascache artyexp_water3 sound/weapons/explo/exp_water_03.wav soundparms 1.0 0.2 0.8 0.4 1000 8000 weapon loaded maps level.mapname
 	}
 
 	cache models/ammo/us_bomb.tik

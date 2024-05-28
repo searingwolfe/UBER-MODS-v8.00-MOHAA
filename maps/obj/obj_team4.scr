@@ -159,6 +159,7 @@ exec maps/UBER_mapextras/obj4_cratesstuff.scr::barbwire
 level waittill spawn
 
 	thread ambience
+	thread water_volumes
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -216,6 +217,15 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 	endArray
 
 	exec global/ambience_mp.scr sound/amb_stereo/Amb_M5_Field.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+water_volumes: // these are for any airstrikes that drop bombs into the ocean.
+
+	level.water_volumes = makeArray
+		( 1407 799 32 ) ( -3039 -1654 -1000 ) ( 1920 0 10 )
+		( -1632 -855 32 ) ( -8000 0 -1000 ) ( 0 3355 10 )
+		( -6050 2500 32 ) ( -8000 0 -1000 ) ( 0 8000 10 )
+	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////

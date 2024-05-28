@@ -6,13 +6,21 @@
 
 main local.name local.color local.radius local.redflicker local.greenflicker local.blueflicker local.dontspawntrig:
 
+	if($(local.name) == NULL) { wait 1; println("----- ERROR flickerrotate.scr. $" + local.name + " does not exist!"); end }
+
+	local.c = 0
+	while($(local.name) != NULL && $(local.name).size > 1 && local.c < 60) { local.c++; waitframe }
+	if($(local.name) != NULL && $(local.name).size > 1 && local.c >= 60) { wait 1; println("----- ERROR flickerrotate.scr. cannot have > 1 entity named $" + local.name); end }
+	if($(local.name + "_flickertrig") != NULL) { $(local.name + "_flickertrig") remove }
+
    	if(local.dontspawntrig != 1)
    	{
-	local.trig_shot = spawn trigger_multiple spawnflags 128 // only respond to being shot by bullets or explosions.
+	local.trig_shot = spawn trigger_multiple spawnflags 128 targetname (local.name + "_flickertrig") // only respond to being shot by bullets or explosions.
 	local.trig_shot.origin = $(local.name).origin
 	local.trig_shot setsize ( -50 -50 -20 ) ( 50 50 50 ) 
 	local.trig_shot.name = local.name
 	local.trig_shot setthread shot
+	local.trig_shot glue $(local.name)
    	}
 
 	local.r = local.color[0]
@@ -27,9 +35,8 @@ main local.name local.color local.radius local.redflicker local.greenflicker loc
 	local.v[1] = 4
 	local.v[2] = 5
 
-	while(1)
+	while($(local.name) != NULL && $(local.name).size <= 1)
 	{
-	
 		if(local.minues!=1)
 		{
 			local.v[0] ++ 
@@ -61,7 +68,7 @@ main local.name local.color local.radius local.redflicker local.greenflicker loc
 			local.i[1] += local.v[1]
 			local.i[2] += local.v[2]
 
-			if($(local.name) != NULL)
+			if($(local.name) != NULL && $(local.name).size <= 1)
 			{
 				if($(local.name).shot==1) // if trigger is shot at, make angle rotations spin faster.
 				{
@@ -75,15 +82,14 @@ main local.name local.color local.radius local.redflicker local.greenflicker loc
 					if($(local.name).shot2 == 1) { $(local.name) light 1 1 1 local.radius }
 				}
 
-				if(local.dontspawntrig != 1) { local.trig_shot.origin = $(local.name).origin }
-
 				$(local.name).angles = ( local.i[0] local.i[1] local.i[2] )
 
 				if($(local.name).shot2 != 1) { $(local.name) light (randomfloat local.redflicker / 100.00 + local.r) (randomfloat local.greenflicker / 100.00 + local.g) (randomfloat local.blueflicker / 100.00 + local.b) local.radius }
 			}
-			if($(local.name) == NULL) { local.trig_shot remove; end }
+			else { break }
 		}
 	}
+	if(local.trig_shot != NIL && local.trig_shot != NULL) { local.trig_shot remove }
 end
 
 shot: // 2nd model doesn't run this thread, since only one spawnflags 128 trigger was spawned in.

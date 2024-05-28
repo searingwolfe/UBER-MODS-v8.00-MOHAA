@@ -64,7 +64,7 @@ checkhit local.place:
             end //end if same team and team team killing is not on 
          } 
 
-         if(local.player.flying==1 && local.player.plane != NIL && local.player.plane != NULL) 
+         if(local.player.flying == 1 && local.player.plane != NIL && local.player.plane != NULL) 
          { 
 
             if(local.player.plane.scale >= .3) 
@@ -95,9 +95,16 @@ checkhit local.place:
                local.damage = 30 
             } 
 
-         } 
-         else 
-         { 
+         }
+	 else if(local.player.driving == 1 && local.player.drivingent != NIL && local.player.drivingent != NULL && local.player.drivingent.targetname == "nebelwerfer_healthtrig")
+	 {
+		local.damage = 30
+		local.player.drivingent.shooter = self
+		local.player.drivingent damage self local.damage self local.player.drivingent.origin self.forwardvector (0 0 0) 10 1 18 -1
+		local.hit_entity = 1
+	 }
+         else
+         {
             local.hitvec = local.place - local.player.origin 
 
             local.hitvec_fwd = local.hitvec * local.player.forwardvector 
@@ -107,11 +114,11 @@ checkhit local.place:
             local.is_hit_fwd = (abs local.hitvec_fwd) <= 32.0 
             local.is_hit_lf = (abs local.hitvec_lf) <= 32.0 
             local.is_hit_up = local.hitvec_up >= 0.0 && local.hitvec_up <= 92.0 
-            local.damage = 45 
-         } 
+            local.damage = 45
+         }
 
          if(local.is_hit_fwd && local.is_hit_lf && local.is_hit_up && (local.player.dmteam != self.dmteam || getcvar("g_teamdamage") == "1" && getcvar("g_gametype") == "1"))
-         { 
+         {
 		if(local.player.flying != 1 || local.player.turreting == 1)
 		{
 			local.player damage self local.damage self local.player.origin self.forwardvector (0 0 0) 10 1 18 -1
@@ -506,7 +513,7 @@ bang local.place:
 
 	if(self.model == "models/ammo/us_bomb.tik")
 	{
-		local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik"
+		local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik" //targetname "mortar_dirt_nosound"
 		local.Exp4 anim start
 		local.Exp4 playsound artyexp_sand
 	}

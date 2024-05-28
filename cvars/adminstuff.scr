@@ -6,9 +6,9 @@ main:
 //-----------------------------------------------------------------------------
 
 	level.admin_IPs = makeArray	// do not include :port extensions
-		10.1.10.250 		// LAN ip admins
-		10.1.10.251
-		192.192.168.168 	// not-LAN ip admins
+		//10.1.10.250 		// LAN ip admins
+		//10.1.10.251
+		//73.84.96.108 		// not-LAN ip admins
 		// add
 		// more
 		// IPs
@@ -49,153 +49,21 @@ main:
 
 	thread addkills
 	thread adddeaths
+	thread subtractkills
+	thread subtractdeaths
+
+	thread cvar_admin_IPs
+
+	thread file_playernames
+	thread cvar_file_playernames
 
 	local.result = registerev connected cvars/adminstuff.scr::check_player_stufftexts
 	local.result2 = registerev disconnected cvars/adminstuff.scr::date_time_timezone
-end
 
-////////////////////////////////////////////////////////////////////////
-
-samename_fix:
-
-	while($player.size < 2) { waitframe }
-	while($player.size >= 2)
-	{
-		for(local.i = 1; local.i <= $player.size; local.i++)
-		{
-			for(local.p = 1; local.p <= level.admin_IPs.size; local.p++)
-			{
-				if($player[local.i].IP_address_init == level.admin_IPs[local.p][1] || $player[local.i] isadmin == 1)
-				{
-					$player[local.i].admin_name_priority = 1
-				}
-			}
-
-			for(local.j = 1; local.j <= $player.size; local.j++)
-			{
-				if(local.i != local.j && netname $player[local.i] == netname $player[local.j] && $player[local.j].admin_name_priority != 1 && $player[local.j].checking_stufftexts != 1)
-				{
-					local.name = netname $player[local.j]
-					local.name2 = ""
-					local.clientnum = string($player[local.j].entnum + 1)
-
-					if(local.name[local.name.size - 2] != "_" && local.name[local.name.size - 1] != local.clientnum)
-					{
-						$player[local.j] stufftext ("name " + netname $player[local.j] + "_" + local.j)
-						local.name2 = ""
-					}
-					else
-					{
-						for(local.n = 0; local.n < local.name.size - 2; local.n++) { local.name2 += local.name[local.n] }
-						$player[local.j] stufftext ("name " + local.name2)
-						local.name = ""
-					}
-					wait 0.15
-					if(local.j <= $player.size && $player[local.j] != NULL) { $player[local.j] thread cprint local.j local.name local.name2 }
-				}
-			}
-		}
-		wait 0.15 // keeping the loop slow enough so console doesn't print 2 or 3 times.
-	}
-	thread samename_fix
-end
-
-cprint local.i:
-
-	if(self == NULL || self getconnstate == 1 || netname self == local.name || netname self == local.name2) { end }
-
-	if(self.adminstuff_namefix == NIL) { self.adminstuff_namefix = 0 }
-	self.adminstuff_namefix++
-
-	println("----- NAME FIX: $player[" + local.i + "]: " + netname self + ": " + self.adminstuff_namefix)
-	local.attempts = 20
-
-	if(self.adminstuff_namefix > 3) { self iprint ("SAME NAME FIX - Attempts remaining: " + (local.attempts - self.adminstuff_namefix)) 1 }
-	if(self.adminstuff_namefix >= local.attempts)
-	{
-		iprintlnbold("Banning " + netname self + " for changing names to another player's name too many times.")
-		stuffsrv("banip " + self.IP_address_init)
-	}
-end
-
-IP_addresses: // removing the port extension from players' IP addresses
-
-	while($player.size < 1) { waitframe }
-	while($player.size >= 1)
-	{
-		for(local.i = 1; local.i <= $player.size; local.i++)
-		{
-			if($player[local.i].IP_address_init == NIL)
-			{ 
-				local.userinfo = string(getip $player[local.i]) // string characters start at [0]
-				local.ip = ""
-				for(local.u = 0; local.u < local.userinfo.size; local.u++) // save only the IP address into local.ip
-				{
-					if(local.userinfo[local.u] == ":") { local.host = 0; break }
-					local.ip += local.userinfo[local.u]
-				}
-				if(local.host != 0) { local.ip = "localhost" }
-				$player[local.i].IP_address_init = local.ip
-			}
-		}
-		waitframe
-	}
-	thread IP_addresses
-end
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-
-check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
-
-	while(local.player != NULL && local.player.IP_address_init == NIL) { waitframe }
-	if(local.player == NULL || local.player isadmin == 1) { end }
-
-	for(local.p = 1; local.p <= level.admin_IPs.size; local.p++)
-	{
-		if(local.player.IP_address_init == level.admin_IPs[local.p][1]) { end }
-	}
-
-	thread date_time_timezone
-
-	local.player.checking_stufftexts = 1
-	local.name = netname local.player
-	local.n = 0
-
-	while(local.player != NULL && netname local.player == local.name && local.n <= 20)
-	{
-		local.player stufftext ("name " + local.name + "_" + getclientnum local.player)
-		local.n++
-		wait 0.15
-	}
-	if(local.player != NULL && local.player )
-	{
-		if(netname local.player == local.name)
-		{
-			println("----- Auto-kicked " + netname local.player + " for joining with stufftext hacks.")
-			stuffsrv("clientkickr " + (getclientnum local.player) + " \"joining with stufftext hacks.\"")
-			end
-		}
-		else { local.player stufftext ("name " + local.name) }
-	}
-
-	wait 0.15
-	if(local.player != NULL)
-	{
-		local.player.checking_stufftexts = 0
-		if(netname local.player != local.name) { local.player stufftext ("name " + local.name) }
-	}
-end
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-
-date_time_timezone:
-
-	local.datetime = getdate("%D") + " " + gettime(0)
-	println(local.datetime)
+	level waittill spawn // waiting for other mods to finish loading, before checking if "intermission" event is already registered.
+	while(game.game == NIL) { waitframe }
+	if(game.game == "AA" && level.registerev_intermission != 1) { local.result = registerev intermission cvars/adminstuff.scr::intermission }
+	level.registerev_intermission = 1
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -204,6 +72,10 @@ end
 
 anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks" cvar phrases, auto-kick them for joining with preloaded hacks
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 	local.hacks = makeArray // add more if needed
 		te_dietouch
 		f0rc3m0d3l
@@ -236,6 +108,10 @@ anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks
 		wb_
 		cr_
 	endArray
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 	while($player.size < 1) { waitframe }
 	while($player.size >= 1)
@@ -266,12 +142,278 @@ anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks
 						break
 					}
 				}
-			if(local.break == 1) { break }
-			}			
+			if(local.break == 1) { local.break = 0; break }
+			}		
 		}
 		waitframe
 	}
 	thread anti_hacks
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+samename_fix:
+
+	while(level.file_playernames == NIL) { waitframe } // wait for "file_playernames" thread to finish.
+
+	while($player.size < 2) { waitframe }
+	while($player.size >= 2)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			for(local.p = 1; local.p <= level.admin_IPs.size; local.p++)
+			{
+				if($player[local.i] isadmin == 1 || ($player[local.i].IP_address_init != NIL && $player[local.i].IP_address_init == level.admin_IPs[local.p][1]))
+				{
+					$player[local.i].admin_name_priority = 1
+					break
+				}
+			}
+
+			if($player[local.i].admin_name_priority != 1 && $player[local.i].checking_stufftexts == 0 && $player[local.i].IP_address_init != NIL) // don't do "if stufftexts != 1", since == NIL could apply, thus skipping waiting for "check_player_stufftexts".
+			{
+				for(local.f = 1; local.f <= level.file_playernames.size && level.file_playernames != 0; local.f++)
+				{
+					if(netname $player[local.i] == level.file_playernames[local.f][1] && $player[local.i].IP_address_init != level.file_playernames[local.f][2])
+					{
+						$player[local.i] thread changename
+						break
+					}
+				}
+
+				for(local.j = 1; local.j <= $player.size && $player[local.i].cprinting_namefix != 1; local.j++) // ignore this for-loop if already changing name due to matching another player's name in "cvars/playernames.txt".
+				{
+					if(local.i != local.j && netname $player[local.i] == netname $player[local.j] && $player[local.j].admin_name_priority != 1 && $player[local.j].checking_stufftexts == 0 && $player[local.j].IP_address_init != NIL)
+					{
+						if($player[local.i].netname_time < $player[local.j].netname_time) // only change $player[local.j]'s name if he changed his name after copying another player's name.
+						{
+							$player[local.j] thread changename
+						}
+
+						if($player[local.i].netname_time == $player[local.j].netname_time) // very rare case (if both players changed names at the exact same time).
+						{
+							if($player[local.i].netname_jointime > $player[local.j].netname_jointime) { local.k = local.i } // the player who joined first will have name-priority if both players changed names simultaneously.
+							else if($player[local.i].netname_jointime == $player[local.j].netname_jointime)
+							{
+								if(local.i > local.j) { local.k = local.i } // if some unbelievably rare chance they changed names and joined the server at the same time, then the player with the lower clientnum will have name-priority.
+								else { local.k = local.j }
+							}
+							else { local.k = local.j }
+
+							$player[local.k] thread changename
+							local.k = NIL
+						}
+					}
+				}
+			}
+		}
+		wait 0.15 // keeping the loop slow enough so console doesn't print 2 or 3 times.
+	}
+	thread samename_fix
+end
+
+////////////////////////////////////////////////////////////////////////
+
+changename:
+
+	if(self.cprinting_namefix == 1) { end }
+	self.cprinting_namefix = 1
+
+	local.name = netname self
+	local.name2 = ""
+	local.playernum = string(self.entnum + 1)
+	local.namestring = netname self + "_" + local.playernum
+
+	for(local.f = 1; local.f <= level.file_playernames.size && level.file_playernames != 0; local.f++)
+	{
+		if(local.namestring == level.file_playernames[local.f][1]) { local.playernum++; local.f = 0 } // keep making a new name until it doesn't match another name in "cvars/playernames.txt", before sending stufftext to player.
+		local.namestring = netname self + "_" + local.playernum
+	}
+
+	if(local.name[local.name.size - 2] != "_" && local.name[local.name.size - 1] != local.playernum) // add "_[playernum]" to the player's name.
+	{
+		local.n = 0
+		while(self != NULL && netname self == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
+		{
+			self stufftext ("name " + local.namestring)
+			local.n++
+			wait 0.15
+		}
+	}
+	else
+	{
+		for(local.n = 0; local.n < local.name.size - 2; local.n++) { local.name2 += local.name[local.n] } // remove "_[playernum]" from the player's name.
+		local.n = 0
+		while(self != NULL && netname self == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
+		{
+			self stufftext ("name " + local.name2)
+			local.n++
+			wait 0.15
+		}
+	}
+	wait 0.15
+
+	if(self != NULL && netname self == local.name) // secondary check for stufftext hacks, in case a hacker joins without them first (i.e. copying admin's name after joining with a different name).
+	{
+		println("----- Auto-kicked " + netname self + " for joining with stufftext hacks.")
+		stuffsrv("clientkickr " + (getclientnum self) + " \"joining with stufftext hacks.\"")
+		end
+	}
+
+	if(self != NULL) { self thread cprint local.playernum }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cprint local.playernum:
+
+	if(self == NULL || self getconnstate == 1) { end }
+
+	if(self.adminstuff_namefix == NIL) { self.adminstuff_namefix = 0 }
+	self.adminstuff_namefix++
+
+	println("----- NAME FIX: $player[" + local.playernum + "]: " + netname self + ": " + self.adminstuff_namefix)
+	local.attempts = 20
+
+	if(self.adminstuff_namefix > 3) { self iprint ("SAME NAME FIX - Attempts remaining: " + (local.attempts - self.adminstuff_namefix)) 1 }
+	if(self.adminstuff_namefix >= local.attempts)
+	{
+		iprintlnbold("Banning " + netname self + " for changing names to another player's name too many times.")
+		stuffsrv("banip " + self.IP_address_init)
+	}
+	self.cprinting_namefix = 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+IP_addresses: // removing the port extension from players' IP addresses. also updating players' netname_time any time they change their name.
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].IP_address_init == NIL)
+			{ 
+				local.userinfo = string(getip $player[local.i]) // string characters start at [0]
+				local.ip = ""
+				for(local.u = 0; local.u < local.userinfo.size; local.u++) // save only the IP address into local.ip
+				{
+					if(local.userinfo[local.u] == ":") { local.host = 0; break }
+					local.ip += local.userinfo[local.u]
+				}
+				if(local.host != 0) { local.ip = "localhost" }
+				$player[local.i].IP_address_init = local.ip
+			}
+
+			if($player[local.i].netname_old != NIL && $player[local.i].netname_old != netname $player[local.i]) // updating players' netname_time and netname_old.
+			{
+				$player[local.i].netname_time = level.time
+				$player[local.i].netname_old = netname $player[local.i]
+			}
+		}
+		waitframe
+	}
+	thread IP_addresses
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
+
+	local.c = 0
+	while(local.player == NIL || local.player == NULL || local.c <= 40) { local.c++; waitframe } // make sure the player actually exists first.
+	while(local.player != NIL && local.player != NULL && local.player getconnstate != 4) { waitframe } // make sure the player is CS_ACTIVE (in the game), not PRIMED, CONNECTED, ZOMBIE, or FREE.
+	while(local.player != NIL && local.player != NULL && local.player.IP_address_init == NIL) { waitframe } // wait for "IP_addresses" thread to finish obtaining an IP string.
+
+	if(local.player == NIL || local.player == NULL) { end }
+	if(local.player isadmin == 1)
+	{
+		println(netname local.player + " logged in as admin (isadmin = 1).")
+		local.player.checking_stufftexts = 0
+		local.player thread date_time_timezone
+		end
+	}
+	for(local.p = 1; local.p <= level.admin_IPs.size; local.p++)
+	{
+		if(local.player.IP_address_init == level.admin_IPs[local.p][1])
+		{
+			println(netname local.player + " logged in as admin (level.admin_IPs).")
+			if(level.loggedinasadminIPs_msg != 1) { println("type 'admin_IPs 1' into console for more info.") }
+			level.loggedinasadminIPs_msg = 1
+
+			local.player.checking_stufftexts = 0
+			local.player thread date_time_timezone
+			end
+		}
+	}
+	local.player thread date_time_timezone
+	local.player.checking_stufftexts = 1
+
+	local.name = netname local.player
+	local.n = 0
+	while(local.player != NULL && netname local.player == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
+	{
+		local.player stufftext ("name " + local.name + "_" + getclientnum local.player)
+		local.n++
+		wait 0.15
+	}
+
+	wait 0.15
+	if(local.player != NULL && netname local.player == local.name)
+	{
+		println("----- Auto-kicked " + netname local.player + " for joining with stufftext hacks.")
+		stuffsrv("clientkickr " + (getclientnum local.player) + " \"joining with stufftext hacks.\"")
+		end
+	}
+	else
+	{
+		local.n = 0
+		while(local.player != NULL && netname local.player != local.name && local.n <= 20)
+		{
+			local.player stufftext ("name " + local.name)
+			local.player.netname_jointime = level.time
+			local.player.netname_time = level.time
+			local.player.netname_old = local.name
+			local.n++
+			wait 0.15
+		}
+	}
+
+	wait 0.15
+	if(local.player != NULL) { local.player.checking_stufftexts = 0 }
+	println(local.name + " passed the stufftext test.")
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+date_time_timezone:
+
+	if(self != NULL && self.classname == "Player" && self getconnstate == 4) { println("$player[" + (self.entnum + 1) + "] = " + netname self) }
+
+	local.datetime = getdate("%D") + " " + gettime(0)
+	println(local.datetime)
+end
+
+////////////////////////////////////////////////////////////////////////
+
+intermission local.type: // erase all playernames from the previous map, then save all players' names and IPs in the current map just before a new map loads (or current one restarts).
+
+	if(int(local.type) != 0) // this thread is not used, since only one "intermission" event can be registered at a time. The active "intermission" thread is in global/victory_podium.scr.
+	{
+		local.ret = fremove "main/cvars/playernames.txt"
+		local.result = fnewdir "main/cvars"
+		local.file = fopen "main/cvars/playernames.txt" "a+"
+		local.return = fseek local.file 0 2
+		for(local.i = 1; local.i <= $player.size; local.i++) { local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n") }
+		local.result = fclose local.file
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -605,6 +747,8 @@ coord2:
 			local.tempstr = local.tempstr + " \"angle\" \"" + local.angle + "\""
 		}
 
+		local.ret = fexists "main/cvars/coords.txt"
+		if(local.ret != 1) { local.result = fnewdir "main/cvars" }
 		local.file = fopen "main/cvars/coords.txt" "a+"
 		local.return = fseek local.file 0 2
 		if(getcvar("coord2") == "trigger") { local.result = fputs local.file local.tempstr }
@@ -866,4 +1010,154 @@ adddeaths:
 
 	if(getcvar("adddeaths") != "0") { setcvar "adddeaths" "0" }
 	thread adddeaths
+end
+
+subtractkills:
+
+	while(getcvar("subtractkills") == "0" || getcvar("subtractkills") == "") { waitframe }
+
+	local.cvar = getcvar("subtractkills")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			$player[local.i] addkills -1
+			$player[local.i] iprint ("----- Admin is subtracting 1 kill from your score.")
+			println("----- Subtracting 1 kill from $player[" + local.i + "]'s score.")
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("subtractkills") != "0") { setcvar "subtractkills" "0" }
+	thread subtractkills
+end
+
+subtractdeaths:
+
+	while(getcvar("subtractdeaths") == "0" || getcvar("subtractdeaths") == "") { waitframe }
+
+	local.cvar = getcvar("subtractdeaths")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			$player[local.i] adddeaths -1
+			$player[local.i] iprint ("----- Admin is subtracting 1 death from your score.")
+			println("----- Subtracting 1 death from $player[" + local.i + "]'s score.")
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("subtractdeaths") != "0") { setcvar "subtractdeaths" "0" }
+	thread subtractdeaths
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+file_playernames: // list of all players' names and IPs from the previous map iteration, used to prevent other players from copying their names before the original players have loaded into the next map.
+		// players can still copy a previous-map-player's name if they are still joining or left, but once that player rejoins the game, the copycat player's name will be changed.
+
+	local.ret = fexists "main/cvars/playernames.txt"
+	if(local.ret != 1) { local.result = fnewdir "main/cvars" }
+	local.file = fopen "main/cvars/playernames.txt" "a+"
+	local.content = freadall local.file // put all text into a single string (including the enter keys, which are "\n". Tabs are "\t".)
+	local.name = 1
+	local.IP = 1
+
+	for(local.c = 0; local.c <= local.content.size - 1; local.c++) // first make a new array with names and IPs.
+	{
+		if(local.c >= 4 && (local.c < 5 || (local.c >= 5 && local.content[local.c - 5] == "\n")) && local.content[local.c - 4] == "n" && local.content[local.c - 3] == "a" && local.content[local.c - 2] == "m" && local.content[local.c - 1] == "e" && local.content[local.c] == "=")
+		{
+			for(local.d = local.c + 1; local.d <= local.content.size - 1; local.d++)
+			{
+				if(local.content[local.d] == "\n" || local.content[local.d] == " " || local.content[local.d] == "\t") { break }
+
+				if(level.file_playernames[local.name][1] == NIL) { level.file_playernames[local.name][1] = "" }
+				level.file_playernames[local.name][1] += local.content[local.d]
+			}
+			local.c = local.d
+			local.name++
+		}
+
+		if(local.c >= 9 && local.content[local.c - 3] == "\n" && local.content[local.c - 2] == "I" && local.content[local.c - 1] == "P" && local.content[local.c] == "=")
+		{
+			for(local.d = local.c + 1; local.d <= local.content.size - 1; local.d++)
+			{
+				if(local.content[local.d] == "\n" || local.content[local.d] == " " || local.content[local.d] == "\t") { break }
+
+				if(level.file_playernames[local.IP][2] == NIL) { level.file_playernames[local.IP][2] = "" }
+				level.file_playernames[local.IP][2] += local.content[local.d]
+			}
+			local.c = local.d
+			local.IP++
+		}
+	}
+
+	if(level.file_playernames == NIL || level.file_playernames.size < 1) { level.file_playernames = 0 }
+	local.result = fclose local.file
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+cvar_file_playernames:
+
+	while(getcvar("file_playernames") == "0" || getcvar("file_playernames") == "") { waitframe }
+
+	println("***** List of saved Names & IPs from previous map *****")
+	println("----- These are refreshed after each map change/restart (cvars/playernames.txt)...")
+
+	if(level.file_playernames != NIL && level.file_playernames.size >= 1 && level.file_playernames != 0)
+	{
+		for(local.a = 1; local.a <= level.file_playernames.size; local.a++) { println(level.file_playernames[local.a][1] + " " + "IP: " + level.file_playernames[local.a][2]) }
+		println("***** *****")
+	}
+
+	if(level.file_playernames == NIL) { println("----- ERROR: Cannot find anything named 'level.file_playernames'.")  }
+	else if(level.file_playernames == 0 || level.file_playernames.size < 1) { println("----- ERROR: 'cvars/playernames.txt' does not have any player names.")  }
+
+	if(getcvar("file_playernames") != "0") { setcvar "file_playernames" "0" }
+	thread cvar_file_playernames
+end
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+cvar_admin_IPs:
+
+	while(getcvar("admin_IPs") == "0" || getcvar("admin_IPs") == "") { waitframe }
+
+	println("***** List of Admin IP Addresses *****")
+	println("----- These can be changed in cvars/adminstuff.scr...")
+
+	if(level.admin_IPs != NIL && level.admin_IPs.size >= 1)
+	{
+		for(local.a = 1; local.a <= level.admin_IPs.size; local.a++) { println(level.admin_IPs[local.a][1]) }
+		println("***** *****")
+	}
+
+	if(level.admin_IPs == NIL) { println("----- ERROR: Cannot find anything named 'level.admin_IPs'.")  }
+	else if(level.admin_IPs.size < 1) { println("----- ERROR: Cannot find any IP addresses within 'level.admin_IPs'.")  }
+
+	if(getcvar("admin_IPs") != "0") { setcvar "admin_IPs" "0" }
+	thread cvar_admin_IPs
 end

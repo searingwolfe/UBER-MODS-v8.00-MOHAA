@@ -2,6 +2,18 @@ main local.origin0 local.origin1 local.origin2 local.origin3 local.origin4 local
 
 exec global/aliascache_triggersounds.scr lightbomb
 
+////////////////////////////////////////////////////////////////////////
+	
+level.lightbomb_time = 0.80 	// time in seconds until bomb reaches the groundtarget destination (making the time too small will cause the lensflare effect to not follow the bomb launch path).
+level.lightbomb_damage = 10	// explosion damage
+level.lightbomb_radius = 325	// explosion radius
+level.lightbomb_scale = 7	// bomb scale when launched
+
+level.lightbomb_lightradius1 = 85	// inner light radius for launched bomb, color = ( 0 1 0 )
+level.lightbomb_lightradius2 = 250	// outer light radius for launched bomb, color = ( 0 .8 .8 )
+
+////////////////////////////////////////////////////////////////////////
+
 level.spot_lbomb[0] = ( local.origin0 ) + ( 0 0 50 )
 if(local.origin1 != NIL) { level.spot_lbomb[1] = ( local.origin1 ) + ( 0 0 50 ) }
 if(local.origin2 != NIL) { level.spot_lbomb[2] = ( local.origin2 ) + ( 0 0 50 ) }
@@ -39,6 +51,7 @@ level waittill spawn
 
 local.rocket1.targetname = ("lightbomb_weapon" + local.rocket1.entnum)
 exec global/flickerrotate.scr local.rocket1.targetname ( 0 0.75 0.75 ) 125 17 25 25
+thread glue local.trig local.rocket1 local.random
 
 while(1)
 {
@@ -61,11 +74,23 @@ while(1)
 	{
 		local.rocket1.origin = level.spot_lbomb[local.random]
 		local.trig.origin = level.spot_lbomb[local.random]
+		local.trig.int = local.random
 	}
 	local.trig.pickedup = 0
 	//local.rocket1 show
 	local.trig triggerable
 }
+end
+
+glue local.trig local.model local.r:
+
+	local.trig.int = local.r
+	while(1)
+	{
+		local.trig.origin = level.spot_lbomb[local.trig.int]
+		local.model.origin = level.spot_lbomb[local.trig.int]
+		waitframe
+	}
 end
 
 Rotatex:
@@ -112,34 +137,50 @@ ihuddraw_color local.player 101 0 .85 .85
 ihuddraw_rect local.player 101 -200 232 200 14 
 ihuddraw_string local.player 101 "Light Bomb:   Equipped"
 
-	local.thing = spawn script_object
-	local.thing model fx/corona_red.tik
-	local.thing.scale = 0.175
-	local.thing attach local.player "Bip01 R Hand" //"tag_weapon_right"
-	local.thing2 = spawn script_object
-	local.thing2 model static/corona_util.tik
-	local.thing2.scale = 0.25
-	local.thing2 attach local.player "Bip01 R Hand" //"tag_weapon_right"
-	local.thing3 = spawn script_object
-	local.thing3 model static/corona_orange.tik
-	local.thing3.scale = 0.225
-	local.thing3 attach local.player "Bip01 R Hand" //"tag_weapon_right"
+if(local.player.isdog == 1)
+{
+	local.player.dog attachmodel models/static/corona_util.tik "Bip01 Spine" 0.25 ("lbomb_model1_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 0 -9 )
+	local.player.dog attachmodel models/static/corona_orange.tik "Bip01 Spine" 0.225 ("lbomb_model2_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 0 -9 )
+}
+else
+{
+	local.player attachmodel models/static/corona_util.tik "Bip01 R Hand" 0.25 ("lbomb_model1_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 -3 0 )
+	local.player attachmodel models/static/corona_orange.tik "Bip01 R Hand" 0.225 ("lbomb_model2_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 -3 0 )
+}
 
 local.team = local.player.dmteam
-while (isalive local.player && local.player.dmteam == local.team && (local.player.fireheld == 0 || local.player.secfireheld == 0 || local.player.useheld == 0 || local.player.placing_killstreak_old == 1))
-waitframe
+local.dog = local.player.isdog
+while(isalive local.player && local.player.dmteam == local.team && (local.player.fireheld == 0 || local.player.secfireheld == 0 || local.player.useheld == 0 || local.player.placing_killstreak_old == 1))
+{
+	if(local.player.isdog == 1 && local.dog != 1)
+	{
+		$("lbomb_model1_" + local.player.entnum) remove
+		$("lbomb_model2_" + local.player.entnum) remove
+		local.player.dog attachmodel models/static/corona_util.tik "Bip01 Spine" 0.25 ("lbomb_model1_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 0 -9 )
+		local.player.dog attachmodel models/static/corona_orange.tik "Bip01 Spine" 0.225 ("lbomb_model2_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 0 -9 )
+		local.dog = 1
+	}
+	if(local.player.isdog != 1 && local.dog == 1)
+	{
+		$("lbomb_model1_" + local.player.entnum) remove
+		$("lbomb_model2_" + local.player.entnum) remove
+		local.player attachmodel models/static/corona_util.tik "Bip01 R Hand" 0.25 ("lbomb_model1_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 -3 0 )
+		local.player attachmodel models/static/corona_orange.tik "Bip01 R Hand" 0.225 ("lbomb_model2_" + local.player.entnum) 1 -1 -1 -1 -1 ( 0 -3 0 )
+		local.dog = 0
+	}
+	waitframe
+}
 
 if(local.player == NULL) { end }
 if(local.player.dmteam != local.team || local.player.health <= 0)
 {
-//local.laser21 remove
-//local.laser22 remove
-local.thing remove
-local.thing2 remove
-local.thing3 remove
-local.player.isfiredboomerweenie = 0
-local.player.istake=0
-ihuddraw_string local.player 101 ""
+	//local.laser21 remove
+	//local.laser22 remove
+	$("lbomb_model1_" + local.player.entnum) remove
+	$("lbomb_model2_" + local.player.entnum) remove
+	local.player.isfiredboomerweenie = 0
+	local.player.istake=0
+	ihuddraw_string local.player 101 ""
 }
 
 if(local.player.isfiredboomerweenie == 0)
@@ -166,67 +207,74 @@ local.groundtarget.origin = trace (local.start + local.fwd_vec * 64) (local.star
 	local.laser21 model "static/corona_orange.tik"
 	local.laser21.origin = local.start + ( local.cos local.sin 25 ) + ( 0 0 local.height )
 	local.laser21.angles = ( local.player.angles[0] 0 local.player.angles[2] ) // local.player.angles; models become mis-aligned at some yaw-angles, so player.angles[1] = 0 is used.         
-	local.laser21.scale = 2
-	local.laser21 notsolid
-	local.laser21 light 0 1 0 85
+	local.laser21.scale = level.lightbomb_scale * 0.2857143
+	local.laser21 solid
+	local.laser21 light 0 1 0 level.lightbomb_lightradius1
 
 	local.laser22 = spawn script_model
 	local.laser22 model "fx/corona_red.tik"
-	local.laser22.scale = 5
+	local.laser22.scale = level.lightbomb_scale * 0.7142857
 	local.laser22.origin = local.laser21.origin
 	local.laser22.angles = local.player.angles // corona_reds are in the same place for all yaw-angles, unlike _orange and _util.
 	local.laser22 notsolid
-	local.laser22 light 0 0.8 0.8 250
+	local.laser22 light 0 .8 .8 level.lightbomb_lightradius2
 	local.laser22 glue local.laser21
 
 	local.laser23 = spawn script_model targetname ("lightbombweap" + local.player.entnum) // make sure these targetnames are different (for blowing up planes),
 	local.laser23 model "static/corona_util.tik"		      			      // then have a for-loop checking $player.size times for lightbombs.
-	local.laser23.scale = 7
+	local.laser23.scale = level.lightbomb_scale
 	local.laser23.origin = local.laser21.origin
 	local.laser23.angles = ( local.player.angles[0] 0 local.player.angles[2] )
 	local.laser23 notsolid
-	local.laser23 glue local.laser22
-	local.laser23 light 1 1 1 0.01
+	local.laser23 glue local.laser21
 	local.laser23 rendereffects "+viewlensflare"
 
-local.thing remove
-local.thing2 remove
-local.thing3 remove
+	local.r1 = (randomint(249999) + 750000) / 1000000.000000 // must add significant figures to at least one value, otherwise these will round down to 0.
+	local.r2 = (randomint(249999) + 750000) / 1000000.000000
+	local.r3 = (randomint(249999) + 750000) / 1000000.000000
+	local.laser23 light local.r1 local.r2 local.r3 0.01
 
-local.laser21 physics_off
-local.laser22 physics_off
-local.laser23 physics_off
-
-local.showspot = 1
+if($("lbomb_model1_" + local.player.entnum) != NULL) { $("lbomb_model1_" + local.player.entnum) remove }
+if($("lbomb_model2_" + local.player.entnum) != NULL) { $("lbomb_model2_" + local.player.entnum) remove }
 
 local.laser21 playsound fireplace1
 //local.laser21 loopsound fire_large
 //local.laser22 loopsound fireplace //snd_b_zing9
 local.laser21 loopsound river1
-
-	local.laser21 thread movestuck_fix local.groundtarget.origin local.laser21 local.laser22 local.laser23 local.groundtarget local.player
-
 local.originold = local.groundtarget.origin
 
-local.laser21 time 0.35 // if this is changed, make sure to also change local.n in the "movestuck_fix" thread.
-local.laser21 moveto local.groundtarget.origin
-local.laser21 waitmove
+local.dist = vector_length(local.groundtarget.origin - local.player gettagposition "eyes bone")
+local.time = level.lightbomb_time
+local.velocity = local.dist / local.time
+
+local.laser21 physics_on
+local.laser21 gravity 0
+local.laser21.velocity = (angles_toforward ( local.player.viewangles[0] local.player.angles[1] local.player.viewangles[2] )) * local.velocity
+local.laser21.player_owner = local.player
+
+local.hitthing = local.player
+while(local.hitthing == local.player || (local.player.drivingent != NIL && local.player.drivingent != NULL && local.hitthing == local.player.drivingent) || (local.player.ridingent != NIL && local.player.ridingent != NULL && local.hitthing == local.player.ridingent) || (local.player.flying == 1 && local.hitthing == local.player.plane))
+{
+	local.laser21 waittill touch
+	local.hitthing = parm.other
+}
+local.laser21.velocity = ( 0 0 0 )
 
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
 	{									 // if $player[local.i] cansee local.laser21 360 was removed, since sometimes bomb can be partially inside a wall,
-		if(local.laser21 != NULL && vector_length(local.laser21.origin - $player[local.i].origin) <= 325) // which now allows giant bombs to kill people through walls
+		if(local.laser21 != NULL && (vector_length(local.laser21.origin - $player[local.i].origin) <= level.lightbomb_radius || $player[local.i].flying == 1)) // which now allows giant bombs to kill people through walls
 		{
 			if(local.player == NIL || local.player == NULL)
 			{
 				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
 				{
-					$player[local.i] damage $world 10 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+					$player[local.i] damage $world level.lightbomb_damage $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
 				}
 				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 				{
-					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 10 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-					else { $player[local.i].drivingent damage $world 10 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					if($player[local.i].flying == 1 && local.hitthing == $player[local.i].plane) { $("planehit" + $player[local.i].entnum) damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world level.lightbomb_damage $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 				}
 			}
 			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
@@ -234,13 +282,13 @@ local.laser21 waitmove
 			{
 				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
 				{
-					$player[local.i] damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+					$player[local.i] damage local.player level.lightbomb_damage local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
 				}
 				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 				{
 					$player[local.i].drivingent.shooter = local.player
-					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-					else { $player[local.i].drivingent damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					if($player[local.i].flying == 1 && local.hitthing == $player[local.i].plane) { $("planehit" + $player[local.i].entnum) damage local.player 9999999 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.player level.lightbomb_damage local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 				}
 			}
 		}
@@ -248,8 +296,13 @@ local.laser21 waitmove
 	local.Exp21 = spawn "fx/300damage.tik" // also does 10 radiusdamage
 	local.Exp21.player_owner = local.player
 	if(local.blewup != 1) { local.Exp21 radiusdamage 0 }
+	else
+	{
+		local.Exp21 radiusdamage level.lightbomb_damage
+		local.Exp21 radius level.lightbomb_radius
+	}
 
-	local.Exp22 = spawn "animate/fx_mortar_water.tik"
+	local.Exp22 = spawn "animate/fx_mortar_water.tik" targetname "mortar_dirt_nosound"
 	local.Exp23 = spawn "emitters/fx_oceanspray.tik"
 	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
 	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
@@ -311,109 +364,4 @@ itemnotattached_fix: // only fixes "isfiredboomerweenie" after player dies or ch
 	if(self == NULL) { end }
 	self.isfiredboomerweenie = 0
 	self.whileloop = 0
-end
-
-////////////////////////////////////////////////////////////////////////
-
-movestuck_fix local.origin local.laser21 local.laser22 local.laser23 local.groundtarget local.player: 
-			    
- local.n = 0			    // if bomb is fired at a tank entity, for example, sometimes the bomb will get stuck inside the tank and never blow up.
-
- while(self != NULL && self.origin != local.origin) // when the bomb takes too long to explode, this thread forces the bomb to explode and reset the trigger.
- {
-	if(local.n == 5) // 5 * (wait 0.1) = 0.5 seconds.
-	{
-		local.blewup = 1
-		for(local.i = 1; local.i <= $player.size; local.i++)
-		{
-			if(local.laser21 != NULL && vector_length(local.laser21.origin - $player[local.i].origin) <= 325)
-			{
-				if(local.player == NIL || local.player == NULL)
-				{
-					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
-					{
-						$player[local.i] damage $world 10 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
-					}
-					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
-					{
-						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 10 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-						else { $player[local.i].drivingent damage $world 10 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-					}
-				}
-				else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
-				else
-				{
-					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
-					{
-						$player[local.i] damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
-					}
-					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
-					{
-						$player[local.i].drivingent.shooter = local.player
-						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-						else { $player[local.i].drivingent damage local.player 10 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-					}
-				}
-			}
-		}
-		local.Exp21 = spawn "fx/300damage.tik" // also does 10 radiusdamage
-		local.Exp21.player_owner = local.player
-		if(local.blewup != 1) { local.Exp21 radiusdamage 0 }
-
-		local.Exp22 = spawn "animate/fx_mortar_water.tik"
-		local.Exp23 = spawn "emitters/fx_oceanspray.tik"
-		local.Exp21.origin = self.origin // local.origin explodes bomb at groundspot origin, not at current bomb's origin (self).
-		local.Exp21.scale = 1
-		local.Exp21 light 0 1 0 450
-		local.Exp21 anim start
-		local.Exp22.origin = self.origin
-		local.Exp22.scale = 1
-		local.Exp22 light .5 1 0 350
-		local.Exp22 anim start
-		local.Exp23.origin = self.origin + ( 0 0 35 )
-		local.Exp23.scale = 1.2
-		local.Exp23 anim start
-		ihuddraw_string local.player 101 "Light Bomb:   Exploded"
-		
-		wait 0.05
-		local.Exp21 playsound artyexpwater1
-		//local.Exp22 playsound grenade_exp_water2
-		local.random2 = randomint(2)
-		if(local.random2 == 0)
-		{
-			local.Exp21 playsound water_explosion1
-		      local.Exp22 playsound water_explosion11
-			
-		}
-		if(local.random2 == 1)
-		{
-			local.Exp21 playsound water_explosion2
-		      local.Exp22 playsound water_explosion22
-		}
-		local.Exp23 playsound wavecrash
-		waitframe
-		
-		local.Exp21 anim stop
-		local.Exp22 anim stop
-		local.Exp23 anim stop
-		local.Exp21 remove
-		local.Exp22 remove
-		local.Exp23 remove
-
-		local.laser21 stoploopsound
-		local.laser22 stoploopsound
-		local.laser23 stoploopsound
-		local.laser21 remove
-		local.laser22 remove
-		local.laser23 remove
-		ihuddraw_string local.player 101 ""
-
-		local.groundtarget remove
-		end 
-	}
-	if(local.n >= 5 || local.laser21.origin == NIL) { end } // run the n==5 if-statement only once, then end.
-							       // also end if $lightbombweap has been removed already.
-	local.n++
- 	wait 0.1
- }
 end

@@ -75,6 +75,14 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 		local.vehicle thread boatstuck_inwall_fix
 		local.vehicle thread turret_laser local.name
 	}
+/*
+	if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik")
+	{
+		local.vehicle attachmodel models/vehicles/higginsdoor.tik "Box01" 1 (local.name + "_door") 1 -1 -1 -1 -1 ( 0 0 0 )
+		$(local.name + "_door").angles = ( 180 0 -90 )
+		$(local.name + "_door") notsolid
+	}
+*/
 										// "local.player.touching_playerboat" or "$player[1].touching_playerboat" can be included in trigger setthreads
 	if(level.touching_playerboat != 1) { thread touching_playerboat }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
 
@@ -111,9 +119,12 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 
 			for(local.i = 1; local.i <= $player.size; local.i++)
 			{
-				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self)
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self && $player[local.i].passenger != 1)
 				{
-					self.passengers damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					for(local.i = 1; local.i <= self.passengers.size; local.i++)
+					{
+						self.passengers[local.i] damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
 				}
 			}
 		}
@@ -134,7 +145,7 @@ vehicletrigger:
 	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
 	local.trig = spawn trigger_use targetname (self.name + "_trig")
 	local.trig.origin = self.origin
-	if(self.model != "models/vehicles/uboat.tik") { local.trig setsize ( -130 -130 -30 ) ( 130 130 100 ) }
+	if(self.model != "models/vehicles/uboat.tik") { local.trig setsize ( -130 -130 -100 ) ( 130 130 100 ) }
 	else { local.trig setsize ( -(2000 * self.scale) -(150 * self.scale) -(10 * self.scale) ) ( (1820 * self.scale) (150 * self.scale) (200 * self.scale) ) }
 	local.trig.vehicle = self
 	local.trig glue self
@@ -438,7 +449,7 @@ vehicledeath:
 	local.boom anim start
 	local.boom notsolid
 
-	local.debris = spawn script_model
+	local.debris = spawn script_model targetname "mortar_dirt_nosound"
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = local.desvehicle.origin + ( 0 0 25 )
 	if(local.desvehicle.model == "models/vehicles/uboat.tik") { local.debris.scale = 2.0 }
@@ -577,7 +588,7 @@ passengers:
 			local.player takedamage
 			//local.player noclip
 			local.player forcetorsostate STAND
-			local.player.origin = local.player.origin + ( 0 0 (local.outheight - (local.player.origin[2] - self.origin[2])) ) // using player's origin prevents passengers getting stuck inside each other
+			local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight)
 			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
 			local.player thread wallstuck_fix
@@ -610,7 +621,8 @@ passengers:
 				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units
 				local.cos = local.cos / local.distoffset * 25
 	
-				local.player.origin = local.player.origin + ( local.cos local.sin local.outheight )
+				if(self != NULL) { local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight) }
+				else { local.player.origin += ( local.cos local.sin local.outheight ) }
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 				local.player thread wallstuck_fix
 

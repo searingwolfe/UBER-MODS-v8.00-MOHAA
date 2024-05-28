@@ -110,14 +110,14 @@ if(getcvar("g_ubermods") == "2")
 
 exec map_triggers/lightbomb.scr ( -4721 -975 579 ) ( -4716 2801 579 ) ( -1761 3011 960 ) ( -757 2500 -391 ) ( 100 34 -251 ) ( 1625 2798 579 ) ( -284 5425 -451 ) ( -298 4173 -415 ) ( -2504 947 -63 ) ( -3321 1340 -59 )
 exec map_triggers/bomb.scr ( 3143 5992 576 ) ( 1409 4374 960 ) ( 450 2797 579 ) ( -2951 2799 579 ) ( 719 4464 -651 ) ( -608 4736 -511 ) ( -1080 952 -71 ) ( -5000 1845 1081 ) ( -4934 -761 1216 ) ( -2955 -541 -119 )
-exec map_triggers/grenade_ammo.scr ( -1917 -2334 -425 ) ( -577 -1113 -511 ) ( 502 63 -511 ) ( -2622 212 -511 ) ( 72 2992 -510 ) ( -382 3692 -511 ) ( 1179 3871 -527 ) ( -1040 6222 -255 ) ( 1168 6512 -255 ) ( 79 6512 -511 )
+exec map_triggers/grenade_ammo.scr ( 0 0 0 ) ( -577 -1113 -511 ) ( 502 63 -511 ) ( -2622 212 -511 ) ( 72 2992 -510 ) ( -382 3692 -511 ) ( 1179 3871 -527 ) ( -1040 6222 -255 ) ( 1168 6512 -255 ) ( 79 6512 -511 )
 exec map_triggers/rocket_ammo.scr ( 911 -2265 -511 ) ( -3213 -1367 -447 ) ( -5094 -1784 -511 ) ( -3279 3312 -495 ) ( -328 1813 -461 ) ( -497 3763 -511 ) ( -784 4943 -255 ) ( 912 5999 -223 ) ( -748 7020 -255 ) ( -1772 6351 -255 )
 exec map_triggers/snowball_ammo.scr ( -5569 -2948 29 ) ( -8112 -738 960 ) ( -5003 647 1080 ) ( -3936 3120 1215 ) ( 792 -1440 -59 ) ( 800 1461 -55 ) ( 719 3504 -647 ) ( -576 3087 -339 ) ( 2904 6389 1216 ) ( 399 7792 960 )
 exec map_triggers/health.scr ( 2242 -6453 -511 ) ( -4393 -3860 -511 ) ( -7347 -8031 -510 ) ( -4912 2992 -511 ) ( 1470 814 -27 ) ( 4324 6208 -510 ) ( 1041 5936 -61 ) ( 351 6927 -61 ) ( -1039 6814 -61 ) ( -2001 6161 -61 )
 
-exec map_triggers/led_trap.scr ( -8112 3120 960 ) led1 1
-exec map_triggers/led_trap.scr ( 1057 4112 -95 ) led2 1
-exec map_triggers/led_trap.scr ( -1356 -2005 -45 ) led3 2
+//exec map_triggers/led_trap.scr ( -8112 3120 960 ) led1 1
+//exec map_triggers/led_trap.scr ( 1057 4112 -95 ) led2 1
+//exec map_triggers/led_trap.scr ( -1356 -2005 -45 ) led3 2
 
 if(getcvar("g_ubergametype") != "bb")
 {
@@ -170,6 +170,7 @@ thread twoswitch sw2 ( -374 3007 -436 ) ( 0 -90 0 ) 60 500 2 // axis side
 
 	thread vehicles_undermap
 	thread players_outsidemap
+	thread grenadetrig_gluetrain
 
 	local.lasers[1] = thread global/vehicle_tele.scr::spawnlaser ( 1338 4540 -527 ) ( 1338 4540 -260 ) ( 1 0 0 ) 3 // origin, endpoint, initial color, scale
 	local.lasers[2] = thread global/vehicle_tele.scr::spawnlaser ( 1338 4543 -260 ) ( 1338 4160 -257 ) ( 1 0 0 ) 3
@@ -203,11 +204,11 @@ if(getcvar("g_throwingknives") == "1")
 {
 	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
 
-	exec global/throwingknife.scr k1 ( 864 5924 -207 ) ( 0 180 0 )
-	exec global/throwingknife.scr k2 ( -1816 6562 -211 ) ( 0 0 0 )
-	exec global/throwingknife.scr k3 ( -2663 -540 -447 ) ( 0 -90 0 )
-	exec global/throwingknife.scr k4 ( -327 5375 -511 ) ( 0 -90 0 )
-	exec global/throwingknife.scr k5 ( 1074 3300 -651 ) ( 0 90 0 )
+	//exec global/throwingknife.scr k1 ( 864 5924 -207 ) ( 0 180 0 ) // removed to reduce entity count
+	//exec global/throwingknife.scr k2 ( -1816 6562 -211 ) ( 0 0 0 )
+	//exec global/throwingknife.scr k3 ( -2663 -540 -447 ) ( 0 -90 0 )
+	//exec global/throwingknife.scr k4 ( -327 5375 -511 ) ( 0 -90 0 )
+	//exec global/throwingknife.scr k5 ( 1074 3300 -651 ) ( 0 90 0 )
 }
 end
 
@@ -351,6 +352,17 @@ setup:
 	level.mp44 = 1
 	level.shotgun = 1
 	level.rifle = 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+grenadetrig_gluetrain:
+
+	while($choochootrain != NULL && level.spot_grenade != NIL && level.spot_grenade.size >= 1)
+	{
+		level.spot_grenade[0] = $choochootrain.origin + ( 0 0 -40 )
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -525,7 +537,7 @@ attach_to_traincab:
 
 	self.angles = ( 10 ($choochootrain.angles[1] + 90) $choochootrain.angles[2] )
 	self glue $("choochoo_seat_" + local.s)
-	if(self.dog != NIL && self.dog != NULL) { self.dog glue $("choochoo_seat_" + local.s) }
+	if(self.dog != NIL && self.dog != NULL) { self.dog glue $("choochoo_seat_" + local.s); local.dog = 1 }
 
 	local.team = self.dmteam
 	local.holdtime = 0
@@ -535,6 +547,7 @@ attach_to_traincab:
 		self anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
 
 		if(self.fireheld != 1) { self.viewangles = ( 10 ($choochootrain.angles[1] + 90) $choochootrain.angles[2] ) }
+		if(local.dog == 1) { local.player.dog.angles = $trainfront.angles }
 
 		if(self.useheld == 1 && $trainfront.can_getout == 1) { local.holdtime++ }
 		else { local.holdtime = 0 }
@@ -762,13 +775,14 @@ train_drivers:
 
 	local.player.angles = ( 10 (self.train.angles[1] + $("train_driverslot_" + local.s).angle_offset) self.train.angles[2] )
 	local.player glue $("train_driverslot_" + local.s)
-	if(local.player.dog != NIL && local.player.dog != NULL) { local.player.dog glue $("train_driverslot_" + local.s) }
+	if(local.player.dog != NIL && local.player.dog != NULL) { local.player.dog glue $("train_driverslot_" + local.s); local.dog = 1 }
 
 	while(self.train != NULL && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
 	{
 		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
 
 		if(local.player.fireheld != 1) { local.player.viewangles = ( 10 (self.train.angles[1] + $("train_driverslot_" + local.s).angle_offset) self.train.angles[2] ) }
+		if(local.dog == 1) { local.player.dog.angles = $choochootrain.angles }
 
 		if(local.player.useheld == 1 && $trainfront.can_getout == 1) { local.holdtime++ }
 		else { local.holdtime = 0 }
@@ -1833,8 +1847,8 @@ mapedge local.color local.color2:
 
 	thread spawnlaser ( -152 3751 -279 ) ( -591 3751 -279 ) local.color2 1
 	thread spawnlaser ( -152 3751 -279 ) ( -152 3072 -279 ) local.color2 1
-	thread spawnlaser ( -171 3733 -339 ) ( -591 3733 -339 ) local.color 1
-	thread spawnlaser ( -171 3733 -339 ) ( -171 3072 -339 ) local.color 1
+	//thread spawnlaser ( -171 3733 -339 ) ( -591 3733 -339 ) local.color 1
+	//thread spawnlaser ( -171 3733 -339 ) ( -171 3072 -339 ) local.color 1
 end
 
 cratesstuff local.model local.origin local.angles local.hide local.scale local.targetname local.setsize1 local.setsize2:
@@ -2013,13 +2027,15 @@ consoleprint:
 
 	local.maxclients = int(getcvar(sv_maxclients))
 	local.nullent = 0
+	local.e = 0
 	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
 	{
 		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
-		if(local.entity != NULL && local.i >= 725) { local.warning = 1 }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
 
 		if(local.entity != NULL && local.entity.model == models/fx/dummy.tik && local.entity.targetname == "") { local.entity remove; local.nullent++ }
 	}
@@ -2036,7 +2052,7 @@ consoleprint:
 	if(local.warning == 1)
 	{
 		wait 1
-		println("----- WARNING: Keep below 725 entities on SP maps for Reborn servers!")
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
 end

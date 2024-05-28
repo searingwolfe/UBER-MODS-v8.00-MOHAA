@@ -67,6 +67,7 @@ exec global/aliascache_triggersounds.scr detonator_switch
 exec global/aliascache_triggersounds.scr pipesteam
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
+exec global/aliascache_triggersounds.scr arty_exp_water
 
 waitthread setup
 
@@ -92,7 +93,7 @@ exec global/victory_podium.scr ( 3707 385 -511 ) 0 auto auto 5
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
-	exec global/dog.scr ( 943 -6179 -511 ) ( 0 0 0 ) 15 10
+	exec global/dog.scr ( 2755 -3658 -627 ) ( 0 -90 0 ) 15 10
 
 	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
 	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
@@ -187,8 +188,8 @@ exec jetpack/trigger.scr ( 3715 105 -511 ) // platform
 exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( -1284 -6497 -511 ) ( 0 180 0 ) ( -1284 -6561 -511 ) ( 0 -90 0 ) 500 1 1 8
 exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 3621 -3537 -489 ) ( 0 -90 0 ) ( 3695 -3537 -489 ) ( 0 0 0 ) 500 1 1 8
 
-exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( -1632 -6343 -255 ) ( 60 180 0 ) 100 0
-exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -1503 -5983 -427 ) ( 0 0 0 ) bb2 60 450 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( -1632 -6343 -255 ) ( 60 180 0 ) 100 0
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -1503 -5983 -427 ) ( 0 0 0 ) bb1 60 450 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
 exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 3488 -3582 -376 ) ( 60 180 0 ) 100 0
 exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 3473 -3694 -448 ) ( 0 -45 0 ) bb2 60 450 2
 exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( 3610 -4064 -168 ) ( 60 -90 0 ) 100 0
@@ -227,6 +228,7 @@ level waittill spawn
 
 	thread consoleprint
 	thread ambience
+	thread water_volumes
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -250,9 +252,13 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 	level.spawnamb = makeArray
 		( 3333 -3525 -96 ) ( -8000 -8000 -1000 ) ( 0 1140 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
 
-		( 3334 -3525 -97 ) ( 0 -2202 -1000 ) ( 8000 1141 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-		( 3334 -3525 -96 ) ( 0 -2202 0 ) ( 8000 1141 350 ) sound/amb_stereo/Amb_M2_VentInt.mp3
-		( 3334 -3525 255 ) ( 0 -2202 0 ) ( 8000 1141 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 3334 -3525 -97 ) ( 0 -2202 -1000 ) ( 1660 1141 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 3334 -3525 -96 ) ( 0 -2202 0 ) ( 1660 1141 350 ) sound/amb_stereo/Amb_M2_VentInt.mp3
+		( 3334 -3525 255 ) ( 0 -2202 0 ) ( 1660 1141 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 4995 -3525 -17 ) ( 0 -2202 0 ) ( 186 1141 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 4995 -3525 -18 ) ( 0 -2202 -235 ) ( 186 1141 0 ) sound/amb_stereo/Amb_M2_VentInt.mp3
+		( 4995 -3525 -254 ) ( 0 -2202 -1000 ) ( 186 1141 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
+		( 5182 -3525 0 ) ( 0 -2202 -1000 ) ( 8000 1141 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
 
 		( 3334 -5728 -96 ) ( 0 -8000 -1000 ) ( 8000 0 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
 		( 3334 -2383 -96 ) ( -2535 0 -1000 ) ( 8000 1742 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
@@ -260,7 +266,25 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 		( -3871 -1650 -511 ) ( -8000 0 -1000 ) ( 0 3535 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
 	endArray
 
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_04.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_04.mp3 1 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+water_volumes: // these are for any airstrikes that drop bombs into the ocean.
+
+	level.water_volumes = makeArray
+		( -3871 -607 -700 ) ( 0 0 -1000 ) ( 224 2495 900 )
+		( -3871 1888 -700 ) ( -8000 0 -1000 ) ( 0 8000 900 )
+		( -3647 -1375 -700 ) ( 0 0 -1000 ) ( 4350 8000 900 )
+		( 703 -351 -700 ) ( 0 0 -1000 ) ( 2976 8000 900 )
+		( 3679 3584 -700 ) ( 0 0 -1000 ) ( 8000 8000 900 )
+
+		( 2240 -351 -700 ) ( 0 -6000 -1000 ) ( 895 0 0 )
+		( 1024 -351 -700 ) ( 0 -6000 -1000 ) ( 895 0 0 )
+		( -191 -1375 -700 ) ( 0 -6000 -1000 ) ( 895 0 0 )
+		( -1407 -1375 -700 ) ( 0 -6000 -1000 ) ( 895 0 0 )
+		( -2623 -1375 -700 ) ( 0 -6000 -1000 ) ( 895 0 0 )
+		( -3647 -1375 -700 ) ( 0 -6000 -1000 ) ( 703 0 0 )
+	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -872,13 +896,15 @@ consoleprint:
 
 	local.maxclients = int(getcvar(sv_maxclients))
 	local.nullent = 0
+	local.e = 0
 	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
 	{
 		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
-		if(local.entity != NULL && local.i >= 725) { local.warning = 1 }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
 	}
 	if(local.entity == NULL) // if entity 868 = NULL
 	{
@@ -893,7 +919,7 @@ consoleprint:
 	if(local.warning == 1)
 	{
 		wait 1
-		println("----- WARNING: Keep below 725 entities on SP maps for Reborn servers!")
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
 end

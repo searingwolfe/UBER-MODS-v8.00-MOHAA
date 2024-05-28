@@ -370,14 +370,14 @@ airstrikes_alternate2:
 	{
 		local.rtime = randomint(90) + 90
 		local.r = randomint(2)
-		if(local.r == 0) { waitexec global/bomberplane_nospline.scr bomberpath axis 2 local.rtime }
+		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime }
 		if(local.r == 1)
 		{
 			local.r2 = randomint(5)
-			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr bomberpath2 allies 2 local.rtime }
-			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr bomberpath3 allies 2 local.rtime }
-			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr bomberpath2 c47 2 local.rtime }
-			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr bomberpath3 c47 2 local.rtime }
+			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime }
+			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime }
+			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime }
+			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime }
 		}
 		waitframe
 	}
@@ -1358,13 +1358,15 @@ consoleprint:
 
 	local.maxclients = int(getcvar(sv_maxclients))
 	local.nullent = 0
+	local.e = 0
 	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
 	{
 		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
-		if(local.entity != NULL && local.i >= 725) { local.warning = 1 }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
 	}
 	if(local.entity == NULL) // if entity 868 = NULL
 	{
@@ -1379,7 +1381,7 @@ consoleprint:
 	if(local.warning == 1)
 	{
 		wait 1
-		println("----- WARNING: Keep below 725 entities on SP maps for Reborn servers!")
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
 end

@@ -46,22 +46,40 @@ catchfire local.model local.burntime local.damageinc local.burnscale local.fires
   if(local.burnscale != NIL) { local.burn.scale = local.burnscale }
   local.burn notsolid
   local.burn glue self 
-  self loopsound fireplace1
+  self loopsound fireplace2
 
   local.team = self.dmteam
   if(self.onfire_count == NIL) { self.onfire_count = 0 }
 
   while(self.onfire_count < local.burntime && isalive self && self.dmteam == local.team && self.dmteam != "spectator" && self != NULL) 
-  { 
-  	wait 0.1
+  {
+	for(local.v = 1; level.water_volumes != NIL && level.water_volumes.size >= 1 && local.v <= level.water_volumes.size; local.v++)
+	{
+		local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+		local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+		local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+		local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+		local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+		local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+
+		if(int(self.origin[0]) >= local.X_min[local.v] && int(self.origin[0]) <= local.X_max[local.v] && int(self.origin[1]) >= local.Y_min[local.v] && int(self.origin[1]) <= local.Y_max[local.v] && int(self.origin[2]) >= local.Z_min[local.v] && int(self.origin[2]) <= local.Z_max[local.v])
+		{
+			local.extinguished = 1
+			break
+		}
+	}
+	if(local.extinguished == 1) { break }
+
+
 	self volumedamage local.damageinc // "self hurt 1" works too
 	self.onfire_count++
 	if(self.health <= local.damageinc) { self kill } // tell players that they've killed themselves.
+  	wait 0.1
   }
 
   local.burn unglue
   local.burn remove
-  //self iprint ("Fire has been extinguished.")
+  if(local.extinguished == 1) { self iprint ("Fire has been extinguished.") }
   self.caughtonfire = 0
   self.onfire_count = 0
   self stoploopsound

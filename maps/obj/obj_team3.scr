@@ -66,6 +66,10 @@ exec global/aliascache_triggersounds.scr weldingtorch
 exec global/aliascache_triggersounds.scr explode_wood_small
 exec global/aliascache_triggersounds.scr explode_building_small
 cache models/vehicles/tigertank.tik		// needed for aagun threads
+
+level.mapname = getcvar "mapname"
+local.master = spawn scriptmaster
+local.master aliascache exp_shingle sound/weapons/explo/Exp_Shingle_01.WAV soundparms 1.5 0.0 1.0 0.0 1000 2200 weapon loaded maps level.mapname
 }
 
 level waittill prespawn
@@ -283,6 +287,7 @@ thread port4
 level waittill spawn
 
 	thread ambience
+	thread water_volumes
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -318,7 +323,14 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 		( 767 1226 -30 ) ( -559 0 0 ) ( 0 427 445 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
 	endArray
 
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M5_Field.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+water_volumes: // these are for any airstrikes that drop bombs into the ocean.
+
+	level.water_volumes = makeArray
+		( 0 -4480 0 ) ( -8000 -8000 -4000 ) ( 8000 0 4000 )
+	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -573,14 +585,11 @@ end
 
 minenbombs local.origin local.fireorigin local.health local.damage local.radius local.offtime:
 
-	local.mine = spawn "vehicles/bmwbike.tik" // any .tik with a classname "drivablevehicle" can be destroyed by grenades, as well as rockets & explosions.
+	local.mine = spawn trigger_multiple spawnflags 128
 	local.mine.origin = local.origin
-	local.mine.angles = ( 0 90 0 )
-	//local.mine setsize ( -50 -50 -10 ) ( 50 50 0 ) // setsize is set as ( -1 -1 -1 ) ( 1 1 1 ) in bmwbike.tik
+	local.mine setsize ( -40 -40 -40 ) ( 40 40 40 )
 	local.mine.health = local.health
-	local.mine.scale = 0.1
-	local.mine hide
-	local.mine setsize ( -10 -10 0 ) ( 10 10 1 )
+	local.mine thread trig_healthboost
 
 	local.fire = spawn script_model
 	local.fire model "animate/fire.tik" 
@@ -589,7 +598,7 @@ minenbombs local.origin local.fireorigin local.health local.damage local.radius 
 	local.fire notsolid
 	local.fire hide
 
-	while(local.mine != NULL) { wait 0.1 } // wait until the bmwbike blows up.
+	while(local.mine.health > 0) { waitframe }
 
 	local.explode = spawn script_model
 	local.explode.origin = local.origin
@@ -614,10 +623,21 @@ minenbombs local.origin local.fireorigin local.health local.damage local.radius 
 	waitframe
 	local.explode remove
 	local.explode2 remove
+	local.mine remove
 	
 	wait local.offtime
 	local.fire remove
 	thread minenbombs local.origin local.fireorigin local.health local.damage local.radius local.offtime
+end
+
+trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0) // prevent regular bullets from killing trigger (i.e. if 250 health, trigger can still be killed by 2 grenades or a shotgun blast)
+	{
+		self.health = local.health
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -792,6 +812,7 @@ bangalore_explode local.name:
 	if(local.random == 0) { $("bangalore_" + local.name) playsound explode_building_small3 }
 	if(local.random == 1) { $("bangalore_" + local.name) playsound explode_building_small4 }
 	if(local.random == 2) { $("bangalore_" + local.name) playsound explode_building_small5 }
+	$("bangalore_explosion_" + local.name + "1") playsound exp_shingle
 	waitframe
 
 	local.boomorigin = $("bangalore_explosion_" + local.name + "1").origin + ( 0 0 250 )
@@ -815,7 +836,7 @@ end
 
 barbwire_bombs local.name local.origin local.angles:
 
-	local.bangalore = spawn trigger_use targetname ("bangalore_pickup" + local.name)
+	local.bangalore = spawn trigger_use targetname (local.name + "_pickup")
 	local.bangalore model "animate/bangalore_pulsating.tik"
 	local.bangalore.origin = local.origin
 	local.bangalore.angles = local.angles
@@ -853,8 +874,8 @@ end
 bangalore_holding local.name local.origin local.angles:
 
    	self iprint ("*** Plant the bangalore on the beach barbwire.*** ")
-   	local.number = randomint 999999999
-   	self attachmodel models/animate/bangalore.tik "Bip01 R Thigh" 0.5 ("cig_1" + local.number) 1 -1 -1 -1 -1 ( 0 0 3 ) //( -up +down, +forward -backward, +right -left )
+	if(self.isdog == 1) { self.dog attachmodel models/animate/bangalore.tik "Bip01 Spine" 0.5 ("cig_1" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 5 ) }
+   	else { self attachmodel models/animate/bangalore.tik "Bip01 R Thigh" 0.5 ("cig_1" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 3 ) } //( -up +down, +forward -backward, +right -left )
    	local.static = spawn script_model
    	local.static model "static/corona_reg.tik"
    	local.static.scale = 0.001
@@ -864,18 +885,18 @@ bangalore_holding local.name local.origin local.angles:
    	local.static glue self
    	local.static show
 
-   	$("cig_1" + local.number).angles = ( 0 180 20 )
-   	$("bangalore_pickup" + local.name) nottriggerable
+	if(self.isdog == 1) { $("cig_1" + self.entnum).angles = ( 0 -90 0 ) }
+	else { $("cig_1" + self.entnum).angles = ( 0 180 20 ) }
+   	$(local.name + "_pickup") nottriggerable
 	waitframe
-   	$("bangalore_pickup" + local.name) remove
-   	wait 0.5
+   	if($(local.name + "_pickup") != NULL) { $(local.name + "_pickup") remove }
 
-   	local.result = self waitthread scan_player local.name //cannot use self in "doit"
+   	local.result = self waitthread scan_player local.name local.number //cannot use self in "doit"
 
    	if(local.result != left)
    	{
 		self.inuse = 0
-    		$("cig_1" + local.number) remove
+    		$("cig_1" + self.entnum) remove
 		local.static unglue
 		local.static remove
 
@@ -885,17 +906,18 @@ bangalore_holding local.name local.origin local.angles:
 			goto barbwire_bombs local.name local.origin local.angles
 		}
 
-    		if(self.planted != 1) { goto barbwire_bombs local.name self.origin self.angles } // "goto" command ends the current script immediately, and goes to a new one.
+    		if(self.planted != 1) { goto barbwire_bombs local.name self.origin ( 0 (self.angles[1] - 90) 0 ) } // "goto" command ends the current script immediately, and goes to a new one.
 		self.planted = 0
    	}
 	if(local.result == left) { goto barbwire_bombs local.name local.origin local.angles }
 end
 
-scan_player local.name:
+scan_player local.name local.number:
 
 	local.result = ok
 	local.team = self.dmteam
 	local.holdtimer = 0
+	local.dog = self.isdog
 	while(1)
 	{
 		if(self == NULL)
@@ -910,6 +932,21 @@ scan_player local.name:
 	   			if(self.dmteam == spectator || isalive self) { level.bangalore_went2spectator[local.name] = 1 }
     	   			end local.result
     			}
+
+			if(self.isdog == 1 && local.dog != 1)
+			{
+				if($("cig_1" + self.entnum) != NULL) { $("cig_1" + self.entnum) remove }
+				self.dog attachmodel models/animate/bangalore.tik "Bip01 Spine" 0.5 ("cig_1" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 5 )
+				for(local.i = 1; local.i <= $("cig_1" + self.entnum).size; local.i++) { $("cig_1" + self.entnum)[local.i].angles = ( 0 -90 0 ) }
+				local.dog = 1
+			}
+			if(self.isdog != 1 && local.dog == 1)
+			{
+				if($("cig_1" + self.entnum) != NULL) { $("cig_1" + self.entnum) remove }
+				self attachmodel models/animate/bangalore.tik "Bip01 R Thigh" 0.5 ("cig_1" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 3 )
+				for(local.i = 1; local.i <= $("cig_1" + self.entnum).size; local.i++) { $("cig_1" + self.entnum)[local.i].angles = ( 0 180 20 ) }
+				local.dog = 0
+			}
 
 			local.holdtimer = 0
 			while(isalive self && self.useheld == 1 && self.dmteam == local.team && (($bangalore_trigger_left != NULL && self istouching $bangalore_trigger_left) || ($bangalore_trigger_center != NULL && self istouching $bangalore_trigger_center) || ($bangalore_trigger_right != NULL && self istouching $bangalore_trigger_right)))

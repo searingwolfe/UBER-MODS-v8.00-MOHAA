@@ -2407,13 +2407,15 @@ consoleprint:
 
 	local.maxclients = int(getcvar(sv_maxclients))
 	local.nullent = 0
+	local.e = 0
 	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
 	{
 		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
-		if(local.entity != NULL && local.i >= 725) { local.warning = 1 }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
 
 		if(local.entity != NULL && local.entity.model == models/animate/allied_airborne_soldier_dead.tik) { local.entity remove; local.nullent++ } // remove dead soldier model
 		if(local.entity != NULL && local.entity.model == models/statweapons/flak88base.tik) { local.entity notsolid } // or local.entity remove
@@ -2431,7 +2433,7 @@ consoleprint:
 	if(local.warning == 1)
 	{
 		wait 1
-		println("----- WARNING: Keep below 725 entities on SP maps for Reborn servers!")
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
 end

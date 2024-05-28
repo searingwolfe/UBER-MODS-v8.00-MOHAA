@@ -1,4 +1,4 @@
-*Current Version: 7.95 - Updated: 4/19/2024*
+*Current Version: 7.955 - Updated: 5/28/2024*
 
 ### Table of Contents
 
@@ -188,7 +188,7 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 | exec cvars/cybsnd.scr      | "cybsnd_score 1" | print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won). |
 |       | "cybsnd_info 1" | print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance. |
 |       | "cybsnd_debug 1" | print once per second the Allies/Axis team count (living players) and Allies/Axis team total. If these values are inaccurate, then the mod has broken somehow (wait for the next the round, or reload the map). |
-| exec cvars/coord_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console). Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places. |
+| exec cvars/coord_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console). Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places and write to "coords.txt". Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). |
 | exec cvars/ubergametype.scr      | "g_ubergametype bb" | "g_ubergametype bb" = Base-Builder gametype. |
 |       | "g_ubergametype cyb" | Cyber Attack gametype. |
 |       | "g_ubergametype snd" | Search & Destroy gametype. |
@@ -212,12 +212,16 @@ Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 |       | "wuss2 [27 or Searingwolfe]" | give them all weapons; still works if "cheats" = "0". |
 |       | "addkills [27 or Searingwolfe]" | give them +1 kill. |
 |       | "adddeaths [27 or Searingwolfe]" | give them +1 death. |
+|       | "subtractkills [27 or Searingwolfe]" | give them -1 kill. |
+|       | "subtractdeaths [27 or Searingwolfe]" | give them -1 death. |
 |       | "coord2 1" | print $player[1]'s coords & angles to a "main/cvars/coords.txt" file (must create this file for "coord2" CVAR to work) in "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line. |
 |       | "coord2 entity" | print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line. |
 |       | "coord2 trigger" | print "( 0 0 0 ) " coords format on the same line. |
 |       | "coord2 spawn" | print ""0 0 0" "angle" "0"" coords format on a new line. |
 | exec cvars/playerspawns.scr      | "playerspawns 1" | spawn dummy models at all Allies/Axis or FFA spawns (only works in singleplayer maps, not including Training). |
 |       | "playerspawns 0" | remove the dummy models. |
+
+- For "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
 
 #
 
@@ -430,6 +434,8 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 			waitframe
 		}
 	end
+
+- Modders can assign UBER gametypes for different maps in a single map rotation (in global/uberversion.scr), but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
 
 #
 
@@ -800,7 +806,48 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- All singleplayer maps will eventually be modded: M1 and M2 (v7.95), M3 and M4 (v7.97), M5 and M6 + final version edits (v8.00).
+- M3L1A fully modded. 5 flyable planes, 2 jetpacks, 2 flak88s, 2 nebelwerfers, 4 tanks, 2 boats added to the map. 2 sets of radiobomb-walkies, extra throwing knives not added.
+- 1 bangalore wallbomb at the trench bunker entrance. Airstrikes occur at random times, and along any X-Y-axis direction on the map.
+
+- Random artillery explosions occur in the beach craters, at 6 $higgins_runup_mortar1 [mortar6] locations, and once per time-cycle at any random map location.
+
+- 6 original higgins boats will begin moving toward the beach after a random amount of initial map time.
+- These boats' solid clips were readjusted to better fit players, who can jetpack or eject from planes to land in the boats.
+- $higgins2 will always get destroyed and never respawn, but the other 5 $higgins1 [higgins6] boats can blow up from grenades, rockets, etc at any time and respawn after 60 seconds.
+- Higgins boats that are destroyed will slowly sink down and run continuous fx_water_spray emitters while sinking.
+- Once the higgins boats drop their doors upon landing, teleporters between the boats and the beach water are spawned, allowing players to hop on/off the boats.
+- Some Giant Bomb trigger and Rocket Ammo trigger origins are glued to 5 of the higgins boats.
+
+- 3 bangalores on the beach can be picked up and planted on the nearby barbwire to blow it up (other bangalores are removed after the barbwire is gone).
+- An ocean blocker thread prevents the drivable higgins boats (near edges of map) from going onto dry land.
+
+- Invisible map walls prevent players' projectiles from going through cliffs or through the ground.
+- Thick green lasers outline the map's borders to reclaim missing land areas and prevent players from falling underneath them.
+- Red lasers inside the beach bunkers outline the waist-level walls for players to see how much cover they have, when sniping other players down at the beach.
+- One ladder spawned in the trench, and marked by a blue laser.
+
+---------------
+
+- M3L1B fully modded. 5 flyable planes, 3 flak88s, 2 nebelwerfers, 5 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, extra throwing knives not added.
+- 3 bangalore wallbombs on Axis' side upper hill at 3 bunker door exits. Airstrikes occur at random times, and along any X-Y-axis direction on the map.
+
+- Random artillery explosions occur in the beach and hill craters, and once per time-cycle at any random map location.
+- If any $mortar_dirt_nosound emitters (from plane/vehicle/tank, Giant Bomb/Light Bomb, or airstrike bomb explosions) impact a "bunker_roof_volumes" region above the ground, $bunker_dust1 emitters will sprinkle dust inside the bunker.
+
+- The two AA Guns can be blown up by with large explosions (anything except for grenade explosions).
+- 3 minenbombs (entmint mines) that explode if grenades/rockets/etc blow up near them.
+- One minenbomb will not respawn (if 2 destructible crates are destroyed), but will instead knock over the nearby metal card table.
+- 2 radios have triggers for playing radio music.
+
+- The main beach bunker metal doors can now be opened/closed, with the upper-lower parts of entrance door opening/closing separately. A metal hatch can also be opened/closed.
+- One ladder spawned in the trench (blue laser), and 2 ladders spawned inside the dark empty beach bunker (purple lasers).
+
+- Invisible map walls prevent players' projectiles from going through cliffs or through the ground.
+- NOTE: avoid flying too high above the map while in spectator, since this map is very large. Viewing too much of the map at one time will cause a game crash (runtime error).
+
+---------------
+
+- All other singleplayer maps will eventually be modded: M3 (v7.96), M4 (v7.97), M5 (v7.98), M6 (v7.99), and final version edits (v8.00).
 
 #
 

@@ -75,6 +75,7 @@ players_alive_status:
   level.allow_teams_to_win = 0
   level.alliesplanted = 0
   level.axisplanted = 0
+  level.explosives_dropped = 0
   local.round_starttime = level.round_starttime
 
   wait 0.25 // keep this long enough so the scoreboard can add a point.
@@ -731,8 +732,22 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 	if(level.newgametype == "snd") 
 	{ 
 		local.bombtrig model "animate/pulse_explosive_pickup.tik" 
-		if(level.changesides != 1) { local.bombtrig.origin = local.originallies; local.bombtrig.angles = ( 0 local.angleallies 0 ); local.bombtrig light 0 0 1 125 }
-		if(level.changesides == 1) { local.bombtrig.origin = local.originaxis; local.bombtrig.angles = ( 0 local.angleaxis 0 ); local.bombtrig light 1 0 0 125 }
+		if(level.changesides != 1)
+		{
+			local.bombtrig.origin = local.originallies
+			local.bombtrig.angles = ( 0 local.angleallies 0 )
+			local.bombtrig light 0 0 1 125
+
+			exec global/flickerrotate.scr bombexplosive ( 0 0 1 ) 125 25 25 0
+		}
+		if(level.changesides == 1)
+		{
+			local.bombtrig.origin = local.originaxis
+			local.bombtrig.angles = ( 0 local.angleaxis 0 )
+			local.bombtrig light 1 0 0 125
+
+			exec global/flickerrotate.scr bombexplosive ( 1 0 0 ) 125 0 25 25
+		}
 	}
 	if(level.newgametype == "cyb") 
 	{ 
@@ -740,12 +755,16 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 		local.bombtrig.origin = local.origincentral
 		local.bombtrig.angles = ( 0 local.anglecentral 0 )
 		local.bombtrig light .25 0 .667 125
+
+		exec global/flickerrotate.scr bombexplosive ( .25 0 .667 ) 125 0 25 0
 	}
 
 	local.bombtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
 	local.bombtrig notsolid
 	local.bombtrig show
 	local.bombtrig droptofloor
+	local.bombtrig.origin += ( 0 0 20 )
+	local.bombtrig.scale = 1.50
 
 	local.bombtrig.originallies = local.originallies
 	local.bombtrig.originaxis = local.originaxis
@@ -826,31 +845,26 @@ doit local.originallies local.angleallies local.originaxis local.angleaxis local
 
    	if(local.result != left)
    	{
-		if(level.bomb_set != 1)
+		self.inuse = 0
+    		if($("bombhip" + self.entnum) != NULL) { $("bombhip" + self.entnum) remove }
+
+		if(level.bomb_set != 1) // dropped the bomb
 		{
-			self.inuse = 0
-    			$("bombhip" + self.entnum) remove // dropped the bomb
 			level.explosives_dropped = 1 // only used to change center screen dialogue.
+			thread bomb_has_dropped
 
 			if(level.disable_defuse != 1)
 			{
-				if(level.bomb_went2spectator == 1)  // if player goes to spectator, skip wait 0.5 and spawn the bomb at its old picked-up origin.
+				if(level.bomb_went2spectator == 1)  // if player goes to spectator, spawn the bomb at its old picked-up origin.
 				{ 
 					level.bomb_went2spectator = 0
 					goto bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral
 				}
     				goto bomb self.origin self.angles[1] self.origin self.angles[1] self.origin self.angles[1]
 			}
-			else if(level.change_team_score == 1)
-			{
-				self.inuse = 0
-    				$("bombhip" + self.entnum) remove	
-			}
 		}
-		else if(level.bomb_set == 1)
+		else if(level.bomb_set == 1) // planted the bomb
 		{
-			self.inuse = 0
-    			$("bombhip" + self.entnum) remove
     			//self stufftext "say *** I have planted the bomb! ***"
 			iprintlnbold("*** The bomb has been planted! ***")
 		}
@@ -860,6 +874,14 @@ doit local.originallies local.angleallies local.originaxis local.angleaxis local
 		level.explosives_dropped = 1
 		goto bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral
 	}
+end
+
+bomb_has_dropped:
+
+	waitframe // need to wait long enough for disable_defuse to change, if the round ended after a player dropped the bomb.
+	waitframe
+	waitframe
+	if(level.disable_defuse != 1) { iprintlnbold("*** The bomb has been dropped! ***") }
 end
 
 scan_player local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral:
@@ -882,10 +904,10 @@ scan_player local.originallies local.angleallies local.originaxis local.angleaxi
 		}
      		else
      		{
-  			if(self.dmteam != local.team || !isalive self || self.dead == 1 || self.dmteam == spectator || level.bomb_set == 1 || level.change_team_score == 1)
+  			if(self.dmteam != local.team || !isalive self || self.dead == 1 || self.dmteam == spectator || level.bomb_set == 1 || level.change_team_score == 1 || self.fellundermap == 1)
     			{
 				self.bombdog = 0
-	   			if(self.dmteam == spectator || isalive self) { level.bomb_went2spectator = 1 }
+	   			if(self.dmteam == spectator || isalive self || self.fellundermap == 1) { level.bomb_went2spectator = 1 }
     	   			end local.result
     			}
 			for(local.i = 1; local.i <= level.bombsites; local.i++)

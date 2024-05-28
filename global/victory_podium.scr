@@ -334,7 +334,7 @@ huddraw local.first_player local.second_player local.third_player:
 	huddraw_virtualsize 4 1
 	huddraw_alpha 4 1
 	huddraw_font 4 "facfont-10"
-	huddraw_color 4 1 1 0
+	huddraw_color 4 0 1 0
 	huddraw_rect 4 100 170 600 20
 
 	if(local.first_player != NIL && local.first_player != NULL)
@@ -352,7 +352,7 @@ huddraw local.first_player local.second_player local.third_player:
 		huddraw_virtualsize 3 1
 		huddraw_alpha 3 1
 		huddraw_font 3 "facfont-10"
-		huddraw_color 3 .85 .85 .85
+		huddraw_color 3 1 1 0
 		huddraw_rect 3 100 195 600 20
 		huddraw_string 3 ("Second Place: " + netname local.second_player)
 	}
@@ -362,7 +362,7 @@ huddraw local.first_player local.second_player local.third_player:
 		huddraw_virtualsize 2 1
 		huddraw_alpha 2 1
 		huddraw_font 2 "facfont-10"
-		huddraw_color 2 .7 .7 .7
+		huddraw_color 2 1 0 0
 		huddraw_rect 2 100 220 600 20
 		huddraw_string 2 ("Third Place: " + netname local.third_player)
 	}
@@ -550,7 +550,18 @@ end
 
 intermission local.type:
 
-	if(int(local.type) != 0 || level.time == NIL || int(level.time) < 60) { end }
+	if(local.type == NIL || int(local.type) != 0)
+	{
+		local.ret = fremove "main/cvars/playernames.txt"
+		local.result = fnewdir "main/cvars"
+		local.file = fopen "main/cvars/playernames.txt" "a+"
+		local.return = fseek local.file 0 2
+		for(local.i = 1; local.i <= $player.size; local.i++) { local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n") }
+		local.result = fclose local.file
+		end
+	}
+
+	if(level.time == NIL || int(level.time) < 60) { end }
 	if($intermission_camera == NULL) { wait 1; println("----- ERROR victory_podium.scr: $intermission_camera could not be found!"); end }
 	if($victory_podium == NULL) { wait 1; println("----- ERROR victory_podium.scr: $victory_podium could not be found!"); end }
 

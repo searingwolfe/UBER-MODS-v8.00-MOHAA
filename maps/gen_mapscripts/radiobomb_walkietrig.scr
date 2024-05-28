@@ -185,7 +185,8 @@ doit local.name local.origin local.angles:
    //self iprint ("CAUTION: The player holding the walkie talkie will kill you if they hold the USE key!")
 
    if(self.isdog != 1) { self attachmodel models/animate/radiobomb.tik "Bip01 R Thigh" 0.5 ("rbomb1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 3 ) } //( -up +down, +forward -backward, +right -left )
-   if(self.isdog == 1) { self.dog attachmodel models/animate/radiobomb.tik "Bip01 Spine" 0.5 ("rbomb1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 3 ) }
+   else { self.dog attachmodel models/animate/radiobomb.tik "Bip01 Spine" 0.5 ("rbomb1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 3 ) }
+   $("rbomb1_1" + local.name).angles = ( 0 180 20 )
 
    local.static = spawn script_model
    local.static model "items/cigarette.tik"
@@ -204,8 +205,6 @@ doit local.name local.origin local.angles:
    //huddraw_rect 104 -200 222 200 14 
    //huddraw_string 104 "Radio Bomb:   Picking Up"
 
-   $("rbomb1_1" + local.name).angles = ( 0 180 20 )
-
    $("rbomb_trigger1" + local.name) nottriggerable
    waitframe
    $("rbomb_trigger1" + local.name) remove
@@ -221,7 +220,7 @@ doit local.name local.origin local.angles:
    if(local.result != left)
    {
      self.inuse = 0
-     $("rbomb1_1" + local.name) remove
+     if($("rbomb1_1" + local.name) != NULL) { $("rbomb1_1" + local.name) remove }
      //self stufftext "say *** I dropped a radiobomb. ***"
      //huddraw_string 104 "Radio Bomb:   Dropped"
      local.static unglue
@@ -256,6 +255,7 @@ scan_player local.name:
  local.result = ok
  local.team = self.dmteam
  local.count = 0
+ local.dog = self.isdog
  while(1)
  {
   	if(self == NULL)
@@ -273,8 +273,23 @@ scan_player local.name:
     			end local.result
    		}
 
+		if(self.isdog == 1 && local.dog != 1)
+		{
+			if($("rbomb1_1" + local.name) != NULL) { $("rbomb1_1" + local.name) remove }
+			self.dog attachmodel models/animate/radiobomb.tik "Bip01 Spine" 0.5 ("rbomb1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 3 )
+			for(local.i = 1; local.i <= $("rbomb1_1" + local.name).size; local.i++) { $("rbomb1_1" + local.name)[local.i].angles = ( 0 180 20 ) }
+			local.dog = 1
+		}
+		if(self.isdog != 1 && local.dog == 1)
+		{
+			if($("rbomb1_1" + local.name) != NULL) { $("rbomb1_1" + local.name) remove }
+			self attachmodel models/animate/radiobomb.tik "Bip01 R Thigh" 0.5 ("rbomb1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 3 )
+			for(local.i = 1; local.i <= $("rbomb1_1" + local.name).size; local.i++) { $("rbomb1_1" + local.name)[local.i].angles = ( 0 180 20 ) }
+			local.dog = 0
+		}
+
 		local.planttimer = 0
-		while(self.useheld == 1 && self.dmteam == local.team && isalive self)
+		while(self.useheld == 1 && self.dmteam == local.team && isalive self && self.fellundermap != 1)
 		{ 
 			if(local.planttimer == 0) { self stopwatch 1.5 }
 			if(local.planttimer >= 15)  
@@ -357,6 +372,7 @@ doit2 local.name local.origin local.angles:
 
    if(self.isdog != 1) { self attachmodel models/static/scr536.tik "Bip01 R Thigh" 0.75 ("rwalkie1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 4 ) } //( -up +down, +forward -backward, +right -left )
    if(self.isdog == 1) { self.dog attachmodel models/static/scr536.tik "Bip01 Spine" 0.75 ("rwalkie1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 6 ) }
+   $("rwalkie1_1" + local.name).angles = ( 90 180 20 )
 
    local.static = spawn script_model
    local.static model "items/cigarette.tik"
@@ -375,8 +391,6 @@ doit2 local.name local.origin local.angles:
    //huddraw_rect 104 -200 222 200 14 
    //huddraw_string 104 "Walkie Talkie:   Picking Up"
 
-   $("rwalkie1_1" + local.name).angles = ( 90 180 20 )
-
    $("rwalkie_trigger1" + local.name) nottriggerable
    waitframe
    $("rwalkie_trigger1" + local.name) remove
@@ -392,7 +406,7 @@ doit2 local.name local.origin local.angles:
    if(local.result != left)
    {
      self.inuse = 0
-     $("rwalkie1_1" + local.name) remove
+     if($("rwalkie1_1" + local.name) != NULL) { $("rwalkie1_1" + local.name) remove }
      //self stufftext "say *** I dropped a walkie talkie. ***"
      //huddraw_string 104 "Walkie Talkie:   Dropped"
      local.static unglue
@@ -429,6 +443,7 @@ scan_player2 local.name:
  local.result = ok
  local.team = self.dmteam
  local.count = 0
+ local.dog = self.isdog
  while(1)
  {
   	if(self == NULL)
@@ -444,8 +459,23 @@ scan_player2 local.name:
     			end local.result
    		}
 
+		if(self.isdog == 1 && local.dog != 1)
+		{
+			if($("rwalkie1_1" + local.name) != NULL) { $("rwalkie1_1" + local.name) remove }
+			self.dog attachmodel models/static/scr536.tik "Bip01 Spine" 0.75 ("rwalkie1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 6 )
+			for(local.i = 1; local.i <= $("rwalkie1_1" + local.name).size; local.i++) { $("rwalkie1_1" + local.name)[local.i].angles = ( 90 180 20 ) }
+			local.dog = 1
+		}
+		if(self.isdog != 1 && local.dog == 1)
+		{
+			if($("rwalkie1_1" + local.name) != NULL) { $("rwalkie1_1" + local.name) remove }
+			self attachmodel models/static/scr536.tik "Bip01 R Thigh" 0.75 ("rwalkie1_1" + local.name) 1 -1 -1 -1 -1 ( 0 0 4 )
+			for(local.i = 1; local.i <= $("rwalkie1_1" + local.name).size; local.i++) { $("rwalkie1_1" + local.name)[local.i].angles = ( 90 180 20 ) }
+			local.dog = 0
+		}
+
 		local.detonatetimer = 0
-		while(self.useheld == 1 && self.dmteam == local.team && isalive self)
+		while(self.useheld == 1 && self.dmteam == local.team && isalive self && self.fellundermap != 1)
 		{ 
 			if(local.detonatetimer == 0) { self stopwatch 1.5 }
 			if(local.detonatetimer >= 15)  

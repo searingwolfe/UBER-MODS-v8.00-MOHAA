@@ -774,25 +774,30 @@ ammoboxes_explode local.health local.damage local.radius:
 
 	if($ammoboxes == NULL || $ammocrate == NULL) { end }
 
-	local.bike = spawn "vehicles/bmwbike.tik"
-	local.bike.origin = ( 1057 678 -254 )	  
-	local.bike.angles = ( 0 180 0 )
-	local.bike.health = local.health
-	local.bike.scale = 0.1
-	local.bike notsolid
-	local.bike hide
+	local.mine = spawn trigger_multiple spawnflags 128
+	local.mine.origin = ( 1114 712 -256 )
+	local.mine setsize ( -40 -40 -40 ) ( 40 40 40 )
+	local.mine.health = local.health
+	local.mine thread trig_healthboost
 
-	while(local.bike != NULL) { waitframe }
+	local.fire = spawn script_model
+	local.fire model "emitters/fireandsmoke.tik"
+	local.fire.origin = ( 1114 712 -256 )
+	local.fire.scale = 0.9
+	local.fire notsolid
+	local.fire hide
+
+	while(local.mine.health > 0) { waitframe }
 	
 	local.explode = spawn script_model
 	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
-	local.explode.origin = $ammocrate.origin
+	local.explode.origin = ( 1114 712 -256 )
 	local.explode.scale = 1
 	local.explode anim start
 
 	local.debris = spawn script_model
 	local.debris model "emitters/explosion_mine.tik" //"emitters/mortar_dirt_nosound.tik" 
-	local.debris.origin = $ammocrate.origin
+	local.debris.origin = ( 1114 712 -256 )
 	local.debris notsolid
 	local.debris.scale = 1.0 //1.25
 	local.debris anim start
@@ -816,9 +821,24 @@ ammoboxes_explode local.health local.damage local.radius:
 	println("----- Blowing up the Ammo Crates.")
 
 	waitframe
-	if(local.bike != NULL) { local.bike remove }
+	local.mine remove
 	local.explode remove
 	local.debris remove
+	local.fire show
+	local.fire anim start
+
+	wait 60
+	local.fire remove
+end
+
+trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0) // prevent regular bullets from killing trigger (i.e. if 250 health, trigger can still be killed by 2 grenades or a shotgun blast)
+	{
+		self.health = local.health
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1930,13 +1950,15 @@ consoleprint:
 
 	local.maxclients = int(getcvar(sv_maxclients))
 	local.nullent = 0
+	local.e = 0
 	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
 	{
 		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
-		if(local.entity != NULL && local.i >= 725) { local.warning = 1 }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
 
 		if(local.entity != NULL && local.entity.model == models/fx/dummy.tik) { local.entity remove; local.nullent++ } // remove fx dummy models near phones
 		if(local.entity != NULL && local.entity.model == models/vehicles/jeep_30cal.tik && local.entity.origin[0] == 0 && local.entity.origin[1] == 0 && local.entity.origin[2] == 0) { local.entity remove; local.nullent++ }
@@ -1954,7 +1976,7 @@ consoleprint:
 	if(local.warning == 1)
 	{
 		wait 1
-		println("----- WARNING: Keep below 725 entities on SP maps for Reborn servers!")
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
 end
