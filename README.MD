@@ -812,18 +812,18 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - Random artillery explosions occur in the beach craters, at 6 $higgins_runup_mortar1 [mortar6] locations, and once per time-cycle at any random map location.
 
 - 6 original higgins boats will begin moving toward the beach after a random amount of initial map time.
-- These boats' solid clips were readjusted to better fit players, who can jetpack or eject from planes to land in the boats.
-- $higgins2 will always get destroyed and never respawn, but the other 5 $higgins1 [higgins6] boats can blow up from grenades, rockets, etc at any time and respawn after 60 seconds.
-- Higgins boats that are destroyed will slowly sink down and run continuous fx_water_spray emitters while sinking.
-- Once the higgins boats drop their doors upon landing, teleporters between the boats and the beach water are spawned, allowing players to hop on/off the boats.
-- Some Giant Bomb trigger and Rocket Ammo trigger origins are glued to 5 of the higgins boats.
+	- These boats' solid clips were readjusted to better fit players, who can jetpack or eject from planes to land in the boats.
+	- $higgins2 will always get destroyed and never respawn, but the other 5 $higgins1 [higgins6] boats can blow up from grenades, rockets, etc at any time and respawn after 60 seconds.
+	- Higgins boats that are destroyed will slowly sink down and run continuous fx_water_spray emitters while sinking.
+	- Once the higgins boats drop their doors upon landing, teleporters between the boats and the beach water are spawned, allowing players to hop on/off the boats.
+	- Some Giant Bomb trigger and Rocket Ammo trigger origins are glued to 5 of the higgins boats.
 
 - 3 bangalores on the beach can be picked up and planted on the nearby barbwire to blow it up (other bangalores are removed after the barbwire is gone).
 - An ocean blocker thread prevents the drivable higgins boats (near edges of map) from going onto dry land.
 
 - Invisible map walls prevent players' projectiles from going through cliffs or through the ground.
-- Thick green lasers outline the map's borders to reclaim missing land areas and prevent players from falling underneath them.
-- Red lasers inside the beach bunkers outline the waist-level walls for players to see how much cover they have, when sniping other players down at the beach.
+	- Thick green lasers outline the map's borders to reclaim missing land areas and prevent players from falling underneath them.
+	- Red lasers inside the beach bunkers outline the waist-level walls for players to see how much cover they have, when sniping other players down at the beach.
 - One ladder spawned in the trench, and marked by a blue laser.
 
 ---------------
@@ -832,18 +832,19 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 - 3 bangalore wallbombs on Axis' side upper hill at 3 bunker door exits. Airstrikes occur at random times, and along any X-Y-axis direction on the map.
 
 - Random artillery explosions occur in the beach and hill craters, and once per time-cycle at any random map location.
-- If any $mortar_dirt_nosound emitters (from plane/vehicle/tank, Giant Bomb/Light Bomb, or airstrike bomb explosions) impact a "bunker_roof_volumes" region above the ground, $bunker_dust1 emitters will sprinkle dust inside the bunker.
+	- If any $mortar_dirt_nosound emitters (from plane/vehicle/tank, Giant Bomb/Light Bomb, or airstrike bomb explosions) impact a "bunker_roof_volumes" region above the ground, $bunker_dust1 emitters will sprinkle dust inside the bunker.
 
 - The two AA Guns can be blown up by with large explosions (anything except for grenade explosions).
 - 3 minenbombs (entmint mines) that explode if grenades/rockets/etc blow up near them.
-- One minenbomb will not respawn (if 2 destructible crates are destroyed), but will instead knock over the nearby metal card table.
+	- One minenbomb will not respawn (if 2 destructible crates are destroyed), but will instead knock over the nearby metal card table.
 - 2 radios have triggers for playing radio music.
 
 - The main beach bunker metal doors can now be opened/closed, with the upper-lower parts of entrance door opening/closing separately. A metal hatch can also be opened/closed.
 - One ladder spawned in the trench (blue laser), and 2 ladders spawned inside the dark empty beach bunker (purple lasers).
 
 - Invisible map walls prevent players' projectiles from going through cliffs or through the ground.
-- NOTE: avoid flying too high above the map while in spectator, since this map is very large. Viewing too much of the map at one time will cause a game crash (runtime error).
+
+NOTE: avoid flying too high above the map while in spectator, since this map is very large. Viewing too much of the map at one time will cause a game crash (runtime error).
 
 ---------------
 
@@ -853,93 +854,62 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 # Updates & Bug Fixes
 
-v7.95 (4-14-2023): - Various player-damaging scripts modified for giving scorepoints to player killers and preventing teammates from being killed by vehicle/tank/boat/plane weapons or explosions.
+v7.955 (5-28-2024): - More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:
+	- Non-admin players will have name-priority over other players that copy their name if they held their name the earliest (in current level.time map time) and if they joined the server first.
+	- Ensured that "SAME NAME FIX" script waits for the player to finish running "check_player_stufftexts", and ensured that "check_player_stufftexts" thread doesn't prematurely end before the player fully connects to the server.
 
-- Press JUMP to exit nebelwerfers and flak88s now, along with other drivable stuff; hold FIRE(zoom) to look around.
-- Players driving uboats can now lean left/right to aim turret projectiles up/down (only while moving), instead of only shooting them in a horizontal line (a laser is visible while adjusting aim). Lean left/right while not moving to look behind.
+- Before a map switch or map restart, the script will delete and write a "cvars/playernames.txt" file containing all players' names and IPs in the current map.
+	- Players with the wrong IP address can still copy names in this list, but if a player finally loads in, or leaves and rejoins later in the same map whose name and IP match a name, that player will have name-priority over his own name.
 
-- Claymore, Cluster Mine, Sentry Turret killstreaks will respond to enemies driving vehicles/tanks/boats, flying planes, riding as passengers, and riding as turret players, properly giving kills/scorepoints for most scenarios.
-- Sentry Turrets will not shoot at players driving vehicles/tanks/boats if there are no other passengers or turret players, since drivers cannot be killed with bullets.
+- Passenger riders & turret users in drivable tanks, vehicles, and boats have further improved scripts to prevent them from getting stuck inside vehicles or other players when exiting them.
+- Dogs will go into the 1st available passenger seat for drivable vehicles with a 30 Cal turret gun (jeep.tik, sdkfz.tik, sdkfz_afrika.tik), instead of saying "dogs cannot use vehicle turrets".
 
-- Giant Bombs, Light Bombs, Nebelwerfers, Flak88s, Flyable planes' bullets/rockets/ejected planes, uboat projectiles, airstrike bombs killing players that are riding in vehicles/tanks/boats/planes will properly give kills/scorepoints to the player that launched projectiles from them.
-- Tank & Flak88 projectiles will give kills/scorepoints to the player that launched them for most other cases too.
-- Bangalore wall bombs & Radiobomb Walkies also give kills/scorepoints to the player that triggered them.
+- Fixed rare bug that prevented turret players from dying if their vehicle driver runs over another vehicle and blows himself up.
+	- This bug also prevented turret players from ever dying again, until they switch teams or until "$player[turret player clientnum] takedamage" is executed.
 
-- Ensured that players cannot attempt to get into vehicles whose passenger seats are all occupied.
-- Passengers in vehicles/boats that are auto-exited by drivers getting out of them will also be checked if they're stuck in a wall. If so, the script respawns the passengers.
-- Improved player reset threads when exiting vehicles/tanks/boats to better avoid players getting stuck in them when on sharply-angled sloped terrain.
+- Dogs can now use and fly with jetpacks, visible on the dogs' backs.
 
-- Vehicle/tank "_trig" triggers are now glued to their vehicles/tanks, so vehicles/tanks and their triggers are at the exact same origin initially.
-- Tank setsizes readjusted (mainly kingtank.tik). Tank cannons are now solid.
+- Giant Bomb and Light Bomb triggers are now visible on the dogs' right sides.
+	- Both of these triggers will explode much faster when launching near the ground below the player owner's feet.
 
-- Revamped Tank & Flak88 shooting by replacing their original projectiles (causing radiusdamage from $world after exploding) with scripted ones (modifying tank cannon .tiks) that give kills/scorepoints to the driver when needed.
-- Tank & Flak88 projectiles will no longer deal radiusdamage and kill teammates if exploding too close to at least 1 teammate, even if they're driving or riding in something.
+- Flyable planes will now explode mid-air if they touch any Giant Bombs or Light Bombs launched by other players, with kills/scorepoints given to the player that launched them.
+	- Rare server crash fix for Giant/Light Bomb triggers by reworking scripts. Server would crash if shooting them directly at a flyable plane's propellers.
+	- Reworked scripts by replacing "waitmove" with a physics_on projectile and using "waittill touch".
+	- Slowed down Light Bomb velocity time from 0.35 to 0.80 seconds, since these new physics_on projectiles will stray away from their horizontal trajectory if their time-until-impact is faster than 0.80. 
 
-- Flyable planes that players eject from (on fire and crashing) will no longer deal radiusdamage and kill teammates if exploding too close to at least 1 teammate, even if they're driving or riding in something.
-- Players who switch teams during first-flight instructions will no longer be teleported back to the plane trigger for flying a plane (flight is cancelled).
-- Flyable planes will no longer blow up if they touch a projectile owned by a teammate (not including in FFA), and kills/scorepoints will be given to the projectile's owner that touches/blows up any planes.
+- Fixed scorepoints not being given to players flying planes when they shoot and kill nebelwerfer users with the 30 Cal or MG42.
+	- Fixed NULL errors relating to a flyable plane's scale, and rarely occuring after planes crash into the ground.
 
-- cvars/adminstuff.scr script now uses admins' IPs in a level array variable (top of script) to prevent admins from getting auto-kicked for same-name fix & stufftext-check threads (or make sure $player[admin clientnum + 1] isadmin == 1).
+- The 6 UBER triggers: giant bomb, light bomb, +200 health, toxic snowball ammo, grenade ammo, rocket launcher ammo, will always stay at their current "level.spot_[trigger]" origin, even if other scripts are moving the origin.
 
----------------
+- Removed some unwanted door-closing sounds in maps/gen_mapscripts/doorsgates.scr. Reworked trigger sounds, added metal_doors_solid and metal_hatch threads.
+- Added players' ability to extinguish their flames inside any "level.water_volumes" volume if they get caught on fire by a bonfire trigger, from maps/gen_mapscripts/bonfire.scr.
 
-- The new script, global/ambience_mp.scr, recreates ambience sound changes between different environments in singleplayer maps, for multiplayer purposes.
-	- Originally, global/ambient.scr would run only the "normal" soundtrack (from music/[map name].mus in Pak0.pk3), or switch between soundtracks if $player walked through any $interior or $exterior triggers.
-	- Players that are inside of a volume will run stufftext "tmstop; tmloop [music filepath]" only if the music filepath is different from their current playing music.
-	- Players will only change music once per 40 frames, preventing spamming when standing at ambience volume borders.
-	- The script can also make players run stufftext "s_musicvolume 1" if local.forcemaxvolume = 1 in the main script, to ensure that all players hear the ambience.
-	- Music volume must be greater than 0% to hear these ambient sounds.
-	- If debug iprint = 1 (local.debug = 1), players will iprint music filepath each time a new ambient sound plays, and music will change faster (once per frame).
-	- If a player walks into an area where 2+ volumes are still overlapping (should never happen, but runs if the script failed to see the overlap), the player's origin is printed and the script ends.
-	- Ambience volumes are like triggers, but triggers aren't actually spawned. They should fill the whole interior of a building, or whatever 3D region that players will hear interior ambience within it (or other special ambiences).
-	- Circular volumes (light houses), curved or diagonal walls (not along X-Y axis) will require several small rectangular volumes stacked like pancakes to fill in these interior areas.
+- Bomberplane airstrikes' and airstrike killstreaks' dropped bombs will make a water explosion if dropped on top of water, only if an level.water_volumes array exists.
+	- Before any bomberplane.scr or bomberplane_nospline.scr script runs, add a level.water_volumes array in the map script (example below) and add origin, setsize1, setsize2 (similar to triggers).
+	- Water volumes added to mohdm4, obj_team4, M2L2A, M2L2B, M2L2C, M3L1A, M3L1B.
 
-- Main script parameters: outside/exterior ambient music filepath, force max volume (0 = no, 1 = yes), debug iprint (0 = no, 1 = iprint music, change music faster).
-	- First, create a "level.spawnambs = makeArray" and add various ambience volumes, starting with origin and both -/+ setsizes, then the music to be played inside it.
-	- Then, run "exec global/ambience_mp.scr local.music" where "local.music" = ambience music filepath for outdoors music to be played (the default ambience to play when players are outside all other 	volumes).
-	- If any 2 volumes are overlapping and/or touching in all 3 axes (x,y,z), then the 2nd volume is removed and replaced with 0s in the makeArray.
-	- Errors print suggestions for fixing a volume's setsizes or origin if any volume is deleted.
-	- If level.spawnamb does not exist or doesn't have any volumes, the map's ambience will default to "local.music".
-	- Parameters: origin, setsize 1, setsize 2, indoors ambient music filepath.
-	- Example:
+	water_volumes: // these are for any airstrikes that drop bombs into the ocean.
 
-			ambience: // make sure the spawnamb volumes are not touching or overlapping!!!
+		level.water_volumes = makeArray // from dm/mohdm4
+			( 1407 799 32 ) ( -3039 -1654 -1000 ) ( 1920 0 10 ) // origin, setsize1, setsize2.
+			( -1632 -855 32 ) ( -8000 0 -1000 ) ( 0 3355 10 )
+			( -6050 2500 32 ) ( -8000 0 -1000 ) ( 0 8000 10 )
+		endArray
+	end
 
-				level.spawnamb = makeArray // map M2L1.
-					( -1903 -3775 380 ) ( 0 0 0 ) ( 351 351 379 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[1]
-					( -73 2415 360 ) ( 0 -911 0 ) ( 1528 0 423 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[2]
-					( 1455 3343 380 ) ( -1487 -927 0 ) ( 0 0 226 ) sound/amb_stereo/Amb_M2_SnowInt.mp3		// amb[3]
-					( 2816 7879 -307 ) ( 0 -1108 0 ) ( 1455 0 882 ) sound/amb_stereo/Amb_M2_SubFacility.mp3		// amb[4]
-				endArray
+- Modders can now assign UBER gametypes for different maps in a single map rotation (in global/uberversion.scr), but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
 
-				exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3
-				//exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 1 // outdoors music filepath, force max music volume, debug iprint.
-			end
+- Added rotation and boosted scale of $bombexplosive in global/cyberattack_searchdestroy.scr so they're easier to see and distinguish from the Radiobomb Walkies.
+	- Added "The bomb has been dropped!" messages when players drop bombs, but not when the dropped bomb causes the round to end.
+
+- Fixed M1L1 vehicle tele for tanks to go through the town entrance.
+- Fixed "minenbombs" threads in various maps (particularly obj_team3) so they stop blocking players' paths.
+- Fixed bangalore array errors in M2L2C from 2 bangalores having the same name.
+- Bangalores are now visible on dogs' left sides when picked up.
+- Some global/spawnladder.scr ladders readjusted. If a solidclip was spawned for the ladder, the ladder's trigger should be 20+ units away from it, and extend 50 units above the upper-floor.
 
 ---------------
 
-- M2L3 fully modded. 4 flyable planes, 1 flak88, 1 nebelwerfer, 3 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, 5 extra throwing knives also added.
-- 1 set of bangalore wallbombs (two-way switch) between the truck garage and Axis spawn outdoors. Airstrikes are not included in this level.
-
-- The train's splinepath is extended along the curved railroad, and extended from the train tunnel. The tunnel itself is extended all the way to the map's edge.
-- Press USE(e) near the train and the fence to ride in the train. The train moves automatically. Hold USE(e) for 1 second to exit the train (only when outside of the "player_clip" brushes).
-	- Any players that exit the train while it's moving will appear on top of the train. Press USE(e) while looking down to re-enter the train. Walking too close to the edge of a moving train will kill the player.
-	- When the train arrives and fully stops, all players inside the train-front and the train cab will automatically exit the train and teleported to the ground.
-	- Players/vehicles/tanks that touch the moving train will be killed/destroyed.
-- Up to 2 players (teammates only, does not work in FFA) can ride in the front of the train (the bp44train.tik model), and they must hop in before the train is moving too fast.
-	- The 2 train-front riders can shoot from the train's windows, and aim by holding FIRE(zoom). These players can be shot/killed by other players shooting at the train's windows too.
-- Up to 20 players (5 rows, 4 columns) can ride in the train cab, regardless of teammates. The riders can shoot and aim by holding FIRE(zoom), or exit the train cab by holding USE(e).
-	- When train starts moving (only when a player gets into the train-front, the bp44train), all players inside the train cab will be locked into 1 of 20 available seats.
-	- If all seats are filled, the extra players are teleported back outside of the cab on the ground.
-	- If players on opposite teams are riding in the train cab together, anywhere they shoot will cause damage to their riding enemies since the damage-respoding trigger covers the whole cab's interior.
-	- The train cab rider in the 1st seat (middle row, closest to door) can toggle opening/closing the solid traincab door by Leaning Left/Right
-	- If the train cab door is closed, players inside the cab cannot be shot/killed or shoot/kill others.
-
-- 2 vehicle teles for vehicles to enter/exit the truck garage. Various extra roads outlined by lasers spawned in extra map areas.
-- Other lasers on the rooftops help prevent players from falling off edges.
-
-- Thick green lasers on the ground outline "player_clip" brushes from the map's .bsp (brushes cannot be removed), since players cannot walk through them.
-- Vehicles/tanks can drive through them, but players that exit them while inside these brushes will get trapped (respawned after 3 seconds).
-- Building rooftops and ledges are solified with "script_origin"s and accessible via teles from the ground (glitching can occur when standing still. To reduce entity count, smaller "script_model"s were not used).
-
-- Numerous sound entities added throughout the Allies spawn and truck garage: 3 generators, 16 transformers, 8 air vents.
+- M3L1A fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)<br>)
+- M3L1B fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)<br>)
