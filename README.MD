@@ -911,5 +911,5 @@ v7.955 (5-28-2024): - More improvements in adminstuff.scr to prevent "stufftext"
 
 ---------------
 
-- M3L1A fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)<br>)
-- M3L1B fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)<br>)
+- M3L1A fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
+- M3L1B fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
