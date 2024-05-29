@@ -854,7 +854,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.955 (5-28-2024): - More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:
+v7.955 (5-29-2024): - More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:
 	- Non-admin players will have name-priority over other players that copy their name if they held their name the earliest (in current level.time map time) and if they joined the server first.
 	- Ensured that "SAME NAME FIX" script waits for the player to finish running "check_player_stufftexts", and ensured that "check_player_stufftexts" thread doesn't prematurely end before the player fully connects to the server.
 
