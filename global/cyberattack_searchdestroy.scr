@@ -85,15 +85,16 @@ players_alive_status:
   waitframe
 
   while(level.round_starttime > 0) // waiting until the round begins
-  { 
-	for(local.i = 1; local.i <= $player.size; local.i++)
+  {
+ 	local.maxplayers = int(getcvar "sv_maxclients")
+	for(local.i = 1; local.i <= local.maxplayers; local.i++)
   	{
 		local.mef_weaponclass = NIL
-		if($player[local.i] != NULL && ($player[local.i].weapcheck != 1 || $player[local.i].mef_weaponclass == NIL))
+		if(local.i <= $player.size && $player[local.i] != NULL && ($player[local.i].weapcheck != 1 || $player[local.i].mef_weaponclass == NIL))
 		{
 			local.mef_weaponclass = waitthread global/get_player_weaponclass.scr::main $player[local.i]
 		}
-		if($player[local.i] != NULL)
+		if(local.i <= $player.size && $player[local.i] != NULL)
 		{
 			$player[local.i].mef_weaponclass = local.mef_weaponclass
 			$player[local.i].weapcheck = 1
@@ -102,9 +103,12 @@ players_alive_status:
   	}
 	waitframe
   }
-  for(local.i = 1; local.i <= $player.size; local.i++) // make spectators auto join teams once round starts, off by default.
+  for(local.i = 1; local.i <= local.maxplayers; local.i++) // make spectators auto join teams once round starts, off by default.
   {
-	if($player[local.i].dmteam == "spectator" && level.spectators_jointeams == 1) { $player[local.i] primarydmweapon mg; $player[local.i] auto_join_team } // could also be primarydmweapon rifle
+	if(local.i <= $player.size && $player[local.i] != NULL && $player[local.i].dmteam == "spectator" && level.spectators_jointeams == 1)
+	{
+		$player[local.i] primarydmweapon mg; $player[local.i] auto_join_team // could also be primarydmweapon rifle
+	}
   }
 
   if(level.newgametype == "snd" && level.changesides != 1) { huddraw_string 207 ("Plant Team: Allies") }
@@ -112,9 +116,9 @@ players_alive_status:
   if(level.newgametype == "cyb") { huddraw_string 207 ("Find & Plant Bomb") }
   if(level.newgametype == "ft") { huddraw_string 207 ("Kill All Enemy Players") }
 
-  local.maxplayers = int(getcvar "sv_maxclients")  // round has now started
-  while(level.change_team_score != 1)
+  while(level.change_team_score != 1)  // round has now started
   {
+ 	local.maxplayers = int(getcvar "sv_maxclients")
 	for(local.i = 1; local.i <= local.maxplayers; local.i++)
 	{
 	   local.mef_weaponclass = NIL
@@ -945,9 +949,9 @@ reset_bomb local.originallies local.angleallies local.originaxis local.angleaxis
 	if($bombexplosive != NULL) { $bombexplosive nottriggerable }
 	while(level.spectate_enemyteam == 1) { waitframe }
 
-	if($("bombhip" + self.entnum) != NULL) { $("bombhip" + self.entnum) remove }
+	if(self != NULL && $("bombhip" + self.entnum) != NULL) { $("bombhip" + self.entnum) remove }
 	if($bombexplosive != NULL) { $bombexplosive remove }
-	self.inuse = 0
+	if(self != NULL) { self.inuse = 0 }
 	
 	thread bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral
 end
