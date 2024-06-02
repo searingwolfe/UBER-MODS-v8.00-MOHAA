@@ -1,4 +1,4 @@
-*Current Version: 7.955 - Updated: 5/29/2024*
+*Current Version: 7.955 - Updated: 6/2/2024*
 
 ### Table of Contents
 
@@ -854,7 +854,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.955 (5-29-2024): - More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:
+v7.955 (6-2-2024): - More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:
 	- Non-admin players will have name-priority over other players that copy their name if they held their name the earliest (in current level.time map time) and if they joined the server first.
 	- Ensured that "SAME NAME FIX" script waits for the player to finish running "check_player_stufftexts", and ensured that "check_player_stufftexts" thread doesn't prematurely end before the player fully connects to the server.
 
@@ -908,6 +908,9 @@ v7.955 (5-29-2024): - More improvements in adminstuff.scr to prevent "stufftext"
 - Fixed bangalore array errors in M2L2C from 2 bangalores having the same name.
 - Bangalores are now visible on dogs' left sides when picked up.
 - Some global/spawnladder.scr ladders readjusted. If a solidclip was spawned for the ladder, the ladder's trigger should be 20+ units away from it, and extend 50 units above the upper-floor.
+
+- Fixed rare case in cyberattack_searchdestroy.scr where players switching teams while dead wouldn't remove their frozen bodies, and thus causing the script's Allies/Axis teamcounts to become inaccurate.
+- Fixed "cybsnd_debug 1" cvar not working anymore if left on while the server changes maps. Use this cvar to continuously print to console the Allies/Axis' alive & total teamcounts. If any of these are inaccurate, the script has broken and requires a map restart.
 
 ---------------
 
