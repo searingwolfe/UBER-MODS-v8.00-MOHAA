@@ -299,7 +299,7 @@ frozen_player local.mef_weaponclass:
 	local.revivetrig.origin = local.ent.origin 		     
 	local.revivetrig setsize ( -35 -35 -5 ) ( 35 35 105 )
 
-	while(self != NULL && self.dmteam != spectator && local.ent != NULL && local.ent.dying != 1 && local.ent.reviving != 1 && level.change_team_score != 1)
+	while(self != NULL && self.dmteam == local.ent.team && local.ent != NULL && local.ent.dying != 1 && local.ent.reviving != 1 && level.change_team_score != 1)
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
@@ -378,13 +378,14 @@ frozen_player local.mef_weaponclass:
 			}
 		}		   
 	}
-	if(self == NULL || self.dmteam == spectator)
+
+	if(self == NULL || self.dmteam != local.ent.team)
 	{
 		if($("beams" + local.ent.entnum) != NULL) { $("beams" + local.ent.entnum) remove }
 		if($("revivetrig" + local.ent.entnum) != NULL) { $("revivetrig" + local.ent.entnum) remove }
 		if(local.ent != NULL) { local.ent remove }
+		if(self != NULL) { self.teamcheck = 0 }
 	}
-
 end
 
 spawn_beam local.startpoint local.endpoint local.color local.entnum:
