@@ -1,4 +1,4 @@
-*Current Version: 7.955 - Updated: 6/2/2024*
+*Current Version: 7.955 - Updated: 6/11/2024*
 
 ### Table of Contents
 
@@ -911,6 +911,16 @@ v7.955 (6-2-2024): - More improvements in adminstuff.scr to prevent "stufftext" 
 
 - Fixed rare case in cyberattack_searchdestroy.scr where players switching teams while dead wouldn't remove their frozen bodies, and thus causing the script's Allies/Axis teamcounts to become inaccurate.
 - Fixed "cybsnd_debug 1" cvar not working anymore if left on while the server changes maps. Use this cvar to continuously print to console the Allies/Axis' alive & total teamcounts. If any of these are inaccurate, the script has broken and requires a map restart.
+- Fixed a potential spamming NIL error in global/give_players_knives.scr.
+
+---------------
+
+v7.955 (6-11-2024): - Major script revisions for cyberattack_searchdestroy.scr to ensure that Allies/Axis' alive & total teamcounts remain accurate (mainly "players_perteam_status" thread).
+	- Bugs appeared when $player[1] left the game before $player[2], making $player[2] become $player[1] in the teamcounts arrays before the arrays had a chance to remove the now-NULL $player[2].
+	- Instead of filling the arrays with $player[local.i] in a for-loop, the arrays instead check for players' entnums (player entity numbers will not change if other players leave before them).
+	- Revised "player_fromspectator" and added a "player_mef_weaponclass" thread to simplify assigning a weaponclass to players, and improve accuracy when dead/frozen players are respawned with their old weaponclass.
+
+More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
 
 ---------------
 
