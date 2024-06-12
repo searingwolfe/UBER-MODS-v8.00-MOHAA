@@ -854,8 +854,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.955 (6-2-2024): - More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:<br>
-	- Non-admin players will have name-priority over other players that copy their name if they held their name the earliest (in current level.time map time) and if they joined the server first.<br>
+v7.955 (6-2-2024):
+- More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:
+	- Non-admin players will have name-priority over other players that copy their name if they held their name the earliest (in current level.time map time) and if they joined the server first.
 	- Ensured that "SAME NAME FIX" script waits for the player to finish running "check_player_stufftexts", and ensured that "check_player_stufftexts" thread doesn't prematurely end before the player fully connects to the server.
 
 - Before a map switch or map restart, the script will delete and write a "cvars/playernames.txt" file containing all players' names and IPs in the current map.
@@ -915,9 +916,10 @@ v7.955 (6-2-2024): - More improvements in adminstuff.scr to prevent "stufftext" 
 
 ---------------
 
-v7.955 (6-11-2024): - Major script revisions for cyberattack_searchdestroy.scr to ensure that Allies/Axis' alive & total teamcounts remain accurate (mainly "players_perteam_status" thread).<br>
-	- Bugs appeared when $player[1] left the game before $player[2], making $player[2] become $player[1] in the teamcounts arrays before the arrays had a chance to remove the now-NULL $player[2].<br>
-	- Instead of filling the arrays with $player[local.i] in a for-loop, the arrays instead check for players' entnums (player entity numbers will not change if other players leave before them).<br>
+v7.955 (6-11-2024):
+- Major script revisions for cyberattack_searchdestroy.scr to ensure that Allies/Axis' alive & total teamcounts remain accurate (mainly "players_perteam_status" thread).
+	- Bugs appeared when $player[1] left the game before $player[2], making $player[2] become $player[1] in the teamcounts arrays before the arrays had a chance to remove the now-NULL $player[2].
+	- Instead of filling the arrays with $player[local.i] in a for-loop, the arrays instead check for players' entnums (player entity numbers will not change if other players leave before them).
 	- Revised "player_fromspectator" and added a "player_mef_weaponclass" thread to simplify assigning a weaponclass to players, and improve accuracy when dead/frozen players are respawned with their old weaponclass.
 
 More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
