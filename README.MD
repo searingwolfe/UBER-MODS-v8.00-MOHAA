@@ -1,4 +1,4 @@
-*Current Version: 7.955 - Updated: 6/11/2024*
+*Current Version: 7.958 - Updated: 6/11/2024*
 
 ### Table of Contents
 
@@ -916,7 +916,7 @@ v7.955 (6-2-2024):
 
 ---------------
 
-v7.955 (6-11-2024):
+v7.958 (6-11-2024):
 - Major script revisions for cyberattack_searchdestroy.scr to ensure that Allies/Axis' alive & total teamcounts remain accurate (mainly "players_perteam_status" thread).
 	- Bugs appeared when $player[1] left the game before $player[2], making $player[2] become $player[1] in the teamcounts arrays before the arrays had a chance to remove the now-NULL $player[2].
 	- Instead of filling the arrays with $player[local.i] in a for-loop, the arrays instead check for players' entnums (player entity numbers will not change if other players leave before them).
