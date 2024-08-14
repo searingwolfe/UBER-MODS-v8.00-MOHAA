@@ -857,8 +857,8 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 - M3L2 fully modded. 5 jetpacks, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
 
 - NOTE: Tanks, vehicles, radiobomb-walkies, dog trigger were removed because the players' clients keep auto-disconnecting them with an "ERROR: MAX_GAMESTATE_CHARS exceeded" message in their consoles.
-- So far, this error only occurs on this map if too many vehicles/tanks are spawned in (too much client data? too many sound aliases? not sure).
-- Do not use more than 2 different models of drivable vehicles/tanks. Do not add more than 4 drivable vehicles/tanks. Remove as many other mods as possible too.
+	- So far, this error only occurs on this map if too many vehicles/tanks are spawned in (too much client data? too many sound aliases? not sure).
+	- Do not use more than 2 different models of drivable vehicles/tanks. Do not add more than 4 drivable vehicles/tanks. Remove as many other mods as possible too.
 
 - Players can automatically walk through the 4 broken windows on the ground floor of the Allies mansion building (script teleports them in/out of the building if touching and facing any broken window).
 - Random explosions added within most mortar craters on the map.
@@ -898,18 +898,18 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 v7.97 (8-14-2024):
 - More script improvements in global/cyberattack_searchdestroy.scr:
-- Fixed camera jittering when players are dead/frozen and team-spectating other teammates, by doing "self physics_off" when following a living player, and "self physics_on" when spectating a stationary frozen body.
-- When the bomb is planted on a bombsite, the bomb will still flicker in color, making more obvious which bombsite has an explosive on it.
-- Team avatars added above each bombsite, and above the $bombexplosive (no avatar above $bombexplosive if playing Cyber Attack game mode).
-- The 3 entities making the outside walls of each bombsite are now notsolid, preventing players getting stuck if they're placed in some corners.
+	- Fixed camera jittering when players are dead/frozen and team-spectating other teammates, by doing "self physics_off" when following a living player, and "self physics_on" when spectating a stationary frozen body.
+	- When the bomb is planted on a bombsite, the bomb will still flicker in color, making more obvious which bombsite has an explosive on it.
+	- Team avatars added above each bombsite, and above the $bombexplosive (no avatar above $bombexplosive if playing Cyber Attack game mode).
+	- The 3 entities making the outside walls of each bombsite are now notsolid, preventing players getting stuck if they're placed in some corners.
 
 ---------------
 
 - To prevent the $bombexplosive from auto-rotating (using bomb's initial angle parameters instead), make the "no rotate" parameter = 1 below [see README (essentials).txt for more info].
 
-	Parameters: Allies origin, Allies angle, Axis origin, Axis angle, central origin, central angle, bomb norotate. Both Allies and Axis origins/angles are for Search & Destroy only. The central origin/angle is for Cyber Attack only.
-	Example from "cyb" thread in map scripts: thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -3609 -2716 56 ) 90 1
-	Example from "snd" thread in map scripts: thread global/cyberattack_searchdestroy.scr::bomb ( -4102 2862 0 ) 90 ( 3550 -3498 -195 ) 180 ( 0 0 0 ) 0 1
+		Parameters: Allies origin, Allies angle, Axis origin, Axis angle, central origin, central angle, bomb norotate. Both Allies and Axis origins/angles are for Search & Destroy only. The central origin/angle is for Cyber Attack only.
+		Example from "cyb" thread in map scripts: thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -3609 -2716 56 ) 90 1
+		Example from "snd" thread in map scripts: thread global/cyberattack_searchdestroy.scr::bomb ( -4102 2862 0 ) 90 ( 3550 -3498 -195 ) 180 ( 0 0 0 ) 0 1
 
 ---------------
 
@@ -917,48 +917,48 @@ v7.97 (8-14-2024):
 - Players using drivable vehicles & boats can now be shot and killed by enemy players (not including SDKFZs). Given the math behind the damage dealt to drivers, all passengers will likely be killed first before the driver does.
 - Players using drivable vehicles & boats can now see a secondary health bar, representing their actual player's health (when in vehicles/boats/tanks, the health bar changes to the vehicle's health).
 - Players using drivable tanks can now see a secondary health bar, representing the tank's current health (the health bar always starts at 100 when entering tanks, even though the tank & driver have different healths).
-- If players had a jetpack on before driving vehicles/boats, the jetpack fuel bar simply to the player's health, and reverts back to the fuel bar after exiting vehicles/boats.
+	- If players had a jetpack on before driving vehicles/boats, the jetpack fuel bar simply to the player's health, and reverts back to the fuel bar after exiting vehicles/boats.
 - Drivable tanks will now emit smoke if they are damaged. The smoke's scale increases as the tank's health decreases.
 
 ---------------
 
 - Players using flak88s can now be shot and killed if the turret is facing > 30 and < 195 degrees to the left ( > 165 and < 330 to the right) of the enemy shooter, or if player's driver dummy model is in line-of-sight with enemy bullets.
-- These angles (level.flak88s_minangle & level.flak88s_maxangle in the script) simulate the flak88 blocking bullets with its center hull and its shield.
+	- These angles (level.flak88s_minangle & level.flak88s_maxangle in the script) simulate the flak88 blocking bullets with its center hull and its shield.
 
 ---------------
 
 - Greatly improved global/spawnladder.scr for spawning invisible ladders (visible if using the "spawn laser" parameter), with simplified parameters. More details at the top of the script.
-- All ladders will be 20+ units away from any walls to prevent players getting stuck when climbing (20 units behind origin's coords when facing ladder's angle).
-- If the ladder cannot be climbed, the origin may need to be moved 1+ units away from walls or 1+ units above the floor.
+	- All ladders will be 20+ units away from any walls to prevent players getting stuck when climbing (20 units behind origin's coords when facing ladder's angle).
+	- If the ladder cannot be climbed, the origin may need to be moved 1+ units away from walls or 1+ units above the floor.
 
-	Parameters: origin, angle for players to attach, ladder height (minimum = 70), ladder width from center (default = 13.5), thickness of ladder (default = 1) extending into the wall when facing ladder's angle, ...
-	... spawn solid clip (0 = no, 1 = yes), spawn laser (0 = no, 1 = 1 laser, 2 = 2 lasers outlining ladder, 3 = ladder with visible rungs), laser color [default = ( 0 0 1 ) or blue].
-	Example: exec global/spawnladder.scr ( -200 300 0 ) 180 500 13.5 1 0 0
-	Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 180 500 13.5 1 1 3 ( 0 0 1 )
+			Parameters: origin, angle for players to attach, ladder height (minimum = 70), ladder width from center (default = 13.5), thickness of ladder (default = 1) extending into the wall when facing ladder's angle, ...
+			... spawn solid clip (0 = no, 1 = yes), spawn laser (0 = no, 1 = 1 laser, 2 = 2 lasers outlining ladder, 3 = ladder with visible rungs), laser color [default = ( 0 0 1 ) or blue].
+			Example: exec global/spawnladder.scr ( -200 300 0 ) 180 500 13.5 1 0 0
+			Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 180 500 13.5 1 1 3 ( 0 0 1 )
 
 ---------------
 
 - Modified training_alarmswitch_gunrange.scr and added a similar training_detonator_gunrange.scr for blowing up either a single bangalore or a series of bangalores (without adding specific map threads for multiple bangalores).
-- First load in each bangalore_wallbomb.scr and set them in a "name" array for each bangalore series. For example, the 1st bangalore "bb1" to blow up should be "local.name[1]". Make sure "local.name" is different for each series.
+	- First load in each bangalore_wallbomb.scr and set them in a "name" array for each bangalore series. For example, the 1st bangalore "bb1" to blow up should be "local.name[1]". Make sure "local.name" is different for each series.
 
-	local.name[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( 3937 -3712 -136 ) ( 60 -90 0 ) 100 0
-	local.name[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 3775 -3556 -136 ) ( 60 180 0 ) 100 0
-	local.name[3] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( 3968 -3359 -136 ) ( 60 90 0 ) 100 0
-	local.name[4] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb4 ( 4160 -3554 -136 ) ( 60 0 0 ) 100 0
-	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 3997 -3647 -187 ) ( 0 90 0 ) local.name1 60 450 2 // local.name[1] = bb1, local.name[2] = bb2, etc.
+			local.name[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( 3937 -3712 -136 ) ( 60 -90 0 ) 100 0
+			local.name[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 3775 -3556 -136 ) ( 60 180 0 ) 100 0
+			local.name[3] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( 3968 -3359 -136 ) ( 60 90 0 ) 100 0
+			local.name[4] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb4 ( 4160 -3554 -136 ) ( 60 0 0 ) 100 0
+			exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 3997 -3647 -187 ) ( 0 90 0 ) local.name1 60 450 2 // local.name[1] = bb1, local.name[2] = bb2, etc.
 
-	local.name2[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb5 ( -6719 -6113 -47 ) ( 60 0 0 ) 100 0
-	local.name2[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb6 ( -6719 -6602 40 ) ( 60 0 0 ) 100 0
-	local.name2[3] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb7 ( -6944 -6832 -64 ) ( 60 -90 0 ) 100 0
-	exec map_triggers/map_switches/training_detonator_gunrange.scr ( -6736 -6480 -119 ) ( 0 180 0 ) local.name2 60 450 2
+			local.name2[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb5 ( -6719 -6113 -47 ) ( 60 0 0 ) 100 0
+			local.name2[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb6 ( -6719 -6602 40 ) ( 60 0 0 ) 100 0
+			local.name2[3] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb7 ( -6944 -6832 -64 ) ( 60 -90 0 ) 100 0
+			exec map_triggers/map_switches/training_detonator_gunrange.scr ( -6736 -6480 -119 ) ( 0 180 0 ) local.name2 60 450 2
 
 ---------------
 
 - Added conditions for triggers using global/flickerrotate.scr to disable flicker-rotating or only disable rotating.
 
-	For a trigger example named $trigger: if $trigger.flickerremove == 1, stop flicker-rotating; if $trigger.norotate == 1, the trigger will flicker in color, but will not rotate.
-	Parameters: name, RGB color, light radius, red flicker, green flicker, blue flicker amounts (25 = 0.25 in RGB color), don't spawn shot-trigger (0 = spawn it, 1 = don't spawn).
-	Example: exec global/flickerrotate.scr $trigger ( 0 0 0.75 ) 125 17 17 25
+		For a trigger example named $trigger: if $trigger.flickerremove == 1, stop flicker-rotating; if $trigger.norotate == 1, the trigger will flicker in color, but will not rotate.
+		Parameters: name, RGB color, light radius, red flicker, green flicker, blue flicker amounts (25 = 0.25 in RGB color), don't spawn shot-trigger (0 = spawn it, 1 = don't spawn).
+		Example: exec global/flickerrotate.scr $trigger ( 0 0 0.75 ) 125 17 17 25
 
 ---------------
 
@@ -974,18 +974,18 @@ v7.97 (8-14-2024):
 ---------------
 
 - New script added: global/water_wade_sounds.scr. This simple script simulates player sounds moving through water volumes or falling into them, for maps that do not have these sounds pre-loaded in.
-- Changing ubersound.scr to stop the "needs an alias in ubersound.scr - please fix" console errors only works client-side. This script plays sounds server-side for all other players to hear.
-- Requires at least one "level.water_volumes" volume. Parameters = origin, - setsize 1, + setsize 2.
-- Optionally, setting parameter "bigsplash" = 1 will make players play a louder splash sound when falling into water volumes.
+	- Changing ubersound.scr to stop the "needs an alias in ubersound.scr - please fix" console errors only works client-side. This script plays sounds server-side for all other players to hear.
+	- Requires at least one "level.water_volumes" volume. Parameters = origin, - setsize 1, + setsize 2.
+	- Optionally, setting parameter "bigsplash" = 1 will make players play a louder splash sound when falling into water volumes.
 
-	Parameters: big splash sound (0 = no, 1 = yes).
-	Example: exec global/water_wade_sounds.scr 1; thread water_volumes
-	water_volumes: 		// example thread from m3l2.
+			Parameters: big splash sound (0 = no, 1 = yes).
+			Example: exec global/water_wade_sounds.scr 1; thread water_volumes
+			water_volumes: 		// example thread from m3l2.
 
-		level.water_volumes = makeArray
-			( -5047 1768 -195 ) ( 0 0 -1000 ) ( 2423 359 70 )
-		endArray
-	end
+				level.water_volumes = makeArray
+					( -5047 1768 -195 ) ( 0 0 -1000 ) ( 2423 359 70 )
+				endArray
+			end
 
 - Modders can assign UBER gametypes for different maps in a single map rotation in "global/uberversion.scr", but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
 - Modders can change default player running speed for all maps in "global/uberversion.scr".
