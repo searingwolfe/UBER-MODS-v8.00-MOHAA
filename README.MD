@@ -955,10 +955,10 @@ v7.97 (8-14-2024):
 ---------------
 
 - Added conditions for triggers using global/flickerrotate.scr to disable flicker-rotating or only disable rotating.
+	- For a trigger example named $trigger: if $trigger.flickerremove == 1, stop flicker-rotating; if $trigger.norotate == 1, the trigger will flicker in color, but will not rotate.
 
-		For a trigger example named $trigger: if $trigger.flickerremove == 1, stop flicker-rotating; if $trigger.norotate == 1, the trigger will flicker in color, but will not rotate.
-		Parameters: name, RGB color, light radius, red flicker, green flicker, blue flicker amounts (25 = 0.25 in RGB color), don't spawn shot-trigger (0 = spawn it, 1 = don't spawn).
-		Example: exec global/flickerrotate.scr $trigger ( 0 0 0.75 ) 125 17 17 25
+			Parameters: name, RGB color, light radius, red flicker, green flicker, blue flicker amounts (25 = 0.25 in RGB color), don't spawn shot-trigger (0 = spawn it, 1 = don't spawn).
+			Example: exec global/flickerrotate.scr $trigger ( 0 0 0.75 ) 125 17 17 25
 
 ---------------
 
