@@ -1,3 +1,38 @@
+// Player-Controlled Spotlight. Press USE to turn on/off the spotlight.
+//
+// The original player-spotlight script is modded to allow all 4 mounted orientations, instead of just the ground/floor.
+// Try both orients (0 or 1) if using mountwall = 1 or 3 to get the best rotation, you'll know that "orient" needs to be changed if the spotlight doesn't rotate correctly with the player's angles.
+//
+// When another player touches the spotlight's beam, that player is illuminated with a big light, whose color is identical to the spotlight beam's color (run by "led_spotlight.scr").
+//
+// The color of the spotlight's beam can also be changed with an alarm switch or similar switch (see spotlight_colorswitch.scr),
+// thanks to two if-statements inside a while(1) loop that wait until level.spotlight[local.name] = 1 for a one-time random color change, or until level.spotlight_rainbow[local.name] = 1
+// for randomly, rapidly, continuously changing colors.
+//
+// global/player_spotlight.scr & map_triggers/player_spotlight.scr can work together by switching back and forth between these two scripts, only if $pathnames are added (without the "$").
+// The global spotlights continuously follow a looping path of SplinePath nodes until a player is within level.autospot_trigdist distance from the spotlight's target light,
+// then following the spotted player until he runs out of the spotlight's view.
+//
+// Any players that stand near the auto-spotlight will convert it into the regular map_triggers spotlights, allowing the player to aim and turn on/off the spotlight.
+// After the player moves away and after a few seconds, the map_triggers spotlights revert back to the global auto-spotlights (also turning back on), following the path again where it last left off.
+// Add one of these 2 level variables to adjust the lock-on trigger's distance, or the speed that the auto-spotlight moves across its path.
+// 	level.autospot_trigdist = 550
+// 	level.autospot_movespeed = 2.5
+// 
+// Parameters: origin, rgb color [ex: ( 1 0 0 ) for red], name, health, base angle, mount wall (0 = floor, 1 = left wall, 2 = ceiling, 3 = right wall), ...
+// ... orient (0 or 1 = rotate along x or y axis; only applies when mountwall = 1 or 3), ... remove after death (0 = no, disable spotlight; 1 = remove spotlight, keep base; 2 = remove everything), ...
+// ... initial spotlight angles, $pathname of SplinePath nodes to follow automatically.
+//
+// Examples (without paths, and with paths):
+//	exec map_triggers/player_spotlight.scr ( 4045 -3439 -128 ) ( 1 0 0 ) s0 700 90 0 0 1	// red
+//	exec map_triggers/player_spotlight.scr ( 448 -3651 50 ) ( 1 1 0 ) s1 700 180 1 1 1	// yellow
+//	exec map_triggers/player_spotlight.scr ( -5912 -6036 -32 ) ( 0 1 0 ) s2 700 90 0 0 1	// green
+//	exec map_triggers/player_spotlight.scr ( -3111 2143 512 ) ( 0 0 1 ) s3 700 -90 0 0 1	// blue
+//
+//	exec global/player_spotlight.scr ( 2270.25 2047.58 320 ) ( 1 0 0 ) s_auto0 9999 270 0 0 1 ( 0 0 0 ) spotpath1_2
+//	exec global/player_spotlight.scr ( 785.25 2048.58 320 ) ( 0 1 0 ) s_auto1 9999 270 0 0 1 ( 0 0 0 ) spotpath1_1
+//	exec global/player_spotlight.scr ( 70.25 2464.58 328 ) ( 0 0 1 ) s_auto2 9999 270 0 0 1 ( 0 0 0 ) spotpath1_3
+//
 
 main local.origin local.color local.name local.health local.anglestart local.mountwall local.orient local.removeafterdeath local.initially_on local.spotangles_init local.path:
 
@@ -261,9 +296,10 @@ aimspot local.groundspot_target local.name local.beam local.spot local.light loc
 
 	if(local.flare.on == 1)
 	{
-		for(local.i=1;local.i<=$player.size;local.i++)
+		for(local.i=1; local.i <= $player.size; local.i++)
 		{
-			if(vector_length(local.p - $player[local.i].origin) < 50) 
+			local.dist_xy = vector_length(( local.p[0] local.p[1] 0 ) - ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ))
+			if(local.dist_xy < 50 && local.p[2] >= $player[local.i].origin[2] && ((local.p[2] <= $player[local.i].origin[2] + 95 && $player[local.i] getposition == "standing") || (local.p[2] <= $player[local.i].origin[2] + 55 && $player[local.i] getposition == "crouching")))
 			{
  				if($player[local.i].packon != 1) { $player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2] }
 			}

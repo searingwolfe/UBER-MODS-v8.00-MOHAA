@@ -32,7 +32,7 @@ setcvar "thereisnomonkey" "0"
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
-local.v = waitexec global/uberversion.scr
+local.v = exec global/uberversion.scr
 
 if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
 if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
@@ -266,7 +266,7 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 		( -3871 -1650 -511 ) ( -8000 0 -1000 ) ( 0 3535 4000 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
 	endArray
 
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_04.mp3 1 1 // 0 = no, 1 = keep players' music volume at max.
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_04.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 water_volumes: // these are for any airstrikes that drop bombs into the ocean.
@@ -320,10 +320,11 @@ setup:
 	$t1491 remove // [1] - [2]
 	$t1492 remove
 
-	exec global/spawnladder.scr ( 154 -4036 -627 ) 0 ( -1 -10 0 ) ( 1 10 241 ) 	// keep origin in front of ladder bars & off of walls (facing toward player) to prevent climbing player from getting stuck.
-	exec global/spawnladder.scr ( 350 -4036 -627 ) 180 ( -1 -10 0 ) ( 1 10 241 )	// ideally, player's hands should not go behind the ladder when climbing (use 3rd person to check your hands).
-	exec global/spawnladder.scr ( 2654 -3500 -627 ) 0 ( -1 -10 0 ) ( 1 10 241 )
-	exec global/spawnladder.scr ( 2852 -3500 -627 ) 180 ( -1 -10 0 ) ( 1 10 241 )
+	// origin, ladder angle, height, width, thickness (going into wall), spawn solid clip (0 = no, 1 = yes), spawn lasers (1 = 1 laser, 2 = 2 lasers for ladder, 3 = ladder with rungs), laser color (R G B).
+	exec global/spawnladder.scr ( 165 -4036 -627 ) 0 241 10 1 0 0		// keep origin in front of ladder bars & off of walls (facing toward player) to prevent climbing player from getting stuck.
+	exec global/spawnladder.scr ( 340 -4036 -627 ) 180 241 10 1 0 0		// ideally, player's hands should not go behind the ladder when climbing (use 3rd person to check your hands).
+	exec global/spawnladder.scr ( 2667 -3500 -627 ) 0 241 10 1 0 0
+	exec global/spawnladder.scr ( 2842 -3500 -627 ) 180 241 10 1 0 0
 
 	//$wavelaps remove // [1] - [32]
 	for(local.w = 1; local.w <= $wavelaps.size; local.w++) { $wavelaps[local.w] loopsound waves_laps }

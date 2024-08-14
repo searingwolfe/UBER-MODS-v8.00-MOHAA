@@ -281,7 +281,7 @@ Teams in both game modes have a specified amount of rounds to win (5 by default)
 			waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1297 2461 672 ) 90 allies
 
 - bomb:
-	- Parameters: Allies origin, Allies origin, Axis origin, Axis angle, central origin, central angle. Both Allies and Axis origins/angles are for Search & Destroy only.<br>
+	- Parameters: Allies origin, Allies angle, Axis origin, Axis angle, central origin, central angle. Both Allies and Axis origins/angles are for Search & Destroy only.<br>
 	- The central origin/angle is for Cyber Attack only. The bomb color is always blue when Allies are planting, and red when Axis are planting in Search & Destroy. Only spawn in one bomb per map.<br>
 	- If only using Cyber Attack, for example, then don't forget the other parameters (just keep them 0). Examples below:
 
@@ -435,7 +435,8 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 		}
 	end
 
-- Modders can assign UBER gametypes for different maps in a single map rotation (in global/uberversion.scr), but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
+- Modders can assign UBER gametypes for different maps in a single map rotation in "global/uberversion.scr", but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
+- Modders can change default player running speed for all maps in "global/uberversion.scr".
 
 #
 
@@ -507,12 +508,17 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 - 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats, 5 for uboats.
 
 - For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
-- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit.
+- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
 - For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Press JUMP = exit.
 - For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Press JUMP = exit, Lean Left/Right = look behind.
 
 - Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
 - Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
+
+- Players using drivable vehicles & boats can be shot and killed by enemy players (not including SDKFZs). Given the math behind the damage dealt to drivers, all passengers will likely be killed first before the driver does.
+- Players using drivable vehicles & boats can see a secondary health bar, representing their actual player's health (when in vehicles/boats/tanks, the health bar changes to the vehicle's health).
+- Players using drivable tanks can now see a secondary health bar, representing the tank's current health (the health bar always starts at 100 when entering tanks, even though the tank & driver have different healths).
+- Tanks will emit smoke if they are damaged. The smoke's scale increases as the tank's health decreases.
 
 		Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time.<br>
 		Tank Example: exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -680 2788 -257 ) ( 0 270 0 ) 1000 60
@@ -848,83 +854,145 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- All other singleplayer maps will eventually be modded: M3 (v7.96), M4 (v7.97), M5 (v7.98), M6 (v7.99), and final version edits (v8.00).
+- M3L2 fully modded. 5 jetpacks, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
+
+- NOTE: Tanks, vehicles, radiobomb-walkies, dog trigger were removed because the players' clients keep auto-disconnecting them with an "ERROR: MAX_GAMESTATE_CHARS exceeded" message in their consoles.
+- So far, this error only occurs on this map if too many vehicles/tanks are spawned in (too much client data? too many sound aliases? not sure).
+- Do not use more than 2 different models of drivable vehicles/tanks. Do not add more than 4 drivable vehicles/tanks. Remove as many other mods as possible too.
+
+- Players can automatically walk through the 4 broken windows on the ground floor of the Allies mansion building (script teleports them in/out of the building if touching and facing any broken window).
+- Random explosions added within most mortar craters on the map.
+- The wall near the large barn and the cylindrical building, next to the 2-story house, can be blown up by any explosions not coming from grenades.
+
+- Blue laser ladder added inside the cylindrical building for climbing to the upper platform and sniping out the window.
+- Green laser wall added on the road near the Allies mansion building, since a solid wall clip (blocks all projectiles) from the original map cannot be removed. Shooting this wall makes the lasers white for a moment.
+
+- The 2 fireplaces in the Allies mansion building have valves on the right side for closing/opening the chimney valve, which causes black smoke to emit/stop emitting (respectively) out of the fireplace.
+- 2 civilian radios can be turned on/off to play music.
+- The 20mm flak cannon (black, near the Axis metal grid station) can be moved up/down.
+- Toilets can be flushed and bathtub faucet loopsound can be turned on/off. 
+- 2 scripted white wooden doors can be opened/closed.
+
+---------------
+
+- M3L3 fully modded. 4 vehicles, 4 tanks, 4 jetpacks, 3 flak88s, 4 nebelwerfers, 8 extra throwing knives added to the map.
+
+- 2 vehicle teles: one between the middle Allies road and the destroyed buildings, and one to travel through the Axis road barbwire.
+- Random explosions added within all mortar craters on the map.
+- Airstrikes occur at random times, and along any X-Y-axis direction on the map.
+
+- The walls near the central roofless building with dead bodies inside (and a small wall outside, across from the building) can be blown up by any explosions not coming from grenades.
+- Since the 4 nebelwerfers have player-clips from the map's .BSP that cannot be removed, a script thread prevents players that get off the nebelwerfers from getting stuck in these player-clips.
+
+- 5 blue laser ladders added within 5 buildings.
+- Toilet can be flushed and bathtub faucet loopsound can be turned on/off. 
+- 4 cabinets can be opened/closed, including the mini podium in the Axis church.
+
+---------------
+
+- All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
 
 # Updates & Bug Fixes
 
-v7.955 (6-2-2024):
-- More improvements in adminstuff.scr to prevent "stufftext" hackers from joining or copying admins' names:
-	- Non-admin players will have name-priority over other players that copy their name if they held their name the earliest (in current level.time map time) and if they joined the server first.
-	- Ensured that "SAME NAME FIX" script waits for the player to finish running "check_player_stufftexts", and ensured that "check_player_stufftexts" thread doesn't prematurely end before the player fully connects to the server.
-
-- Before a map switch or map restart, the script will delete and write a "cvars/playernames.txt" file containing all players' names and IPs in the current map.
-	- Players with the wrong IP address can still copy names in this list, but if a player finally loads in, or leaves and rejoins later in the same map whose name and IP match a name, that player will have name-priority over his own name.
-
-- Passenger riders & turret users in drivable tanks, vehicles, and boats have further improved scripts to prevent them from getting stuck inside vehicles or other players when exiting them.
-- Dogs will go into the 1st available passenger seat for drivable vehicles with a 30 Cal turret gun (jeep.tik, sdkfz.tik, sdkfz_afrika.tik), instead of saying "dogs cannot use vehicle turrets".
-
-- Fixed rare bug that prevented turret players from dying if their vehicle driver runs over another vehicle and blows himself up.
-	- This bug also prevented turret players from ever dying again, until they switch teams or until "$player[turret player clientnum] takedamage" is executed.
-
-- Dogs can now use and fly with jetpacks, visible on the dogs' backs.
-
-- Giant Bomb and Light Bomb triggers are now visible on the dogs' right sides.
-	- Both of these triggers will explode much faster when launching near the ground below the player owner's feet.
-
-- Flyable planes will now explode mid-air if they touch any Giant Bombs or Light Bombs launched by other players, with kills/scorepoints given to the player that launched them.
-	- Rare server crash fix for Giant/Light Bomb triggers by reworking scripts. Server would crash if shooting them directly at a flyable plane's propellers.
-	- Reworked scripts by replacing "waitmove" with a physics_on projectile and using "waittill touch".
-	- Slowed down Light Bomb velocity time from 0.35 to 0.80 seconds, since these new physics_on projectiles will stray away from their horizontal trajectory if their time-until-impact is faster than 0.80. 
-
-- Fixed scorepoints not being given to players flying planes when they shoot and kill nebelwerfer users with the 30 Cal or MG42.
-	- Fixed NULL errors relating to a flyable plane's scale, and rarely occuring after planes crash into the ground.
-
-- The 6 UBER triggers: giant bomb, light bomb, +200 health, toxic snowball ammo, grenade ammo, rocket launcher ammo, will always stay at their current "level.spot_[trigger]" origin, even if other scripts are moving the origin.
-
-- Removed some unwanted door-closing sounds in maps/gen_mapscripts/doorsgates.scr. Reworked trigger sounds, added metal_doors_solid and metal_hatch threads.
-- Added players' ability to extinguish their flames inside any "level.water_volumes" volume if they get caught on fire by a bonfire trigger, from maps/gen_mapscripts/bonfire.scr.
-
-- Bomberplane airstrikes' and airstrike killstreaks' dropped bombs will make a water explosion if dropped on top of water, only if an level.water_volumes array exists.
-	- Before any bomberplane.scr or bomberplane_nospline.scr script runs, add a level.water_volumes array in the map script (example below) and add origin, setsize1, setsize2 (similar to triggers).
-	- Water volumes added to mohdm4, obj_team4, M2L2A, M2L2B, M2L2C, M3L1A, M3L1B.
-
-			water_volumes: // these are for any airstrikes that drop bombs into the ocean.
-
-				level.water_volumes = makeArray // from dm/mohdm4
-					( 1407 799 32 ) ( -3039 -1654 -1000 ) ( 1920 0 10 ) // origin, setsize1, setsize2.
-					( -1632 -855 32 ) ( -8000 0 -1000 ) ( 0 3355 10 )
-					( -6050 2500 32 ) ( -8000 0 -1000 ) ( 0 8000 10 )
-				endArray
-			end
-
-- Modders can now assign UBER gametypes for different maps in a single map rotation (in global/uberversion.scr), but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
-
-- Added rotation and boosted scale of $bombexplosive in global/cyberattack_searchdestroy.scr so they're easier to see and distinguish from the Radiobomb Walkies.
-	- Added "The bomb has been dropped!" messages when players drop bombs, but not when the dropped bomb causes the round to end.
-
-- Fixed M1L1 vehicle tele for tanks to go through the town entrance.
-- Fixed "minenbombs" threads in various maps (particularly obj_team3) so they stop blocking players' paths.
-- Fixed bangalore array errors in M2L2C from 2 bangalores having the same name.
-- Bangalores are now visible on dogs' left sides when picked up.
-- Some global/spawnladder.scr ladders readjusted. If a solidclip was spawned for the ladder, the ladder's trigger should be 20+ units away from it, and extend 50 units above the upper-floor.
-
-- Fixed rare case in cyberattack_searchdestroy.scr where players switching teams while dead wouldn't remove their frozen bodies, and thus causing the script's Allies/Axis teamcounts to become inaccurate.
-- Fixed "cybsnd_debug 1" cvar not working anymore if left on while the server changes maps. Use this cvar to continuously print to console the Allies/Axis' alive & total teamcounts. If any of these are inaccurate, the script has broken and requires a map restart.
-- Fixed a potential spamming NIL error in global/give_players_knives.scr.
+v7.97 (8-14-2024):
+- More script improvements in global/cyberattack_searchdestroy.scr:
+- Fixed camera jittering when players are dead/frozen and team-spectating other teammates, by doing "self physics_off" when following a living player, and "self physics_on" when spectating a stationary frozen body.
+- When the bomb is planted on a bombsite, the bomb will still flicker in color, making more obvious which bombsite has an explosive on it.
+- Team avatars added above each bombsite, and above the $bombexplosive (no avatar above $bombexplosive if playing Cyber Attack game mode).
+- The 3 entities making the outside walls of each bombsite are now notsolid, preventing players getting stuck if they're placed in some corners.
 
 ---------------
 
-v7.958 (6-11-2024):
-- Major script revisions for cyberattack_searchdestroy.scr to ensure that Allies/Axis' alive & total teamcounts remain accurate (mainly "players_perteam_status" thread).
-	- Bugs appeared when $player[1] left the game before $player[2], making $player[2] become $player[1] in the teamcounts arrays before the arrays had a chance to remove the now-NULL $player[2].
-	- Instead of filling the arrays with $player[local.i] in a for-loop, the arrays instead check for players' entnums (player entity numbers will not change if other players leave before them).
-	- Revised "player_fromspectator" and added a "player_mef_weaponclass" thread to simplify assigning a weaponclass to players, and improve accuracy when dead/frozen players are respawned with their old weaponclass.
+- To prevent the $bombexplosive from auto-rotating (using bomb's initial angle parameters instead), make the "no rotate" parameter = 1 below [see README (essentials).txt for more info].
+
+	Parameters: Allies origin, Allies angle, Axis origin, Axis angle, central origin, central angle, bomb norotate. Both Allies and Axis origins/angles are for Search & Destroy only. The central origin/angle is for Cyber Attack only.
+	Example from "cyb" thread in map scripts: thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -3609 -2716 56 ) 90 1
+	Example from "snd" thread in map scripts: thread global/cyberattack_searchdestroy.scr::bomb ( -4102 2862 0 ) 90 ( 3550 -3498 -195 ) 180 ( 0 0 0 ) 0 1
+
+---------------
+
+- Players using drivable tanks can now hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
+- Players using drivable vehicles & boats can now be shot and killed by enemy players (not including SDKFZs). Given the math behind the damage dealt to drivers, all passengers will likely be killed first before the driver does.
+- Players using drivable vehicles & boats can now see a secondary health bar, representing their actual player's health (when in vehicles/boats/tanks, the health bar changes to the vehicle's health).
+- Players using drivable tanks can now see a secondary health bar, representing the tank's current health (the health bar always starts at 100 when entering tanks, even though the tank & driver have different healths).
+- If players had a jetpack on before driving vehicles/boats, the jetpack fuel bar simply to the player's health, and reverts back to the fuel bar after exiting vehicles/boats.
+- Drivable tanks will now emit smoke if they are damaged. The smoke's scale increases as the tank's health decreases.
+
+---------------
+
+- Players using flak88s can now be shot and killed if the turret is facing > 30 and < 195 degrees to the left ( > 165 and < 330 to the right) of the enemy shooter, or if player's driver dummy model is in line-of-sight with enemy bullets.
+- These angles (level.flak88s_minangle & level.flak88s_maxangle in the script) simulate the flak88 blocking bullets with its center hull and its shield.
+
+---------------
+
+- Greatly improved global/spawnladder.scr for spawning invisible ladders (visible if using the "spawn laser" parameter), with simplified parameters. More details at the top of the script.
+- All ladders will be 20+ units away from any walls to prevent players getting stuck when climbing (20 units behind origin's coords when facing ladder's angle).
+- If the ladder cannot be climbed, the origin may need to be moved 1+ units away from walls or 1+ units above the floor.
+
+	Parameters: origin, angle for players to attach, ladder height (minimum = 70), ladder width from center (default = 13.5), thickness of ladder (default = 1) extending into the wall when facing ladder's angle, ...
+	... spawn solid clip (0 = no, 1 = yes), spawn laser (0 = no, 1 = 1 laser, 2 = 2 lasers outlining ladder, 3 = ladder with visible rungs), laser color [default = ( 0 0 1 ) or blue].
+	Example: exec global/spawnladder.scr ( -200 300 0 ) 180 500 13.5 1 0 0
+	Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 180 500 13.5 1 1 3 ( 0 0 1 )
+
+---------------
+
+- Modified training_alarmswitch_gunrange.scr and added a similar training_detonator_gunrange.scr for blowing up either a single bangalore or a series of bangalores (without adding specific map threads for multiple bangalores).
+- First load in each bangalore_wallbomb.scr and set them in a "name" array for each bangalore series. For example, the 1st bangalore "bb1" to blow up should be "local.name[1]". Make sure "local.name" is different for each series.
+
+	local.name[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( 3937 -3712 -136 ) ( 60 -90 0 ) 100 0
+	local.name[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 3775 -3556 -136 ) ( 60 180 0 ) 100 0
+	local.name[3] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( 3968 -3359 -136 ) ( 60 90 0 ) 100 0
+	local.name[4] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb4 ( 4160 -3554 -136 ) ( 60 0 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 3997 -3647 -187 ) ( 0 90 0 ) local.name1 60 450 2 // local.name[1] = bb1, local.name[2] = bb2, etc.
+
+	local.name2[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb5 ( -6719 -6113 -47 ) ( 60 0 0 ) 100 0
+	local.name2[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb6 ( -6719 -6602 40 ) ( 60 0 0 ) 100 0
+	local.name2[3] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb7 ( -6944 -6832 -64 ) ( 60 -90 0 ) 100 0
+	exec map_triggers/map_switches/training_detonator_gunrange.scr ( -6736 -6480 -119 ) ( 0 180 0 ) local.name2 60 450 2
+
+---------------
+
+- Added conditions for triggers using global/flickerrotate.scr to disable flicker-rotating or only disable rotating.
+
+	For a trigger example named $trigger: if $trigger.flickerremove == 1, stop flicker-rotating; if $trigger.norotate == 1, the trigger will flicker in color, but will not rotate.
+	Parameters: name, RGB color, light radius, red flicker, green flicker, blue flicker amounts (25 = 0.25 in RGB color), don't spawn shot-trigger (0 = spawn it, 1 = don't spawn).
+	Example: exec global/flickerrotate.scr $trigger ( 0 0 0.75 ) 125 17 17 25
+
+---------------
+
+- Prevented drivers & passengers' dead bodies from blocking the vehicles if they haven't respawned yet, and prevented them from doing weird physics like sliding endlessly across the ground or moving upwards if touching living players.
+- Fixed "max_health" bug sometimes giving newly respawned vehicles/boats/tanks much lower health than the health initially given to them when the map first loaded.
+- Spotlights will now target/illuminate players if the beam hits anywhere on a player's body (previously only worked if the beam hit players' feet).
+- Readme information added to global/player_spotlight.scr, map_triggers/player_spotlight, and map_triggers/spotlight_colorswitch.scr for describing and using each script's numerous parameters.
+- Removed the gold "Jetpack" HUD text next to the jetpack fuel meter, reducing the amount of stufftexts a player needs to run when getting a jetpack, thus reducing the initial lag when running them.
+- Small NIL error fixed in global/playertank.scr for tank turrets' smoke emitter duration, occuring if players quickly shoot and then exit the tank.
+- Reduced the solid setsizes for jeep.tik and jeep_bench.tik.
+- The alienx/basebuild.scr script now keeps memory of the map's originally defined "sv_runspeed" (define this after level waittill spawn) and returns to that "sv_runspeed" after building has ended, instead of defaulting back to "sv_runspeed 250".
+
+---------------
+
+- New script added: global/water_wade_sounds.scr. This simple script simulates player sounds moving through water volumes or falling into them, for maps that do not have these sounds pre-loaded in.
+- Changing ubersound.scr to stop the "needs an alias in ubersound.scr - please fix" console errors only works client-side. This script plays sounds server-side for all other players to hear.
+- Requires at least one "level.water_volumes" volume. Parameters = origin, - setsize 1, + setsize 2.
+- Optionally, setting parameter "bigsplash" = 1 will make players play a louder splash sound when falling into water volumes.
+
+	Parameters: big splash sound (0 = no, 1 = yes).
+	Example: exec global/water_wade_sounds.scr 1; thread water_volumes
+	water_volumes: 		// example thread from m3l2.
+
+		level.water_volumes = makeArray
+			( -5047 1768 -195 ) ( 0 0 -1000 ) ( 2423 359 70 )
+		endArray
+	end
+
+- Modders can assign UBER gametypes for different maps in a single map rotation in "global/uberversion.scr", but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
+- Modders can change default player running speed for all maps in "global/uberversion.scr".
 
 More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
 
 ---------------
 
-- M3L1A fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
-- M3L1B fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
+- M3L2 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
+- M3L3 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>

@@ -97,11 +97,15 @@ level.messagesactive = 1
 //thread message_them
 
 //build speed
-setcvar "sv_runspeed" local.buildspeed
+level.basebuild_normalspeed = getcvar("sv_runspeed")
 setcvar "g_kblock" "1"
-if (local.buildspeed < 250 || local.buildspeed == NIL)
+if(local.buildspeed < 250 || local.buildspeed == NIL)
 {
 setcvar "sv_runspeed" "250"
+}
+else
+{
+setcvar "sv_runspeed" local.buildspeed
 }
 
 setcvar "dmflags" "0" //fall-damage
@@ -150,7 +154,7 @@ if (getcvar(alx_basebuild) == "0")
 	setcvar "cheats" "0"
 	setcvar "dmflags" "0"
 	setcvar "thereisnomonkey" "0"
-	setcvar "sv_runspeed" "250"
+	setcvar "sv_runspeed" level.basebuild_normalspeed
 	huddraw_string 62 ""
 	if($player.size >= 1) { $player stoploopsound }
 }
@@ -361,7 +365,7 @@ if (local.timeleft <= 0)
 	huddraw_string 62 ""
 	setcvar "dmflags" "0"
 	if($player.size >= 1) { $player stufftext "tmstop" }
-	setcvar "sv_runspeed" "250"
+	setcvar "sv_runspeed" level.basebuild_normalspeed
 }
 
 if (local.timeleft > 70)
@@ -377,7 +381,7 @@ if (level.objectlimitcount == local.objectlimitx) {
 	huddraw_string 62 ""
 	setcvar "dmflags" "0"
 	if($player.size >= 1) { $player stufftext "tmstop" }
-	setcvar "sv_runspeed" "250"
+	setcvar "sv_runspeed" level.basebuild_normalspeed
 }
 
 //local.player physics_on
@@ -430,7 +434,7 @@ if ($builder_object.size > 0)
 }
 
 	setcvar "dmflags" "0"
-	setcvar "sv_runspeed" "250"
+	setcvar "sv_runspeed" level.basebuild_normalspeed
 
 if ($player.size > 0)
 {
@@ -438,7 +442,7 @@ if ($player.size > 0)
 	setcvar "cheats" "0"
 	setcvar "thereisnomonkey" "0"
 	setcvar "dmflags" "0"
-	setcvar "sv_runspeed" "250"
+	setcvar "sv_runspeed" level.basebuild_normalspeed
 }
 
 //May Fix The MG42 Bug!
@@ -1787,7 +1791,7 @@ objectlimit_fix:
 	}
 	if(local.entity == NULL) // if entity 868 = NULL
 	{	
-		if((local.nullent + 155) >= level.objectlimit) { end }
+		if(level.objectlimit == NIL || (local.nullent + 155) >= level.objectlimit) { end }
 
 		local.objectlimitdown = (1024 - local.nullent - 155) + (level.objectlimit - 1024)
 

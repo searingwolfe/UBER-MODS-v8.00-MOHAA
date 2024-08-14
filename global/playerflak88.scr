@@ -1,4 +1,11 @@
-main local.turret local.health local.resettime local.origin local.angles local.removebase local.baseangles: 
+main local.turret local.health local.resettime local.origin local.angles local.removebase local.baseangles:
+
+////////////////////////////////////////////////////////////////////////
+
+level.flak88s_minangle = 165	// minimum angle-difference required between the flak88 (assuming it's at angle 0) and enemies shooting the flak88 (from flak88 shield's left side).
+level.flak88s_maxangle = 330	// maximum angle-difference required (or maxangle - 360 = minimum angle from flak88 shield's right side).
+
+////////////////////////////////////////////////////////////////////////
 
 	if(local.health == NIL || local.health < 0) { local.health = 999999 } // ideal health = 350
 	if(local.resettime == NIL || local.resettime < 0) { local.resettime = 999999 }
@@ -73,10 +80,44 @@ end
 
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
 
+	local.PI = 3.14159265359
 	local.health = self.trigshot.health
 	while(self != NULL && self.dead != 1 && self.trigshot != NULL && self.trigshot.health > 0)
 	{
-		self.trigshot.health = local.health
+		if(self.fplayer != NIL && self.fplayer != NULL && self.fplayer.health > 0)
+		{
+			if(self.trigshot.health < local.health)
+			{
+				local.damage = ((local.health - self.trigshot.health) / 3.000)
+
+				if(self.trigshot.shooter != NIL && self.trigshot.shooter != NULL && self.trigshot.shooter.viewangles != NIL)		// only damage the driver if the shooter is at a horizontal angle 150 - 330, or
+				{															// at a verical angle +/- 45 degrees from the flak88's point of view.
+					local.a_vector = self.forwardvector * 10
+					local.b_vector = self.trigshot.shooter.origin - self.origin
+					local.avec = ( local.a_vector[0] local.a_vector[1] 0 )
+					local.bvec = ( local.b_vector[0] local.b_vector[1] 0 )
+					local.angle_xy = thread angle_between_vectors local.avec local.bvec	// find the angle between flak88's forward vector and the vector between flak88 & shooter.
+					local.product = thread cross_product_vectors local.avec local.bvec	// use cross product to determine if the angle between the vectors is positive or negative.
+					if(local.product < 0) { local.angle_xy = 360 - local.angle_xy }		// keep the angle in 0 - 360 range.
+
+					if(local.angle_xy > level.flak88s_minangle && local.angle_xy < level.flak88s_maxangle)
+					{
+						if(self.trigshot.shooter.player_owner != NIL && self.trigshot.shooter.player_owner != NULL) { self.fplayer damage self.trigshot.shooter.player_owner local.damage self.trigshot.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else if(self.trigshot.shooter.owner != NIL && self.trigshot.shooter.owner != NULL) { self.fplayer damage self.trigshot.shooter.owner local.damage self.trigshot.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else { self.fplayer damage self.trigshot.shooter local.damage self.trigshot.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					}
+				}
+			}
+
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.trigshot)
+				{
+					self.fplayer damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		if(isalive self.trigshot) { self.trigshot.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
 		if(self.trigshot.shooter != NIL) { self.trigshot thread shooter_NIL }
 		waitframe
 	}
@@ -87,6 +128,23 @@ shooter_NIL:
 	waitframe
 	if(self != NULL) { self.shooter = NIL }
 end
+
+angle_between_vectors local.avec local.bvec:
+
+	local.PI = 3.14159265359
+	local.dotproduct = vector_dot local.avec local.bvec
+	local.magnitude_avec = vector_length local.avec
+	local.magnitude_bvec = vector_length local.bvec
+	local.angle = (acos (local.dotproduct / (local.magnitude_avec * local.magnitude_bvec))) * (180 / local.PI)
+end local.angle
+
+cross_product_vectors local.avec local.bvec:
+
+	local.cross_vec = vector_cross local.avec local.bvec
+	if(local.cross_vec[0] != 0) { local.product = local.cross_vec[0] }
+	else if(local.cross_vec[1] != 0) { local.product = local.cross_vec[1] }
+	else if(local.cross_vec[2] != 0) { local.product = local.cross_vec[2] }
+end local.product
 
 playergetin_flak:
 
@@ -114,7 +172,7 @@ playergetin_flak:
 	self.flak88.fplayer forcelegsstate STAND
 	self.flak88.fplayer hide
 	self.flak88.fplayer notsolid
-	self.flak88.fplayer nodamage
+	//self.flak88.fplayer nodamage
 	//self.flak88.fplayer safeholster 1 // must "wait 1" for safeholster to work, crosshair also gets removed
 	self.flak88.fplayer.driving = 1
 	self.flak88.fplayer.drivingent = self.flak88.trigshot
@@ -131,7 +189,7 @@ playergetin_flak:
 	local.flakangles = 0
 	local.lookangles = 0
 
-	while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.health > 0 && self.flak88.fplayer.dead != 1 && level.change_team_score != 1)
 	{
 		self.flak88.fplayer.origin = self.flak88.origin + ( -10 0 20 )
 		local.fwd_vec = angles_toforward self.flak88.fplayer.viewangles
@@ -148,7 +206,7 @@ playergetin_flak:
 
 		if(self.flak88.fplayer.fireheld == 1 && self.flak88.fplayer.secfireheld != 1 && self.flak88.flakfiredelay != 0)
 		{
-			self.flak88.fplayer playsound flak_snd_fire
+			if(level.flak88scriptmaster_nofire_sound != 1) { self.flak88.fplayer playsound flak_snd_fire }
 			self.flak88 playsound flak_reload
 			self.flak88 anim fire_scripted // anim fire; use fire_scripted to simulate firing a round, that way a script-spawned projectile can provide kills/scorepoints.
 			self.flak88 thread projectile
@@ -441,6 +499,8 @@ scriptmaster:
 level.mapname = getcvar "mapname"
 local.master = spawn scriptmaster
 
+local.master aliascache flak_reload sound/weapons/fire/TankFire1.wav soundparms 1.5 0 1 0 800 4000 auto loaded maps level.mapname
+
 if(level.mapname != "m3l2" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3" && level.nebelscriptmaster != 1)
 {
 	if(level.mapname != "m1l3a" && level.mapname != "m1l3b" && level.mapname != "m1l3c")
@@ -456,12 +516,13 @@ if(level.mapname != "m3l2" && level.mapname != "m5l2a" && level.mapname != "m5l2
 	local.master aliascache explode_flak884 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
 	}
 }
+
 if(level.mapname != "m3l2" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
 {
-	local.master aliascache flak_reload sound/weapons/fire/TankFire1.wav soundparms 1.5 0 1 0 800 4000 auto loaded maps level.mapname
 	local.master aliascache flak_snd_fire1 sound/weapons/fire/TankCannonFire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
 	local.master aliascache flak_snd_fire2 sound/weapons/fire/Flak88Fire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
 	local.master aliascache flak_snd_fire3 sound/weapons/fire/Flak88Fire3.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
 	local.master aliascache flak_snd_fire4 sound/weapons/fire/Flak88Fire4.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
 }
+else { level.flak88scriptmaster_nofire_sound = 1 }
 end

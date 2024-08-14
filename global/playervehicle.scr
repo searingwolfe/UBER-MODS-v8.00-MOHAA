@@ -88,6 +88,7 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 
 	if(level.vehicle_initorigin[local.name] == NIL) { level.vehicle_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
 	if(level.vehicle_initangles[local.name] == NIL) { level.vehicle_initangles[local.name] = local.angles }
+	if(level.vehicle_inithealth[local.name] == NIL) { level.vehicle_inithealth[local.name] = local.health }
 
 	if(level.vehiclescriptmaster[local.vehicle.model] != 1) // this only runs once
 	{
@@ -152,9 +153,9 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 	local.health = self.health
 	while(self != NULL && self.health > 0)
 	{
-		if(self.passengers != NIL && self.passengers.size >= 1)
+		if(self.health < local.health && self.shooter != NIL && self.shooter != NULL)
 		{
-			if(self.health < local.health && self.shooter != NIL && self.shooter != NULL)
+			if(self.passengers != NIL && self.passengers.size >= 1)
 			{
 				local.damage = ((local.health - self.health) / self.passengers.size)
 				for(local.i = 1; local.i <= self.passengers.size; local.i++)
@@ -162,6 +163,25 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					else { self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				}
+			}
+			if(self.driver != NIL && self.driver != NULL && self.model != "models/vehicles/sdkfz.tik" && self.model != "models/vehicles/sdkfz_afrika.tik" && self.model != "models/vehicles/shermantank.tik")
+			{
+				if(self.driver.health > 1)
+				{
+					if(self.passengers != NIL && self.passengers.size >= 1) { local.damage = ((local.health - self.health) / (2 + self.passengers.size)) }
+					else { local.damage = ((local.health - self.health) / 2) }
+
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.driver damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				}
+				else
+				{
+					self thread driverreset 1
+					self thread vehiclereset
+					killent self.driver
+					self.driver = NIL
 				}
 			}
 
@@ -176,6 +196,7 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				}
 			}
 		}
+
 		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
 		if(self.shooter != NIL) { self thread shooter_NIL }
 		waitframe
@@ -250,7 +271,7 @@ playergetin:
 
 	self.driver forcelegsstate STAND
 	self.driver hide
-	self.driver nodamage
+	//self.driver nodamage
 	self.driver notsolid
 	if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
 	if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
@@ -260,6 +281,15 @@ playergetin:
 
 	self attachdriverslot 0 self.driver //attachpassengerslot //attachturretslot
 	self thread dummyavatar
+
+	if(local.driver.using_pack == 1)
+	{
+		local.driver stufftext "globalwidgetcommand june6 linkcvar phealth"
+		local.driver stufftext "globalwidgetcommand june6 statbar vertical 0 100"
+		local.driver stufftext "globalwidgetcommand charliesector linkcvar phealth"
+		local.driver stufftext "set phealth 100"
+	}
+	else { local.driver thread display }
 
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
@@ -302,6 +332,8 @@ playergetin:
 				else { self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed } // make vehicles drive faster, only when holding W (forward key)
 			}
 		}
+
+		local.driver stufftext ("set phealth " + int(local.driver.health))
 		waitframe
 	}
 
@@ -322,7 +354,33 @@ playergetin:
 		self remove
 	}
 	waitframe
-	if(local.driver != NULL) { local.driver.driving = 0; local.driver.drivingent = NIL }
+	if(local.driver != NULL)
+	{
+		local.driver.driving = 0
+		local.driver.drivingent = NIL
+		if(!isalive local.driver) { local.driver stufftext ("set phealth 0") }
+
+		if(local.driver.using_pack == 1)
+		{
+			local.driver stufftext "globalwidgetcommand june6 linkcvar fuel"
+			local.driver stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.jetpack_max_fuel)
+			local.driver stufftext "globalwidgetcommand charliesector linkcvar fuel"
+		}
+		else
+		{
+			local.driver stufftext "hidemenu dday1"
+			local.driver stufftext "hidemenu dday2"
+		}
+
+		local.origin = local.driver.origin
+		while(local.driver != NULL && !isalive local.driver && local.driver.dmteam != "spectator")
+		{
+			local.driver.origin = ( local.origin[0] local.origin[1] local.driver.origin[2] ) // for some reason, drivers' dead bodies would move forward across the ground until they hit a wall.
+			local.driver notsolid
+			local.driver droptofloor
+			waitframe
+		}
+	}
 end
 
 driverreset local.status:
@@ -343,7 +401,7 @@ driverreset local.status:
 	if(self.driver.dmteam != spectator)
 	{
 		self.driver show
-		self.driver solid
+		if(local.status != 1) { self.driver solid }
 		self.driver takedamage
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
 		if(local.status != 1 && local.status != 2)
@@ -468,7 +526,7 @@ vehicledeath:
 		if(self.desmodel == models/vehicles/bmwbike_d.tik) { local.fire.origin += ( 0 0 -25 ); local.smoke.origin += ( 0 0 -25 ) }
 	}
 
-	self thread driverreset 1					// local.status = 1
+	self thread driverreset 1					// use local.status = 1 for drivers that died
 	self thread mainreset local.desvehicle local.fire local.smoke	// waiting self.resettime seconds until a new vehicle is spawned in
 
 	self thread kill_riders
@@ -548,7 +606,7 @@ mainreset local.desvehicle local.fire local.smoke:
 	local.model = self.model
 	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
 	local.angles = self.angles
-	local.health = self.max_health // self.max_health is the local.health initially given to the vehicle
+	local.health = level.vehicle_inithealth[self.name]
 	local.vehiclespeed = self.vehiclespeed
 	local.resettime = self.resettime
 	local.headlights = self.headlights
@@ -834,7 +892,8 @@ passengers:
 			local.origin = local.player.origin
 			while(local.player != NULL && !isalive local.player && local.player.dmteam != "spectator")
 			{
-				local.player.origin = local.origin // for some reason, passengers' dead bodies would move forward across the ground until they hit a wall.
+				local.player.origin = ( local.origin[0] local.origin[1] local.player.origin[2] ) // for some reason, passengers' dead bodies would move forward across the ground until they hit a wall.
+				local.player notsolid
 				local.player droptofloor
 				waitframe
 			}
@@ -1344,6 +1403,52 @@ removeclass_camera:
 		}
 		waitframe
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+display:
+
+	if(game.game != "AA") { local.menu1 = "bastogne1"; local.menu2 = "bastogne2" }
+	else { local.menu1 = "dday1"; local.menu2 = "dday2" }
+
+	self stufftext ("globalwidgetcommand " + local.menu1 + " shader townhallwindow")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " menu " + local.menu1 + " 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand june6 borderstyle NONE"
+	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
+	self stufftext "globalwidgetcommand june6 rect 16 420 16 64"
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand june6 linkcvar phealth"
+	self stufftext "globalwidgetcommand june6 statbar vertical 0 100"
+	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
+	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
+
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " menu " + local.menu2 + " 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	self stufftext "globalwidgetcommand charliesector textalign left "
+	self stufftext "globalwidgetcommand charliesector rect 40 470 150 20"
+	self stufftext "globalwidgetcommand charliesector fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand charliesector linkcvar phealth"
+	self stufftext "globalwidgetcommand charliesector font facfont-20"
+	self stufftext "globalwidgetcommand charliesector shader townhallwindow"
+
+	self stufftext ("showmenu " + local.menu2)
+	self stufftext ("showmenu " + local.menu1)
+	self stufftext "set phealth 100"
 end
 
 ////////////////////////////////////////////////////////////////////////

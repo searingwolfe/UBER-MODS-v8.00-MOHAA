@@ -74,6 +74,8 @@ main local.name local.model local.origin local.angles local.health local.resetti
 
 	if(level.tank_initorigin[local.name] == NIL) { level.tank_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
 	if(level.tank_initangles[local.name] == NIL) { level.tank_initangles[local.name] = local.angles }
+	if(level.tank_inithealth[local.name] == NIL) { level.tank_inithealth[local.name] = local.health }
+	local.tank thread tankdamagesmoke
 
 	if(level.tankscriptmaster[local.tank.model] != 1) // this only runs once
 	{
@@ -82,6 +84,7 @@ main local.name local.model local.origin local.angles local.health local.resetti
 		cache models/emitters/mortar_dirt_nosound.tik
 		cache models/projectiles/tigercannonshell.tik
 		cache models/fx/fx_cannonsmoke.tik
+		cache models/emitters/shermansmoke.tik
 		thread scriptmaster local.tank.model
 		level.tankscriptmaster[local.tank.model] = 1
 		level.tankscriptmaster[local.model] = 1
@@ -143,7 +146,7 @@ tankreset local.groundtarget: // tank turret must be reset each time a new tank 
 	}
 	local.groundtarget_gun2 remove
 	//removeclass Camera // also removes PlayerIntermission and other func_cameras
-	if(level.removeclass_camera != 1) { thread removeclass_camera } // when exiting any drivable tanks, a "Camera" entity is left behind (likely from the VehicleTurretGun); remove this to prevent Camera entities from building up over time.
+	if(level.removeclass_camera != 1) { thread removeclass_camera } // when exiting any drivable tanks, a "Camera" entity is left behind (likely from the VehicleTurretGun); remove them to prevent Camera entities from building up over time.
 end
 
 tanktrigger:
@@ -203,6 +206,17 @@ playergetin:
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
 	local.groundtarget = spawn script_origin
+	local.turretangles = self.gun.angles
+	local.holdtime = 0
+
+	if(self.driver.using_pack == 1)
+	{
+		self.driver stufftext "globalwidgetcommand june6 linkcvar phealth"
+		self.driver stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.tank_inithealth[self.name] )
+		self.driver stufftext "globalwidgetcommand charliesector linkcvar phealth"
+		self.driver stufftext "set phealth 100"
+	}
+	else { self.driver thread display self.name }
 
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
@@ -220,6 +234,15 @@ playergetin:
 			self.driver = NIL
 			break
 		}
+		else if(self.driving_state_forward != 1 && self.driving_state_backward != 1 && self.driving_state_left != 1 && self.driving_state_right != 1 && self.gun.angles == local.turretangles && self.health < level.tank_inithealth[self.name])
+		{
+			if(self.driver.useheld == 1) { local.holdtime++ }
+			if(local.holdtime >= 30)
+			{
+				self.health += 1.25	// if the tank is not moving, turret is not moving, and the driver is holding USE(e) for > 1 second, then slowly repair the tank's health.
+				self.driver loopsound weldingtorch
+			}
+		}
 
 		if(self != NULL && isalive self.driver && self.driver.fireheld == 1 && self.firingshell != 1)
 		{
@@ -227,6 +250,12 @@ playergetin:
 			self thread projectile
 		}
 		if(self.shooter != NIL) { self thread shooter_NIL }
+
+		if(self.driver.useheld != 1 || self.driver.fireheld == 1 || self.gun.angles != local.turretangles || self.health >= level.tank_inithealth[self.name]) { local.holdtime = 0; self.driver stoploopsound }
+		if(local.holdtime > 9999) { local.holdtime = 9999 }
+		local.turretangles = self.gun.angles
+
+		self.driver stufftext ("set phealth " + int(self.health))
 		waitframe
 	}
 
@@ -248,7 +277,33 @@ playergetin:
 		self remove
 	}
 	waitframe
-	if(local.driver != NULL) { local.driver.driving = 0; local.driver.drivingent = NIL }
+	if(local.driver != NULL)
+	{
+		local.driver.driving = 0
+		local.driver.drivingent = NIL
+		if(!isalive local.driver) { local.driver stufftext ("set phealth 0") }
+
+		if(local.driver.using_pack == 1)
+		{
+			local.driver stufftext "globalwidgetcommand june6 linkcvar fuel"
+			local.driver stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.jetpack_max_fuel)
+			local.driver stufftext "globalwidgetcommand charliesector linkcvar fuel"
+		}
+		else
+		{
+			local.driver stufftext "hidemenu dday1"
+			local.driver stufftext "hidemenu dday2"
+		}
+
+		local.origin = local.driver.origin
+		while(local.driver != NULL && !isalive local.driver && local.driver.dmteam != "spectator")
+		{
+			local.driver.origin = ( local.origin[0] local.origin[1] local.driver.origin[2] ) // for some reason, drivers' dead bodies would move forward across the ground until they hit a wall.
+			local.driver notsolid
+			local.driver droptofloor
+			waitframe
+		}
+	}
 end
 
 shooter_NIL:
@@ -385,6 +440,7 @@ smokey:
 
 	self.tanksmoking = 1
 	local.targetname = self.targetname
+	local.tanksmokecount = self.tanksmokecount
 
 	local.smoke = spawn script_model
 	local.smoke model "fx/fx_cannonsmoke.tik"
@@ -415,7 +471,7 @@ smokey:
 	$(local.targetname).tanksmokecount = local.tanksmokecount
 	$(local.targetname).gun = $(local.targetname) QueryTurretSlotEntity 0
 
-	while($(local.targetname) != NULL && $(local.targetname).gun != NULL && $(local.targetname).tanksmokecount < 120)
+	while($(local.targetname) != NULL && $(local.targetname).gun != NULL && $(local.targetname).tanksmokecount != NIL && $(local.targetname).tanksmokecount < 120)
 	{
 		local.smoke.origin = $(local.targetname).gun gettagposition "tag_barrel"
 		$(local.targetname).tanksmokecount++
@@ -444,6 +500,25 @@ tankdamage:
 			//if(local.c == 2) { exec global/earthquake.scr .2 3 0 0 } // if tank is getting constantly damaged per frame, stop earthquake from spamming. (removed, since it was still getting annoying)
 		}
 	}
+end
+
+tankdamagesmoke:
+
+	local.smoke = spawn script_model
+	local.smoke model "models/emitters/shermansmoke.tik"
+	local.smoke.origin = self gettagposition "turret0"
+	local.smoke.angles = ( 270 0 0 )
+	local.smoke anim stop
+	local.smoke notsolid
+
+	while(self != NULL && self.health > 0)
+	{
+		local.smoke.origin = self gettagposition "turret0"
+		local.smoke.scale = 1.000 - (self.health / level.tank_inithealth[self.name])
+		if(self.health < level.tank_inithealth[self.name]) { local.smoke anim start }
+		waitframe
+	}
+	local.smoke remove
 end
 
 tankdeath:
@@ -539,7 +614,7 @@ mainreset local.destank:
 	local.desmodel = self.desmodel
 	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
 	local.angles = self.angles
-	local.health = self.max_health
+	local.health = level.tank_inithealth[self.name]
 	local.vehiclespeed = self.vehiclespeed
 	local.resettime = self.resettime
 
@@ -796,10 +871,61 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+display local.name:
+
+	if(game.game != "AA") { local.menu1 = "bastogne1"; local.menu2 = "bastogne2" }
+	else { local.menu1 = "dday1"; local.menu2 = "dday2" }
+
+	self stufftext ("globalwidgetcommand " + local.menu1 + " shader townhallwindow")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " menu " + local.menu1 + " 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand june6 borderstyle NONE"
+	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
+	self stufftext "globalwidgetcommand june6 rect 16 420 16 64"
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand june6 linkcvar phealth"
+	self stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.tank_inithealth[local.name] )
+	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
+	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
+
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " menu " + local.menu2 + " 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	self stufftext "globalwidgetcommand charliesector textalign left "
+	self stufftext "globalwidgetcommand charliesector rect 40 470 150 20"
+	self stufftext "globalwidgetcommand charliesector fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand charliesector linkcvar phealth"
+	self stufftext "globalwidgetcommand charliesector font facfont-20"
+	self stufftext "globalwidgetcommand charliesector shader townhallwindow"
+
+	self stufftext ("showmenu " + local.menu2)
+	self stufftext ("showmenu " + local.menu1)
+	self stufftext "set phealth 100"
+end
+
+////////////////////////////////////////////////////////////////////////
+
 scriptmaster local.model:
 
 level.mapname = getcvar "mapname"
 local.master = spawn scriptmaster
+
+if(level.scriptmaster[weldingtorch] != 1)
+{
+	local.master aliascache weldingtorch sound/mechanics/WeldingTorch.wav soundparms 1.0 0.0 1.0 0.0 400 1000 item loaded maps level.mapname
+}
 
 if(local.model == "models/vehicles/kingtank.tik")
 {

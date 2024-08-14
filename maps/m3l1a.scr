@@ -32,7 +32,7 @@ setcvar "thereisnomonkey" "0"
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
-local.v = waitexec global/uberversion.scr
+local.v = exec global/uberversion.scr
 
 if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
 if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
@@ -258,9 +258,8 @@ setup:
 		}
 	}
 
-	// keep origin in front of ladder bars & off of walls (facing toward player) to prevent climbing player from getting stuck. ideally, player's hands should not go behind the ladder when climbing (use 3rd person to check your hands).
-	exec global/spawnladder.scr ( 1375.5 4255 -503 ) -90 ( -31 -1 0 ) ( 31 1 250 ) // origin, player angle, setsize1, setsize2
-	thread spawnlaser ( 1375.5 4241 -503 ) ( 1375.5 4241 -303 ) ( 0 0 1 ) 1
+	// origin, ladder angle, height, width, thickness (going into wall), spawn solid clip (0 = no, 1 = yes), spawn lasers (1 = 1 laser, 2 = 2 lasers for ladder, 3 = ladder with rungs), laser color (R G B).
+	exec global/spawnladder.scr ( 1375.5 4241 -503 ) -90 200 31 1 0 1 ( 0 0 1 )
 
 	$playerweapon_springfield remove
 	$sequence_12_playerclip1 remove
@@ -2462,6 +2461,7 @@ emitterstuff local.model local.origin local.angles local.scale local.anim:
 	if(local.angles[2] != NIL) { local.emitter.angles = local.angles }
 	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
 	if(local.anim != NIL) { local.emitter anim local.anim }
+	local.emitter notsolid
 end
 
 solidclip local.origin local.setsize1 local.setsize2 local.angles local.targetname:

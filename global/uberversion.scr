@@ -1,10 +1,15 @@
+
+
 main:
 
-	local.uberversion = "7.958"
+	thread runspeed	350	// change player running speed here ("sv_runspeed" cvar).
 
-// /* NOTE: uncommenting this switch statement will not allow "g_ubergametype" cvar to change a map's UBER gametype between maps (hard-coded to this list only).
+// NOTE: removing " / * " and " * / " below will hard-code maps' UBER gametypes to this list only, but will not allow "g_ubergametype" cvar to work anymore.
+/*
 
 	level.mapname = getcvar "mapname"
+	level.global_uberversion_hardcode = 1
+
 	switch(level.mapname)
 	{
 		case "dm/mohdm1": setcvar "g_ubergametype" "ft"; break // cyber attack, search & destroy, base-builder, freze tag, none.
@@ -35,9 +40,24 @@ main:
 		case "m2l3": setcvar "g_ubergametype" "0"; break
 		case "m3l1a": setcvar "g_ubergametype" "0"; break
 		case "m3l1b": setcvar "g_ubergametype" "0"; break
+		case "m3l2": setcvar "g_ubergametype" "0"; break
+		case "m3l3": setcvar "g_ubergametype" "0"; break
 		// more fully-modded maps coming soon.
 
 		default: setcvar "g_ubergametype" "0"; break
 	}
-// */
+*/
+// NOTE: removing " / * " and " * / " above will hard-code maps' UBER gametypes to this list only, but will not allow "g_ubergametype" cvar to work anymore.
+
+	local.uberversion = "7.97"
 end local.uberversion
+
+runspeed local.run_speed:
+
+	level waittill spawn
+	setcvar "sv_runspeed" local.run_speed // default = 250
+
+	wait 0.5
+	local.datetime = getdate("%D") + " " + gettime(0)
+	println(local.datetime)
+end

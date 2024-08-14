@@ -1,11 +1,11 @@
-main local.switchorigin local.switchangles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset:
+main local.origin local.angles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset:
 
 exec global/aliascache_triggersounds.scr alarm_switch
 
 local.switch = spawn script_model
 local.switch model "animate/alarmswitch.tik"
-local.switch.origin = local.switchorigin
-local.switch.angles = local.switchangles
+local.switch.origin = local.origin
+local.switch.angles = local.angles
 local.switch notsolid
 
 local.switchtrig = spawn trigger_use
@@ -20,8 +20,29 @@ local.switch playsound alarmswitch
 /////////////////////////////////////////////*** add code here ***//////
 
  	local.player = parm.other
- 	local.player iprint ("*** Blowing up a bangalore. ***")
-	local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff
+	if(typeof local.name == "array") // "typeof" is a Reborn 1.12 command.
+	{
+		local.player iprint ("*** Blowing up some bangalores. ***")
+
+		if(local.name[0] != NIL && local.name[0].size > 0) { local.sub = 1 } // works if the first local.name starts at either local.name[0] or local.name[1].
+		else { local.sub = 0 }
+
+		wait (randomint(50) / 50.00 + 0.25)
+		for(local.n = 0; local.n < local.name.size - local.sub; local.n++)
+		{
+			if(local.name[local.n].size > 0)
+			{
+				local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name[local.n] local.offtime local.damageradius local.pulsatingoff
+				wait (randomint(100) / 100.00 + 0.25)
+			}
+		}
+		local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name[local.name.size - local.sub] local.offtime local.damageradius local.pulsatingoff
+	}
+ 	else
+	{
+		local.player iprint ("*** Blowing up a bangalore. ***")
+		local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff
+	}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -49,5 +70,5 @@ if(local.manualreset == 1)
 local.switch remove
 local.switchtrig remove
 
-thread main local.switchorigin local.switchangles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset
+thread main local.origin local.angles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset
 end

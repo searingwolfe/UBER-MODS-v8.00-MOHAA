@@ -583,6 +583,7 @@ player_spectating local.team:
 		{
 			local.specorg = self.spectarget.origin + ( 0 0 100 )
 			self.origin = (trace local.specorg (local.specorg + ( 0 0 0 ) + ((angles_toforward self.viewangles) * -50)) 1) - ( 0 0 82.125 )
+			self physics_on
 		}
 		if(self.spectarget != NIL && self.spectarget != NULL && self.spectarget.classname != ScriptModel && self.spectargetdead != 1) // spectating a living player
 		{
@@ -592,7 +593,8 @@ player_spectating local.team:
 		
 			local.fwd_vec = angles_toforward self.spectarget.viewangles
 			self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.spectarget.viewangles) * -50)) 1) - ( 0 0 82.125 )
-			self face self.spectarget.viewangles
+			self physics_off
+			self face self.spectarget.viewangles	// keep physics_off when following another player with rapidly changing viewangles (looking around), to prevent camera jittering.
 		}
 
 		if(self.spectarget == NIL || self.spectarget == NULL) // in case there's somehow no one to spectate and this while-loop hasn't ended yet, try again 3 more times to find a spectarget, otherwise end.
@@ -605,6 +607,7 @@ player_spectating local.team:
 		}
 		waitframe
 	}
+	if(self != NULL) { self physics_on }
 end	
 
 //-----------------------------------------------------------------------------
@@ -748,7 +751,7 @@ end
 
 //-----------------------------------------------------------------------------
 
-bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral:
+bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral local.norotate:
 
 	if(level.newgametype == "ft" || getcvar("g_ubergametype") == "ft") { end }
 	if(getcvar("g_ubergametype") == "cyb") { level.newgametype = cyb }
@@ -756,6 +759,8 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 	if(level.newgametype != "cyb" && level.newgametype != "snd") { level.newgametype = "cyb" }
 
 	local.bombtrig = spawn trigger_use targetname "bombexplosive"
+	if(local.norotate == 1) { $bombexplosive.norotate = 1 }		// if local.norotate = 1, keep bombs from rotating and instead use the local.angleallies, angleaxis, anglecentral parameters.
+
 	if(level.newgametype == "snd") 
 	{ 
 		local.bombtrig model "animate/pulse_explosive_pickup.tik" 
@@ -764,6 +769,7 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 			local.bombtrig.origin = local.originallies
 			local.bombtrig.angles = ( 0 local.angleallies 0 )
 			local.bombtrig light 0 0 1 125
+			local.bombtrig.team = "allies"
 
 			exec global/flickerrotate.scr bombexplosive ( 0 0 1 ) 125 25 25 0
 		}
@@ -772,9 +778,11 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 			local.bombtrig.origin = local.originaxis
 			local.bombtrig.angles = ( 0 local.angleaxis 0 )
 			local.bombtrig light 1 0 0 125
+			local.bombtrig.team = "axis"
 
 			exec global/flickerrotate.scr bombexplosive ( 1 0 0 ) 125 0 25 25
 		}
+		local.bombtrig thread dummyavatar
 	}
 	if(level.newgametype == "cyb") 
 	{ 
@@ -1010,13 +1018,13 @@ bombsite local.origin local.angle local.team:
 	local.ebox1.origin = local.table.origin + ( local.cos4 local.sin4 0 )
 	local.ebox1.angles = local.table.angles + ( 0 90 0 )
 	local.ebox1.scale = 0.85
-	local.ebox1 solid
+	local.ebox1 notsolid
 	local.ebox2 = spawn script_model targetname ("sitewall2_" + level.bombsites)
 	local.ebox2 model "static/static_electricbox1.tik" // cement side panel
 	local.ebox2.origin = local.table.origin + ( local.cos5 local.sin5 0 )
 	local.ebox2.angles = local.table.angles + ( 0 -90 0 )
 	local.ebox2.scale = 2
-	local.ebox2 solid
+	local.ebox2 notsolid
 
 	if(level.newgametype == "snd")
 	{
@@ -1110,7 +1118,9 @@ bombsite local.origin local.angle local.team:
 	local.backlid.origin = local.table.origin + ( local.cos7 local.sin7 20 )
 	local.backlid.angles = local.table.angles + ( -90 0 0 )
 	local.backlid.scale = 3.9
-	local.backlid solid
+	local.backlid notsolid
+
+	local.pulsetrig thread dummyavatar
 end
 
 bombsites_remove:
@@ -1127,6 +1137,37 @@ bombsites_remove:
 		$("sitewall3_" + local.s) remove
 	}
 	level.bombsites = 0
+end
+
+//-----------------------------------------------------------------------------
+
+dummyavatar:
+
+	if(self.team == NIL) { wait 1 }
+	if(self.team == NIL) { end }
+
+	local.avatar = spawn func_beam
+	local.avatar.origin = self.origin + ( 0 0 30 )
+	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+	local.avatar minoffset 0.0
+	local.avatar maxoffset 0.0
+	local.avatar color ( 1 1 1 )
+	local.avatar scale 7.0
+	local.avatar life 0
+	if(self.team == "allies") { local.avatar shader ("textures/hud/allies_headicon") }
+	if(self.team == "axis") { local.avatar shader ("textures/hud/axis_headicon") }
+	local.avatar numsegments 1
+	local.avatar alpha 0.80
+	local.avatar activate
+
+	local.team = self.team
+	while(self != NULL && self.team == local.team && level.bombisdead != 1 && level.change_team_score != 1)
+	{
+		local.avatar.origin = self.origin + ( 0 0 30 )
+		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+		waitframe
+	}
+	local.avatar remove
 end
 
 //-----------------------------------------------------------------------------
@@ -1174,8 +1215,23 @@ bomb_planted local.i local.originallies local.originaxis local.origincentral loc
 		if(local.r == 10) { $player playsound den_objective_o11 }
 	}
 
-	if(level.newgametype == "snd") { $("bombsitetrig_" + local.i).model = "animate/pulse_explosive_pickup.tik"; $("bombsitetrig_" + local.i) playsound plantedbomb; local.planttimer = 450 }
-	if(level.newgametype == "cyb") { $("bombsitetrig_" + local.i).model = "animate/pulse_radiobomb_pickup.tik"; $("bombsitetrig_" + local.i) playsound radiobombplant; local.planttimer = 450 }
+	$("bombsitetrig_" + local.i).norotate = 1
+	if(local.team == "allies") { exec global/flickerrotate.scr $("bombsitetrig_" + local.i) ( 1 0 0 ) 125 15 15 0 1 }
+	if(local.team == "axis") { exec global/flickerrotate.scr $("bombsitetrig_" + local.i) ( 0 0 1 ) 125 0 15 15 1 }
+
+	if(level.newgametype == "snd")
+	{
+
+		$("bombsitetrig_" + local.i).model = "animate/pulse_explosive_pickup.tik"
+		$("bombsitetrig_" + local.i) playsound plantedbomb
+		local.planttimer = 450
+	}
+	if(level.newgametype == "cyb")
+	{
+		$("bombsitetrig_" + local.i).model = "animate/pulse_radiobomb_pickup.tik"
+		$("bombsitetrig_" + local.i) playsound radiobombplant
+		local.planttimer = 450
+	}
 
 	thread bomb_defuse_check local.i local.team
 
@@ -1209,6 +1265,7 @@ bomb_planted local.i local.originallies local.originaxis local.origincentral loc
  		level.axisplanted = 0
 		if(level.newgametype == "snd") { $("bombsitetrig_" + local.i).model = "animate/pulse_explosive.tik" }
 		if(level.newgametype == "cyb") { $("bombsitetrig_" + local.i).model = "animate/pulse_radiobomb.tik" }
+		$("bombsitetrig_" + local.i).flickerremove = 1
 		
 		if(local.team == "allies" && level.round_starttime <= 0) // the bombsite's team = allies, the axis defused the bomb, so play an axis "bomb defused" dialog.
 		{
@@ -1296,6 +1353,7 @@ blowup_bomb local.i local.team:
 	if(level.bombcamera == 1) { thread camera local.i local.r }
 	wait local.r
 
+	$("bombsitetrig_" + local.i).flickerremove = 1
 	level.bombisdead = 1 
 	huddraw_string 207 ("Target Destroyed."); huddraw_color 207 1.0 0.0 0.0
 

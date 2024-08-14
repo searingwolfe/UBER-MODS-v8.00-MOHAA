@@ -1,0 +1,135 @@
+// Simple script for simulating player sounds moving through water volumes or falling into them, for maps that do not have these sounds pre-loaded in.
+// Changing ubersound.scr to stop the "needs an alias in ubersound.scr - please fix" console errors only works client-side. This script plays sounds server-side for all other players to hear.
+// Requires at least one "level.water_volumes" volume. Parameters = origin, - setsize 1, + setsize 2.
+// Optionally, setting parameter "bigsplash" = 1 will make players play a louder splash sound when falling into water volumes.
+//
+// Parameters: big splash sound (0 = no, 1 = yes)
+// Example: exec global/water_wade_sounds.scr 1; thread water_volumes
+//
+// water_volumes: // example thread from m3l2.
+//
+//	level.water_volumes = makeArray
+//		( -5047 1768 -195 ) ( 0 0 -1000 ) ( 2423 359 70 )
+//	endArray
+// end
+
+main local.bigsplash:
+
+	waitthread initialize local.bigsplash
+	thread players_water_sounds local.bigsplash
+end
+
+//-----------------------------------------------------------------------------
+
+players_water_sounds local.bigsplash:
+
+	while(1)
+	{
+		if($player != NULL && $player.size >= 1)
+		{
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if(level.water_volumes != NIL && level.water_volumes != 0)
+				{
+					for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+					{
+						local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+						local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+						local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+						local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+						local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+						local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+						local.origin = $player[local.i].origin
+	
+						if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+						{
+							if($player[local.i].water_temp_ent == NIL || $player[local.i].water_temp_ent == NULL) { $player[local.i] thread water_temp_ent }
+
+							if($player[local.i].dmteam != "spectator" && $player[local.i].dead != 1)
+							{
+								if($player[local.i] getmovement == "running" && $player[local.i].water_runwait != 1) { $player[local.i] thread water_volumes_runwait }
+								if($player[local.i] getmovement == "running" && $player[local.i].water_runwait2 != 1) { $player[local.i] thread water_volumes_runwait2 }
+								if($player[local.i] getposition == "offground" && $player[local.i].water_falling != 1) { $player[local.i] thread water_volumes_falling local.bigsplash }
+							}
+						}
+						else if($player[local.i].water_temp_ent != NIL && $player[local.i].water_temp_ent != NULL) { $player[local.i].water_temp_ent remove }
+					}
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+water_temp_ent:
+
+	local.ent = spawn script_model	// one entity for left-foot water-movement sounds and the player's entity for the right-foot.
+	local.ent model fx/dummy.tik	// starting another "playsound" on the same entity will prematurely end the previous sound that is playing.
+	local.ent glue self
+	self.water_temp_ent = local.ent
+
+	local.ent2 = spawn script_model // secondary entity for initial splash sound into the water, since players may start moving in the water before the splash sound finishes.
+	local.ent2 model fx/dummy.tik
+	local.ent2 glue self
+	self.water_temp_ent2 = local.ent2
+end
+
+//-----------------------------------------------------------------------------
+
+water_volumes_runwait:
+
+	self.water_runwait = 1
+	self.water_runwait2 = 1
+	self.water_temp_ent playsound snd_step_wade
+
+	wait 0.375		// estimated time between each player's footstep sounds/animations.
+	if(self != NULL) { self.water_runwait2 = 0 }
+end
+
+water_volumes_runwait2:
+
+	self.water_runwait2 = 1
+	self playsound snd_step_wade
+
+	wait 0.375
+	if(self != NULL) { self.water_runwait = 0 }
+end
+
+water_volumes_falling local.bigsplash:
+
+	self.water_falling = 1
+	local.team = self.dmteam
+
+	while(isalive self && self.dmteam == local.team && self.dead != 1 && self getposition == "offground") { waitframe } // wait until player hits the ground inside the water volume.
+	if(self != NULL)
+	{
+		if(local.bigsplash == 1) { self.water_temp_ent2 playsound snd_bodyfall_wade }
+		else { self.water_temp_ent2 playsound snd_landing_wade }
+		self.water_temp_ent2 remove
+		self.water_falling = 0
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+initialize local.bigsplash:
+
+	level.mapname = getcvar "mapname"
+	if(level.mapname != "m3l1a" && level.mapname[2] != "/" && level.mapname[3] != "/")
+	{
+		local.master = spawn scriptmaster
+		local.master aliascache snd_step_wade1 sound/characters/body_mvmtwater_01.wav soundparms 0.75 0.3 0.9 0.2 160 1600 body loaded maps level.mapname
+		local.master aliascache snd_step_wade2 sound/characters/body_mvmtwater_02.wav soundparms 0.75 0.3 0.9 0.2 160 1600 body loaded maps level.mapname
+		local.master aliascache snd_step_wade3 sound/characters/body_mvmtwater_03.wav soundparms 0.75 0.3 0.9 0.2 160 1600 body loaded maps level.mapname
+		local.master aliascache snd_step_wade4 sound/characters/body_mvmtwater_04.wav soundparms 0.75 0.3 0.9 0.2 160 1600 body loaded maps level.mapname
+		local.master aliascache snd_landing_wade1 sound/characters/fs_water_land_01.wav soundparms 0.9 0.2 0.9 0.2 160 1600 body loaded maps level.mapname
+	}
+
+	if(local.bigsplash == 1 && level.mapname[0] == "m" && level.mapname[1] != "3")
+	{
+		local.master aliascache snd_bodyfall_wade1 sound/characters/body_fallwater_01.wav soundparms 1.0 0.2 0.9 0.2 320 2000 body loaded maps level.mapname
+		local.master aliascache snd_bodyfall_wade2 sound/characters/body_fallwater_02.wav soundparms 1.0 0.2 0.9 0.2 320 2000 body loaded maps level.mapname
+	}
+end
