@@ -240,7 +240,7 @@ playergetin:
 			if(self.driver.useheld == 1) { local.holdtime++ }
 			if(local.holdtime >= 30)
 			{
-				self.health += 1.25	// if the tank is not moving, turret is not moving, and the driver is holding USE(e) for > 1 second, then slowly repair the tank's health.
+				self.health += 1.5	// if the tank is not moving, turret is not moving, and the driver is holding USE(e) for > 1 second, then slowly repair the tank's health.
 				self.driver loopsound weldingtorch
 			}
 		}
@@ -256,6 +256,7 @@ playergetin:
 		if(local.holdtime > 9999) { local.holdtime = 9999 }
 		local.turretangles = self.gun.angles
 
+		if(self.health > level.tank_inithealth[self.name]) { self.health = level.tank_inithealth[self.name] }
 		self.driver stufftext ("set phealth " + int(self.health))
 		waitframe
 	}
