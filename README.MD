@@ -917,8 +917,8 @@ v7.97 (8-16-2024):
 - Players using drivable vehicles & boats can now be shot and killed by enemy players (not including SDKFZs). Given the math behind the damage dealt to drivers, all passengers will likely be killed first before the driver does.
 - Players using drivable vehicles & boats can now see a secondary health bar, representing their actual player's health (when in vehicles/boats/tanks, the health bar changes to the vehicle's health).
 - Players using drivable tanks can now see a secondary health bar, representing the tank's current health (the health bar always starts at 100 when entering tanks, even though the tank & driver have different healths).
-	- If players had a jetpack on before driving vehicles/boats, the jetpack fuel bar simply to the player's health, and reverts back to the fuel bar after exiting vehicles/boats.
-- Drivable tanks will now emit smoke if they are damaged. The smoke's scale increases as the tank's health decreases.
+	- If players had a jetpack on before driving tanks/vehicles/boats, the jetpack fuel bar simply changes to the player's health, and reverts back to the fuel bar after exiting tanks/vehicles/boats.
+- Drivable tanks will now emit smoke if they are damaged and disappear when at full health. The smoke's scale increases as the tank's health decreases.
 
 ---------------
 
