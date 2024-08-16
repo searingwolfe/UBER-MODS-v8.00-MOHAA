@@ -1,4 +1,4 @@
-*Current Version: 7.97 - Updated: 8/14/2024*
+*Current Version: 7.97 - Updated: 8/16/2024*
 
 ### Table of Contents
 
@@ -896,7 +896,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.97 (8-14-2024):
+v7.97 (8-16-2024):
 - More script improvements in global/cyberattack_searchdestroy.scr:
 	- Fixed camera jittering when players are dead/frozen and team-spectating other teammates, by doing "self physics_off" when following a living player, and "self physics_on" when spectating a stationary frozen body.
 	- When the bomb is planted on a bombsite, the bomb will still flicker in color, making more obvious which bombsite has an explosive on it.
@@ -970,6 +970,7 @@ v7.97 (8-14-2024):
 - Small NIL error fixed in global/playertank.scr for tank turrets' smoke emitter duration, occuring if players quickly shoot and then exit the tank.
 - Reduced the solid setsizes for jeep.tik and jeep_bench.tik.
 - The alienx/basebuild.scr script now keeps memory of the map's originally defined "sv_runspeed" (define this after level waittill spawn) and returns to that "sv_runspeed" after building has ended, instead of defaulting back to "sv_runspeed 250".
+- Resized some ambience volumes in M1L2A.
 
 ---------------
 
