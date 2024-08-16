@@ -556,7 +556,13 @@ intermission local.type:
 		local.result = fnewdir "main/cvars"
 		local.file = fopen "main/cvars/playernames.txt" "a+"
 		local.return = fseek local.file 0 2
-		for(local.i = 1; local.i <= $player.size; local.i++) { local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n") }
+		if($player != NULL)
+		{
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n")
+			}
+		}
 		local.result = fclose local.file
 		end
 	}

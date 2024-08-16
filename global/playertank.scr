@@ -510,14 +510,16 @@ tankdamagesmoke:
 	local.smoke model "models/emitters/shermansmoke.tik"
 	local.smoke.origin = self gettagposition "turret0"
 	local.smoke.angles = ( 270 0 0 )
-	local.smoke anim stop
+	local.smoke hide
 	local.smoke notsolid
 
 	while(self != NULL && self.health > 0)
 	{
 		local.smoke.origin = self gettagposition "turret0"
 		local.smoke.scale = 1.000 - (self.health / level.tank_inithealth[self.name])
-		if(self.health < level.tank_inithealth[self.name]) { local.smoke anim start }
+
+		if(int(self.health) < int(level.tank_inithealth[self.name])) { local.smoke show }
+		else { local.smoke hide }
 		waitframe
 	}
 	local.smoke remove
@@ -924,9 +926,10 @@ scriptmaster local.model:
 level.mapname = getcvar "mapname"
 local.master = spawn scriptmaster
 
-if(level.scriptmaster[weldingtorch] != 1)
+if(level.scriptmaster[weldingtorch] != 1 && level.scriptmaster[detonator_switch] != 1)
 {
 	local.master aliascache weldingtorch sound/mechanics/WeldingTorch.wav soundparms 1.0 0.0 1.0 0.0 400 1000 item loaded maps level.mapname
+	level.scriptmaster[weldingtorch] = 1
 }
 
 if(local.model == "models/vehicles/kingtank.tik")
