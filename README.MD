@@ -991,6 +991,11 @@ v7.97 (8-16-2024):
 - Modders can assign UBER gametypes for different maps in a single map rotation in "global/uberversion.scr", but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
 - Modders can change default player running speed for all maps in "global/uberversion.scr".
 
+---------------
+
+- Potentially fixed the "ERROR: MAX_GAMESTATE_CHARS exceeded" auto-disconnecting error for M3L2 and M3L3 by removing all ".wav" sound caches in m3l2_precache.scr and m3l3_precache.scr.
+- With that error fixed, vehicles are now back in M3L2 and more vehicles added in M3L3. If somehow the error still disconnects players, just remove the vehicles again.
+
 More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
 
 ---------------
