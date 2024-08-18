@@ -1,4 +1,4 @@
-*Current Version: 7.97 - Updated: 8/16/2024*
+*Current Version: 7.97 - Updated: 8/18/2024*
 
 ### Table of Contents
 
@@ -896,7 +896,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.97 (8-16-2024):
+v7.97 (8-18-2024):
 - More script improvements in global/cyberattack_searchdestroy.scr:
 	- Fixed camera jittering when players are dead/frozen and team-spectating other teammates, by doing "self physics_off" when following a living player, and "self physics_on" when spectating a stationary frozen body.
 	- When the bomb is planted on a bombsite, the bomb will still flicker in color, making more obvious which bombsite has an explosive on it.
