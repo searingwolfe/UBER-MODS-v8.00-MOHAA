@@ -1,4 +1,4 @@
-main local.pathname local.position local.bombsoff local.offtime local.bulletstokill local.killtime local.randomizepath:
+main local.pathname local.position local.bombsoff local.offtime local.bulletstokill local.killtime local.randomizepath local.playerowner:
 
 exec global/aliascache_triggersounds.scr airstrikes
 
@@ -8,9 +8,8 @@ exec global/aliascache_triggersounds.scr airstrikes
 	level.airspace_toobusy = 1
 
 	local.plane = spawn script_model
-	if(local.pathname == "allies") { local.plane model "vehicles/p47fly.tik" }
-	if(local.pathname == "axis") { local.plane model "vehicles/fockwulffly.tik" }
-	if(local.pathname == "final") { local.plane model "vehicles/fockwulffly.tik" }
+	if(local.playerowner.dmteam == "allies") { local.plane model "vehicles/p47fly.tik" }
+	else { local.plane model "vehicles/fockwulffly.tik" }
 	local.plane.scale = 1
 	local.plane.origin = $bomberpathh.origin
 	local.plane.angles = $bomberpathh.angles
@@ -18,15 +17,23 @@ exec global/aliascache_triggersounds.scr airstrikes
 	local.plane show
 	local.plane.pathname = local.pathname
 
-	local.plane thread damagetrigger local.position local.pathname local.bulletstokill
+	local.plane thread damagetrigger local.position local.pathname local.bulletstokill local.playerowner
 	local.plane thread killplane local.position local.pathname local.killtime
 
 	local.plane playsound airplane_flyover
 	local.plane loopsound airplane_idle
 	local.plane followpath $bomberpathh
-	if(local.position != "second" && local.bombsoff != 1) { iprintlnbold "*** Airstrike Carpet Bomb Incoming! Take Cover! ***"; println("----- Airstrike Carpet Bomb Incoming!") }
+	if(local.position != "second" && local.bombsoff != 1)
+	{
+		if(getcvar("g_gametype" == "1")) { iprintlnbold "*** Airstrike Carpet Bomb Incoming! Take Cover! ***"; println("----- Airstrike Carpet Bomb Incoming!") }
+		else
+		{
+			if(local.playerowner.dmteam == "allies") { iprintlnbold "*** Allies Airstrike Carpet Bomb Incoming! Take Cover! ***"; println("----- Allies Airstrike Carpet Bomb Incoming!") }
+			if(local.playerowner.dmteam == "axis") { iprintlnbold "*** Axis Airstrike Carpet Bomb Incoming! Take Cover! ***"; println("----- Axis Airstrike Carpet Bomb Incoming!") }
+		}
+	}
 
-	if(local.bombsoff != 1) { local.plane thread bombdropcoords local.pathname local.position } // drop bombs from the planes, coords are preset for allies, axis, final pathnames.
+	if(local.bombsoff != 1) { local.plane thread bombdropcoords local.pathname local.position local.playerowner } // drop bombs from the planes, coords are preset for allies, axis, final pathnames.
 
 	if(local.position == "second") { wait 1 } // second plane waits 1 second before beginning "waitmove".
 	local.plane waitmove
@@ -48,27 +55,30 @@ exec global/aliascache_triggersounds.scr airstrikes
 	if(local.offtime > 0 && local.offtime != NIL)
 	{ 
 		wait local.offtime
-		thread main local.pathname local.position local.bombsoff local.offtime local.bulletstokill local.killtime 
+		thread main local.pathname local.position local.bombsoff local.offtime local.bulletstokill local.killtime local.randomizepath
 	}		// this turns on continuous airstrikes, only if airstrikebombs.scr::main is exec'd from main map script and given an offtime > 0.
  }
 end
 
 ////////////////////////////////////////////////////////////////////////
 
-damagetrigger local.position local.pathname local.bulletstokill:
+damagetrigger local.position local.pathname local.bulletstokill local.playerowner:
 
 	local.trigger = spawn trigger_multiple spawnflags 128 // only responds to bullets and explosions occuring near them
 	local.trigger.origin = self.origin
 	local.trigger setsize ( -300 -300 -100 ) ( 300 300 100 )
 	local.trigger.triggered = 0
 	local.trigger setthread triggered
+	self.damagetrigger = local.trigger
 
 	if(local.bulletstokill == NIL || local.bulletstokill < 1) { local.bulletstokill = 10 } // default = 10 bullets
 
 	local.pathpos = local.position + local.pathname
 	level.planedead[local.pathpos] = 0
-	
-	while(self != NULL && level.planedead[local.pathpos] == 0) 
+
+	if(local.playerowner != NIL && local.playerowner != NULL) { local.team = local.playerowner.dmteam }
+
+	while(self != NULL && level.planedead[local.pathpos] == 0 && local.playerowner != NIL && local.playerowner != NULL && local.playerowner.dmteam == local.team) 
 	{ 
 		local.player = parm.other	   // since multiple flying bombs will have the same targetname, the for-loop below will account for any & all
 		local.trigger.origin = self.origin // make sure the trigger stays on the plane.  	      // bombs (light bombs, giant bombs) flying in the air.
@@ -100,7 +110,8 @@ killplane local.position local.pathname local.killtime:
 	if(local.killtime == NIL) { local.killtime = 2.5 } // default = 2.5 seconds
 	local.pathpos = local.position + local.pathname
 
-	while(level.planedead[local.pathpos] != 1 && level.planedead[local.pathpos] != 2) { waitframe; if(self == NULL) { end } }
+	while(level.planedead[local.pathpos] != 1 && level.planedead[local.pathpos] != 2 && self != NULL && self.damagetrigger != NULL) { waitframe }
+	if(self == NULL) { end }
 	
 	if(level.planedead[local.pathpos] == 1) // if the plane was shot at, begin a smoke trail and wait a few seconds before exploding.
 	{
@@ -170,7 +181,7 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-dropbomb local.origin local.waittime local.speed local.zrotate local.damageradius local.position: // local.plane thread dropbomb ( 0 0 0 ) 2.5 2500 45 350
+dropbomb local.origin local.waittime local.speed local.zrotate local.damageradius local.position local.playerowner: // local.plane thread dropbomb ( 0 0 0 ) 2.5 2500 45 350
 
 	local.bombpoint = spawn script_origin origin ( local.origin ) // bombdrop destination
 	local.pathpos = local.position + self.pathname
@@ -179,38 +190,70 @@ dropbomb local.origin local.waittime local.speed local.zrotate local.damageradiu
 
 	if(level.planedead[local.pathpos] != 1 && level.planedead[local.pathpos] != 2)
 	{
-	local.bomb = spawn script_model
-	local.bomb model ammo/us_bomb.tik
-	local.bomb.scale = 1.5
-	local.bomb.origin = self.origin
-	local.bomb.angle = self.angle + 90
-	local.bomb light 1 0 0 300
-	waitframe
+		local.bomb = spawn script_model
+		local.bomb model ammo/us_bomb.tik
+		local.bomb.scale = 1.5
+		local.bomb.origin = self.origin
+		local.bomb.angle = self.angle + 90
+		local.bomb light 1 0 0 300
+		waitframe
 
-	local.bomb thread movestuck_fix local.bombpoint
-	local.bomb moveto local.bombpoint
-	local.bomb speed local.speed // speed to travel from plane to ground
-	local.bomb rotatez local.zrotate // point bomb nose-down over time
-	local.bomb waitmove
-	if(local.bomb != NULL) { local.bomb explode }
-	waitframe
-	if(local.bomb != NULL) { local.bomb remove }
+		local.bomb thread movestuck_fix local.bombpoint local.playerowner
+		local.bomb moveto local.bombpoint
+		local.bomb speed local.speed // speed to travel from plane to ground
+		local.bomb rotatez local.zrotate // point bomb nose-down over time
+		local.bomb waitmove
+		if(local.bomb != NULL) { local.bomb remove }
 
-	local.boom = spawn script_model
-	local.boom model animate/fx_mortar_dirt.tik // emitters/fx_explosion_mine.tik
-	local.boom.origin = local.bombpoint.origin
-	local.boom.scale = 1.5 // = 1 if using fx_explosion_mine.tik
-	local.boom anim start
-	waitframe
-	local.boom anim stop
-	radiusdamage local.boom 200 local.damageradius
+		local.boom = spawn script_model
+		local.boom model animate/fx_mortar_dirt.tik // emitters/fx_explosion_mine.tik
+		local.boom.origin = local.bombpoint.origin
+		local.boom.scale = 1.5 // = 1 if using fx_explosion_mine.tik
+		local.boom anim start
+
+		//radiusdamage local.boom 200 local.damageradius
+		local.blewup = 1
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(vector_length(local.boom.origin - $player[local.i].origin) <= local.damageradius) // "cansee" condition removed; if somehow a teammate cannot see a bomb, they will still get killed by radiusdamage
+			{
+				if(local.playerowner == NIL || local.playerowner == NULL)
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+					{
+						$player[local.i] damage $world 200 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 200 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { $player[local.i].drivingent damage $world 200 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+				}
+				else if($player[local.i] != local.playerowner && $player[local.i].dmteam == local.playerowner.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+				else
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+					{
+						$player[local.i] damage local.playerowner 200 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						$player[local.i].drivingent.shooter = local.playerowner
+						if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.playerowner 200 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { $player[local.i].drivingent damage local.playerowner 200 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+				}
+			}
+		}
+		waitframe
+		local.boom anim stop
 	}
 
 	if(local.boom != NIL && local.boom != NULL) { local.boom remove }
 	local.bombpoint remove
 end
 
-movestuck_fix local.bombpoint:
+movestuck_fix local.bombpoint local.playerowner:
 
 	//local.c = 0
 	//while(self != NULL) { local.c = local.c + 0.1; wait 0.1 }  // use these 3 lines to count exactly how long each bomb takes to touch the ground and explode, after each one is dropped.
@@ -221,8 +264,41 @@ movestuck_fix local.bombpoint:
  	{	    
 		if(local.n == 3.000)
 		{
-			self explode
-			waitframe
+			//radiusdamage local.boom 200 local.damageradius
+			local.blewup = 1
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if(vector_length(local.boom.origin - $player[local.i].origin) <= local.damageradius) // "cansee" condition removed; if somehow a teammate cannot see a bomb, they will still get killed by radiusdamage
+				{
+					if(local.playerowner == NIL || local.playerowner == NULL)
+					{
+						if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+						{
+							$player[local.i] damage $world 200 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+						}
+						else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+						{
+							if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 200 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+							else { $player[local.i].drivingent damage $world 200 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						}
+					}
+					else if($player[local.i] != local.playerowner && $player[local.i].dmteam == local.playerowner.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+					else
+					{
+						if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+						{
+							$player[local.i] damage local.playerowner 200 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+						}
+						else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+						{
+							$player[local.i].drivingent.shooter = local.playerowner
+							if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.playerowner 200 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+							else { $player[local.i].drivingent damage local.playerowner 200 local.playerowner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						}
+					}
+				}
+			}
+
 			if(self != NULL) { self remove }
 			end
 		}
@@ -489,70 +565,70 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-bombdropcoords local.pathname local.position:
+bombdropcoords local.pathname local.position local.playerowner:
 
    if(local.pathname == "allies")
    {
 	if(local.position != "second") // "first"
 	{
 		waitframe
-		self thread dropbomb ( -1683 -1167 -127 ) 4.90 1700 55 500 local.position
+		self thread dropbomb ( -1683 -1167 -127 ) 4.90 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -1613 -1802 -374 ) 5.00 1700 55 500 local.position
+		self thread dropbomb ( -1613 -1802 -374 ) 5.00 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -807 -2590 -323 ) 5.10 1700 55 500 local.position
+		self thread dropbomb ( -807 -2590 -323 ) 5.10 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -321 -2384 -387 ) 5.20 1700 55 500 local.position
+		self thread dropbomb ( -321 -2384 -387 ) 5.20 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -65 -2934 -395 ) 5.30 1700 55 500 local.position
+		self thread dropbomb ( -65 -2934 -395 ) 5.30 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 83 -2263 -127 ) 5.40 1700 55 500 local.position
+		self thread dropbomb ( 83 -2263 -127 ) 5.40 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -3093 -387 ) 5.50 1700 55 500 local.position
+		self thread dropbomb ( 700 -3093 -387 ) 5.50 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -2263 -127 ) 5.60 1700 55 500 local.position
+		self thread dropbomb ( 700 -2263 -127 ) 5.60 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1065 -2795 -387 ) 5.70 1700 55 500 local.position
+		self thread dropbomb ( 1065 -2795 -387 ) 5.70 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1120 -3233 -382 ) 5.80 1700 55 500 local.position
+		self thread dropbomb ( 1120 -3233 -382 ) 5.80 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1765 -2795 -387 ) 5.90 1700 55 500 local.position
+		self thread dropbomb ( 1765 -2795 -387 ) 5.90 1700 55 500 local.position local.playerowner
 		waitframe
 
-		self thread dropbomb ( 3030 -2755 -387 ) 6.20 1700 55 500 local.position
+		self thread dropbomb ( 3030 -2755 -387 ) 6.20 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4440 -2755 -387 ) 6.30 1700 55 500 local.position
+		self thread dropbomb ( 4440 -2755 -387 ) 6.30 1700 55 500 local.position local.playerowner
 		waitframe
 	}     
 	if(local.position == "second")
 	{
 		waitframe
-		self thread dropbomb ( -1683 -1401 -318 ) 5.95 1700 55 500 local.position
+		self thread dropbomb ( -1683 -1401 -318 ) 5.95 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -1430 -2250 -369 ) 6.05 1700 55 500 local.position
+		self thread dropbomb ( -1430 -2250 -369 ) 6.05 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -500 -2795 -395 ) 6.15 1700 55 500 local.position
+		self thread dropbomb ( -500 -2795 -395 ) 6.15 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -225 -3306 -383 ) 6.25 1700 55 500 local.position
+		self thread dropbomb ( -225 -3306 -383 ) 6.25 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 75 -2507 -387 ) 6.35 1700 55 500 local.position
+		self thread dropbomb ( 75 -2507 -387 ) 6.35 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 180 -3462 -387 ) 6.45 1700 55 500 local.position
+		self thread dropbomb ( 180 -3462 -387 ) 6.45 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -2507 -387 ) 6.55 1700 55 500 local.position
+		self thread dropbomb ( 700 -2507 -387 ) 6.55 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -3345 -127 ) 6.65 1700 55 500 local.position
+		self thread dropbomb ( 700 -3345 -127 ) 6.65 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1171 -2357 -387 ) 6.75 1700 55 500 local.position
+		self thread dropbomb ( 1171 -2357 -387 ) 6.75 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1415 -2795 -387 ) 6.85 1700 55 500 local.position
+		self thread dropbomb ( 1415 -2795 -387 ) 6.85 1700 55 500 local.position local.playerowner
 		waitframe
 
-		self thread dropbomb ( 2325 -2755 -387 ) 7.15 1700 55 500 local.position
+		self thread dropbomb ( 2325 -2755 -387 ) 7.15 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 3735 -2755 -387 ) 7.25 1700 55 500 local.position
+		self thread dropbomb ( 3735 -2755 -387 ) 7.25 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 5145 -2755 -387 ) 7.35 1700 55 500 local.position
+		self thread dropbomb ( 5145 -2755 -387 ) 7.35 1700 55 500 local.position local.playerowner
 		waitframe
 	}
    }
@@ -561,73 +637,73 @@ bombdropcoords local.pathname local.position:
 	if(local.position != "second") // "first"
 	{
 		//waitframe
-		//self thread dropbomb ( 4440 -2755 -387 ) 3.10 1700 55 500 local.position
+		//self thread dropbomb ( 4440 -2755 -387 ) 3.10 1700 55 500 local.position local.playerowner
 		//waitframe
-		//self thread dropbomb ( 3030 -2755 -387 ) 3.20 1700 55 500 local.position
+		//self thread dropbomb ( 3030 -2755 -387 ) 3.20 1700 55 500 local.position local.playerowner
 		//waitframe
 
-		self thread dropbomb ( -1683 -1167 -127 ) 5.30 1700 55 500 local.position
+		self thread dropbomb ( -1683 -1167 -127 ) 5.30 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -1696 -472 -311 ) 5.40 1700 55 500 local.position
+		self thread dropbomb ( -1696 -472 -311 ) 5.40 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -2068 -41 -357 ) 5.50 1700 55 500 local.position
+		self thread dropbomb ( -2068 -41 -357 ) 5.50 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -2713 -41 -383 ) 5.60 1700 55 500 local.position
+		self thread dropbomb ( -2713 -41 -383 ) 5.60 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -3192 -10 -191 ) 5.70 1700 55 500 local.position
+		self thread dropbomb ( -3192 -10 -191 ) 5.70 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -3832 -127 -319 ) 5.80 1700 55 500 local.position
+		self thread dropbomb ( -3832 -127 -319 ) 5.80 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -4336 -607 -309 ) 5.90 1700 55 500 local.position
+		self thread dropbomb ( -4336 -607 -309 ) 5.90 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -4531 168 -319 ) 6.00 1700 55 500 local.position
+		self thread dropbomb ( -4531 168 -319 ) 6.00 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -4895 376 -309 ) 6.10 1700 55 500 local.position
+		self thread dropbomb ( -4895 376 -309 ) 6.10 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5150 -826 -309 ) 6.20 1700 55 500 local.position
+		self thread dropbomb ( -5150 -826 -309 ) 6.20 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5200 -20 -319 ) 6.30 1700 55 500 local.position
+		self thread dropbomb ( -5200 -20 -319 ) 6.30 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5464 349 -309 ) 6.40 1700 55 500 local.position
+		self thread dropbomb ( -5464 349 -309 ) 6.40 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5856 489 -309 ) 6.50 1700 55 500 local.position
+		self thread dropbomb ( -5856 489 -309 ) 6.50 1700 55 500 local.position local.playerowner
 		waitframe
 	}     
 	if(local.position == "second")
 	{
 		//waitframe
-		//self thread dropbomb ( 5145 -2755 -387 ) 4.05 1700 55 500 local.position
+		//self thread dropbomb ( 5145 -2755 -387 ) 4.05 1700 55 500 local.position local.playerowner
 		//waitframe
-		//self thread dropbomb ( 3735 -2755 -387 ) 4.15 1700 55 500 local.position
+		//self thread dropbomb ( 3735 -2755 -387 ) 4.15 1700 55 500 local.position local.playerowner
 		//waitframe
-		//self thread dropbomb ( 2325 -2755 -387 ) 4.25 1700 55 500 local.position
+		//self thread dropbomb ( 2325 -2755 -387 ) 4.25 1700 55 500 local.position local.playerowner
 		//waitframe
 
-		self thread dropbomb ( -1696 -872 -309 ) 6.35 1700 55 500 local.position
+		self thread dropbomb ( -1696 -872 -309 ) 6.35 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -1837 -131 -309 ) 6.45 1700 55 500 local.position
+		self thread dropbomb ( -1837 -131 -309 ) 6.45 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -2434 -41 -396 ) 6.55 1700 55 500 local.position
+		self thread dropbomb ( -2434 -41 -396 ) 6.55 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -2990 -27 -319 ) 6.65 1700 55 500 local.position
+		self thread dropbomb ( -2990 -27 -319 ) 6.65 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -3486 141 -319 ) 6.75 1700 55 500 local.position
+		self thread dropbomb ( -3486 141 -319 ) 6.75 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -4310 -20 -319 ) 6.85 1700 55 500 local.position
+		self thread dropbomb ( -4310 -20 -319 ) 6.85 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -4345 572 -309 ) 6.95 1700 55 500 local.position
+		self thread dropbomb ( -4345 572 -309 ) 6.95 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -4856 -465 -309 ) 7.05 1700 55 500 local.position
+		self thread dropbomb ( -4856 -465 -309 ) 7.05 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5180 595 -309 ) 7.15 1700 55 500 local.position
+		self thread dropbomb ( -5180 595 -309 ) 7.15 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5408 -477 -309 ) 7.25 1700 55 500 local.position
+		self thread dropbomb ( -5408 -477 -309 ) 7.25 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5750 -20 -319 ) 7.35 1700 55 500 local.position
+		self thread dropbomb ( -5750 -20 -319 ) 7.35 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -5853 -527 -309 ) 7.45 1700 55 500 local.position
+		self thread dropbomb ( -5853 -527 -309 ) 7.45 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -6100 -20 -319 ) 7.55 1700 55 500 local.position
+		self thread dropbomb ( -6100 -20 -319 ) 7.55 1700 55 500 local.position local.playerowner
 		waitframe
 	}
    }
@@ -636,81 +712,81 @@ bombdropcoords local.pathname local.position:
 	if(local.position != "second") // "first"
 	{
 		waitframe
-		self thread dropbomb ( 3382 2611 -395 ) 2.20 1700 55 500 local.position
+		self thread dropbomb ( 3382 2611 -395 ) 2.20 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4315 2346 -405 ) 2.30 1700 55 500 local.position
+		self thread dropbomb ( 4315 2346 -405 ) 2.30 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 1437 -403 ) 2.40 1700 55 500 local.position
+		self thread dropbomb ( 4520 1437 -403 ) 2.40 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 437 -403 ) 2.50 1700 55 500 local.position
+		self thread dropbomb ( 4520 437 -403 ) 2.50 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 -563 -403 ) 2.60 1700 55 500 local.position
+		self thread dropbomb ( 4520 -563 -403 ) 2.60 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4585 -1563 -403 ) 2.70 1700 55 500 local.position
-		waitframe
-
-		self thread dropbomb ( 4440 -2755 -387 ) 2.85 1700 55 500 local.position
-		waitframe
-		self thread dropbomb ( 3030 -2755 -387 ) 2.95 1700 55 500 local.position
+		self thread dropbomb ( 4585 -1563 -403 ) 2.70 1700 55 500 local.position local.playerowner
 		waitframe
 
-		self thread dropbomb ( 1765 -2795 -387 ) 3.20 1700 55 500 local.position
+		self thread dropbomb ( 4440 -2755 -387 ) 2.85 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1120 -3233 -382 ) 3.30 1700 55 500 local.position
+		self thread dropbomb ( 3030 -2755 -387 ) 2.95 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1065 -2795 -387 ) 3.40 1700 55 500 local.position
+
+		self thread dropbomb ( 1765 -2795 -387 ) 3.20 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -2263 -127 ) 3.50 1700 55 500 local.position
+		self thread dropbomb ( 1120 -3233 -382 ) 3.30 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -3093 -387 ) 3.60 1700 55 500 local.position
+		self thread dropbomb ( 1065 -2795 -387 ) 3.40 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 83 -2263 -127 ) 3.70 1700 55 500 local.position
+		self thread dropbomb ( 700 -2263 -127 ) 3.50 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -65 -2934 -395 ) 3.80 1700 55 500 local.position
+		self thread dropbomb ( 700 -3093 -387 ) 3.60 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -321 -2384 -387 ) 3.90 1700 55 500 local.position
+		self thread dropbomb ( 83 -2263 -127 ) 3.70 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -807 -2590 -323 ) 4.00 1700 55 500 local.position
+		self thread dropbomb ( -65 -2934 -395 ) 3.80 1700 55 500 local.position local.playerowner
+		waitframe
+		self thread dropbomb ( -321 -2384 -387 ) 3.90 1700 55 500 local.position local.playerowner
+		waitframe
+		self thread dropbomb ( -807 -2590 -323 ) 4.00 1700 55 500 local.position local.playerowner
 		waitframe
 	}     
 	if(local.position == "second")
 	{
 		waitframe
-		self thread dropbomb ( 3116 3248 -114 ) 3.15 1700 55 500 local.position
+		self thread dropbomb ( 3116 3248 -114 ) 3.15 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 3755 1995 -403 ) 3.25 1700 55 500 local.position
+		self thread dropbomb ( 3755 1995 -403 ) 3.25 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 1937 -403 ) 3.35 1700 55 500 local.position
+		self thread dropbomb ( 4520 1937 -403 ) 3.35 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 937 -403 ) 3.45 1700 55 500 local.position
+		self thread dropbomb ( 4520 937 -403 ) 3.45 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 -63 -403 ) 3.55 1700 55 500 local.position
+		self thread dropbomb ( 4520 -63 -403 ) 3.55 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 -1063 -403 ) 3.65 1700 55 500 local.position
+		self thread dropbomb ( 4520 -1063 -403 ) 3.65 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 4520 -2241 -303 ) 3.75 1700 55 500 local.position
-		waitframe
-
-		self thread dropbomb ( 3735 -2755 -387 ) 3.90 1700 55 500 local.position
-		waitframe
-		self thread dropbomb ( 2325 -2755 -387 ) 4.00 1700 55 500 local.position
+		self thread dropbomb ( 4520 -2241 -303 ) 3.75 1700 55 500 local.position local.playerowner
 		waitframe
 
-		self thread dropbomb ( 1415 -2795 -387 ) 4.25 1700 55 500 local.position
+		self thread dropbomb ( 3735 -2755 -387 ) 3.90 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 1171 -2357 -387 ) 4.35 1700 55 500 local.position
+		self thread dropbomb ( 2325 -2755 -387 ) 4.00 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -3345 -127 ) 4.45 1700 55 500 local.position
+
+		self thread dropbomb ( 1415 -2795 -387 ) 4.25 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 700 -2507 -387 ) 4.55 1700 55 500 local.position
+		self thread dropbomb ( 1171 -2357 -387 ) 4.35 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 180 -3462 -387 ) 4.65 1700 55 500 local.position
+		self thread dropbomb ( 700 -3345 -127 ) 4.45 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( 75 -2507 -387 ) 4.75 1700 55 500 local.position
+		self thread dropbomb ( 700 -2507 -387 ) 4.55 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -225 -3306 -383 ) 4.85 1700 55 500 local.position
+		self thread dropbomb ( 180 -3462 -387 ) 4.65 1700 55 500 local.position local.playerowner
 		waitframe
-		self thread dropbomb ( -500 -2795 -395 ) 4.95 1700 55 500 local.position
+		self thread dropbomb ( 75 -2507 -387 ) 4.75 1700 55 500 local.position local.playerowner
+		waitframe
+		self thread dropbomb ( -225 -3306 -383 ) 4.85 1700 55 500 local.position local.playerowner
+		waitframe
+		self thread dropbomb ( -500 -2795 -395 ) 4.95 1700 55 500 local.position local.playerowner
 		waitframe
 	}
    }

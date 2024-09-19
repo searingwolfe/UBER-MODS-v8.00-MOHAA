@@ -49,16 +49,13 @@ if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Free
 if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
 setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
 
-exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
 //level.basebuild_laserdist = 700
 }
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
 exec global/aliascache_triggersounds.scr airstrikes
-}
-if(getcvar("g_ubermods") == "2")
-{
 exec global/aliascache_triggersounds.scr explode_building_small
 exec global/aliascache_triggersounds.scr explode_wood_small
 }
@@ -183,18 +180,11 @@ exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -2211 -3839 8
 	thread vehicles_undermap
 	thread laser_borders ( .55 .5 .5 )
 	thread laser_road ( .125 0 .333 ) //( .3608 .6627 .0016 )
-
-	thread splinepath
-	thread splinepath2
-	thread airstrikes_alternate
 }
 
-if(getcvar("g_ubermods") == "1")
-{
-	thread splinepath
-	thread splinepath2
-	thread airstrikes_alternate2
-}
+thread splinepath
+thread splinepath2
+thread airstrikes_alternate
 
 level waittill spawn
 
@@ -291,30 +281,20 @@ end
 
 airstrikes_alternate:
 
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { end }
+
 	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane.scr
 	level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
 	level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
 
-	while(1) //parameters: path targetname, team (allies, axis, c47), number of planes, off time, amount of bombs (0 or NIL for no bombs), time until bombs drop, end (1 = only do 1 airstrike)
+	while(1) //parameters: team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike)
 	{
+		local.rtime = randomint(90) + 60	// randomize time between 90 and 180 seconds. NOTE: any offtime between 1 and 2 is essentially waiting 0 seconds.
 		local.r = randomint(2)
-		if(local.r == 0) { waitexec global/bomberplane.scr bomberpath allies 2 150 16 3.2 1 }
-		if(local.r == 1) { waitexec global/bomberplane.scr bomberpath2 axis 2 150 16 3.2 1 }
-		waitframe
-	}
-end
+		if(getcvar("g_ubermods") == "2") { local.bombs = 16; local.timetodrop = 3.2 }	// these are NIL if g_ubermods = 1, preventing bombs from dropping.
 
-airstrikes_alternate2:
-
-	level.bomberplane_health = 200
-	level.bomberplane_bombspeed = 0.25
-	level.bomberplane_bombgravity = 2
-
-	while(1)
-	{
-		local.r = randomint(2)
-		if(local.r == 0) { waitexec global/bomberplane.scr bomberpath allies 2 150 }
-		if(local.r == 1) { waitexec global/bomberplane.scr bomberpath2 axis 2 150 }
+		if(local.r == 0) { waitexec global/bomberplane.scr bomberpath allies 2 local.rtime local.bombs local.timetodrop 1 }
+		if(local.r == 1) { waitexec global/bomberplane.scr bomberpath2 axis 2 local.rtime local.bombs local.timetodrop 1 }
 		waitframe
 	}
 end

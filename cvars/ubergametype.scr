@@ -4,8 +4,15 @@ main:
 	if(getcvar("g_throwingknives") == "") { setcvar "g_throwingknives" "1" }
 
 	thread ubergametype
+
+	waitframe
 	thread ubermods
 	thread throwingknives
+	thread gametype
+
+	thread time
+	thread score
+	thread teams
 end
 
 ubergametype:
@@ -52,7 +59,6 @@ end
 
 ubermods:
 
-	waitframe
 	local.cvar = getcvar("g_ubermods")
 	while(getcvar("g_ubermods") == local.cvar) { waitframe }
 
@@ -83,7 +89,6 @@ end
 
 throwingknives:
 
-	waitframe
 	local.cvar = getcvar("g_throwingknives")
 	while(getcvar("g_throwingknives") == local.cvar) { waitframe }
 
@@ -98,4 +103,86 @@ throwingknives:
 		println("g_throwingknives will be changed upon restarting.")
 	}
 	thread throwingknives
+end
+
+////////////////////////////////////////////////////////////////////////
+
+gametype: // only for indicating one of the two available g_gametypes for these UBER MODS.
+
+	local.cvar = getcvar("g_gametype")
+	while(getcvar("g_gametype") == local.cvar) { waitframe }
+
+	if(getcvar("g_gametype") == "1") { println("gametype: Free-For-All.") }
+	if(getcvar("g_gametype") == "2") { println("gametype: Team-Match.") }
+	thread gametype
+end
+
+////////////////////////////////////////////////////////////////////////
+
+time:
+
+	local.cvar = getcvar("time")
+	while(getcvar("time") != "1") { waitframe }
+
+	local.time = int(getcvar("timelimit")) * 60.000 - level.time
+	local.minutes = int(local.time) / 60
+	local.seconds = int(local.time) % 60
+	println("Time remaining = " + local.minutes + ":" + local.seconds)
+
+	setcvar "time" "0"
+	thread time
+end
+
+score:
+
+	local.cvar = getcvar("score")
+	while(getcvar("score") != "1") { waitframe }
+
+	if($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			println("Kills = " + $player[local.i] getkills + ", Deaths = " + $player[local.i] getdeaths + ": $player[" + local.i + "] = " + netname $player[local.i])
+		}
+	}
+	else { println("No players in the server.") }
+
+	setcvar "score" "0"
+	thread score
+end
+
+teams:
+
+	local.cvar = getcvar("teams")
+	while(getcvar("teams") != "1") { waitframe }
+
+	local.allies = 0
+	local.axis = 0
+	local.spectator = 0
+	local.freeforall = 0
+	if($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			println("Team = " + $player[local.i].dmteam + ": $player[" + local.i + "] = " + netname $player[local.i])
+
+			if(getcvar("g_gametype") == "1")
+			{
+				if($player[local.i].dmteam == "spectator") { local.spectator++ }
+				else { local.freeforall++ }
+			}
+			else
+			{
+				if($player[local.i].dmteam == "allies") { local.allies++ }
+				else if($player[local.i].dmteam == "axis") { local.axis++ }
+				else { local.spectator++ }
+			}
+		}
+		if(getcvar("g_gametype") == "1") { println("Free-For-All: " + local.freeforall + ", Spectators: " + local.spectator) }
+		else { println("Allies: " + local.allies + ", Axis: " + local.axis + ", Spectators: " + local.spectator) }
+	}
+	else { println("No players in the server.") }
+
+	setcvar "teams" "0"
+	thread teams
 end

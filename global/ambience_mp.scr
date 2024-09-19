@@ -66,11 +66,12 @@ main local.music local.forcemaxvolume local.debug:
 	if(local.e == 1) { println("----- Failed to load ambience_mp.scr."); end }
 
 	println("Loading ambience_mp.scr...")
-	soundtrack sound/null.wav // turn off the map's background ambience (from Pak0.pk3, music/[map name].mus).
-
+	waitthread spawnamb_initial_check
 	if(level.spawnamb == NIL || level.spawnamb.size < 1) { println("Ambience set to " + local.music + ".") } // default map's soundtrack to "outdoors" local.music ambience if level.spawnamb array is NIL or has nothing in its array.
 
-	waitthread spawnamb_initial_check
+	while(getcvar("g_ubergametype") == "bb" && level.bbactive != 0) { waitframe } // wait until base-building is finished first, before playing ambience
+
+	soundtrack sound/null.wav // turn off the map's background ambience (from Pak0.pk3, music/[map name].mus).
 	thread playamb local.music local.forcemaxvolume local.debug
 end
 

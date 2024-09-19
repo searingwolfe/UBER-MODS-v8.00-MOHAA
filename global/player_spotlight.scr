@@ -243,6 +243,21 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 			$("s_colorchange_" + local.name).s_newcolor = ( local.random1 local.random2 local.random3 )
 		}
 
+		if(level.spotlight_rainbow[local.name] == 3 || level.flags[allspotlights_rainbow] == 3)
+		{
+			if(local.c == NIL) { local.c = 0 }
+			local.c++
+			local.r = randomint(100) / 100.0000
+			if(local.c > local.r)
+			{
+				if(local.flare != NULL) { local.flare light ( local.random1 local.random2 local.random3 ) }
+				if(local.beam != NULL) { local.beam color ( local.random1 local.random2 local.random3 ) }
+				$("s_colorchange_" + local.name).s_newcolor = ( local.random1 local.random2 local.random3 )
+				local.c = 0
+			}
+		}
+		else { local.c = 0 }
+
 		if(local.spotlight == NULL || local.spot == NULL || local.spottrigger == NULL || local.spot.destroyed == 1) { break }
 	}
 end

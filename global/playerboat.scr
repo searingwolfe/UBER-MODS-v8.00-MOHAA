@@ -112,27 +112,33 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				local.damage = ((local.health - self.health) / self.passengers.size)
 				for(local.i = 1; local.i <= self.passengers.size; local.i++)
 				{
+					self.passengers[local.i] takedamage
 					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					else { self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					self.passengers[local.i] nodamage
 				}
 			}
 			if(self.driver != NIL && self.driver != NULL && self.model != "models/vehicles/uboat.tik")
 			{
 				if(self.driver.health > 1)
 				{
+					self.driver takedamage
 					if(self.passengers != NIL && self.passengers.size >= 1) { local.damage = ((local.health - self.health) / (2 + self.passengers.size)) }
 					else { local.damage = ((local.health - self.health) / 2) }
 
 					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					else { self.driver damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					self.driver nodamage
 				}
 				else
 				{
 					self thread driverreset 1
 					self thread vehiclereset
-					killent self.driver
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					self.driver = NIL
 				}
 			}
@@ -195,10 +201,17 @@ playergetin:
 
 	local.player = parm.other
 	local.team = local.player.dmteam
+	if(self.attachingdriver == 1) { end }
+	self.attachingdriver = 1
 
 	local.player safeholster 1
 	wait 1
-	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1) { end }
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		end
+	}
+
 	self.driver = local.player
 	self.driver.driving = 1
 	self.driver.drivingent = self
@@ -210,7 +223,7 @@ playergetin:
 
 	self.driver forcelegsstate STAND
 	//self.driver hide
-	//self.driver nodamage
+	self.driver nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
 	self.driver notsolid
 	self.driver.driving_state_jump = 0
 	if(self.model == "models/vehicles/uboat.tik")
@@ -234,6 +247,16 @@ playergetin:
 	}
 	else { local.driver thread display }
 
+	ihuddraw_alpha local.player 111 0
+	ihuddraw_virtualsize local.player 111 1
+	ihuddraw_alpha local.player 111 .8
+	ihuddraw_font local.player 111 "verdana-12"
+	ihuddraw_color local.player 111 .85 .85 0
+	ihuddraw_rect local.player 111 330 212 200 14 
+	ihuddraw_string local.player 111 "" // "Passengers:   0"
+	local.passengers_hud = 0
+
+	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
 		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
@@ -248,50 +271,55 @@ playergetin:
 			break
 		}
 
-		if(self != NULL && isalive self.driver && self.driver.dmteam == local.team)
+		if(self.passengers.size != local.passengers_hud)
 		{
-			if(self.model == "models/vehicles/uboat.tik")
+			if(self.passengers.size > 0) { ihuddraw_string local.player 111 ("Passengers:   " + self.passengers.size) }
+			else { ihuddraw_string local.player 111 "" }
+			local.passengers_hud = self.passengers.size
+		}
+
+		if(self.model == "models/vehicles/uboat.tik")
+		{
+			if(self.turretlaser != NIL && self.turretlaser != NULL)
 			{
-				if(self.turretlaser != NIL && self.turretlaser != NULL)
-				{
-					local.fwd_vec = angles_toforward ( (self.angles[0] + self.turretlaser_offset) self.angles[1] self.angles[2] )
-					local.start = $(self.targetname + "_tag_barrel").origin
-					local.groundtarget = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * 10240) 0
+				local.fwd_vec = angles_toforward ( (self.angles[0] + self.turretlaser_offset) self.angles[1] self.angles[2] )
+				local.start = $(self.targetname + "_tag_barrel").origin
+				local.groundtarget = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * 10240) 0
 
-					self.turretlaser.origin = $(self.targetname + "_tag_barrel").origin
-					self.turretlaser endpoint local.groundtarget
-				}
-
-				if(self.driver.useheld != 1)
-				{
-					if(self.driver.fireheld == 1)
-					{
-						if(self.driver.secfireheld != 1) { self thread firegun } 
-						else { self thread firesecondary }
-					}
-	
-					if(self.driver.fireheld != 1 && (self.driver.leanleftheld == 1 || self.driver.leanrightheld == 1))
-					{
-						if(self.velocity == ( 0 0 0 )) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
-						else if(self.turretlaser != NIL && self.turretlaser != NULL)
-						{
-							if(self.driver.leanleftheld != 1 && self.driver.leanrightheld == 1)
-							{
-								if(self.turretlaser_offset > -15) { self.turretlaser activate; self.turretlaser_offset -= .25 }
-								else { self.turretlaser deactivate; self.turretlaser_offset = -15 }
-							}
-	
-							if(self.driver.leanleftheld == 1 && self.driver.leanrightheld != 1)
-							{
-								if(self.turretlaser_offset < 3) { self.turretlaser activate; self.turretlaser_offset += .25 }
-								else { self.turretlaser deactivate; self.turretlaser_offset = 3 }
-							}
-							if(self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1) { self.turretlaser deactivate }
-						}
-					}
-					else { self.turretlaser deactivate }
-				}
+				self.turretlaser.origin = $(self.targetname + "_tag_barrel").origin
+				self.turretlaser endpoint local.groundtarget
 			}
+
+			if(self.driver.useheld != 1)
+			{
+				if(self.driver.fireheld == 1)
+				{
+					if(self.driver.secfireheld != 1) { self thread firegun } 
+					else { self thread firesecondary }
+				}
+	
+				if(self.driver.fireheld != 1 && (self.driver.leanleftheld == 1 || self.driver.leanrightheld == 1))
+				{
+					if(self.velocity == ( 0 0 0 )) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
+					else if(self.turretlaser != NIL && self.turretlaser != NULL)
+					{
+						if(self.driver.leanleftheld != 1 && self.driver.leanrightheld == 1)
+						{
+							if(self.turretlaser_offset > -15) { self.turretlaser activate; self.turretlaser_offset -= .25 }
+							else { self.turretlaser deactivate; self.turretlaser_offset = -15 }
+						}
+	
+						if(self.driver.leanleftheld == 1 && self.driver.leanrightheld != 1)
+						{
+							if(self.turretlaser_offset < 3) { self.turretlaser activate; self.turretlaser_offset += .25 }
+							else { self.turretlaser deactivate; self.turretlaser_offset = 3 }
+						}
+						if(self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1) { self.turretlaser deactivate }
+					}
+				}
+				else { self.turretlaser deactivate }
+			}
+
 			if(self.driver.fireheld == 1 && self.model != "models/vehicles/uboat.tik") { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
 
 			if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind)
@@ -327,6 +355,7 @@ playergetin:
 		local.driver.drivingent = NIL
 		local.driver stoploopsound
 		if(!isalive local.driver) { local.driver stufftext ("set phealth 0") }
+		ihuddraw_string local.player 111 ""
 
 		if(local.driver.using_pack == 1)
 		{
@@ -523,13 +552,18 @@ kill_riders:
 	{
 		for(local.i = 1; local.i <= self.passengers.size; local.i++)
 		{
-			if(self.shooter != NIL)
+			if(self.passengers[local.i] != NIL && self.passengers[local.i] != NULL)
 			{
-				if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-				else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
-				else if(self.shooter != NULL) { self.passengers[local.i] damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				if(self.shooter != NIL)
+				{
+					self.passengers[local.i] takedamage
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else if(self.shooter != NULL) { self.passengers[local.i] damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					self.passengers[local.i] nodamage
+				}
+				else { self.passengers[local.i] volumedamage 9999999 }
 			}
-			else { self.passengers[local.i] volumedamage 9999999 }
 		}
 	}
 
@@ -537,9 +571,11 @@ kill_riders:
 	{
 		if(self.driver != NIL)
 		{
+			self.driver takedamage
 			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 			else if(self.shooter != NULL) { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			self.driver nodamage
 		}
 	}
 	else if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
@@ -601,7 +637,7 @@ passengers:
 	local.player forcelegsstate STAND
 	//local.player hide
 	//local.player noclip
-	//local.player nodamage
+	local.player nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
 	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
 	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE(zoom) = look around.")
 	local.player.origin = self.origin

@@ -66,40 +66,36 @@ doit local.origin local.r local.g local.b local.radius:
    local.static show
    level.hold_time = 9999
 
-   //huddraw_alpha 104 0
-   //huddraw_virtualsize 104 1
-   //huddraw_alpha 104 .8
-   //huddraw_font 104 "verdana-12"
-   //huddraw_color 104 .5 0 0
-   //huddraw_rect 104 -200 222 200 14 
-   //huddraw_string 104 "Explosives:   Picking Up"
+   ihuddraw_alpha self 102 0
+   ihuddraw_virtualsize self 102 1
+   ihuddraw_alpha self 102 .8
+   ihuddraw_font self 102 "verdana-12"
+   ihuddraw_color self 102 .5 0 0
+   ihuddraw_rect self 102 -175 222 200 14 
+   ihuddraw_string self 102 "Explosives:   Acquired"
 
    $("cig_1" + local.number).angles = ( 0 180 20 )
    self stufftext "say *** I have acquired the explosives! ***"
    $"explosive_tanktrig" nottriggerable
    waitframe
    $"explosive_tanktrig" remove
-   //wait 0.5
-   //huddraw_string 104 "Explosives:   Acquired"
    
    $obj6b triggerable
    local.result = self waitthread scan_player level.hold_time //cannot use self in "doit"
 
    if(local.result != left)
    {
+    	ihuddraw_string self 102 ""
+
 	if(level.bomb_set != 1)
 	{
 		self.inuse = 0
     		$("cig_1" + local.number) remove
     		self stufftext "say *** I dropped the explosives! ***"
-    		//huddraw_string 104 "Explosives:   Dropped"
 		local.static unglue
 		local.static remove
 		level.tankexplosives_dropped = 1 // only used to change center screen dialogue.
-
    		$obj6b nottriggerable
-    		//wait 0.5
-    		//huddraw_string 104 ""	
 
 		if(level.tankbomb_went2spectator == 1) 
 		{ 
@@ -114,13 +110,9 @@ doit local.origin local.r local.g local.b local.radius:
 		self.inuse = 0
     		$("cig_1" + local.number) remove
     		self stufftext "say *** I have planted the explosives! ***"
-    		//huddraw_string 104 "Explosives:   Planted"
 		local.static unglue
 		local.static remove
-
    		$obj6b nottriggerable
-    		//wait 0.5
-    		//huddraw_string 104 ""
 	}
    }
    if(local.result == left) { goto main local.origin local.angles local.r local.g local.b local.radius }

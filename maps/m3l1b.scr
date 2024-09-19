@@ -49,16 +49,13 @@ if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Free
 if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
 setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
 
-exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
 //level.basebuild_laserdist = 700
 }
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
 exec global/aliascache_triggersounds.scr airstrikes
-}
-if(getcvar("g_ubermods") == "2")
-{
 exec global/aliascache_triggersounds.scr generator_loop
 exec global/aliascache_triggersounds.scr valve_switch
 exec global/aliascache_triggersounds.scr light_switch
@@ -86,7 +83,7 @@ level waittill prespawn
 	exec global/ambient.scr m3l1b
 	exec global/door_locked.scr
 	exec global/exploder.scr
-	exec global/barrel.scr::explosive_barrel
+	//exec global/barrel.scr::explosive_barrel
 	//exec global/crate.scr::explosive_crate
 
 	setcvar "r_fastsky" "1"
@@ -125,8 +122,8 @@ exec map_triggers/rocket_ammo.scr ( 1431 -1855 320 ) ( -1047 -1911 272 ) ( 1375 
 exec map_triggers/snowball_ammo.scr ( -4566 5455 772 ) ( -5821 3011 216 ) ( -6924 -1103 334 ) ( -4394 -1258 -143 ) ( -3221 -625 324 ) ( 1359 847 387 ) ( -815 -1675 -615 ) ( 5425 -1122 318 ) ( 3426 -8007 -500 ) ( -3827 -8006 -500 )
 exec map_triggers/health.scr ( 7984 -7047 -501 ) ( -7856 -7047 -501 ) ( -7323 -637 413 ) ( -7272 3434 420 ) ( -4562 8097 395 ) ( -3299 7069 434 ) ( -1689 1435 450 ) ( 5400 1439 545 ) ( 7984 -1117 320 ) ( -1328 -1675 -615 )
 
-exec map_triggers/led_trap.scr ( 7984 -8113 -567 ) led1 1
-exec map_triggers/led_trap.scr ( -7984 -8113 -567 ) led2 2
+//exec map_triggers/led_trap.scr ( 7984 -8113 -567 ) led1 1
+//exec map_triggers/led_trap.scr ( -7984 -8113 -567 ) led2 2
 
 if(getcvar("g_ubergametype") != "bb")
 {
@@ -155,7 +152,7 @@ exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( 3064 -6165 -
 exec global/playertank.scr tank02 vehicles/panzer_tank_europe.tik ( -2881 -5865 -350 ) ( 0 90 0 ) 1000 45	// allies
 //exec global/playertank.scr tank03 vehicles/kingtank.tik ( -2176 -3530 -200 ) ( 0 180 0 ) 1000 45		// middle
 exec global/playertank.scr tank04 vehicles/panzer_tank.tik ( 4231 -308 300 ) ( 0 -90 0 ) 1000 45		// axis
-exec global/playertank.scr tank05 vehicles/panzer_tank.tik ( -2120 192 500 ) ( 0 -90 0 ) 1000 45		// axis
+//exec global/playertank.scr tank05 vehicles/panzer_tank.tik ( -2120 192 500 ) ( 0 -90 0 ) 1000 45		// axis
 exec global/playertank.scr tank06 vehicles/kingtank.tik ( -5580 1224 750 ) ( 0 -90 0 ) 1000 45			// axis
 
 exec global/playernebelwerfer.scr NIL 200 45 ( 1524 -5167 -406 ) ( -12 90 0 ) // -5967, +50
@@ -187,7 +184,6 @@ exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( 1839.5 -896 407 ) ( 6
 exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 1887 -758 313 ) ( 0 180 0 ) bb3 60 450 2
 
 	thread vehicles_undermap
-	thread airstrikes_alternate
 	thread explodesounds
 
 	thread minenbombs ( 1424 -1756 -80 ) 50 400 620 40 // origin, health, damage, radius, offtime, check if two $minenbomb_destructible entities have been destroyed.
@@ -199,10 +195,7 @@ exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 1887 -758 313
 	thread radio_music ( 1466 -2207 132 ) ( 0 90 0 )
 }
 
-if(getcvar("g_ubermods") == "1")
-{
-	thread airstrikes_alternate2
-}
+thread airstrikes_alternate
 
 level waittill spawn
 
@@ -379,6 +372,8 @@ end
 
 airstrikes_alternate:
 
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { end }
+
 	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane.scr
 	level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
 	level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
@@ -388,42 +383,18 @@ airstrikes_alternate:
 
 	while(1) //parameters: team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike)
 	{
-		local.rtime = randomint(90) + 60	// randomize time between 90 and 180 seconds.
+		local.rtime = randomint(90) + 60	// randomize time between 90 and 180 seconds. NOTE: any offtime between 1 and 2 is essentially waiting 0 seconds.
 		local.r = randomint(2)
-		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime 25 0.1 1 }	// axis = 50% chance
-		if(local.r == 1)										// allies = 33% chance
-		{												// c47 = 17% chance
+		if(getcvar("g_ubermods") == "2") { local.bombs = 25; local.timetodrop = 0.1 }	// these are NIL if g_ubermods = 1, preventing bombs from dropping.
+
+		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime local.bombs local.timetodrop 1 }	// axis = 50% chance
+		if(local.r == 1)												// allies = 33% chance
+		{														// c47 = 17% chance
 			local.r2 = randomint(5)
-			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime 25 0.1 1 }  // NOTE: any offtime between 1 and 2 is essentially waiting 0 seconds.
-			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime 25 0.1 1 }
-			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime 25 0.1 1 }
-			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime 25 0.1 1 }
-		}
-		waitframe
-	}
-end
-
-airstrikes_alternate2:
-
-	level.bomberplane_health = 200
-	level.bomberplane_bombspeed = 0.25
-	level.bomberplane_bombgravity = 2
-
-	level.bomberplane_map_setsize1 = ( -7871 -8127 0 )
-	level.bomberplane_map_setsize2 = ( 7999 8127 1423 )
-
-	while(1)
-	{
-		local.rtime = randomint(90) + 60
-		local.r = randomint(2)
-		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime }
-		if(local.r == 1)
-		{
-			local.r2 = randomint(5)
-			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime }
-			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime }
-			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime }
-			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime }
+			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
 		}
 		waitframe
 	}

@@ -132,12 +132,20 @@ if ($player.size > 0)
 }
 if (local.hudhide != 1 || local.huddisplay == NIL) // default = 0
 {
-huddraw_virtualsize 4 1
-huddraw_alpha 4 1
-huddraw_font 4 "facfont-10"
-huddraw_color 4 .4 .8 0 //0 .15 .4
-huddraw_rect 4 100 235 600 20
-huddraw_string 4 ("You Have " + local.timeleft + " Seconds Left To Build - Objects Used: " + level.objectlimitcount + "/" + local.objectlimitx)
+huddraw_virtualsize 9 1
+huddraw_alpha 9 1
+huddraw_font 9 "facfont-10"
+huddraw_color 9 .4 .8 0 //0 .15 .4
+huddraw_rect 9 100 235 600 20
+huddraw_string 9 ("You Have " + local.timeleft + " Seconds Left To Build - Objects Used: " + level.objectlimitcount + "/" + local.objectlimitx)
+
+huddraw_virtualsize 10 1
+huddraw_align 10 center center
+huddraw_alpha 10 1
+huddraw_font 10 handle-23
+huddraw_color 10 1 1 1
+huddraw_rect 10 0 0 0 0 
+huddraw_string 10 ""
 }
 
 	level.bbactive = 1
@@ -155,7 +163,7 @@ if (getcvar(alx_basebuild) == "0")
 	setcvar "dmflags" "0"
 	setcvar "thereisnomonkey" "0"
 	setcvar "sv_runspeed" level.basebuild_normalspeed
-	huddraw_string 62 ""
+	huddraw_string 10 ""
 	if($player.size >= 1) { $player stoploopsound }
 }
 
@@ -163,6 +171,7 @@ if (int(getcvar(alx_timeboost)) > 0)
 {
 	local.levelwaitstarttime = (local.levelwaitstarttime + int(getcvar(alx_timeboost)))
 	setcvar "alx_timeboost" "0"
+	local.timeboost = 1
 }
 
 if (int(getcvar(alx_timedown)) > 0)
@@ -193,192 +202,51 @@ if (int(getcvar(alx_objectlimitdown)) > 0)
 
 if (local.countdownhide != 1 || local.countdownhide == NIL) // default = 0
 {
-if (local.timeleft <= 70)
-{
-if($player.size >= 1) { $player stufftext "tmstart sound/music/mus_Schmerzen_01f.mp3" }
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 1 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 60)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 0 0
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 50)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 1 0
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 40)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 1 0
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 30)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 0 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 20)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 0 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 10)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 1 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 9)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 1 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 8)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 1 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 7)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 0 0
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 6)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 1 0
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 5)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 1 0
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 4)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 1 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 3)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 0 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 2)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 1 0 1
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-}
-if (local.timeleft <= 1)
-{
-	huddraw_virtualsize 62 1
-	huddraw_align 62 center center
-	huddraw_alpha 62 1
-	huddraw_font 62 handle-23
-	huddraw_color 62 0 0 0
-	huddraw_rect 62 0 0 0 0 
-	huddraw_string 62 (local.timeleft)
-	//$player stoploopsound
-	//$player stufftext "tmstop"
-}
+	if (local.timeleft <= 70)
+	{
+		if($player.size >= 1 && local.timeleft == 70) { $player stufftext "tmstart sound/music/mus_Schmerzen_01f.mp3" }
+		huddraw_string 10 (local.timeleft)
+	}
+	if (local.timeleft == 60) { huddraw_color 10 .5 .25 0 }
+	if (local.timeleft == 50) { huddraw_color 10 0 0 0 }
+	if (local.timeleft == 40) { huddraw_color 10 .0625 .0625 .0625 }
+	if (local.timeleft == 30) { huddraw_color 10 .125 0 .333 }
+	if (local.timeleft == 20) { huddraw_color 10 .5 0 1 }
+	if (local.timeleft == 10) { huddraw_color 10 0 0 1 }
+	if (local.timeleft == 9) { huddraw_color 10 0 1 1 }
+	if (local.timeleft == 8) { huddraw_color 10 0 1 0 }
+	if (local.timeleft == 7) { huddraw_color 10 1 1 0 }
+	if (local.timeleft == 6) { huddraw_color 10 1 .5 0 }
+	if (local.timeleft == 5) { huddraw_color 10 1 0 0 }
+	if (local.timeleft == 4) { huddraw_color 10 1 0 1 }
+	if (local.timeleft == 3) { huddraw_color 10 1 1 1 }
+	if (local.timeleft == 2) { huddraw_color 10 .5 .5 .5 }
+	if (local.timeleft == 1) { huddraw_color 10 0 0 0 }
 }
 
 if (local.timeleft <= 0)
 {
 	setcvar "cheats" "0"
 	setcvar "thereisnomonkey" "0"
-	huddraw_string 62 ""
+	huddraw_string 10 ""
 	setcvar "dmflags" "0"
 	if($player.size >= 1) { $player stufftext "tmstop" }
 	setcvar "sv_runspeed" level.basebuild_normalspeed
 }
 
-if (local.timeleft > 70)
+if (local.timeleft > 70 && local.timeboost == 1)
 {
-	huddraw_string 62 ""
+	huddraw_string 10 ""
+	huddraw_color 10 1 1 1
 	if($player.size >= 1) { $player stufftext "tmstop" }
+	local.timeboost = 0
 }
 
 if (level.objectlimitcount == local.objectlimitx) {
 	goto End_Loop
 	setcvar "cheats" "0"
 	setcvar "thereisnomonkey" "0"
-	huddraw_string 62 ""
+	huddraw_string 10 ""
 	setcvar "dmflags" "0"
 	if($player.size >= 1) { $player stufftext "tmstop" }
 	setcvar "sv_runspeed" level.basebuild_normalspeed
@@ -464,10 +332,8 @@ if ($player.size > 0)
 
 
 //Clear the hud
-huddraw_shader 1 ""
-huddraw_string 2 ""
-huddraw_string 62 ""
-huddraw_string 4 ""
+huddraw_string 10 ""
+huddraw_string 9 ""
 
 //thread Messages
 
@@ -593,7 +459,8 @@ Init_Lift_Builder local.player local.modelnumber:
 
 local.player.buildingmapnow = 1
 
-local.player iprint "You have selected a Lift-Creator, please follow the instructions:"
+local.player iprint "You have selected a Lift-Creator."
+local.player iprint "First set the lowest point. Then set the highest point."
 
 
 if (level.base_build_object[local.modelnumber].modelname == "statweapons/mg42_gun.tik") {
@@ -1466,7 +1333,8 @@ Init_Builder_Teleporter local.player local.modelnumber:
 
 local.player.buildingmapnow = 1
 
-local.player iprint "You have selected a Teleporter, please follow the instructions:"
+local.player iprint "You have selected a Teleporter."
+local.player iprint "First set the starting point. Then set the destination."
 
 	local.builder = spawn script_model
 	local.builder model "fx/corona_red.tik"

@@ -69,11 +69,14 @@ exec global/aliascache_triggersounds.scr airstrike_radiotrig
 
 /////////////////////////////////////////////*** add code here ***//////
 
-	exec maps/training_mapscripts/airstrikebombs.scr::splinepath_change local.pathname
-	waitframe
-																   // keep offtime = 0 or NIL since offtime is already inside "airstrike_radiotrig.scr".
-	exec maps/training_mapscripts/airstrikebombs.scr local.pathname first local.bombsoff 0 local.bulletstokill local.killtime  // if offtime > 0, then airstrikes will continuously occur after each "offtime"
-	exec maps/training_mapscripts/airstrikebombs.scr local.pathname second local.bombsoff 0 local.bulletstokill local.killtime // duration has passed (ideally exec'd in map's main script).
+	waitexec maps/training_mapscripts/airstrikebombs.scr::splinepath_change local.pathname
+
+	exec maps/training_mapscripts/airstrikebombs.scr local.pathname first local.bombsoff 0 local.bulletstokill local.killtime 0 local.switchtrig.player
+	exec maps/training_mapscripts/airstrikebombs.scr local.pathname second local.bombsoff 0 local.bulletstokill local.killtime 0 local.switchtrig.player
+
+	// keep offtime = 0 or NIL since offtime is already inside "airstrike_radiotrig.scr".
+ 	// if offtime > 0, then airstrikes will continuously occur after each "offtime"
+ 	// duration has passed (ideally exec'd in map's main script).
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -131,6 +134,7 @@ ready:
 			if(local.team == freeforall) { self.team = 3 }
 
 			local.player iprint ("AIRSTRIKE CALLED!")
+			self.player = local.player
 			end
 		}
 									      

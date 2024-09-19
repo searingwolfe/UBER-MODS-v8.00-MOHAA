@@ -184,30 +184,28 @@ spawn_victors:
 	local.p = 1
 	for(local.i = 1; local.i <= int(getcvar("sv_maxclients")); local.i++)
 	{
-		if(local.i <= $player.size && $player[local.i] != NULL && $player[local.i] getconnstate != 1 && $player[local.i].dmteam != "spectator")
+		if(local.i <= $player.size && $player[local.i] != NULL && $player[local.i] getconnstate != 1) // && $player[local.i].dmteam != "spectator"
 		{
 			if(level.VP_winnertype == "allies" && $player[local.i].dmteam == "allies") { local.players_init[local.p] = $player[local.i]; local.p++ }
 			else if(level.VP_winnertype == "axis" && $player[local.i].dmteam == "axis") { local.players_init[local.p] = $player[local.i]; local.p++ }
 			else { local.players_init[local.p] = $player[local.i]; local.p++ }
 		}
 	}
+
 	local.first_player = waitthread get_winning_player local.players_init
-	for(local.i = 1; local.i <= local.players_init.size; local.i++)
-	{
-		if(local.players_init[local.i] == local.first_player) { local.players_init[local.i] = NIL }
-	}
 
+	for(local.i = 1; local.i <= int(getcvar("sv_maxclients")); local.i++)
+	{
+		if(local.players_init != NIL && local.players_init[local.i] == local.first_player) { local.players_init[local.i] = NIL }
+	}
 	local.second_player = waitthread get_winning_player local.players_init
-	for(local.i = 1; local.i <= local.players_init.size; local.i++)
-	{
-		if(local.players_init[local.i] == local.second_player) { local.players_init[local.i] = NIL }
-	}
 
-	local.third_player = waitthread get_winning_player local.players_init
-	for(local.i = 1; local.i <= local.players_init.size; local.i++)
+	for(local.i = 1; local.i <= int(getcvar("sv_maxclients")); local.i++)
 	{
-		if(local.players_init[local.i] == local.third_player) { local.players_init[local.i] = NIL }
+		if(local.players_init != NIL && local.players_init[local.i] == local.second_player) { local.players_init[local.i] = NIL }
 	}
+	local.third_player = waitthread get_winning_player local.players_init
+
 	if(local.second_player == local.third_player) { local.third_player = NIL } // only for 2 or fewer players in the game.
 
 	if(local.first_player != NIL && local.first_player != NULL)
@@ -267,7 +265,7 @@ get_winning_player local.players_init:
 		}
 	}
 
-	if(local.players.size == 1) { local.player = local.players[1] }
+	if(local.players.size == 1) { local.player = local.players[1] } // if there's only 1 player in the server, set him as the winner.
 	else
 	{
 		local.lowest_deaths = 9999999
@@ -331,40 +329,40 @@ end local.crate
 
 huddraw local.first_player local.second_player local.third_player:
 
-	huddraw_virtualsize 4 1
-	huddraw_alpha 4 1
-	huddraw_font 4 "facfont-10"
-	huddraw_color 4 0 1 0
-	huddraw_rect 4 100 170 600 20
+	huddraw_virtualsize 3 1
+	huddraw_alpha 3 1
+	huddraw_font 3 "facfont-10"
+	huddraw_color 3 0 1 0
+	huddraw_rect 3 100 170 600 20
 
 	if(local.first_player != NIL && local.first_player != NULL)
 	{
-		huddraw_string 4 ("First Place: " + netname local.first_player)
+		huddraw_string 3 ("First Place: " + netname local.first_player)
 	}
 	else
 	{
-		huddraw_string 4 ("No players on the leaderboard.")
-		huddraw_color 4 .5 .5 .5
+		huddraw_string 3 ("No players on the leaderboard.")
+		huddraw_color 3 .5 .5 .5
 	}
 
 	if(local.second_player != NIL && local.second_player != NULL)
 	{
-		huddraw_virtualsize 3 1
-		huddraw_alpha 3 1
-		huddraw_font 3 "facfont-10"
-		huddraw_color 3 1 1 0
-		huddraw_rect 3 100 195 600 20
-		huddraw_string 3 ("Second Place: " + netname local.second_player)
+		huddraw_virtualsize 2 1
+		huddraw_alpha 2 1
+		huddraw_font 2 "facfont-10"
+		huddraw_color 2 1 1 0
+		huddraw_rect 2 100 195 600 20
+		huddraw_string 2 ("Second Place: " + netname local.second_player)
 	}
 
 	if(local.third_player != NIL && local.third_player != NULL)
 	{
-		huddraw_virtualsize 2 1
-		huddraw_alpha 2 1
-		huddraw_font 2 "facfont-10"
-		huddraw_color 2 1 0 0
-		huddraw_rect 2 100 220 600 20
-		huddraw_string 2 ("Third Place: " + netname local.third_player)
+		huddraw_virtualsize 1 1
+		huddraw_alpha 1 1
+		huddraw_font 1 "facfont-10"
+		huddraw_color 1 1 0 0
+		huddraw_rect 1 100 220 600 20
+		huddraw_string 1 ("Third Place: " + netname local.third_player)
 	}
 end
 

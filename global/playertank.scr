@@ -164,7 +164,7 @@ end
 triggered:
 
 	local.player = parm.other
-	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { self triggerable; end }
+	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.dead == 1) { end }
 
 	if(self.tank != NULL)
 	{
@@ -176,7 +176,7 @@ triggered:
 		if(self.tank.driver == NIL)
 		{
 			if(local.player.isdog != 1) { self.tank thread playergetin }
-			if(local.player.isdog == 1) { local.player iprint ("Dogs cannot drive vehicles.") } // set other exceptions here
+			if(local.player.isdog == 1) { local.player iprint ("Dogs cannot drive tanks.") } // set other exceptions here
 		}
 	}
 end
@@ -185,11 +185,18 @@ playergetin:
 
 	local.player = parm.other
 	local.team = local.player.dmteam
+	if(self.attachingdriver == 1) { end }
+	self.attachingdriver = 1
 
 	local.player.mef_weaponclass = thread global/get_player_weaponclass.scr::main local.player // thread instead of waitthread, but mef_weaponclass should still update in time.
 	local.player safeholster 1
 	wait 1
-	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1) { end }
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		end
+	}
+
 	self.driver = local.player
 	self.driver.driving = 1
 	self.driver.drivingent = self
@@ -219,6 +226,17 @@ playergetin:
 	}
 	else { self.driver thread display self.name }
 
+	ihuddraw_alpha local.player 110 0
+	ihuddraw_virtualsize local.player 110 1
+	ihuddraw_alpha local.player 110 .8
+	ihuddraw_font local.player 110 "verdana-12"
+	ihuddraw_color local.player 110 .85 .85 0
+	ihuddraw_rect local.player 110 330 222 200 14 
+	ihuddraw_string local.player 110 "" // "Turret User:   0"
+	local.turretuser_hud = 0
+	local.turretuser_count = 0
+
+	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
 	{
 		//if(self.velocity != ( 0 0 0 )) { self.velocity = self.velocity + self.forwardvector * self.vehiclespeed } // does not work properly, so speed increase was removed.
@@ -245,7 +263,16 @@ playergetin:
 			}
 		}
 
-		if(self != NULL && isalive self.driver && self.driver.fireheld == 1 && self.firingshell != 1)
+		if(self.turretplayer != NIL && self.turretplayer != NULL) { local.turretuser_count = 1 }
+		else { local.turretuser_count = 0 }
+		if(local.turretuser_hud != local.turretuser_count)
+		{
+			if(local.turretuser_count == 1) { ihuddraw_string local.player 110 "Turret User:   1" }
+			else { ihuddraw_string local.player 110 "" }
+			local.turretuser_hud = local.turretuser_count
+		}
+
+		if(self.driver.fireheld == 1 && self.firingshell != 1)
 		{
 			self thread fire_tank_sound
 			self thread projectile
@@ -284,6 +311,7 @@ playergetin:
 		local.driver.driving = 0
 		local.driver.drivingent = NIL
 		if(!isalive local.driver) { local.driver stufftext ("set phealth 0") }
+		ihuddraw_string local.player 110 ""
 
 		if(local.driver.using_pack == 1)
 		{
@@ -653,6 +681,7 @@ turretslot_2nd local.player:
 	self.turretplayer.driving_state_jump = 0
 	self.turretplayer forcetorsostate TURRET_START
 	self.turretplayer iprint ("JUMP = exit turret.")
+	self.turretplayer.turretingent = self // used with killstreaks/damagehandler.scr to properly give score to shooter if turretplayer's vehicle gets blown up by an enemy bazooka rocket.
 
 	self unlock
 	self.gun unlock
@@ -670,6 +699,7 @@ turretslot_2nd local.player:
 
 	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1)
 	{
+		local.player.origin = self.gun2.origin
 		if(local.player.fireheld == 1) { self.gun2 playsound tankfire30cal }
 
 		if(self.turretplayer.driving_state_jump == 1)
@@ -677,7 +707,6 @@ turretslot_2nd local.player:
 			self waitthread turretplayer_reset local.team local.player
 			end
 		}
-		if(self != NULL) { local.origin = self.origin }
 		waitframe
 	}
 	if(self != NULL) { self waitthread turretplayer_reset local.team local.player }
@@ -714,6 +743,7 @@ turretplayer_reset local.team local.player local.dead:
 	local.player thread wallstuck_fix
 	local.player forcetorsostate STAND
 	local.player takedamage // this prevents a rare bug that kept the turret player from ever dying again (player is somehow, but only sometimes given "nodamage"?)
+	local.player.turretingent = NIL
 
 	if(isalive local.player && local.player.dmteam != "spectator")
 	{

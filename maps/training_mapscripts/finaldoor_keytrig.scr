@@ -69,21 +69,19 @@ doit_key local.origin:
    local.static glue self
    local.static show
 
-   //huddraw_alpha 104 0
-   //huddraw_virtualsize 104 1
-   //huddraw_alpha 104 .8
-   //huddraw_font 104 "verdana-12"
-   //huddraw_color 104 0 .5 0
-   //huddraw_rect 104 -200 222 200 14 
-   //huddraw_string 104 "Final Door Key:   Picking Up"
+   ihuddraw_alpha self 102 0
+   ihuddraw_virtualsize self 102 1
+   ihuddraw_alpha self 102 .8
+   ihuddraw_font self 102 "verdana-12"
+   ihuddraw_color self 102 0 .5 0
+   ihuddraw_rect self 102 -175 222 200 14 
+   ihuddraw_string self 102 "Final Door Key:   Acquired"
 
    $("cig_1" + local.number).angles = ( 0 180 20 )
    self stufftext "say *** I have found the final door key! ***"
    $"final_doorkey" nottriggerable
    waitframe
    $"final_doorkey" remove 
-   //wait 0.5
-   //huddraw_string 104 "Final Door Key:   Acquired"
    
    local.result = self waitthread scan_player_key //cannot use self in "doit"
    if(local.result != left)
@@ -94,15 +92,13 @@ doit_key local.origin:
 	local.static remove
 	if($final_doorkey != NULL) { $final_doorkey remove }
 	local.originold = local.origin + ( 0 0 -15 )
+    	ihuddraw_string self 102 ""
 
 	if(level.finaldoorunlocked != 1)
 	{
 		self stufftext "say *** I dropped the final door key! ***"
-    		//huddraw_string 104 "Final Door Key:   Dropped"
 		level.keydropped = 1
-		level.dooropening = 0	
-    		//wait 0.5
-    		//huddraw_string 104 ""
+		level.dooropening = 0
 
 		if(level.finalkey_went2spectator == 1) 
 		{ 
@@ -115,12 +111,9 @@ doit_key local.origin:
 	else if(level.finaldoorunlocked == 1)
 	{
 		self stufftext "say *** I have unlocked the final door! Soon after it opens, it will lock again once closed! ***"
-    		//huddraw_string 104 "Final Door Key:   Unlocked Door"
 		self iprint "*** Door unlocked: Press the USE key to open it. ****"
 		level.keydropped = 0 
-		level.dooropening = 0	
-    		//wait 0.5
-    		//huddraw_string 104 ""
+		level.dooropening = 0
 		//$exit_door unlock //if you click press use too fast, you'll open the door before the light turns green
 
 		goto finaldoor_triggertemp

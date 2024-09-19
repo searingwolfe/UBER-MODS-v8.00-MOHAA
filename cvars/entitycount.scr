@@ -5,10 +5,11 @@
 // "entities 5" = print only non-NULL entities that have targetnames.
 // "entities 6" = print only non-NULL entities that do not have targetnames (targetnames = "").
 // "entities 7" = print only non-NULL entities, and print their classnames.
+// "entities 8" = print only non-NULL entities, and print only if they have a ".target" entity specified (simple ents like pathnodes are NULL/don't exist in the game).
 
 main:
 
-	while(int(getcvar("entities")) != 1 && int(getcvar("entities")) != 2 && int(getcvar("entities")) != 3 && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7) { waitframe }
+	while(int(getcvar("entities")) != 1 && int(getcvar("entities")) != 2 && int(getcvar("entities")) != 3 && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8) { waitframe }
 
 	local.maxclients = int(getcvar(sv_maxclients))
 	local.nullent = 0
@@ -18,16 +19,16 @@ main:
 	{
 		if(local.i % 14 == 0 || int(getcvar("entities")) == 3) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
 
-		if(int(getcvar("entities")) != 1 && int(getcvar("entities")) != 2 && int(getcvar("entities")) != 3 && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7) { break }
+		if(int(getcvar("entities")) != 1 && int(getcvar("entities")) != 2 && int(getcvar("entities")) != 3 && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8) { break }
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.i == 0) { println("----- Note: This can only count up to 869 entities (0 to 868).") }
 		if(local.i == 0) { println("----- Counting entities. Please wait...") }
 
 		if(int(getcvar("entities")) == 1 && local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
-		if(int(getcvar("entities")) == 2 || int(getcvar("entities")) == 3 || int(getcvar("entities")) == 4 || int(getcvar("entities")) == 5 || int(getcvar("entities")) == 6 || int(getcvar("entities")) == 7)
+		if(int(getcvar("entities")) == 2 || int(getcvar("entities")) == 3 || int(getcvar("entities")) == 4 || int(getcvar("entities")) == 5 || int(getcvar("entities")) == 6 || int(getcvar("entities")) == 7 || int(getcvar("entities")) == 8)
 		{
-			if(local.i < local.maxclients && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7)
+			if(local.i < local.maxclients && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8)
 			{
 				if(local.entity == NULL) { println("$player[" + (local.i + 1) + "] = NULL"); local.j++ }
 				if(local.entity != NULL) { println("$player[" + (local.i + 1) + "] = " + (netname $player[local.i + 1 - local.j])) }
@@ -36,15 +37,16 @@ main:
 			{
 				if(local.entity == NULL)
 				{
-					if(int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7) { println(local.i + ": NULL") }
+					if(int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8) { println(local.i + ": NULL") }
 					local.nullent++
 				}
 				if(local.entity != NULL)
 				{
 					if((int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6) || (int(getcvar("entities")) == 5 && local.entity.targetname != "") || (int(getcvar("entities")) == 6 && local.entity.targetname == ""))
 					{
-						if(int(getcvar("entities")) != 7) { println(local.i + ": " + local.entity) }
+						if(int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8) { println(local.i + ": " + local.entity) }
 						if(int(getcvar("entities")) == 7) { println(local.i + ": " + local.entity.classname) }
+						if(int(getcvar("entities")) == 8 && local.entity.target != "") { println(local.i + ": " + local.entity.target) }
 					}
 				}
 			}

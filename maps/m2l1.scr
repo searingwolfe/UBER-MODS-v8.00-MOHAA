@@ -49,16 +49,13 @@ if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Free
 if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
 setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
 
-exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
 //level.basebuild_laserdist = 700
 }
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
 exec global/aliascache_triggersounds.scr airstrikes
-}
-if(getcvar("g_ubermods") == "2")
-{
 exec global/aliascache_triggersounds.scr explode_building_small
 exec global/aliascache_triggersounds.scr explode_building_large
 exec global/aliascache_triggersounds.scr explode_wood_small
@@ -122,13 +119,13 @@ exec map_triggers/led_trap.scr ( -1717 -3450 972 ) led4 2
 if(getcvar("g_ubergametype") != "bb")
 {
 	exec map_triggers/player_spotlight.scr ( 1489 1455 888 ) ( 1 1 1 ) s0 700 -45 0 0 1		// white
-	exec map_triggers/player_spotlight.scr ( 2877 6733 672 ) ( 1 0 0 ) s1 700 -120 0 0 1		// red
+	//exec map_triggers/player_spotlight.scr ( 2877 6733 672 ) ( 1 0 0 ) s1 700 -120 0 0 1		// red
 	//exec map_triggers/player_spotlight.scr ( 3022 -1776 888 ) ( 1 1 0 ) s2 700 45 0 0 1		// yellow
 	//exec map_triggers/player_spotlight.scr ( -1327 623 888 ) ( 0 1 0 ) s3 700 -45 0 0 1		// green
-	exec map_triggers/player_spotlight.scr ( -1645 -2676 940 ) ( 0 0 1 ) s4 700 45 0 0 1		// blue
+	//exec map_triggers/player_spotlight.scr ( -1645 -2676 940 ) ( 0 0 1 ) s4 700 45 0 0 1		// blue
 	//exec map_triggers/player_spotlight.scr ( -3284 2887 1168 ) ( 1 0 1 ) s5 700 30 0 0 1		// magenta 
 
-	exec map_triggers/spotlight_colorswitch.scr ( 1349 1594 888 ) ( 270 -45 0 ) s0 rainbow
+	exec map_triggers/spotlight_colorswitch.scr ( 1349 1594 888 ) ( 270 -45 0 ) s0 slowrainbow
 }
 
 // Available playervehicle models:
@@ -207,14 +204,9 @@ exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -1629 -3424 6
 	local.laser5 = thread spawnlaser ( -2264 2190 622 ) ( -2264 2859 622 ) ( 1 0 0 ) 3
 	local.laser6 = thread spawnlaser ( -2264 2856 619 ) ( -2264 2856 448 ) ( 1 0 0 ) 3
 	thread vehicle_tele 300 180 ( -2280 2523.5 625 ) ( -30 -350 -250 ) ( 30 350 0 ) local.laser4 local.laser5 local.laser6
-
-	thread airstrikes_alternate
 }
 
-if(getcvar("g_ubermods") == "1")
-{
-	thread airstrikes_alternate2
-}
+thread airstrikes_alternate
 
 level waittill spawn
 
@@ -333,6 +325,8 @@ end
 
 airstrikes_alternate:
 
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { end }
+
 	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane.scr
 	level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
 	level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
@@ -342,42 +336,18 @@ airstrikes_alternate:
 
 	while(1) //parameters: team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike)
 	{
-		local.rtime = randomint(90) + 90	// randomize time between 90 and 180 seconds.
+		local.rtime = randomint(90) + 60	// randomize time between 90 and 180 seconds. NOTE: any offtime between 1 and 2 is essentially waiting 0 seconds.
 		local.r = randomint(2)
-		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime 25 0.1 1 }	// axis = 50% chance
-		if(local.r == 1)										// allies = 33% chance
-		{												// c47 = 17% chance
+		if(getcvar("g_ubermods") == "2") { local.bombs = 25; local.timetodrop = 0.1 }	// these are NIL if g_ubermods = 1, preventing bombs from dropping.
+
+		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime local.bombs local.timetodrop 1 }	// axis = 50% chance
+		if(local.r == 1)												// allies = 33% chance
+		{														// c47 = 17% chance
 			local.r2 = randomint(5)
-			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime 25 0.1 1 }  // NOTE: any offtime between 1 and 2 is essentially waiting 0 seconds.
-			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime 25 0.1 1 }
-			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime 25 0.1 1 }
-			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime 25 0.1 1 }
-		}
-		waitframe
-	}
-end
-
-airstrikes_alternate2:
-
-	level.bomberplane_health = 200
-	level.bomberplane_bombspeed = 0.25
-	level.bomberplane_bombgravity = 2
-
-	level.bomberplane_map_setsize1 = ( -6935 -4375 0 )
-	level.bomberplane_map_setsize2 = ( 5935 7415 2100 )
-
-	while(1)
-	{
-		local.rtime = randomint(90) + 90
-		local.r = randomint(2)
-		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime }
-		if(local.r == 1)
-		{
-			local.r2 = randomint(5)
-			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime }
-			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime }
-			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime }
-			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime }
+			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
 		}
 		waitframe
 	}

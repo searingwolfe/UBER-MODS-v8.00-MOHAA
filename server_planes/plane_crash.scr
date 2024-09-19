@@ -105,10 +105,45 @@ plane_explode local.scale local.hitthing:
 	local.Exp light 1 0 1 local.radius
 	local.Exp anim start
 	local.Exp.scale = local.expscale
-	local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
-	local.Exp2.origin = local.origin
-	local.Exp2 anim start
-	local.Exp2.scale = local.expscale
+
+	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			//local.origin = self.plane.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.Exp2 = spawn "animate/fx_mortar_water.tik"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale * 1.20
+				local.Exp playsound artyexp_water
+			}
+			else
+			{
+				local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale
+				local.Exp playsound artyexp_sand
+			}
+		}
+	}
+	else
+	{
+		local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+		local.Exp2.origin = local.origin
+		local.Exp2 anim start
+		local.Exp2.scale = local.expscale
+		local.Exp playsound artyexp_sand
+	}
 	
 	if(self.in_para_drop != 1 && local.new_uberround != 1)
 	{
@@ -121,7 +156,6 @@ plane_explode local.scale local.hitthing:
 	}
 
 	exec global/earthquake.scr .35 2 0 0
-	local.Exp playsound artyexp_sand
 	local.Exp2 playsound explodeplane
 
 	local.Exp2.player_owner = self
@@ -250,14 +284,48 @@ plane_explode_null:
 	local.Exp light 1 0 1 local.radius
 	local.Exp anim start
 	local.Exp.scale = local.expscale
-	local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
-	local.Exp2.origin = local.origin
-	local.Exp2 anim start
-	local.Exp2.scale = local.expscale
+
+	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			//local.origin = self.plane.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.Exp2 = spawn "animate/fx_mortar_water.tik"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale * 1.20
+				local.Exp playsound artyexp_water
+			}
+			else
+			{
+				local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale
+				local.Exp playsound artyexp_sand
+			}
+		}
+	}
+	else
+	{
+		local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+		local.Exp2.origin = local.origin
+		local.Exp2 anim start
+		local.Exp2.scale = local.expscale
+		local.Exp playsound artyexp_sand
+	}
 
 	exec global/earthquake.scr .35 2 0 0
 	radiusdamage local.origin 500 local.radius
-	local.Exp playsound artyexp_sand
 	local.Exp2 playsound explodeplane
 
 	local.Exp anim start

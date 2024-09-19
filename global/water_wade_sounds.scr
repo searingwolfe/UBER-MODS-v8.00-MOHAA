@@ -105,9 +105,12 @@ water_volumes_falling local.bigsplash:
 	while(isalive self && self.dmteam == local.team && self.dead != 1 && self getposition == "offground") { waitframe } // wait until player hits the ground inside the water volume.
 	if(self != NULL)
 	{
-		if(local.bigsplash == 1) { self.water_temp_ent2 playsound snd_bodyfall_wade }
-		else { self.water_temp_ent2 playsound snd_landing_wade }
-		self.water_temp_ent2 remove
+		if(self.water_temp_ent2 != NIL && self.water_temp_ent2 != NULL) // prevents splashing again if player goes in/out of noclip while inside water.
+		{
+			if(local.bigsplash == 1) { self.water_temp_ent2 playsound snd_bodyfall_wade }
+			else { self.water_temp_ent2 playsound snd_landing_wade }
+			self.water_temp_ent2 remove
+		}
 		self.water_falling = 0
 	}
 end
@@ -132,4 +135,6 @@ initialize local.bigsplash:
 		local.master aliascache snd_bodyfall_wade1 sound/characters/body_fallwater_01.wav soundparms 1.0 0.2 0.9 0.2 320 2000 body loaded maps level.mapname
 		local.master aliascache snd_bodyfall_wade2 sound/characters/body_fallwater_02.wav soundparms 1.0 0.2 0.9 0.2 320 2000 body loaded maps level.mapname
 	}
+
+	local.master aliascache snd_gasp sound/null.wav soundparms 0.75 0.3 0.9 0.2 160 1600 auto loaded maps level.mapname // rarely needed, but m4l0 spat out errors if player walked in/out of the underwater floor border.
 end

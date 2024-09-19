@@ -1,6 +1,7 @@
 main local.origin0 local.origin1 local.origin2 local.origin3 local.origin4 local.origin5 local.origin6 local.origin7 local.origin8 local.origin9:
 
 exec global/aliascache_triggersounds.scr giantbomb
+exec global/aliascache_triggersounds.scr arty_exp_water
 
 ////////////////////////////////////////////////////////////////////////
 	
@@ -127,13 +128,13 @@ if(local.random2 == 1) { local.player playsound bombpickup2 }
 if(local.random2 == 2) { local.player playsound bombpickup3 }
 if(local.random2 == 3) { local.player playsound bombpickup4 }
 
-ihuddraw_alpha local.player 102 0
-ihuddraw_virtualsize local.player 102 1
-ihuddraw_alpha local.player 102 .8
-ihuddraw_font local.player 102 "verdana-12"
-ihuddraw_color local.player 102 0 .85 .85
-ihuddraw_rect local.player 102 -200 232 200 14 
-ihuddraw_string local.player 102 "Giant Bomb:   Equipped"
+ihuddraw_alpha local.player 101 0
+ihuddraw_virtualsize local.player 101 1
+ihuddraw_alpha local.player 101 .8
+ihuddraw_font local.player 101 "verdana-12"
+ihuddraw_color local.player 101 0 .85 .85
+ihuddraw_rect local.player 101 -175 212 200 14 
+ihuddraw_string local.player 101 "Giant Bomb:   Equipped"
 
 if(local.player.isdog == 1)
 {
@@ -175,7 +176,7 @@ if(local.player.dmteam != local.team || local.player.health <= 0)
 	$("bbomb_model_" + local.player.entnum) remove
 	local.player.isfiredboomerweenie = 0
 	local.player.istake=0
-	ihuddraw_string local.player 102 ""
+	ihuddraw_string local.player 101 ""
 }
 
 if(local.player.isfiredboomerweenie == 0)
@@ -188,7 +189,7 @@ local.fwd_vec = angles_toforward local.player.viewangles
 local.start = local.player gettagposition "eyes bone"
 
 local.range = 20240
-ihuddraw_string local.player 102 "Giant Bomb:   Launched"
+ihuddraw_string local.player 101 "Giant Bomb:   Launched"
 
 local.groundtarget.origin = trace (local.start + local.fwd_vec * 64) (local.start + local.fwd_vec * local.range )
 
@@ -278,6 +279,11 @@ local.laser21.velocity = ( 0 0 0 )
 		}
 	}
 	local.Exp21 = spawn "fx/scriptbazookaexplosion.tik" // also does 250 radiusdamage
+	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
+	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
+	local.Exp21.scale = 1.7
+	local.Exp21 light 1 0 0 600
+	local.Exp21 anim start
 	local.Exp21.player_owner = local.player
 	if(local.blewup != 1) { local.Exp21 radiusdamage 0 }
 	else
@@ -286,12 +292,36 @@ local.laser21.velocity = ( 0 0 0 )
 		local.Exp21 radius level.giantbomb_radius
 	}
 
-	local.Exp22 = spawn "animate/fx_mortar_dirt.tik" targetname "mortar_dirt_nosound"
-	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
-	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
-	local.Exp21.scale = 1.7
-	local.Exp21 light 1 0 0 600
-	local.Exp21 anim start
+	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			local.origin = local.Exp21.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.Exp22 = spawn "animate/fx_mortar_water.tik"
+				local.Exp22 playsound artyexp_water
+			}
+			else
+			{
+				local.Exp22 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+				local.Exp22 playsound artyexp_sand
+			}
+		}
+	}
+	else
+	{
+		local.Exp22 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+		local.Exp22 playsound artyexp_sand
+	}
+
 	if(local.groundtarget != NULL) { local.Exp22.origin = local.groundtarget.origin }
 	if(local.groundtarget == NULL) { local.Exp22.origin = local.originold }
 	local.Exp22.scale = 1.7
@@ -303,7 +333,7 @@ local.laser21.velocity = ( 0 0 0 )
 	if(local.groundtarget == NULL) { local.Exp23.origin = local.originold }
 	local.Exp23.scale = 1
 	local.Exp23 anim idle
-	ihuddraw_string local.player 102 "Giant Bomb:   Exploded"
+	ihuddraw_string local.player 101 "Giant Bomb:   Exploded"
 
 exec global/earthquake.scr .35 2 0 0
 wait 0.05
@@ -313,7 +343,7 @@ if(local.random2 == 1) { local.Exp21 playsound gastank_explo2 }
 waitframe
 
 local.player.isfiredboomerweenie=0
-ihuddraw_string local.player 102 ""
+ihuddraw_string local.player 101 ""
 
 if(local.Exp21 != NULL) { local.Exp21 remove }
 if(local.Exp22 != NULL) { local.Exp22 remove }

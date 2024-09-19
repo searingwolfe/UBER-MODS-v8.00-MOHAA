@@ -261,7 +261,13 @@ player_fromspectator:
 			self waitthread player_mef_weaponclass	// weaponclass will not be assigned if the player dies too quickly.
 
 			killent self.entnum 			// if players try to join a team while a round is in progress, and when both teams have at least 1 player, kill the team-switcher immediately.
-			self iprint ("Round is currently in progress. Switching to team-spectator...")
+
+			self iprint ("Please wait. Round is currently in progress.")
+			self iprint ("Removing one death from your score... Switching to team-spectator...")
+			self adddeaths -1
+
+			if(level.newgametype == "snd") { self iprint ("You will respawn when this current round ends.") }
+			else { self iprint ("You will respawn when someone melts your frozen body.") }
 		}
 		else
 		{
@@ -890,7 +896,7 @@ doit local.originallies local.angleallies local.originaxis local.angleaxis local
 
 			if(level.disable_defuse != 1)
 			{
-				if(level.bomb_went2spectator == 1)  // if player goes to spectator, spawn the bomb at its old picked-up origin.
+				if(level.bomb_went2spectator == 1 || self == NULL || (self != NULL && self.dmteam == "spectator"))  // if player goes to spectator, spawn the bomb at its old picked-up origin.
 				{ 
 					level.bomb_went2spectator = 0
 					goto bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral
@@ -1146,6 +1152,8 @@ dummyavatar:
 	if(self.team == NIL) { wait 1 }
 	if(self.team == NIL) { end }
 
+	while(level.bombisdead == 1 || level.change_team_score == 1) { waitframe }
+
 	local.avatar = spawn func_beam
 	local.avatar.origin = self.origin + ( 0 0 30 )
 	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
@@ -1161,12 +1169,7 @@ dummyavatar:
 	local.avatar activate
 
 	local.team = self.team
-	while(self != NULL && self.team == local.team && level.bombisdead != 1)
-	{
-		local.avatar.origin = self.origin + ( 0 0 30 )
-		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
-		waitframe
-	}
+	while(self != NULL && self.team == local.team && level.bombisdead != 1) { waitframe }
 	local.avatar remove
 end
 
@@ -1216,8 +1219,8 @@ bomb_planted local.i local.originallies local.originaxis local.origincentral loc
 	}
 
 	$("bombsitetrig_" + local.i).norotate = 1
-	if(local.team == "allies") { exec global/flickerrotate.scr $("bombsitetrig_" + local.i) ( 1 0 0 ) 125 15 15 0 1 }
-	if(local.team == "axis") { exec global/flickerrotate.scr $("bombsitetrig_" + local.i) ( 0 0 1 ) 125 0 15 15 1 }
+	if(local.team == "allies") { exec global/flickerrotate.scr $("bombsitetrig_" + local.i) ( 1 0 0 ) 125 18 18 0 1 }
+	if(local.team == "axis") { exec global/flickerrotate.scr $("bombsitetrig_" + local.i) ( 0 0 1 ) 125 0 18 18 1 }
 
 	if(level.newgametype == "snd")
 	{

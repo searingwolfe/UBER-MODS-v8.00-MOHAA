@@ -513,9 +513,38 @@ bang local.place:
 
 	if(self.model == "models/ammo/us_bomb.tik")
 	{
-		local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik" //targetname "mortar_dirt_nosound"
-		local.Exp4 anim start
-		local.Exp4 playsound artyexp_sand
+		if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+		{
+			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+				local.origin = self.origin
+	
+				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+				{
+					local.Exp4 = spawn "animate/fx_mortar_water.tik" //targetname "mortar_dirt_nosound"
+					local.Exp4 anim start
+					local.Exp4 playsound artyexp_water
+				}
+				else
+				{
+					local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik" //targetname "mortar_dirt_nosound"
+					local.Exp4 anim start
+					local.Exp4 playsound artyexp_sand	
+				}
+			}
+		}
+		else
+		{
+			local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik" //targetname "mortar_dirt_nosound"
+			local.Exp4 anim start
+			local.Exp4 playsound artyexp_sand	
+		}
 	}
 	else
 	{

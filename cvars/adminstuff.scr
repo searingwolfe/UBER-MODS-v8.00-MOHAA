@@ -235,9 +235,25 @@ changename:
 	if(local.name[local.name.size - 2] != "_" && local.name[local.name.size - 1] != local.playernum) // add "_[playernum]" to the player's name.
 	{
 		local.n = 0
+		local.a = 1
+		for(local.s = 0; local.s < local.namestring.size; local.s++)
+		{
+			if(local.namestring[local.s] == " ") { local.a++; local.s++ }
+
+			if(local.namearray[local.a] == NIL) { local.namearray[local.a] = "" }
+			local.namearray[local.a] += local.namestring[local.s]
+		}
+
 		while(self != NULL && netname self == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
 		{
-			self stufftext ("name " + local.namestring)
+			if(local.namearray[2] != NIL)
+			{
+				local.textstring = "name " + local.namearray[1]
+				for(local.y = 2; local.y <= local.namearray.size; local.y++) { local.textstring += "; append name " + local.namearray[local.y] }
+				self stufftext local.textstring
+			}
+			else { self stufftext ("name " + local.namestring) }
+
 			local.n++
 			wait 0.15
 		}
@@ -246,9 +262,25 @@ changename:
 	{
 		for(local.n = 0; local.n < local.name.size - 2; local.n++) { local.name2 += local.name[local.n] } // remove "_[playernum]" from the player's name.
 		local.n = 0
+		local.a = 1
+		for(local.s = 0; local.s < local.name2.size; local.s++)
+		{
+			if(local.name2[local.s] == " ") { local.a++; local.s++ }
+
+			if(local.namearray2[local.a] == NIL) { local.namearray2[local.a] = "" }
+			local.namearray2[local.a] += local.name2[local.s]
+		}
+
 		while(self != NULL && netname self == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
 		{
-			self stufftext ("name " + local.name2)
+			if(local.namearray2[2] != NIL)
+			{
+				local.textstring = "name " + local.namearray2[1]
+				for(local.y = 2; local.y <= local.namearray2.size; local.y++) { local.textstring += "; append name " + local.namearray2[local.y] }
+				self stufftext local.textstring
+			}
+			else { self stufftext ("name " + local.name2) }
+
 			local.n++
 			wait 0.15
 		}
@@ -356,9 +388,24 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 
 	local.name = netname local.player
 	local.n = 0
+	local.a = 1
+	for(local.s = 0; local.s < local.name.size; local.s++)
+	{
+		if(local.name[local.s] == " ") { local.a++; local.s++ }
+		if(local.namearray[local.a] == NIL) { local.namearray[local.a] = "" }
+		local.namearray[local.a] += local.name[local.s]
+	}
+
 	while(local.player != NULL && netname local.player == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
 	{
-		local.player stufftext ("name " + local.name + "_" + getclientnum local.player)
+		if(local.namearray[2] != NIL)
+		{
+			local.textstring = "name " + local.namearray[1]
+			for(local.y = 2; local.y <= local.namearray.size; local.y++) { local.textstring += "; append name " + local.namearray[local.y] }
+			local.player stufftext (local.textstring + "_" + getclientnum local.player)
+		}
+		else { local.player stufftext ("name " + local.name + "_" + getclientnum local.player) }
+
 		local.n++
 		wait 0.15
 	}
@@ -373,9 +420,25 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 	else
 	{
 		local.n = 0
+		local.a = 1
+		for(local.s = 0; local.s < local.name.size; local.s++)
+		{
+			if(local.name[local.s] == " ") { local.a++; local.s++ }
+
+			if(local.namearray2[local.a] == NIL) { local.namearray2[local.a] = "" }
+			local.namearray2[local.a] += local.name[local.s]
+		}
+
 		while(local.player != NULL && netname local.player != local.name && local.n <= 20)
 		{
-			local.player stufftext ("name " + local.name)
+			if(local.namearray2[2] != NIL)
+			{
+				local.textstring = "name " + local.namearray2[1]
+				for(local.y = 2; local.y <= local.namearray2.size; local.y++) { local.textstring += "; append name " + local.namearray2[local.y] }
+				local.player stufftext local.textstring
+			}
+			else { local.player stufftext ("name " + local.name) }
+
 			local.player.netname_jointime = level.time
 			local.player.netname_time = level.time
 			local.player.netname_old = local.name
@@ -814,7 +877,7 @@ wuss2:
 	{
 		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
 		{
-			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && ($player[local.i].driving != 1 || $player[local.i].passenger == 1) && $player[local.i].flying != 1)
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator)
 			{
 				$player[local.i] wuss
 				println("----- $player[" + local.i + "] wuss2")

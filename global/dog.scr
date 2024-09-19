@@ -327,7 +327,10 @@ player:
 	local.anim.origin = (local.specorg + ((local.specang[0]) (local.specang[1]) (0)) * 50)
 
 	local.player.dog = local.anim
+	local.player.deathanim = NIL
+
 	local.anim thread move local.player
+	local.anim thread deathanim_fix local.player
 
 	local.player thread sounds_loop
 	local.player thread get_movement
@@ -362,7 +365,7 @@ run_counter:
 		{
 			if(isalive self) 
 			{ 
-				if(self != NULL && self.dog != NULL) { self.dog remove }
+				if(self.dog != NULL) { self.dog remove }
 				self thread global/get_player_weaponclass.scr::give_weapons self.mef_weaponclass
 			}
 			if(self != NULL) { self.isdog = 0 }
@@ -442,7 +445,7 @@ get_movement:
 			if(self != NULL) 
 			{
 				self.isdog = 0
-				self.dog remove
+				if(self.dog != NULL) { self.dog remove }
 				self thread global/get_player_weaponclass.scr::give_weapons self.mef_weaponclass
 			}
 			end
@@ -516,7 +519,7 @@ get_movement:
 				end
 			}
 
-			if(self != NULL && self.fireheld == 1 && self.useheld == 0 && self.held != 1)
+			if(self != NULL && self.dog != NULL && self.fireheld == 1 && self.useheld == 0 && self.held != 1)
 			{
 				local.dog_anim = self.dog_anim
 				self.held = 1
@@ -528,7 +531,7 @@ get_movement:
 				}
 				else { self.dog_anim = dog_bite_leg; self thread sounds }
 				wait .75
-				if(self != NULL)
+				if(self != NULL && self.dog != NULL)
 				{
 					self.dog.trigger.biting = 0
 					self.dog.trigger nottriggerable
@@ -550,6 +553,24 @@ get_movement:
 		}
 		waitframe
 		if(self != NULL && self.inventory.size > 0) { self takeall } // in case they pick up some weapons	
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+deathanim_fix local.player: // force the dog to perform a death animation if it's somehow frozen in place after its player died.
+
+	local.team = local.player.dmteam
+	while(isalive local.player && local.player.dog != NIL && local.player.dog != NULL && local.player.dmteam == local.team && level.change_team_score != 1 && local.player.fellundermap != 1) { waitframe }
+
+	if(local.player != NULL && !isalive local.player && local.player.dog != NIL && local.player.dog != NULL && (local.player.dog_anim != dog_death || local.player.deathanim == NIL))
+	{
+		local.player.deathanim = randomint(4)
+		if(local.player.deathanim == 0) { local.player.dog anim death }
+		if(local.player.deathanim == 1) { local.player.dog anim dog_death }
+		if(local.player.deathanim == 2) { local.player.dog anim dog_death2 }
+		if(local.player.deathanim == 3) { local.player.dog anim dog_death_run }
+		local.player thread sounds
 	}
 end
 

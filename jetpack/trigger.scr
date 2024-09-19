@@ -19,7 +19,7 @@ level.fueltime_thrust =  0.1	// how long while player is thrusting (holding USE 
 
 	local.airtank = spawn trigger_multiple
 	local.airtank model "static/static_airtank.tik" 
-	local.airtank.origin = local.origin + ( 0 0 15 )
+	local.airtank.origin = local.origin + ( 0 0 50 )
 	local.airtank setsize ( -40 -40 -40 ) ( 40 40 40 ) 
 	local.airtank.scale = .75
 	local.airtank show
@@ -30,10 +30,10 @@ level.fueltime_thrust =  0.1	// how long while player is thrusting (holding USE 
 
 	local.airtank2 = spawn script_model
 	local.airtank2 model "static/static_airtank.tik" 
-	local.airtank2.origin = local.origin + ( 0 0 15 )
+	local.airtank2.origin = local.origin + ( 0 0 50 )
 	local.airtank2.scale = .75
 	local.airtank2 notsolid
-	//local.airtank2 light 1 0 0 50
+	local.airtank2 light 1 0 0 50
 
 	local.airtank setthread fly
 	
@@ -41,6 +41,11 @@ level.fueltime_thrust =  0.1	// how long while player is thrusting (holding USE 
 
 	local.airtank.targetname = ("jetpacktrig" + local.airtank.entnum)
 	local.airtank2.targetname = (local.airtank.targetname + "_2")
+
+	local.airtank attachmodel models/emitters/pipe_steam.tik "Box01" 1 (local.airtank.targetname + "_3") 1 -1 -1 -1 -1 ( 0 40 0 ) //( +left -right, +up -down, +forward -backward )
+	$(local.airtank.targetname + "_3").angles = ( 0 90 0 )
+	local.airtank2 attachmodel models/emitters/pipe_steam.tik "Box01" 1 (local.airtank.targetname + "_4") 1 -1 -1 -1 -1 ( 0 40 0 ) //( +left -right, +up -down, +forward -backward )
+	$(local.airtank.targetname + "_4").angles = ( 0 90 0 )
 
 	exec global/flickerrotate.scr local.airtank.targetname ( .9 .9 0 ) 125 10 10 5
 	wait 1

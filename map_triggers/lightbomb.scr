@@ -134,7 +134,7 @@ ihuddraw_virtualsize local.player 101 1
 ihuddraw_alpha local.player 101 .8
 ihuddraw_font local.player 101 "verdana-12"
 ihuddraw_color local.player 101 0 .85 .85
-ihuddraw_rect local.player 101 -200 232 200 14 
+ihuddraw_rect local.player 101 -175 212 200 14 
 ihuddraw_string local.player 101 "Light Bomb:   Equipped"
 
 if(local.player.isdog == 1)
@@ -294,6 +294,11 @@ local.laser21.velocity = ( 0 0 0 )
 		}
 	}
 	local.Exp21 = spawn "fx/300damage.tik" // also does 10 radiusdamage
+	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
+	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
+	local.Exp21.scale = 1
+	local.Exp21 light 0 1 0 450
+	local.Exp21 anim start
 	local.Exp21.player_owner = local.player
 	if(local.blewup != 1) { local.Exp21 radiusdamage 0 }
 	else
@@ -304,11 +309,6 @@ local.laser21.velocity = ( 0 0 0 )
 
 	local.Exp22 = spawn "animate/fx_mortar_water.tik" targetname "mortar_dirt_nosound"
 	local.Exp23 = spawn "emitters/fx_oceanspray.tik"
-	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
-	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
-	local.Exp21.scale = 1
-	local.Exp21 light 0 1 0 450
-	local.Exp21 anim start
 	if(local.groundtarget != NULL) { local.Exp22.origin = local.groundtarget.origin }
 	if(local.groundtarget == NULL) { local.Exp22.origin = local.originold }
 	local.Exp22.scale = 1
@@ -322,18 +322,18 @@ local.laser21.velocity = ( 0 0 0 )
 
 exec global/earthquake.scr .25 1 0 0
 wait 0.05
-local.Exp21 playsound artyexpwater1
+local.Exp21 playsound artyexp_water
 //local.Exp22 playsound grenade_exp_water2
 local.random2 = randomint(2)
 if(local.random2 == 0)
 {
 	local.Exp21 playsound water_explosion1
-      local.Exp22 playsound water_explosion11
+	local.Exp22 playsound water_explosion11
 }
 if(local.random2 == 1)
 {
 	local.Exp21 playsound water_explosion2
-      local.Exp22 playsound water_explosion22
+	local.Exp22 playsound water_explosion22
 }
 local.Exp23 playsound wavecrash
 waitframe

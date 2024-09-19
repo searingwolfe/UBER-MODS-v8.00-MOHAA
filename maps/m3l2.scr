@@ -49,16 +49,13 @@ if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Free
 if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
 setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
 
-exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
 //level.basebuild_laserdist = 700
 }
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
 exec global/aliascache_triggersounds.scr airstrikes
-}
-if(getcvar("g_ubermods") == "2")
-{
 exec global/aliascache_triggersounds.scr explode_building_large
 exec global/aliascache_triggersounds.scr explode_wood_small
 exec global/aliascache_triggersounds.scr radio_music2
@@ -205,7 +202,7 @@ exec global/playerflak88.scr NIL 200 45 ( -3325 -6783 -356 ) ( 0 180 0 ) 0 ( 0 4
 	//local.laser[1] = NIL, local.laser[2] = NIL, local.laser[3] = NIL
 	exec global/vehicle_tele.scr ( -2049 1259 -112 ) ( -40 -200 -50 ) ( 40 200 200 ) NIL 0 50
 	exec global/vehicle_tele.scr ( -5732 -6054 -185 ) ( -100 -20 -50 ) ( 150 20 200 ) NIL 1 50
-	exec global/vehicle_tele.scr ( 1091.5 -2488 -182 ) ( -123 -40 -50 ) ( 123 40 200 ) NIL 1 50
+	exec global/vehicle_tele.scr ( 1091.5 -2488 -182 ) ( -123 -60 -50 ) ( 123 60 200 ) NIL NIL 50
 	//
 	// vehicle_tele parameters: origin, setsize1, setsize2, lasers array (NIL if none), teleporting alignment (NIL = none, 0 = 0-180 axis, 1 = 90-270 axis), vehicle height after teleporting (default/NIL = 0), teleporting speed (default/NIL = 25).
 }
@@ -846,6 +843,24 @@ vehicles_undermap:
 				if($(local.vehicles[local.a])[local.s].origin[2] >= 800 || $(local.vehicles[local.a])[local.s].origin[2] <= -500)
 				{
 					$(local.vehicles[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+				if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+				{
+					for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+					{
+						local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+						local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+						local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+						local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+						local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+						local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2] - 50
+						local.origin = $(local.vehicles[local.a])[local.s].origin
+	
+						if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+						{
+							$(local.vehicles[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+						}
+					}
 				}
 			}
 		}
