@@ -1,4 +1,4 @@
-*Current Version: 7.975 - Updated: 9/19/2024*
+*Current Version: 7.975 - Updated: 9/22/2024*
 
 ### Table of Contents
 
@@ -924,7 +924,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.975 (9-19-2024):
+v7.975 (9-22-2024):
 - For "check_player_stufftexts" thread in adminstuff.scr, players' names that contain spacebars (" " characters) will no longer be cut off at the 1st spacebar by the script.
 
 - Fixed players becoming invisible and invincible if 2+ players try to enter a tank/vehicle at the same time as drivers (not passengers or turret users).
@@ -932,6 +932,8 @@ v7.975 (9-19-2024):
 - Fixed kills/score not properly counting when a player blows up an enemy vehicle with a turret player and/or 1+ passengers with a bazooka rocket (a one-hit kill).
 
 - When driving vehicles/tanks, more huddraw text on the right side of the screen will now indicate how many passengers are in the vehicle, and/or if the 30 Cal turret is being used by a teammate.
+- If a player destroys a vehicle/tank/boat/flak88/nebelwerfer using a rocket/grenade/giant bomb/etc, the death explosion will now give kills/score to the player if those explosions caused other enemies to die.
+- Chain-reaction death explosions also give kills/score if any of them cause other enemies to die (sometimes it doesn't work). Death explosions caused by players will not harm their teammates anymore.
 
 - Flyable planes' bomb drops (when right-clicking) and plane crashes will now make water explosions if they land inside any "level.water_volumes".
 - Giant Bombs will also make a water explosion if it explodes inside any "level.water_volumes". Ensured that some Giant Bomb/Light Bomb explosion sounds play for all maps.
@@ -940,6 +942,7 @@ v7.975 (9-19-2024):
 - Fixed victory_podium.scr script not displaying the 3rd player's name if the 3rd player is $player[1]. Players in spectator can also be included in the leaderboard now.
 
 - Jetpack triggers now have smoke emitting from the two airtanks, making them easier to see from far away.
+- Players currently driving/riding in vehicles/tanks/boats will no longer be able to pick up jetpacks (must exit vehicle first).
 
 - Fixed more ambience volumes in M1L2A, and fixed some teles in dm/mohdm2.
 - Vehicles will now explode if they fall into the water in M3L2.
