@@ -56,10 +56,10 @@ fly local.jetpackfuel:
 	local.player = parm.other
 	if(local.player == self) { local.redo = 1 } // only if a player with jetpacks becomes a dog, or vise versa.
 	
-	if(isalive local.player && local.player.dead != 1 && local.player.using_pack != 1 && local.player.OWNS != 1)
+	if(isalive local.player && local.player.dead != 1 && local.player.using_pack != 1 && local.player.OWNS != 1 && local.player.dmteam != "spectator" && local.player.driving != 1 && local.player.flying != 1 && local.player.riding != 1 && local.player.turreting != 1)
 	{
 		local.player waitthread airtank local.player.isdog local.redo 	// Give the player an airtank
-		local.player thread jetpack local.jetpackfuel					// start the main loop, check for player stuff
+		local.player thread jetpack local.jetpackfuel			// start the main loop, check for player stuff
 	}
 	else if(local.player.using_pack == 1)
 	{

@@ -89,6 +89,26 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 
 	if(level.check_player_kills != 1) { local.result = registerev damage killstreaks/damagehandler.scr } // for giving kills/score when players shoot/kill passengers.
 	level.check_player_kills = 1
+
+	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.vehicle }
+	else
+	{
+		for(local.c = 1; local.c <= 999; local.c++)
+		{
+			if(level.chainreactors[local.c] == NIL)
+			{
+				level.chainreactors[local.c] = local.vehicle
+				local.vehicle thread chainreactors_remove local.c
+				break
+			}
+		}
+	}
+end
+
+chainreactors_remove local.c:
+
+	while(self != NULL) { waitframe }
+	level.chainreactors[local.c] = NIL
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -520,10 +540,48 @@ vehicledeath:
 	self.driver = NIL
 
 	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
-	self remove
 	exec global/earthquake.scr .35 2 0 0
-	if(local.desvehicle.model == "models/vehicles/uboat.tik") { radiusdamage local.desvehicle.origin 500 1000 }
-	else { radiusdamage local.desvehicle.origin 500 600 }
+	if(local.desvehicle.model == "models/vehicles/uboat.tik") { local.radius = 1000 }
+	else { local.radius = 600 }
+
+	if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
+	else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
+	else { local.shooter = self.shooter }
+
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.
+	{
+		if(vector_length(self.origin - $player[local.i].origin) <= local.radius) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.shooter == NIL || local.shooter == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.desvehicle 360) // "cansee self" does not work.
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.shooter && $player[local.i].dmteam == local.shooter.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.desvehicle 360)
+				{
+					$player[local.i] damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.shooter
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	self remove
 
 	local.boom = spawn script_model
 	local.boom model "models/emitters/mortar_higgins.tik"
@@ -544,6 +602,7 @@ vehicledeath:
 	waitframe
 	local.boom remove
 	local.debris remove
+	if(local.blewup == 1) { radiusdamage local.desvehicle.origin 500 local.radius } // this must be one frame after other damages in this thread, otherwise chain-reaction kills will not count.
 end
 
 kill_riders:
@@ -913,8 +972,8 @@ projectile local.secondary:
 		}
 	}
 	local.projectile remove
-	waitframe
 	if(local.blewup == 1) { radiusdamage local.explode.origin 500 500 } // 110 200
+	waitframe
 	wait .2 // keeps the explosion light visible longer
 	local.explode remove
 end

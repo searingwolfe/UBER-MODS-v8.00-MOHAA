@@ -293,6 +293,16 @@ local.laser21.velocity = ( 0 0 0 )
 			}
 		}
 	}
+	for(local.c = 1; local.c <= 999; local.c++)
+	{
+		if(level.chainreactors[local.c] != NIL && level.chainreactors[local.c] != NULL && vector_length(local.laser21.origin - level.chainreactors[local.c].origin) <= level.lightbomb_radius)
+		{
+			level.chainreactors[local.c].shooter = local.player
+			if(local.player == NIL || local.player == NULL) { level.chainreactors[local.c] damage $world level.lightbomb_damage $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else { level.chainreactors[local.c] damage local.player level.lightbomb_damage local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+	}
+
 	local.Exp21 = spawn "fx/300damage.tik" // also does 10 radiusdamage
 	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
 	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }

@@ -59,7 +59,29 @@ level.flak88s_maxangle = 330	// maximum angle-difference required (or maxangle -
 		thread scriptmaster
 		level.flak88scriptmaster = 1
 	}
+
+	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.trig }
+	else
+	{
+		for(local.c = 1; local.c <= 999; local.c++)
+		{
+			if(level.chainreactors[local.c] == NIL)
+			{
+				level.chainreactors[local.c] = local.trig
+				local.trig thread chainreactors_remove local.c
+				break
+			}
+		}
+	}
 end
+
+chainreactors_remove local.c:
+
+	while(self != NULL && self.dead != 1) { waitframe }
+	level.chainreactors[local.c] = NIL
+end
+
+////////////////////////////////////////////////////////////////////////
 
 ResetFlak local.groundtarget:
 
@@ -77,6 +99,8 @@ ResetFlak local.groundtarget:
 	//removeclass Camera // also removes PlayerIntermission and other func_cameras
 	if(level.removeclass_camera != 1) { thread removeclass_camera }
 end
+
+////////////////////////////////////////////////////////////////////////
 
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
 
@@ -129,6 +153,8 @@ shooter_NIL:
 	if(self != NULL) { self.shooter = NIL }
 end
 
+////////////////////////////////////////////////////////////////////////
+
 angle_between_vectors local.avec local.bvec:
 
 	local.PI = 3.14159265359
@@ -145,6 +171,8 @@ cross_product_vectors local.avec local.bvec:
 	else if(local.cross_vec[1] != 0) { local.product = local.cross_vec[1] }
 	else if(local.cross_vec[2] != 0) { local.product = local.cross_vec[2] }
 end local.product
+
+////////////////////////////////////////////////////////////////////////
 
 playergetin_flak:
 
@@ -304,6 +332,8 @@ playergetin_flak:
 	}
 end
 
+////////////////////////////////////////////////////////////////////////
+
 reload_flak:
 
 	self.flaksmokecount = 0
@@ -313,6 +343,8 @@ reload_flak:
 	wait 5
 	if(self != NULL) { self.flakfiredelay = 1 }
 end
+
+////////////////////////////////////////////////////////////////////////
 
 projectile:
 
@@ -381,10 +413,12 @@ projectile:
 		}
 	}
 	local.rocket remove
-	waitframe
 	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
+	waitframe
 	local.explode remove
 end
+
+////////////////////////////////////////////////////////////////////////
 
 smokey:
 
@@ -397,6 +431,8 @@ smokey:
 	if(local.smoke != NULL) { local.smoke remove }
 	if(self != NULL) { self.flaksmoking = 0; self.flaksmokecount = 0 }
 end
+
+////////////////////////////////////////////////////////////////////////
 
 ImDead:
 
@@ -439,8 +475,46 @@ ImDead:
 		else { self.flak88.fplayer volumedamage 9999999 } // let's make sure the driver is dead.
 	}
 	local.explode playsound explode_flak88
-	radiusdamage local.explode.origin 500 750
 	exec global/earthquake.scr .35 2 0 0
+
+	if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
+	else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
+	else { local.shooter = self.shooter }
+
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.
+	{
+		if(vector_length(self.origin - $player[local.i].origin) <= 750) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.shooter == NIL || local.shooter == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee self 360)
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.shooter && $player[local.i].dmteam == local.shooter.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee self 360)
+				{
+					$player[local.i] damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.shooter
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+
 	self.flak88.dead = 1
 	self.flak88 hide
 	
@@ -451,6 +525,8 @@ ImDead:
 	waitframe
 	local.explode remove
 	local.debris remove
+	if(local.blewup == 1) { radiusdamage self.origin 500 750 } // this must be one frame after other damages in this thread, otherwise chain-reaction kills will not count.
+
 	wait local.resettime
 
 	if(self.flak88.trigenter != NIL && self.flak88.trigenter != NULL) { self.flak88.trigenter remove }
