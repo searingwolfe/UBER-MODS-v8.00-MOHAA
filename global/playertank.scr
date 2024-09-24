@@ -595,10 +595,12 @@ tankdeath:
 	if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 remove }
 	exec global/earthquake.scr .5 3 0 0
 
-	if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
-	else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
-	else { local.shooter = self.shooter }
-
+	if(self.shooter != NIL)
+	{
+		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
+		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
+		else { local.shooter = self.shooter }
+	}
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.
 	{
