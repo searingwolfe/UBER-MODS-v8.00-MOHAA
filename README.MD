@@ -1,4 +1,4 @@
-*Current Version: 7.975 - Updated: 9/22/2024*
+*Current Version: 7.975 - Updated: 9/24/2024*
 
 ### Table of Contents
 
@@ -924,7 +924,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.975 (9-22-2024):
+v7.975 (9-24-2024):
 - For "check_player_stufftexts" thread in adminstuff.scr, players' names that contain spacebars (" " characters) will no longer be cut off at the 1st spacebar by the script.
 
 - Fixed players becoming invisible and invincible if 2+ players try to enter a tank/vehicle at the same time as drivers (not passengers or turret users).
