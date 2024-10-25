@@ -490,16 +490,16 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 - Additional level parameters such as "damage", "radius" (radius of damage and distance to trigger explosions), triggering field-of-view in degrees, scale of claymore/mine,<br>
 velocity of additional mines spawned, bullet damage for sentry turrets, turret lock-on delay in frames, and maximum lock-on distance, can be edited at the top of each killstreak script.
 
-		Claymores Parameters: number of kills, number of claymores given (max = 5).<br>
+		Claymores Parameters: number of kills, number of claymores given (max = 5).
 		Claymores Example: exec killstreaks/claymores.scr 3 2
 
-		Sentry Turret Parameters: number of kills, time until sentry turret dies.<br>
+		Sentry Turret Parameters: number of kills, time until sentry turret dies.
 		Sentry Turret Example: exec killstreaks/sentry_turret.scr 6 90
 
-		Cluster Mine Parameters: number of kills, number of additional mines spawned (max = 15).<br>
+		Cluster Mine Parameters: number of kills, number of additional mines spawned (max = 15).
 		Cluster Mine Example: exec killstreaks/cluster_mines.scr 9 5
 
-		Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).<br>
+		Airstrike Parameters: number of kills, number of bullets to kill a plane, map height (40 below skybox ceiling; all modded maps have pre-defined map heights, so "map height" can be left empty).
 		Airstrike Example: exec killstreaks/airstrikes.scr 5 8
 
 #
@@ -530,13 +530,13 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 - Players using drivable tanks can now see a secondary health bar, representing the tank's current health (the health bar always starts at 100 when entering tanks, even though the tank & driver have different healths).
 - Tanks will emit smoke if they are damaged. The smoke's scale increases as the tank's health decreases.
 
-		Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time.<br>
+		Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time.
 		Tank Example: exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -680 2788 -257 ) ( 0 270 0 ) 1000 60
 
-		Vehicle Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, initial headlights (0 = off, 1 = on), no headlights (1 = keep them off).<br>
+		Vehicle Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, initial headlights (0 = off, 1 = on), no headlights (1 = keep them off).
 		Vehicle Example: exec global/playervehicle.scr jeep vehicles/jeep.tik ( -2541 2297 -255 ) ( 0 40 0 ) 250 400 45 1
 
-		Boat Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, boat scale.<br>
+		Boat Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, boat scale.
 		Boat Example (a): exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( -6415 -3016 -380 ) ( 0 173.5 0 ) 250 250 45
 		Boat Example (b): exec global/playerboat.scr boat2 vehicles/uboat.tik ( -913 3598 -400 ) ( 0 -90 0 ) 250 40 45 1.0
 
@@ -559,12 +559,12 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 - Ideally, health should be 250, so only two grenades or a direct shotgun blast can destroy the turrets (damage scale below):<br>
 shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage.
 
-		Flak88 Parameters: existing flak88 targetname (NIL, if spawning a new one), health, reset time, new flak88 origin, new flak88 angles, remove turret base (0 = no, 1 = yes), turret base angles (if NIL, default = flak88 angles)<br>
-		Flak88 Example (a): exec global/playerflak88.scr $flak88_weapon1 250 60<br>
+		Flak88 Parameters: existing flak88 targetname (NIL, if spawning a new one), health, reset time, new flak88 origin, new flak88 angles, remove turret base (0 = no, 1 = yes), turret base angles (if NIL, default = flak88 angles)
+		Flak88 Example (a): exec global/playerflak88.scr $flak88_weapon1 250 60
 		Flak88 Example (b): exec global/playerflak88.scr NIL 250 60 ( 2150 3700 -253 ) ( 0 0 0 ) 0 ( 0 90 0 )
 
-		Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new one), health, reset time, new nebel origin, new nebel angles<br>
-		Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60<br>
+		Nebelwerfer Parameters: existing nebelwerfer targetname (NIL, if spawning a new one), health, reset time, new nebel origin, new nebel angles
+		Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60
 		Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
 
 #
