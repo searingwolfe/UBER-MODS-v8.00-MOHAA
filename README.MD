@@ -127,15 +127,15 @@ BASEBUILDER CONSOLE COMMANDS:
 	alx_objectlimitboost 200   // increase basebuild object limit by 200, or any # of objects.
 	alx_objectlimitdown 200    // decrease basebuild object limit by 200, or any # of objects.
 
-	While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.<br>
+	While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.
 
-	Hold Right-Click to change build-laser from green to blue; this activates "Trimming Mode" for the object being held.<br>
-	In trimming mode, players can lean left/right to slowly adjust roll-angles (x,y,z angles = pitch,yaw,roll).<br>
-	In trimming mode, players can crouch to rotate the object's yaw-angle by 90 degrees, flipping the lean left/right angles to adjust pitch-angles (but still looks like adjusting roll-angles from player's point of view).<br>
-	In trimming mode, players can walk (not run) forward/backward to increase/decrease their build-laser's distance between them and their object being held.<br>
-	When a new object is picked up, their build-laser's distance is automatically reset back to "level.basebuild_laserdist" (default = 350).<br>
+	Hold Right-Click to change build-laser from green to blue; this activates "Trimming Mode" for the object being held.
+	In trimming mode, players can lean left/right to slowly adjust roll-angles (x,y,z angles = pitch,yaw,roll).
+	In trimming mode, players can crouch to rotate the object's yaw-angle by 90 degrees, flipping the lean left/right angles to adjust pitch-angles (but still looks like adjusting roll-angles from player's point of view).
+	In trimming mode, players can walk (not run) forward/backward to increase/decrease their build-laser's distance between them and their object being held.
+	When a new object is picked up, their build-laser's distance is automatically reset back to "level.basebuild_laserdist" (default = 350).
 
-	Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.<br>
+	Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.
 	Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
 
 
