@@ -308,7 +308,8 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 
 		( 1023 2304 -9 ) ( -255 0 0 ) ( 0 175 152 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
 
-		( 447 3135 -500 ) ( 0 -1063 0 ) ( 921 0 459 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( 447 3135 -500 ) ( 0 -1063 0 ) ( 577 0 459 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
+		( 1025 2624 -500 ) ( 0 -544 0 ) ( 343 0 459 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
 		( 446 3135 -500 ) ( -191 -872 0 ) ( 0 0 490 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
 
 		( 254 3135 -500 ) ( -414 -447 0 ) ( 0 0 604 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
@@ -420,7 +421,45 @@ if(getcvar("g_ubermods") != "2")
 	local.init_angles2 = spawn script_origin
 	local.init_angles2.origin = trace ($flak88b.origin + local.fwd_vec2 * 56) ($flak88b.origin + local.fwd_vec2 * 10240) 0
 	$flak88b setaimtarget local.init_angles2
+
+	local.truck1 = spawn script_model targetname "latertruck2"
+ 	local.truck1 model "vehicles/opeltruck.tik"
+ 	local.truck1.origin = ( 1525 250 -154 ) 
+ 	local.truck1.angles = ( 1.49 130 0.00 )
+	local.truck1.scale = 1
+	local.truck1 anim stop_wheels
+	local.truck1 anim idlenolights
+
+	local.truck2 = spawn script_model targetname "truck2" // made $truck2 a driv
+ 	local.truck2 model "vehicles/opeltruck.tik"
+ 	local.truck2.origin = ( 1586 2905 -200 )
+ 	local.truck2.angles = ( 0 -103 0 )
+	local.truck2.scale = 1
+	local.truck2 anim stop_wheels
+	local.truck2 anim idlenolights
 }
+	exec global/doorlocked.scr ( 6363 -5152 32 ) gateiron
+	exec global/doorlocked.scr ( 6593 -4496 -1 ) gatelarge 1
+	exec global/doorlocked.scr ( 5155 -2880 -63 ) gateiron
+	exec global/doorlocked.scr ( 5928 -881 -31 ) wood 1
+	exec global/doorlocked.scr ( 4743 -1104 -151 ) wood 1
+	exec global/doorlocked.scr ( 4158 -11 -167 ) wood 1
+	exec global/doorlocked.scr ( 3677 -436 -133 ) wood 1
+	exec global/doorlocked.scr ( 2831 -223 -127 ) wood 1
+	exec global/doorlocked.scr ( 2223 -1000 -71 ) wood 1
+	exec global/doorlocked.scr ( 1571 -1178 -19 ) gatelarge 1
+	exec global/doorlocked.scr ( 1268 4100 -195 ) wood 1
+
+	exec global/doorlocked.scr ( 6496 -5312 8 ) gateiron
+	exec global/doorlocked.scr ( 7520 -5952 40 ) wood
+	exec global/doorlocked.scr ( 7048 -5187 18 ) gateiron
+	exec global/doorlocked.scr ( 6792 -4776 32 ) gateiron
+	exec global/doorlocked.scr ( 5031 -3601 128 ) wood
+	exec global/doorlocked.scr ( 3294 -267 -127 ) wood
+	exec global/doorlocked.scr ( 3060 -694 -127 ) wood
+	exec global/doorlocked.scr ( 95 -385 -103 ) gateiron
+	exec global/doorlocked.scr ( -1407 -807 -144 ) gatemetal
+
 	//$doorL remove
 	//$doorR remove
 	//$friendlyexplosive remove
@@ -490,25 +529,6 @@ if(getcvar("g_ubermods") != "2")
  	local.enddoor.origin = $enddoor.origin
  	local.enddoor setsize ( -40 -40 -70 ) ( 40 70 70 )
 	local.enddoor thread maps/gen_mapscripts/doorsgates.scr::wood_doors $enddoor NIL -85
-
-if(getcvar("g_ubermods") != "2")
-{
-	local.truck1 = spawn script_model targetname "latertruck2"
- 	local.truck1 model "vehicles/opeltruck.tik"
- 	local.truck1.origin = ( 1525 250 -154 ) 
- 	local.truck1.angles = ( 1.49 130 0.00 )
-	local.truck1.scale = 1
-	local.truck1 anim stop_wheels
-	local.truck1 anim idlenolights
-
-	local.truck2 = spawn script_model targetname "truck2" // made $truck2 a driv
- 	local.truck2 model "vehicles/opeltruck.tik"
- 	local.truck2.origin = ( 1586 2905 -200 )
- 	local.truck2.angles = ( 0 -103 0 )
-	local.truck2.scale = 1
-	local.truck2 anim stop_wheels
-	local.truck2 anim idlenolights
-}
 
 if(getcvar("g_ubermods") == "0" || getcvar("g_ubermods") == "")
 {

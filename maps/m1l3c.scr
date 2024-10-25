@@ -156,8 +156,8 @@ if(local.r2 == 0) { exec global/playervehicle.scr eurotruck vehicles/european_de
 if(local.r2 == 1) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_grey.tik ( 400 -3555 280 ) ( 0 90 0 ) 250 400 45 1 }
 if(local.r2 == 2) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_red3.tik ( 400 -3555 280 ) ( 0 90 0 ) 250 400 45 1 }
 
-exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( -6415 -3016 -380 ) ( 0 173.5 0 ) 250 250 45
-exec global/playerboat.scr boat2 vehicles/higginsxtrahull.tik ( -929 -1552 -380 ) ( 0 144.5 0 ) 250 250 45
+exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( -6415 -3016 -380 ) ( 0 173.5 0 ) 250 400 45
+exec global/playerboat.scr boat2 vehicles/higginsxtrahull.tik ( -929 -1552 -380 ) ( 0 144.5 0 ) 250 400 45
 
 exec maps/gen_mapscripts/truckstuff_trig.scr $statictruck1 1 1 // no health, so allies-side static truck cannot blow up
 exec maps/gen_mapscripts/truckstuff_trig.scr $statictruck2 1 1
@@ -194,6 +194,7 @@ level waittill spawn
 
 	thread consoleprint
 	thread ambience
+	thread water_volumes
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -236,6 +237,13 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 	endArray
 
 	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_Cliff_01.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+water_volumes: // these are for any airstrikes that drop bombs into the ocean.
+
+	level.water_volumes = makeArray
+		( 0 0 -375 ) ( -10000 -10000 -500 ) ( 10000 10000 1 )
+	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -359,7 +367,11 @@ if(getcvar("g_ubermods") != "2")
 	$radmobile nodamage
 	$ossmobile nodamage
 }
-	
+
+	$bunker_door_locked remove
+	exec global/doorlocked.scr ( -4633 -6560 884 ) metal 1
+	exec global/doorlocked.scr ( -5648 -5824 -23 ) garagedoor
+
 	$beam bind $lamp
 	$beam show
 	$lamp rotatey 15
@@ -372,10 +384,10 @@ if(getcvar("g_ubermods") != "2")
 	thread spray5
 	thread spray6
 
-	level.springfield = 1								
-	level.bar = 1								
-	level.bazooka = 1	
-	level.mp44 = 1		
+	level.springfield = 1
+	level.bar = 1
+	level.bazooka = 1
+	level.mp44 = 1
 	level.shotgun = 1
 end
 
@@ -1663,11 +1675,11 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/tele.scr ( -5779 -3600 -191 ) ( -5717 -3598 -23 ) 0
 
 	exec map_triggers/telecrouch.scr ( -4670 -5618 752 ) ( -4619 -5599 949 ) 1 1 0 // origin, destination, teletype (1 = one-way, 2 = two-way), origin crouch (0 = stand, 1 = crouch), destination crouch.
-	exec map_triggers/telecrouch.scr ( -4872 -5599 949 ) ( -4620 -5659.5 949 ) 1 1 0
+	exec map_triggers/telecrouch.scr ( -4872 -5599 949 ) ( -4620 -5659.5 949 ) 1 1 1
 	exec map_triggers/telecrouch.scr ( -5196 -5600 752 ) ( -5171 -5599 949 ) 1 1 0
-	exec map_triggers/telecrouch.scr ( -5280 -5599 949 ) ( -5172 -5659.5 949 ) 1 1 0
+	exec map_triggers/telecrouch.scr ( -5280 -5599 949 ) ( -5172 -5659.5 949 ) 1 1 1
 	exec map_triggers/telecrouch.scr ( -5231 -4756 716 ) ( -5321 -4849 881 ) 1 1 0
-	exec map_triggers/telecrouch.scr ( -5438 -4938 881 ) ( -5496 -4986 881 ) 1 1 0
+	exec map_triggers/telecrouch.scr ( -5438 -4938 881 ) ( -5496 -4986 881 ) 1 1 1
 }
 end
 

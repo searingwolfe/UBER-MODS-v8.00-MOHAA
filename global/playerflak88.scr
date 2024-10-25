@@ -184,7 +184,7 @@ playergetin_flak:
 		self triggerable
 		end
 	}
-	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1) { end }
+	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	self nottriggerable
 	if(self.groundtarget != NIL && self.groundtarget != NULL) { self.groundtarget remove }
@@ -206,7 +206,7 @@ playergetin_flak:
 	self.flak88.fplayer.drivingent = self.flak88.trigshot
 	//wait 1
 	self.corona = 1
-	self.flak88.fplayer iprint ("JUMP = exit flak88 turret. Hold FIRE(zoom) = look around.")
+	self.flak88.fplayer iprint ("JUMP = exit. Hold FIRE(zoom) = look around.")
 	self.flak88 thread dummydriver
 
 	self.flak88.player_owner = self.flak88.fplayer
@@ -217,7 +217,7 @@ playergetin_flak:
 	local.flakangles = 0
 	local.lookangles = 0
 
-	while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.health > 0 && self.flak88.fplayer.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.health > 0 && self.flak88.fplayer.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		self.flak88.fplayer.origin = self.flak88.origin + ( -10 0 20 )
 		local.fwd_vec = angles_toforward self.flak88.fplayer.viewangles
@@ -279,7 +279,7 @@ playergetin_flak:
 	}
 	if(self != NULL)
 	{
-		if(self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && (self.flak88.fplayer.dmteam != local.team || level.change_team_score == 1))
+		if(self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && (self.flak88.fplayer.dmteam != local.team || level.change_team_score == 1 || level.bbactive == 0))
 		{
 			if(self.flak88.fplayer.dmteam == spectator)
 			{

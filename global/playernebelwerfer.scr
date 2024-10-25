@@ -144,7 +144,7 @@ playergetin_nebel:
 		self triggerable
 		end
 	}
-	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1) { end }
+	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	self nottriggerable
 	self.nebelwerfer.wplayer = parm.other
@@ -164,7 +164,7 @@ playergetin_nebel:
 	self.nebelwerfer.wplayer.drivingent = self.nebelwerfer.trigshot
 	//wait 1
 	self.corona = 1
-	self.nebelwerfer.wplayer iprint ("JUMP = exit nebelwerfer. Hold FIRE(zoom) = look around.")
+	self.nebelwerfer.wplayer iprint ("JUMP = exit. FIRE(zoom) = reload. Hold FIRE(zoom) = look around.")
 	if(self.nebelwerfer.nebelfirecount == NIL) { self.nebelwerfer.nebelfirecount = 0 }
 
 	self.nebelwerfer.player_owner = self.nebelwerfer.wplayer
@@ -175,7 +175,8 @@ playergetin_nebel:
 	ihuddraw_font self.nebelwerfer.wplayer 77 "verdana-12"
 	ihuddraw_color self.nebelwerfer.wplayer 77 .85 .85 0
 	ihuddraw_rect self.nebelwerfer.wplayer 77 -175 192 200 14 
-	ihuddraw_string self.nebelwerfer.wplayer 77 ("Rockets:   " + (6 - self.nebelwerfer.nebelfirecount))
+	if(self.nebelwerfer.autoreloading == 1) { ihuddraw_string self.nebelwerfer.wplayer 77 ("Rockets:   Reloading") }
+	else { ihuddraw_string self.nebelwerfer.wplayer 77 ("Rockets:   " + (6 - self.nebelwerfer.nebelfirecount)) }
 
 	local.groundtarget = spawn script_origin
 	self.nebelwerfer setaimtarget local.groundtarget
@@ -183,7 +184,7 @@ playergetin_nebel:
 	local.nebelangles = 0
 	local.lookangles = 0
 
-	while(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer && self.nebelwerfer.wplayer.dmteam == local.team && self.nebelwerfer.wplayer.health > 0 && self.nebelwerfer.wplayer.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer && self.nebelwerfer.wplayer.dmteam == local.team && self.nebelwerfer.wplayer.health > 0 && self.nebelwerfer.wplayer.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		self.nebelwerfer.wplayer.origin = self.nebelwerfer.origin  + ( -10 0 20 )
 		local.fwd_vec = angles_toforward self.nebelwerfer.wplayer.viewangles
@@ -198,12 +199,13 @@ playergetin_nebel:
 		local.nebelangles = self.nebelwerfer.angles
 		local.lookangles = self.nebelwerfer.wplayer.viewangles
 
-		if(self.nebelwerfer.wplayer.fireheld == 1 && self.nebelwerfer.wplayer.secfireheld != 1 && self.nebelwerfer.nebelfiredelay != 0)
+		if(self.nebelwerfer.wplayer.fireheld == 1 && self.nebelwerfer.wplayer.secfireheld != 1 && self.nebelwerfer.nebelfiredelay != 0 && self.nebelwerfer.autoreloading != 1)
 		{
 			self.nebelwerfer thread reload_nebel
 			self.nebelwerfer thread projectile
 			self.nebelwerfer waitthread fire_nebel
 		}
+		if(self.nebelwerfer.wplayer.secfireheld == 1) { self.nebelwerfer thread reload_nebel_auto } // Right-click to reload the nebelwerfer.
 
 		if(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer &&self.nebelwerfer.wplayer.driving_state_jump == 1) // Press JUMP to exit.
 		{
@@ -247,7 +249,7 @@ playergetin_nebel:
 	}
 	if(self != NULL)
 	{
-		if(self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && (self.nebelwerfer.wplayer.dmteam != local.team || level.change_team_score == 1))
+		if(self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && (self.nebelwerfer.wplayer.dmteam != local.team || level.change_team_score == 1 || level.bbactive == 0))
 		{
 			if(self.nebelwerfer.wplayer.dmteam == spectator)
 			{
@@ -309,7 +311,7 @@ playergetin_nebel:
 end
 
 ////////////////////////////////////////////////////////////////////////
- 
+
 reload_nebel:
 
 	self.nebelsmokecount = 0
@@ -322,6 +324,8 @@ reload_nebel:
 	if(self.nebelfirecount >= 6)
 	{
 		self.nebelfiredelay = 0
+		if(self.wplayer != NIL && self.wplayer != NULL) { ihuddraw_string self.wplayer 77 ("Rockets:   Reloading") }
+
 		for(local.c = 0; local.c < 6; local.c++)
 		{
 			if(self.dead == 1) { break }
@@ -329,15 +333,20 @@ reload_nebel:
 			wait 1
 		}
 		if(self != NULL) { self.nebelfiredelay = 1; self.nebelfirecount = 0 }
-		if(self.wplayer != NIL && self.wplayer != NULL) { ihuddraw_string self.wplayer 77 ("Rockets:   " + (6 - self.nebelfirecount)) }
 	}
+	if(self.wplayer != NIL && self.wplayer != NULL) { ihuddraw_string self.wplayer 77 ("Rockets:   " + (6 - self.nebelfirecount)) }
 end
 
 reload_nebel_auto:
 
+	if(self.autoreloading == 1) { end }
+	self.autoreloading = 1
+
 	if(self.nebelfirecount < 6)
 	{
 		self.nebelfiredelay = 0
+		if(self.wplayer != NIL && self.wplayer != NULL) { ihuddraw_string self.wplayer 77 ("Rockets:   Reloading") }
+
 		for(local.c = 0; local.c < self.nebelfirecount; local.c++)
 		{
 			if(self.dead == 1) { break }
@@ -347,6 +356,7 @@ reload_nebel_auto:
 		if(self != NULL) { self.nebelfiredelay = 1; self.nebelfirecount = 0 }
 	}
 	if(self.wplayer != NIL && self.wplayer != NULL) { ihuddraw_string self.wplayer 77 ("Rockets:   " + (6 - self.nebelfirecount)) }
+	self.autoreloading = 0
 end
 
 ////////////////////////////////////////////////////////////////////////

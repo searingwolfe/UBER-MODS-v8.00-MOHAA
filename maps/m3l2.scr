@@ -426,6 +426,7 @@ setup:
 		thread flak20mm
 		thread fire_valveswitch 1 ( -4200 3404 77 ) ( 0 90 0 ) 2 90 0 // fire ent int, origin, angles, rotate time, rotate amount, clockwise; keep clockwise = 0 when initializing this valve.
 		thread fire_valveswitch 2 ( -3148 2834 77 ) ( 0 180 0 ) 2 90 0
+		thread fireplace_sounds ( -4190 3363 2 ) ( -3107 2849 2 )
 
 		local.airborne_door = spawn trigger_use targetname "scene2_airborne_door_trigger"
  		local.airborne_door.origin = $scene2_airborne_door.origin
@@ -464,6 +465,11 @@ setup:
 	$scene5_dead_panzer2 notsolid
 
 	$bunker_hum exec global/loopsound.scr m3l2_electrical_hum
+
+	exec global/doorlocked.scr ( -6724 -6607 -191 ) gatelarge 1
+	exec global/doorlocked.scr ( -5733 -6055 -185 ) gatelarge 1
+	exec global/doorlocked.scr ( -4013 2464 0 ) wood 1
+	exec global/doorlocked.scr ( -3283 2432 0 ) wood 1
 
 	level.springfield = 1
 	level.bar = 1
@@ -819,6 +825,29 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+fireplace_sounds local.origin1 local.origin2:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache fireplace_fire sound/amb/Amb_FirePlace.wav soundparms 1.0 0.0 1.0 0.0 150 2500 auto loaded maps level.mapname
+
+	local.fireplace1 = thread soundent local.origin1
+	local.fireplace1 loopsound fireplace_fire
+	local.fireplace2 = thread soundent local.origin2
+	local.fireplace2 loopsound fireplace_fire
+end
+
+soundent local.origin:
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	local.ent.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+end local.ent
+
+////////////////////////////////////////////////////////////////////////
+
 vehicles_undermap:
 
 	local.a = 0
@@ -1066,7 +1095,7 @@ UBER_teleporters:
 	exec map_triggers/tele.scr ( -7088 -6800 -191 ) ( -6985 -6800 80 ) 0
 	exec map_triggers/tele.scr ( -7104 -6032 -191 ) ( -7005 -6057 80 ) 0
 	exec map_triggers/tele.scr ( -5223 -6040 -31 ) ( -5301 -5998 128 ) 1
-	exec map_triggers/tele.scr ( -5291 -5626 128 ) ( -5384 -5720 368 ) 1
+	exec map_triggers/tele.scr ( -5296 -5629 128 ) ( -5384 -5720 368 ) 1
 	exec map_triggers/tele.scr ( -4544 -7184 -61 ) ( -4640 -7266 50 ) 0
 	exec map_triggers/tele.scr ( -4640 -7266 50 ) ( -4638 -7338 148 ) 0
 	exec map_triggers/tele.scr ( -4638 -7338 148 ) ( -4544 -7184 -61 ) 0
@@ -1584,4 +1613,3 @@ autosave_sherman:
 end
 autosave_aa_gun:
 end
-

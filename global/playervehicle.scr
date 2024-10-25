@@ -53,14 +53,16 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	local.vehicle.desmodel = local.desmodel
 	local.vehicle.health = local.health
 	local.vehicle.vehiclespeed = local.vehiclespeed
+	local.vehicle.vehiclespeed_max = local.vehiclespeed
 	local.vehicle.resettime = local.resettime
 	local.vehicle.headlights = local.headlights
 	local.vehicle.noheadlights = local.noheadlights
 
 	if(local.vehicle.classname != "DrivableVehicle") { local.vehicle remove; wait 1; println("----- ERROR playervehicle.scr: .tik model is not a DrivableVehicle."); end }
 
-	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/opeltruck.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/gmctruck.tik") { local.vehicle turnrate 10 }
-	else { local.vehicle turnrate 15 }
+	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/opeltruck.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/gmctruck.tik") { local.vehicle turnrate 8; local.vehicle.turningrate = 8.000 }
+	else if(local.vehicle.model == "models/vehicles/bmwbike.tik") { local.vehicle turnrate 13; local.vehicle.turningrate = 13.000 }
+	else { local.vehicle turnrate 10; local.vehicle.turningrate = 10.000 }
 
 	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik") { local.vehicle.noheadlights = 1 }
 	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/shermantank.tik" || local.vehicle.model == "models/vehicles/bmwbike.tik") { local.vehicle.nohorn = 1 }
@@ -288,7 +290,7 @@ playergetin:
 
 	local.player safeholster 1
 	wait 1
-	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
 	{
 		if(self != NULL) { self.attachingdriver = 0 }
 		end
@@ -344,8 +346,15 @@ playergetin:
 	ihuddraw_string local.player 111 "" // "Passengers:   0"
 	local.passengers_hud = 0
 
+	local.c = 5.000 	// vehicle speed divisor; Higher = starting speed is much slower (total change is larger), Lower = starting speed is closer to max speed (total change is smaller).
+	local.decel_rate = 30 	// how many divisions of local.c for deceleration/acceleration. Higher = more time to reach max speed, Lower = less time to reach max speed.
+	local.deceleration = local.c
+	local.drivervelocity_old = ( 0 0 0 )
+	local.forward = 0
+	local.backward = 0
+
 	self.attachingdriver = 0
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
@@ -393,24 +402,86 @@ playergetin:
 			if(self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1) { local.toggle = 0; local.toggle2 = 0 }
 		}
 
-		if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind)
+		if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind).
 		{
-			if(self.driver.driving_state_backward == 1) { self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -1 }
-			else { self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed } // make vehicles drive faster, only when holding W (forward key)
+			if(self.driver.driving_state_backward == 1)
+			{
+				if(local.forward == 1 && local.c < local.deceleration) // slowing down, before reversing begins.
+				{
+					local.c += local.deceleration / local.decel_rate
+					if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity * (self.vehiclespeed / self.vehiclespeed_max * -1) + self.forwardvector * self.vehiclespeed
+				}
+				else
+				{
+					local.c -= local.deceleration / local.decel_rate
+					if(local.c < 1) { local.c = 1 }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -0.500 // only reverse at half the maximum vehicle speed
+					local.forward = 0
+					local.backward = 1
+				}
+			}
+			else // make vehicles drive faster, only when holding W (forward key).
+			{
+				if(local.backward == 1 && local.c < local.deceleration) // slowing down, before driving forward begins.
+				{
+					local.c += local.deceleration / local.decel_rate
+					if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity * (self.vehiclespeed / self.vehiclespeed_max * -1) + self.forwardvector * self.vehiclespeed * -0.500 // only reverse at half the maximum vehicle speed
+				}
+				else
+				{
+					local.c -= local.deceleration / local.decel_rate
+					if(local.c < 1) { local.c = 1 }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed
+					local.forward = 1
+					local.backward = 0
+				}
+			}
+
+			if(self.turningrate / local.c < 1) { self.turnrate = 1 }
+			else if(self.turningrate / local.c < self.turningrate) { self turnrate (self.turningrate / (local.c * 0.500)) }
+			else { self turnrate self.turningrate }
+		}
+		else if(self.driver.velocity == ( 0 0 0 ))
+		{
+			if(local.c == 1)
+			{
+				if(local.model == "models/vehicles/opeltruck.tik" || local.model == "models/vehicles/opeltruckgreen.tik" || local.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.model == "models/vehicles/gmctruck.tik")
+				{
+					self playsound opeltruck_snd_shift2
+				}
+				else if(local.model == "models/vehicles/sdkfz.tik" || local.model == "models/vehicles/sdkfz_afrika.tik" || local.model == "models/vehicles/m3.tik" || local.model == "models/vehicles/shermantank.tik")
+				{
+					self playsound sdkfz_snd_shift2
+				}
+				else { self playsound jeep_snd_shift2 }
+			}
+			local.c += local.deceleration / local.decel_rate
+			if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
+			else { self.vehiclespeed = self.vehiclespeed_max / local.c }
+
+			if(self.driver.driving_state_backward == 1) { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed * -1 }
+			else { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed }
 		}
 
+		local.drivervelocity_old = self.driver.velocity
 		local.driver stufftext ("set phealth " + int(local.driver.health))
 		waitframe
 	}
 
 	if(self != NULL) // spawn in the new vehicle and remove the old one.
 	{
-		thread main self.name self.model self.origin self.angles self.health self.vehiclespeed self.resettime self.headlights self.noheadlights 1
+		thread main self.name self.model self.origin self.angles self.health self.vehiclespeed_max self.resettime self.headlights self.noheadlights 1
 
 		if(self.driver != NIL && self.driver != NULL)
 		{
-			if(self.driver.dmteam == local.team && level.change_team_score != 1) { self thread driverreset }
-			if(self.driver.dmteam != local.team || level.change_team_score == 1) { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle
+			if(self.driver.dmteam == local.team && level.change_team_score != 1 && level.bbactive != 0) { self thread driverreset }
+			else { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle
 			self thread vehiclereset
 		}
 		if(self.turretplayer != NIL && self.turretplayer != NULL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer }
@@ -713,7 +784,7 @@ mainreset local.desvehicle local.fire local.smoke:
 	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
 	local.angles = self.angles
 	local.health = level.vehicle_inithealth[self.name]
-	local.vehiclespeed = self.vehiclespeed
+	local.vehiclespeed = self.vehiclespeed_max
 	local.resettime = self.resettime
 	local.headlights = self.headlights
 	local.noheadlights = self.noheadlights
@@ -740,7 +811,7 @@ turretslot local.player:
 
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & turret player could be attached to the same seat!
-	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	self.turretplayer = local.player
 	self.turretplayer.passenger = 1
@@ -763,7 +834,7 @@ turretslot local.player:
 	local.driver = self.driver
 	local.team = local.player.dmteam
 
-	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		local.player.origin = self.gun.origin
 		if(local.player.fireheld == 1) { self.gun playsound sndfire30cal }
@@ -871,7 +942,7 @@ passengers:
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & passenger could be attached to the same seat!
 
-	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	for(local.s = 1; local.s <= self.seats; local.s++)
 	{
@@ -908,7 +979,7 @@ passengers:
 	local.PI = 3.14159265359
 	local.driver = self.driver
 
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
 
@@ -1416,7 +1487,7 @@ dummyavatar:
 
 		local.team = self.driver.dmteam
 	}
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		local.avatar.origin = self.driver.origin + ( 0 0 (100 + local.heightinc) )
 		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))

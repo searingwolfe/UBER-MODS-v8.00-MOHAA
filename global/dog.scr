@@ -361,7 +361,7 @@ run_counter:
 
 	while(1)
 	{
-		if(self == NULL || !isalive self || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1) 
+		if(self == NULL || !isalive self || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1 || level.bbactive == 0) 
 		{
 			if(isalive self) 
 			{ 
@@ -373,7 +373,7 @@ run_counter:
 		}
 		local.position = self getposition
 
-		while(isalive self && self.dmteam == local.team && level.change_team_score != 1 && self.fellundermap != 1 && self.dog_anim == dog_run && local.position == standing) 
+		while(isalive self && self.dmteam == local.team && level.change_team_score != 1 && self.fellundermap != 1 && self.dog_anim == dog_run && local.position == standing && level.bbactive != 0) 
 		{
 			wait 0.1
 			if(local.c < 50) { local.c++ } 		 // count to 5 seconds when dog begins running, only if player is standing (not crouching).
@@ -392,7 +392,7 @@ move local.player:
 
 	while(1)
 	{
-		if(local.player == NULL || local.player.dmteam != local.team || level.change_team_score == 1 || local.player.fellundermap == 1)
+		if(local.player == NULL || local.player.dmteam != local.team || level.change_team_score == 1 || local.player.fellundermap == 1 || level.bbactive == 0)
 		{
 			if(local.player != NULL)
 			{
@@ -440,7 +440,7 @@ get_movement:
 
 	while(1)
 	{
-		if(self == NULL || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1)
+		if(self == NULL || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1 || level.bbactive == 0)
 		{
 			if(self != NULL) 
 			{
@@ -506,7 +506,7 @@ get_movement:
 
 				while!(isalive self)
 				{
-					if(self == NULL || self.dmteam != local.team || level.change_team_score == 1) 
+					if(self == NULL || self.dmteam != local.team || level.change_team_score == 1 || level.bbactive == 0) 
 					{
 						if(self != NULL) { self.isdog = 0 }
 						end
@@ -561,7 +561,7 @@ end
 deathanim_fix local.player: // force the dog to perform a death animation if it's somehow frozen in place after its player died.
 
 	local.team = local.player.dmteam
-	while(isalive local.player && local.player.dog != NIL && local.player.dog != NULL && local.player.dmteam == local.team && level.change_team_score != 1 && local.player.fellundermap != 1) { waitframe }
+	while(isalive local.player && local.player.dog != NIL && local.player.dog != NULL && local.player.dmteam == local.team && level.change_team_score != 1 && local.player.fellundermap != 1  && level.bbactive != 0) { waitframe }
 
 	if(local.player != NULL && !isalive local.player && local.player.dog != NIL && local.player.dog != NULL && (local.player.dog_anim != dog_death || local.player.deathanim == NIL))
 	{
@@ -581,7 +581,7 @@ sounds_loop: // recreating the german_shepherd.tik anim sounds for server-side p
 	local.team = self.dmteam
 	self.dogjumpcount = 0
 
-	while(isalive self && self.dmteam == local.team && self.dog != NIL && self.dog != NULL && level.change_team_score != 1)
+	while(isalive self && self.dmteam == local.team && self.dog != NIL && self.dog != NULL && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		if(self.dogbarking != 1 && self.dogjumping == 1 && (self getposition) == "standing" && self.dogjumpcount >= 20) { self.dog playsound dogcollar; self.dogjumpcount = 0 }
 		if(self.dogbarking != 1 && self.dogjumping == 1) { self.dogjumpcount++ } // count how long the player is in the air, to prevent dogcollar sound from playing after every little jump

@@ -16,7 +16,7 @@ main local.target local.inflictor local.damage local.position local.direction lo
 	// give score to players who destroy vehicles/tanks with players riding in them, using explosives of various types.
 	if((local.entity.classname == DrivableVehicle || local.entity.classname == VehicleTank) && local.inflictor != NULL && (local.entity.driver == NIL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1"))))
 	{
-		if(local.inflictor.classname == DrivableVehicle || local.inflictor.classname == VehicleTank)
+		if((local.inflictor.classname == DrivableVehicle || local.inflictor.classname == VehicleTank) && local.inflictor.shooter != NIL && local.inflictor.shooter != NULL)
 		{
 			if(local.inflictor.shooter.player_owner != NIL && local.inflictor.shooter.player_owner != NULL) { local.entity.shooter = local.inflictor.shooter.player_owner }
 			else if(local.inflictor.shooter.owner != NIL && local.inflictor.shooter.owner != NULL) { local.entity.shooter = local.inflictor.shooter.owner }

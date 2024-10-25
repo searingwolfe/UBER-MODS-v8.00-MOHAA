@@ -140,12 +140,12 @@ exec global/playervehicle.scr sdkfz1 vehicles/sdkfz.tik ( -663 -3570 487 ) ( 0 9
 exec global/playervehicle.scr m3halftrack vehicles/m3.tik ( 1885 -2340 481 ) ( 0 180 0 ) 250 40 45 1
 
 local.r1 = randomint(3); local.r2 = randomint(3)
-//if(local.r1 == 0) { exec global/playervehicle.scr eurocar vehicles/european_car_grey.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }	// middle side
-//if(local.r1 == 1) { exec global/playervehicle.scr eurocar vehicles/european_car_silver.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }
-//if(local.r1 == 2) { exec global/playervehicle.scr eurocar vehicles/european_car_tan.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 0 }
-//if(local.r2 == 0) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_green.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
-//if(local.r2 == 1) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_grey.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
-//if(local.r2 == 2) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_red3.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 0 }
+//if(local.r1 == 0) { exec global/playervehicle.scr eurocar vehicles/european_car_grey.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 1 }	// middle side
+//if(local.r1 == 1) { exec global/playervehicle.scr eurocar vehicles/european_car_silver.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 1 }
+//if(local.r1 == 2) { exec global/playervehicle.scr eurocar vehicles/european_car_tan.tik ( -405 2231 448 ) ( 0 -90 0 ) 250 400 45 1 }
+//if(local.r2 == 0) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_green.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 1 }
+//if(local.r2 == 1) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_grey.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 1 }
+//if(local.r2 == 2) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_red3.tik ( -1638 2363 448 ) ( 0 0 0 ) 250 400 45 1 }
 exec global/playervehicle.scr mercedes vehicles/mercedes.tik ( 3340 2851 512 ) ( 0 -90 0 ) 250 400 45 1
 exec global/playervehicle.scr jeep_bench vehicles/jeep_bench.tik ( 2270 32 448 ) ( 0 0 0 ) 250 400 45 1
 
@@ -266,22 +266,14 @@ setup:
 	removeclass AmmoEntity // 3 entities
 	removeclass Weapon
 	removeclass ScriptModel // 5 entities for radio sounds
+	removeclass TriggerUse // also removes $door_locked
 	//removeclass BarrelObject // 4 entities
 	//removeclass ScriptOrigin // 25 entities for $powerlines_sound and $2nd_floor_machine
 	//removeclass InteractObject // 13 entities (cups, books, documents, etc)
 	//removeclass WindowObject // 6 entities
 	//removeclass EffectEntity // 2 smoke entities
 	//removeclass Animate // removes too many entities that are not in Animate class.
-	//removeclass Trigger // also removes TriggerUse
-
-	for(local.e = 0; local.e <= 868; local.e++) // does not remove $door_locked
-	{
-		local.entity = getentity(local.e)
-		if(local.entity != NULL && local.entity.classname == TriggerUse && local.entity.targetname == "")
-		{
-			local.entity remove
-		}
-	}
+	//removeclass Trigger // also removes TriggerUse 
 
 	//$door_locked remove
 	$interior remove
@@ -317,6 +309,23 @@ setup:
 
 		thread trainrun 1
 	}
+
+	exec global/doorlocked.scr ( 3823 7797 -211 ) metal 1
+
+	exec global/doorlocked.scr ( -46 -3200 496 ) wood 1
+	exec global/doorlocked.scr ( -1008 -2481 496 ) wood 1
+	exec global/doorlocked.scr ( 15 -1328 496 ) wood 1
+	exec global/doorlocked.scr ( -1743 -1264 500 ) wood 1
+	exec global/doorlocked.scr ( -1584 -1039 496 ) wood 1
+	exec global/doorlocked.scr ( -1712 80 496 ) wood 1
+	exec global/doorlocked.scr ( -240 463 496 ) wood 1
+	exec global/doorlocked.scr ( -1584 2544 496 ) wood 1
+	exec global/doorlocked.scr ( -560 2544 496 ) wood 1
+	exec global/doorlocked.scr ( 3312 1777 496 ) wood 1
+	exec global/doorlocked.scr ( 3312 882 496 ) wood 1
+	exec global/doorlocked.scr ( 3312 -14 496 ) wood 1
+	exec global/doorlocked.scr ( 954 -15 512 ) wood 1
+	exec global/doorlocked.scr ( 4400 6273 -63 ) garagedoor
 
 	thread zeroents_with_targetname_fix WindowObject
 end
@@ -995,6 +1004,8 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/tele.scr ( 4400 6274 -63 ) ( 4429 6273 576 ) 1
 	exec map_triggers/tele.scr ( -371 5712 576 ) ( -369 5750 960 ) 1
 	exec map_triggers/tele.scr ( 4208 7360 176 ) ( 4208 7360 672 ) 1
+
+	exec map_triggers/tele.scr ( 2959 7100 -31 ) ( 2932 7102 128 ) 0
 }
 end
 

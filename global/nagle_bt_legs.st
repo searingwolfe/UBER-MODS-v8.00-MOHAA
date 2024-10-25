@@ -23,6 +23,7 @@ state STAND
 		movementstealth "1.0"
 		moveposflags "standing"
 		exec global/anti_camper.scr
+		exec global/legs_movement.scr "STAND"
 	}
 	legs
 	{
@@ -96,6 +97,7 @@ state RUN_FORWARD
 	{
 		movementstealth "0.25"
 		moveposflags "standing" "running"
+		exec global/legs_movement.scr "RUN_FORWARD"
 	}
 	legs
 	{
@@ -154,6 +156,7 @@ state RUN_BACKWARD
 	{
 		movementstealth "0.25"
 		moveposflags "standing" "running"
+		exec global/legs_movement.scr "RUN_BACKWARD"
 	}
 	legs
 	{
@@ -211,6 +214,7 @@ state RUN_LEFT
 	{
 		movementstealth "0.25"
 		moveposflags "standing" "running"
+		exec global/legs_movement.scr "RUN_LEFT"
 	}
 	legs
 	{
@@ -268,6 +272,7 @@ state RUN_RIGHT
 	{
 		movementstealth "0.25"
 		moveposflags "standing" "running"
+		exec global/legs_movement.scr "RUN_RIGHT"
 	}
 	legs
 	{
@@ -331,6 +336,7 @@ state WALK_FORWARD
 	{
 		movementstealth "0.75"
 		moveposflags "standing "walking"
+		exec global/legs_movement.scr "WALK_FORWARD"
 	}
 	legs
 	{
@@ -388,6 +394,7 @@ state WALK_BACKWARD
 	{
 		movementstealth "0.75"
 		moveposflags "standing" "walking"
+		exec global/legs_movement.scr "WALK_BACKWARD"
 	}
 	legs
 	{
@@ -445,6 +452,7 @@ state WALK_LEFT
 	{
 		movementstealth "0.75"
 		moveposflags "standing" "walking"
+		exec global/legs_movement.scr "WALK_LEFT"
 	}
 	legs
 	{
@@ -502,6 +510,7 @@ state WALK_RIGHT
 	{
 		movementstealth "0.75"
 		moveposflags "standing" "walking"
+		exec global/legs_movement.scr "WALK_RIGHT"
 	}
 	legs
 	{
@@ -643,6 +652,7 @@ state CROUCH_WALK_FORWARD
 		modheight "duck"
 		movementstealth "1.0"
 		moveposflags "crouching" "walking"
+		exec global/legs_movement.scr "WALK_FORWARD"
 	}
 	legs
 	{
@@ -700,6 +710,7 @@ state CROUCH_WALK_BACKWARD
 		modheight "duck"
 		movementstealth "1.0"
 		moveposflags "crouching" "walking"
+		exec global/legs_movement.scr "WALK_BACKWARD"
 	}
 	legs
 	{
@@ -758,6 +769,7 @@ state CROUCH_WALK_LEFT
 		modheight "duck"
 		movementstealth "1.0"
 		moveposflags "crouching" "walking"
+		exec global/legs_movement.scr "WALK_LEFT"
 	}
 	legs
 	{
@@ -816,6 +828,7 @@ state CROUCH_WALK_RIGHT
 		modheight "duck"
 		movementstealth "1.0"
 		moveposflags "crouching" "walking"
+		exec global/legs_movement.scr "WALK_RIGHT"
 	}
 	legs
 	{
@@ -880,6 +893,7 @@ state CROUCH_RUN_FORWARD
 		modheight "duck"
 		movementstealth "0.75"
 		moveposflags "crouching" "running"
+		exec global/legs_movement.scr "RUN_FORWARD"
 	}
 	legs
 	{
@@ -937,6 +951,7 @@ state CROUCH_RUN_BACKWARD
 		modheight "duck"
 		movementstealth "0.75"
 		moveposflags "crouching" "running"
+		exec global/legs_movement.scr "RUN_BACKWARD"
 	}
 	legs
 	{
@@ -994,6 +1009,7 @@ state CROUCH_RUN_LEFT
 		modheight "duck"
 		movementstealth "0.75"
 		moveposflags "crouching" "running"
+		exec global/legs_movement.scr "RUN_LEFT"
 	}
 	legs
 	{
@@ -1051,6 +1067,7 @@ state CROUCH_RUN_RIGHT
 		modheight "duck"
 		movementstealth "0.75"
 		moveposflags "crouching" "running"
+		exec global/legs_movement.scr "RUN_RIGHT"
 	}
 	legs
 	{

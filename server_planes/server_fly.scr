@@ -48,7 +48,7 @@ main local.modelpair:
 	}
 
 	if(self == NULL || self getconnstate == 1) { end }
-	if(self.dmteam != local.team || level.change_team_score == 1)
+	if(self.dmteam != local.team || level.change_team_score == 1 || level.bbactive == 0)
 	{
 		self.flying = 0
 		self.flying_init = 0
@@ -165,7 +165,7 @@ main local.modelpair:
 	//self exec server_planes/avatar.scr
 
 	self.z = 0
-	while(isalive self && self.dmteam == local.team && self.ejecting != 1 && self.flying == 1 && local.plane != NIL && local.plane != NULL && level.change_team_score != 1)
+	while(isalive self && self.dmteam == local.team && self.ejecting != 1 && self.flying == 1 && local.plane != NIL && local.plane != NULL && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		if(self==NIL || self==NULL)
 		{
@@ -303,10 +303,10 @@ main local.modelpair:
 
 		self exec server_planes/plane_crash.scr::plane_crashing //crash sequence
 
-		if(self.plane != NIL && self.plane != NULL && level.change_team_score != 1)
+		if(self.plane != NIL && self.plane != NULL && level.change_team_score != 1 && level.bbactive != 0)
 		{	
 			waitframe
-			if(self != NULL && self.plane != NIL && self.plane != NULL && level.change_team_score != 1) { self.origin = self.plane.origin + ( 0 10 100 ) }
+			if(self != NULL && self.plane != NIL && self.plane != NULL && level.change_team_score != 1 && level.bbactive != 0) { self.origin = self.plane.origin + ( 0 10 100 ) }
 		}
 		else { self thread forcekill }
 	}
@@ -330,7 +330,7 @@ end
 forcekill: // rare cases if player crashes plane but doesn't die (i.e. if player was noclipping while flying)
 
 	local.team = self.dmteam
-	while(isalive self && self.dmteam == local.team && level.change_team_score != 1)
+	while(isalive self && self.dmteam == local.team && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		killent self.entnum
 		wait 0.5

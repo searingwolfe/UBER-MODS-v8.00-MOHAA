@@ -317,20 +317,12 @@ local.laser21.velocity = ( 0 0 0 )
 			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
 			{
 				local.Exp22 = spawn "animate/fx_mortar_water.tik"
-				local.Exp22 playsound artyexp_water
+				local.waterexp = 1
 			}
-			else
-			{
-				local.Exp22 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
-				local.Exp22 playsound artyexp_sand
-			}
+			else { local.Exp22 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound" }
 		}
 	}
-	else
-	{
-		local.Exp22 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
-		local.Exp22 playsound artyexp_sand
-	}
+	else { local.Exp22 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound" }
 
 	if(local.groundtarget != NULL) { local.Exp22.origin = local.groundtarget.origin }
 	if(local.groundtarget == NULL) { local.Exp22.origin = local.originold }
@@ -343,6 +335,8 @@ local.laser21.velocity = ( 0 0 0 )
 	if(local.groundtarget == NULL) { local.Exp23.origin = local.originold }
 	local.Exp23.scale = 1
 	local.Exp23 anim idle
+	if(local.waterexp == 1) { local.Exp22 playsound artyexp_water }
+	else { local.Exp22 playsound artyexp_sand }
 	ihuddraw_string local.player 101 "Giant Bomb:   Exploded"
 
 exec global/earthquake.scr .35 2 0 0

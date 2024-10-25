@@ -1,4 +1,4 @@
-*Current Version: 7.975 - Updated: 9/24/2024*
+*Current Version: 7.977 - Updated: 10/25/2024*
 
 ### Table of Contents
 
@@ -127,11 +127,18 @@ BASEBUILDER CONSOLE COMMANDS:
 	alx_objectlimitboost 200   // increase basebuild object limit by 200, or any # of objects.
 	alx_objectlimitdown 200    // decrease basebuild object limit by 200, or any # of objects.
 
-While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.<br>
-Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.<br>
-Mini-flak88 objects act as flamethrowers, killing players within 5 hits. 
+	While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.<br>
 
- 
+	Hold Right-Click to change build-laser from green to blue; this activates "Trimming Mode" for the object being held.<br>
+	In trimming mode, players can lean left/right to slowly adjust roll-angles (x,y,z angles = pitch,yaw,roll).<br>
+	In trimming mode, players can crouch to rotate the object's yaw-angle by 90 degrees, flipping the lean left/right angles to adjust pitch-angles (but still looks like adjusting roll-angles from player's point of view).<br>
+	In trimming mode, players can walk (not run) forward/backward to increase/decrease their build-laser's distance between them and their object being held.<br>
+	When a new object is picked up, their build-laser's distance is automatically reset back to "level.basebuild_laserdist" (default = 350).<br>
+
+	Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.<br>
+	Mini-flak88 objects act as flamethrowers, killing players within 5 hits.
+
+
 
 # UBER CVARS Scripts Info
 
@@ -513,7 +520,7 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 - For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
 - For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
 - For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Press JUMP = exit.
-- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Press JUMP = exit, Lean Left/Right = look behind.
+- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Press JUMP = exit, Lean Left/Right (while not moving) = look behind, Lean Left/Right (while moving) = aim up/down the tank shell's trajectory.
 
 - Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
 - Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
@@ -564,7 +571,7 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1.
 
 ---------------
 
@@ -918,59 +925,74 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+- M4L1 fully modded. 10 vehicles, 4 tanks, 3 flak88s, 3 nebelwerfers, 8 extra throwing knives added to the map.
+
+- The altar can slide open/closed by pressing the USE(e) key near the pulsating red button on the altar.
+
+- Airstrikes occur at random times, and along any X-Y-axis direction on the map.
+- 3 bangalore wall-bombs: 2 in the middle building, 1 under the altar inside the church.
+- 1 set of bangalore wall-bombs at the church entrance (bangalores binded to altar), and 1 set of detonator wall-bombs inside the church basement near the radio (blow up the basement).
+
+- The 2 fireplace in the middle building has a valve on the left side for closing/opening the chimney valve, which causes black smoke to emit/stop emitting (respectively) out of the fireplace.
+- The radio in the church basement can play music or static sounds. 1 cabinet in the middle building can be opened/closed.
+- The toilet can be flushed and sink faucet can be turned on/off to loop water dripping sounds.
+
+- Solid walls added at the edges of various roads and cliffs to prevent drivable vehicles from going inside walls.
+	- Some walls can still be driven through, but all areas that players can exit vehicles to walk around/shoot from behind walls are blocked off.
+- Solid ground added in 3 areas for players to walk on: behind green hedges and the cliff near the destroyed plane, cliff side near the middle skinny road, behind sandbags near church.
+
 - All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
 
 # Updates & Bug Fixes
 
-v7.975 (9-24-2024):
-- For "check_player_stufftexts" thread in adminstuff.scr, players' names that contain spacebars (" " characters) will no longer be cut off at the 1st spacebar by the script.
+v7.977 (10-25-2024):
+- Improved driving physics for vehicles/boats:
+	- Acceleration and deceleration added, allowing vehicles to roll a few feet after stopping, or slowing to a full stop before reversing (from driving forward) or driving forward (from reversing).
+	- Vehicles/boats will now reverse at half its maximum speed. Turning speed will also increase/decrease with acceleration/deceleration.
 
-- Fixed players becoming invisible and invincible if 2+ players try to enter a tank/vehicle at the same time as drivers (not passengers or turret users).
-- Fixed drivable vehicles/boats not reversing full speed if the driver holds the "move backward" key ("S" key) while the driver is walking instead of running.
-- Fixed kills/score not properly counting when a player blows up an enemy vehicle with a turret player and/or 1+ passengers with a bazooka rocket (a one-hit kill).
+- Players can now reload nebelwerfers without waiting for "Rockets: 0" by right-clicking (or weapon-zoom button).
+	- Nebelwerfers will now display "Rockets: Reloading" on the screen when currently reloading rockets (must fully reload before it can shoot again).
 
-- When driving vehicles/tanks, more huddraw text on the right side of the screen will now indicate how many passengers are in the vehicle, and/or if the 30 Cal turret is being used by a teammate.
-- If a player destroys a vehicle/tank/boat/flak88/nebelwerfer using a rocket/grenade/giant bomb/etc, the death explosion will now give kills/score to the player if those explosions caused other enemies to die.
-- Chain-reaction death explosions also give kills/score if any of them cause other enemies to die (sometimes it doesn't work). Death explosions caused by players will not harm their teammates anymore.
+- alienx/basebuilder.scr script improved and new building features added: Hold right-click to change build-laser from green to blue; this activates "Trimming Mode" for the object being held.
+	- In trimming mode, players can lean left/right to slowly adjust roll-angles (x,y,z angles = pitch,yaw,roll).
+	- In trimming mode, players can crouch to rotate the object's yaw-angle by 90 degrees, flipping the lean left/right angles to adjust pitch-angles (but still looks like adjusting roll-angles from player's point of view).
+	- In trimming mode, players can walk (not run) forward/backward to increase/decrease their build-laser's distance between them and their object being held.
+	- When a new object is picked up, their build-laser's distance is automatically reset back to "level.basebuild_laserdist" (default = 350).
 
-- Flyable planes' bomb drops (when right-clicking) and plane crashes will now make water explosions if they land inside any "level.water_volumes".
-- Giant Bombs will also make a water explosion if it explodes inside any "level.water_volumes". Ensured that some Giant Bomb/Light Bomb explosion sounds play for all maps.
+- In base-builder, placing down MG42s or mini-flak88 (flame-throwing MG42s) will now spawn an MG42 bipod beneath them.
+	- The build-laser now briefly flashes red when placing an object.
 
-- Fixed airstrikes not properly ending if CVAR "g_ubermods 1" is set (no bomb drops from airstrikes, fewer mods, but not all disabled), and combined all "airstrike_alternate2" threads into "airstrike_alternate" for simplicity.
-- Fixed victory_podium.scr script not displaying the 3rd player's name if the 3rd player is $player[1]. Players in spectator can also be included in the leaderboard now.
+- global/legs_movement.scr: New script for indicating whether players are running or walking forward/backward/left/right.
+	- This script runs from entry commands in the 8 respective mike_legs.st running/walking states, and are saved as "local.player.legs_state_runforward = 1", "local.player.legs_state_walkbackward = 1", etc.
 
-- Jetpack triggers now have smoke emitting from the two airtanks, making them easier to see from far away.
-- Players currently driving/riding in vehicles/tanks/boats will no longer be able to pick up jetpacks (must exit vehicle first).
+- Revamped global/respawn_stuck_fix.scr: All players who recently spawned will have 2 timers counting before any respawns occur (runs from global/dmprecache.scr).
+	- If players are alive and stuck in a wall for 3+ seconds ("falling", but unable to move), they will auto-respawn.
+	- If they do move within 3 seconds and are not "falling", respawn_stuck_fix.scr will turn off for that player until they've respawned after dying, switching teams, or spawning after the map changes.
 
-- Fixed more ambience volumes in M1L2A, and fixed some teles in dm/mohdm2.
-- Vehicles will now explode if they fall into the water in M3L2.
-- Increased player speed during base-builder gamemodes for all maps when players are building.
-- Fixed vehicle_tele.scr lasers not always flashing green when vehicles/tanks pass through the teles.
-- Prevented iprint text spamming if spotlights target players in spectator.
-- Lowered entity counts in some singleplayer maps by removing a few mods or simplifying/reducing the map-wall entities.
-- Added huddraw text for players that pick up a Radiobomb or Walkie.
+- global/doorlocked.scr: New simple script for adding simulated $door_locked triggers, but without spawning any entities.
+	- Parameters: trigger origin (standing on ground in front of a door), door type (wood, metal, gateiron, gatelarge, gatemetal, garagedoor), extra sounds (0 = no, 1 = yes for "wood", "metal", "gatelarge" only).
+	- Example: exec global/doorlocked.scr ( 234 -2453 129 ) wood
+	- Example: exec global/doorlocked.scr ( 234 -2453 129 ) gatelarge 1
 
-- global/bomberplane.scr script updated to have similar parameters as global/bomberplane_nospline.scr, such as bullets-to-kill and player_owner (for preventing players' teammates from being killed, if desired).
-- Updated Training map's maps/training_mapscripts/airstrike_radiotrig.scr & airstrikebombs.scr for allowing the player who called an airstrike to earn kills/scorepoints from the bombs' kills (teammates will not be harmed anymore).
+- Players will now respawn after building ends in base-builder, when they're driving/riding in tanks/vehicles/planes/boats/flak88s/nebelwerfers.
+- Fixed some telecrouch.scr triggers in M1L3C.
+- Added fire loopsounds at 2 fireplaces in M3L2.
+- Added a level.water_volume to M1L3C.
+- Added a ladder to M2l2B and M2L2C for the wide green ladder (behind fences in sub area).
+- Fixed some undermap.scr triggers in M1l2B.
+- Fixed some ambience volumes in M1L2A, M2L2A, M2L2B, and M2L2C.
+- Moved some player spawns in M4L0 to prevent players being spawned inside walls.
+- Fixed some bugs and missing code lines in global/playerboat.scr for higgins boats.
+- Simplified water volumes in M2L2A, M2L2B, M2L2C so other scripts properly respond to them.
+- Fixed Giant Bomb explosion sounds that are also audible at origin = ( 0 0 0 ), when they should only be audible at the destination target.
 
-- Fixed ambience_mp.scr script so it doesn't fully start until base-building is completed by defaulting to the map's original ambience soundtrack. When building is done, the script changes ambiences to the map-scripted "level.spawnamb" volumes.
-
-- Further ensured that team avatars above bombsites in cyberattack_destroy.scr do not disappear between rounds, and made bomb lights flicker a bit more when planted on bombsites.
-- If a round started (1+ players on each team) in Cyber Attack, Search & Destroy, or Freeze Tag, and a player tries joining from spectator or switching teams, the player will die and spawn a frozen body, but their death will no longer count to their score.
-
-- Added a "slowrainbow" option in the parameters for spotlight color-switches (alarm switches near some spotlights) to make spotlights' beam colors change slower than the usual rapid color-switching.
-	- Parameters: origin, angles, spotlight targetname or "all" (change all spotlights' beam colors), NIL (change color one time) or "rainbow" (fast color-switching) or "slowrainbow" (slower color-switching).
-	- Example: exec map_triggers/spotlight_colorswitch.scr ( 4808 453 880 ) ( 0 0 0 ) s0 slowrainbow
-
-- 3 new simple CVARs added: "time 1", "score 1", "teams 1".
-	- The "time" cvar prints the map's time remaining (in minutes:seconds format).
-	- The "score" cvar prints each player's kills and deaths, along with their $player[client num] and netname.
-	- The "teams" cvar prints each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num] and netname, and then print the total number of players on each team.
+- Sounds added for opening/closing cabinet switches (cabinetswitch.scr).
+- Sounds added for throwing knives when they impact the ground/wall or when they hit and kill players.
 
 More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
 
 ---------------
 
-- M4L0 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
+- M4L1 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>

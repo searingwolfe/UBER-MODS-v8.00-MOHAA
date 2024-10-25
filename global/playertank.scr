@@ -211,7 +211,7 @@ playergetin:
 	local.player.mef_weaponclass = thread global/get_player_weaponclass.scr::main local.player // thread instead of waitthread, but mef_weaponclass should still update in time.
 	local.player safeholster 1
 	wait 1
-	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
 	{
 		if(self != NULL) { self.attachingdriver = 0 }
 		end
@@ -257,7 +257,7 @@ playergetin:
 	local.turretuser_count = 0
 
 	self.attachingdriver = 0
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		//if(self.velocity != ( 0 0 0 )) { self.velocity = self.velocity + self.forwardvector * self.vehiclespeed } // does not work properly, so speed increase was removed.
 
@@ -370,8 +370,8 @@ driverreset local.death local.newteam local.changescore:
 	local.driver = self.driver
 
 	self detachdriverslot 0 self.driver
-	if(local.changescore != 1) { self.driver thread weaponfix local.newteam } // player's weapon is invisible when they exit the tank. auto-switch their weapons to make them visible again (wait until they're alive)
-	if(local.changescore == 1) { self.driver thread weaponfix2 }
+	if(local.changescore != 1 && level.bbactive != 0) { self.driver thread weaponfix local.newteam } // player's weapon is invisible when they exit the tank. auto-switch their weapons to make them visible again (wait until they're alive)
+	else { self.driver thread weaponfix2 }
 
 	if(self.model == "models/vehicles/kingtank.tik") { local.outheight = 170 }
 	else { local.outheight = 150 }
@@ -720,7 +720,7 @@ end
 
 turretslot_2nd local.player:
 
-	if(local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1) { end }
+	if(local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	if(local.player.isdog == 1) { local.player iprint ("Dogs cannot use vehicle turrets."); end }
 
@@ -756,7 +756,7 @@ turretslot_2nd local.player:
 	local.driver = self.driver
 	local.team = local.player.dmteam
 
-	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		local.player.origin = self.gun2.origin
 		if(local.player.fireheld == 1) { self.gun2 playsound tankfire30cal }
@@ -911,7 +911,7 @@ dummyavatar:
 	local.avatar activate
 
 	local.team = self.driver.dmteam
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		local.avatar.origin = self.driver.origin + ( 0 0 100 )
 		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
