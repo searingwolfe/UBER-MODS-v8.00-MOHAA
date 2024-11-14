@@ -1,4 +1,4 @@
-*Current Version: 7.977 - Updated: 10/25/2024*
+*Current Version: 7.978 - Updated: 11/14/2024*
 
 ### Table of Contents
 
@@ -26,6 +26,9 @@
 - Delete any and all older UBER MODS .pk3 files.<br>
 - Move the .pk3 file to your "Medal of Honor/main" folder (same folder as Pak0.pk3, Pak1.pk3, Pak2.pk3).<br>
 - Uninstall by deleting the .pk3 mod file from the "main" folder.
+
+- For MOHAA Reborn 1.12: keep all files within the .pk3 as is.
+- For MOH Allied Assault 1.11, Spearhead, or Breakthrough: copy-paste all files within the "Not_Reborn" folder outside of this folder (replacing other files).
 
 This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run in a dedicated server.
 
@@ -452,6 +455,8 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 
 # Killstreak Rewards
 
+- Killstreaks only work in MOHAA Reborn 1.12.
+
 - Killstreak count increases as a player gains kills without dying. Whenever a player dies or changes teams, their killstreak count reverts to 0 again.<br>
 - Killstreak damage handler ensures that scorepoints are properly given to killstreak owners, or to enemies that destroy the killstreaks and kill other players.<br>
 - Scorepoints are also properly given during chain-reaction explosions, such as a mine destroying another mine before killing an enemy player.<br>
@@ -517,10 +522,11 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 - Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All):
 - 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats, 5 for uboats.
 
-- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights (only if "noheadlights" parameter is not equal to 1).
+- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn (Reborn only), Lean Right = turn on/off headlights, only if "noheadlights" parameter != 1 (Reborn only).
 - For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
-- For drivable boats: Hold FIRE = look behind. Hold Left Lean = look left. Hold Right Lean = look right. Press JUMP = exit.
-- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Press JUMP = exit, Lean Left/Right (while not moving) = look behind, Lean Left/Right (while moving) = aim up/down the tank shell's trajectory.
+- For drivable boats: Hold FIRE = look behind. Press JUMP = exit.
+- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade (Non-Reborn: FIRE + USE(e) = throw grenade), Press JUMP = exit,
+Lean Left/Right (while not moving) = look behind (Reborn only), Lean Left/Right (while moving) = aim up/down the tank shell's trajectory (Reborn only).
 
 - Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
 - Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
@@ -545,14 +551,15 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 - global/playerflak88.scr & global/playernebelwerfer.scr<br>
 - Place any script examples before "level waittill spawn". Change coords & angles as needed.
 
+- Press FIRE = shoot projectile. Press JUMP = exit. Hold Secondary FIRE(zoom) = look around. For nebelwerfers: Secondary FIRE(zoom) = reload (Non-Reborn: FIRE + USE(e) = reload).
+
 - With these two global scripts, players can now get into, rotate, and shoot with the flak88s & nebelwerfers (mainly for Allied Assault).<br>
 - The flak88s shoots one shell before waiting 5 seconds to reload. Player is invisible and cannot be killed unless the flak88 is destroyed.
 
 - The nebelwerfers shoot 6 rockets before waiting 6 seconds to reload. Player is visible and can be shot or killed without destroying the nebelwerfer, or killed after it is destroyed.<br>
-- The nebelwerfers cannot reload until all 6 rockets are fired, and it keeps reloading even if the player leaves.<br>
 - After a specified amount of reset time, both scripts reset the destroyed turrets back to their initial states.
 
-- The flak88s' shells do not count as kills / scorepoints, but nebelwerfer rockets do count as kills (rockets do not kill teammates).<br>
+- Flak88 shells and nebelwerfer rockets will not kill teammate or vehicles that they're riding in.<br>
 - Firing the nebelwerfer rockets too close to the nebelwerfer could blow it up and kill the turret player.
 
 - To prevent the turrets from ever resetting, set the reset time to 99999.<br>
@@ -990,6 +997,29 @@ v7.977 (10-25-2024):
 
 - Sounds added for opening/closing cabinet switches (cabinetswitch.scr).
 - Sounds added for throwing knives when they impact the ground/wall or when they hit and kill players.
+
+---------------
+
+v7.978 (11-14-2024):
+- UBER MODS is now compatible with MOHAA 1.11 (non-Reborn), Spearhead, and Breakthrough. However, some mods may still cause bugs in SH or BT.
+- To use these mods in AA, SH, or BT, use the provided zzzzzzzzzzzzzzz_UBER_V7.978_AA-SH-BT.pk3.
+
+- Increased initial vehicle's turnspeed acceleration when players begin driving and turning at the same time.
+
+- Throwing knives can now kill drivers (not in sdkfz, sdkfz_afrika, shermantank), randomly kill a passenger or the driver if 1+ passengers are riding in the vehicle.
+
+- New feature added in basebuilder: when placing down objects, the player can hold the FIRE button to hold still the nonsolid object, and let go of FIRE to place down the object.
+- If holding FIRE for 3+ seconds while placing down an object, placement will be cancelled (laser will turn green). Press FIRE again to uncancel (place down now).
+
+- Added team avatars for flyable planes, and ensured they always remain below the plane's hull so they don't obstruct the player's view.
+
+- Added a "gates_slide" thread in maps/gen_mapscripts/doorsgates.scr for sliding opening/closing gates along a straight horizontal line.
+- Parameters: targetname left gate, targetname right gate, move angle (move left gate towards this angle, right gate moves opposite direction), distance to move gates, time duration
+
+- Fixed rare bug where tank loopsounds would keep playing endlessly for a player that exited a tank.
+- Added "sqrt", "arcsine", "arccosine", and "arctangent" functions in global/math.scr to recreate some MOHAA Reborn functions for regular MOHAA.
+- Removed some unnecessary teles in M2L2C.
+- Fixed more ambience volumes in M2L2B and M2L2C.
 
 More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
 
