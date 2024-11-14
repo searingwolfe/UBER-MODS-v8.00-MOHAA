@@ -30,8 +30,6 @@
 - For MOHAA Reborn 1.12: keep all files within the .pk3 as is.
 - For MOH Allied Assault 1.11, Spearhead, or Breakthrough: copy-paste all files within the "Not_Reborn" folder outside of this folder (replacing other files).
 
-This mod only works for MOHAA Reborn 1.12 (mainly Allied Assault), and must run in a dedicated server.
-
 #
 
 # Essential CVARS for UBER MODS Servers
