@@ -952,7 +952,7 @@ local.player physics_off
 			local.ent color ( 0 1 0 )
 			local.ent alpha 0.4
 			local.ent targetname "thelaser"
-
+ 
 			local.ent alwaysdraw
 
 			local.ent activate
@@ -1012,7 +1012,7 @@ local.player physics_off
 			local.player.leancount = 0
 		}
 		if(local.player.leaning == 1 && local.player.leancount <= 30) { local.player.leancount++ }
-		if(local.player.leanleftheld == 1 || local.player.leanrightheld == 1)
+		if((local.player.leanleftheld == 1 || local.player.leanrightheld == 1) && (local.holdcount == NIL || (local.holdcount != NIL && local.holdcount == 0)))
 		{
 			if(local.player.leaning != 1 && local.player.secfireheld != 1)
 			{
@@ -1046,7 +1046,7 @@ local.player physics_off
 		}
 		local.angles_old = local.builder.angles
 
-		if(local.player.fireheld == 1 && local.player.secfireheld == 1)
+		if(local.player.fireheld == 1 && local.player.secfireheld == 1 && (local.holdcount == NIL || (local.holdcount != NIL && local.holdcount == 0)))
 		{
 			local.ent color ( 0 0 1 )
 			local.player.leancount = 31
@@ -1079,8 +1079,11 @@ local.player physics_off
 			{
 				if(local.player.fireheld == 1)
 				{
-					//local.player iprint "Placing Object (Let go of FIRE to place the Object)."
-					local.player physics_off
+					if(local.holdcount == NIL || (local.holdcount != NIL && local.holdcount == 0))
+					{
+						local.player iprint "Placing Object (Let go of FIRE to place the Object), or Hold FIRE to Cancel."
+					}
+					//local.player physics_off
 
 					local.badplacement = 0
 
@@ -1104,15 +1107,28 @@ local.player physics_off
 					{
 						if(local.badplacement == 1)
 						{
-							local.player iprint "You cannot place Objects on-top of players!"
+							if(local.canceltoggle != 1) { local.player iprint "You cannot place Objects on-top of players!" }
 						}
-						else
+						else if(local.canceltoggle != 2)
 						{
-							goto Place_Object
+							local.canceltoggle = 0
+							if(local.holdcount == NIL) { local.holdcount = 0 }
+							local.holdcount++
+							if(local.holdcount == 61) { local.player iprint "Placing Object Cancelled. Press FIRE to Uncancel (Place Down Now)." }
+							if(local.holdcount > 60) { local.ent color ( 0 1 0 ); local.canceltoggle = 1 }
+							if(local.holdcount > 9999) { local.holdcount = 9999 }
+
 						}
 					}
 				}
 			}	
+		}
+		if(local.player.fireheld != 1 && local.canceltoggle == 1) { local.canceltoggle = 2 }
+
+		if(local.badplacement != 1 && local.holdcount != NIL && (local.player.fireheld != 1 && local.holdcount > 0 && local.holdcount <= 60) || (local.player.fireheld == 1 && local.canceltoggle == 2))
+		{
+			local.ent color ( 1 0 0 )
+			goto Place_Object
 		}
 
 		local.laserorigin = (local.player gettagposition "eyes bone")
@@ -1120,24 +1136,29 @@ local.player physics_off
 
 		local.objectplacementorigin = (trace local.laserorigin (local.laserorigin + ( local.laservec * local.player.basebuild_laserdist )))
 
+		if(local.holdcount == NIL || (local.holdcount != NIL && local.holdcount == 0))
+		{
 			local.ent.origin = local.objectplacementorigin
 			local.ent endpoint local.laserorigin
 
-		if (local.builder != NIL || local.builder != NULL)
-		{
-			local.builder.origin = local.objectplacementorigin
-			//local.builder.angle = local.player.angles[1]
+			if (local.builder != NIL || local.builder != NULL)
+			{
+				local.builder.origin = local.objectplacementorigin
+				//local.builder.angle = local.player.angles[1]
+			}
 		}
 
-					if !(level.bbactive)
-					{
-						goto Dont_Place_Object
-					}
+		if !(level.bbactive)
+		{
+			goto Dont_Place_Object
+		}
 
 	waitframe
 	} //While loop	
 		if (local.ent != NIL || local.ent != NULL)
 		{
+			local.holdcount = 0
+			local.canceltoggle = 0
 			local.ent deactivate
 			local.ent remove
 		}

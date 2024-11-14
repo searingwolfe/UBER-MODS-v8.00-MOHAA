@@ -1,0 +1,370 @@
+wood_doors local.nameleft local.nameright local.rotate:
+
+exec global/aliascache_triggersounds.scr wood_doors
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time 0.9
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) time 0.9 }
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		local.r = randomint(4)
+		if(local.r == 0) { $(local.nameleft) playsound doorwood_open_move1; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_open_move1 } }
+		if(local.r == 1) { $(local.nameleft) playsound doorwood_open_move2; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_open_move2 } }
+		if(local.r == 2) { $(local.nameleft) playsound doorwood_open_move3; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_open_move3 } }
+		if(local.r == 3) { $(local.nameleft) playsound doorwood_open_move4; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_open_move4 } }
+		
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotateup local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotateup local.rotate
+			$(local.nameright) waitthread rotatedown local.rotate
+			$(local.nameright) playsound doorwood_open_stop
+		}
+
+		$(local.nameleft) playsound doorwood_open_stop
+	}
+	if(self.inc == 1)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { $(local.nameleft) playsound doorwood_close_move1; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_close_move1 } }
+		if(local.r == 1) { $(local.nameleft) playsound doorwood_close_move2; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_close_move2 } }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotatedown local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotatedown local.rotate
+			$(local.nameright) waitthread rotateup local.rotate
+		}
+
+		local.r = randomint(3)
+		if(local.r == 0) { $(local.nameleft) playsound doorwood_close_stop1; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_close_stop1 } }
+		if(local.r == 1) { $(local.nameleft) playsound doorwood_close_stop2; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_close_stop2 } }
+		if(local.r == 2) { $(local.nameleft) playsound doorwood_close_stop3; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doorwood_close_stop3 } }
+	}
+	self triggerable 
+	self thread wood_doors local.nameleft local.nameright local.rotate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+wood_gates local.nameleft local.nameright local.rotate:
+
+exec global/aliascache_triggersounds.scr wood_gates
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time 3.45
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) time 3.45 }
+	
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		$(local.nameleft) playsound gatewood_open; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gatewood_open }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotateup local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotateup local.rotate
+			$(local.nameright) waitthread rotatedown local.rotate
+		}
+	}
+	if(self.inc == 1)
+	{
+		$(local.nameleft) playsound gatewood_close; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gatewood_close }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotatedown local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotatedown local.rotate
+			$(local.nameright) waitthread rotateup local.rotate
+		}
+	}
+	self triggerable
+	self thread wood_gates local.nameleft local.nameright local.rotate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+metal_doors local.nameleft local.nameright local.rotate:
+
+exec global/aliascache_triggersounds.scr metal_doorsgates
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time 1.5
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) time 1.5 }
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { $(local.nameleft) playsound gateiron_open2; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateiron_open2 } }
+		if(local.r == 1) { $(local.nameleft) playsound gateiron_open3; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateiron_open3 } }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotateup local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotateup local.rotate
+			$(local.nameright) waitthread rotatedown local.rotate
+		}
+	}
+	if(self.inc == 1)
+	{
+		$(local.nameleft) playsound gateiron_close; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateiron_close }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotatedown local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotatedown local.rotate
+			$(local.nameright) waitthread rotateup local.rotate
+		}
+	}
+	self triggerable
+	self thread metal_doors local.nameleft local.nameright local.rotate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+metal_doors_solid local.nameleft local.nameright local.rotate:
+
+exec global/aliascache_triggersounds.scr metal_doors_solid
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time 1.5
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) time 1.5 }
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { $(local.nameleft) playsound doormetal_open_move1; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doormetal_open_move1 } }
+		if(local.r == 1) { $(local.nameleft) playsound doormetal_open_move2; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doormetal_open_move2 } }
+		
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotateup local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotateup local.rotate
+			$(local.nameright) waitthread rotatedown local.rotate
+			$(local.nameright) playsound doormetal_open_stop1
+		}
+
+		$(local.nameleft) playsound doormetal_open_stop1
+	}
+	if(self.inc == 1)
+	{
+		$(local.nameleft) playsound doormetal_close_move1; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doormetal_close_move1 }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotatedown local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotatedown local.rotate
+			$(local.nameright) waitthread rotateup local.rotate
+		}
+
+		local.r = randomint(4)
+		if(local.r == 0) { $(local.nameleft) playsound doormetal_close_stop1; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doormetal_close_stop1 } }
+		if(local.r == 1) { $(local.nameleft) playsound doormetal_close_stop2; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doormetal_close_stop2 } }
+		if(local.r == 2) { $(local.nameleft) playsound doormetal_close_stop3; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doormetal_close_stop3 } }
+		if(local.r == 3) { $(local.nameleft) playsound doormetal_close_stop4; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound doormetal_close_stop4 } }
+	}
+	self triggerable 
+	self thread metal_doors_solid local.nameleft local.nameright local.rotate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+metal_gates local.nameleft local.nameright local.rotate:
+
+exec global/aliascache_triggersounds.scr metal_doorsgates
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time 1.5
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) time 1.5 }
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		local.r = randomint(3)
+		if(local.r == 0) { $(local.nameleft) playsound gateiron_open1; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateiron_open1 } }
+		if(local.r == 1) { $(local.nameleft) playsound gateiron_open2; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateiron_open2 } }
+		if(local.r == 2) { $(local.nameleft) playsound gateiron_open3; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateiron_open3 } }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotateup local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotateup local.rotate
+			$(local.nameright) waitthread rotatedown local.rotate
+		}
+	}
+	if(self.inc == 1)
+	{
+		$(local.nameleft) playsound gateiron_close; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateiron_close }
+
+		if(local.nameright == NIL || $(local.nameright) == NULL) { $(local.nameleft) waitthread rotatedown local.rotate }
+		if(local.nameright != NIL && $(local.nameright) != NULL) 
+		{
+			$(local.nameleft) thread rotatedown local.rotate
+			$(local.nameright) waitthread rotateup local.rotate
+		}
+	}
+	self triggerable
+	self thread metal_gates local.nameleft local.nameright local.rotate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+shutters local.nameleft local.nameright local.rotate:
+
+exec global/aliascache_triggersounds.scr shutters
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time 0.42
+	$(local.nameright) time 0.42
+
+	local.r = randomint(4)
+	if(local.r == 0) { $(local.nameleft) playsound shutter_squeak_01; $(local.nameright) playsound shutter_squeak_01 }
+	if(local.r == 1) { $(local.nameleft) playsound shutter_squeak_02; $(local.nameright) playsound shutter_squeak_02 }
+	if(local.r == 2) { $(local.nameleft) playsound shutter_squeak_03; $(local.nameright) playsound shutter_squeak_03 }
+	if(local.r == 3) { $(local.nameleft) playsound shutter_squeak_04; $(local.nameright) playsound shutter_squeak_04 }
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		$(local.nameleft) thread rotatedown local.rotate
+		$(local.nameright) waitthread rotateup local.rotate
+	}
+	if(self.inc == 1)
+	{
+		$(local.nameleft) thread rotateup local.rotate
+		$(local.nameright) waitthread rotatedown local.rotate
+	}
+	self triggerable
+	self thread shutters local.nameleft local.nameright local.rotate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+metal_hatch local.name local.rotate:
+
+exec global/aliascache_triggersounds.scr metal_hatch
+
+	self waittill trigger
+	self nottriggerable
+	$(local.name) time 0.9
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0) 
+	{ 
+		$(local.name) playsound metalbunker_hatch_open
+
+		$(local.name) waitthread rotateXup local.rotate
+	}
+	if(self.inc == 1) 
+	{ 
+		$(local.name) playsound metalbunker_hatch_close
+
+		$(local.name) waitthread rotateXdown local.rotate
+	}
+	self triggerable
+	self thread metal_hatch local.name local.rotate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+// targetname left gate, targetname right gate, move angle (move left gate towards this angle, right gate moves opposite direction), distance to move gates, time duration.
+//
+gates_slide local.nameleft local.nameright local.moveangle local.distance local.time:
+
+exec global/aliascache_triggersounds.scr gates_slide
+
+	if(local.time == NIL) { local.time = 4 }
+	if(local.distance == NIL) { local.distance = 100 }
+	if(local.moveangle == NIL) { local.move = 0 }
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time local.time
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) time local.time }
+
+	local.sin = (waitthread global/math.scr::sine local.moveangle) * local.distance
+	local.cos = (waitthread global/math.scr::cosine local.moveangle) * local.distance
+	local.origin_leftopen = $(local.nameleft).origin + ( local.cos local.sin 0 )
+	local.origin_leftclose = $(local.nameleft).origin - ( local.cos local.sin 0 )
+	if(local.nameright != NIL && $(local.nameright) != NULL)
+	{
+		local.origin_rightopen = $(local.nameright).origin - ( local.cos local.sin 0 )
+		local.origin_rightclose = $(local.nameright).origin + ( local.cos local.sin 0 )
+	}
+
+	$(local.nameleft) loopsound gateslide_open; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) loopsound gateslide_open }
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		$(local.nameleft) moveto local.origin_leftopen; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) moveto local.origin_rightopen }
+	}
+	if(self.inc == 1)
+	{
+		$(local.nameleft) moveto local.origin_leftclose; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) moveto local.origin_rightclose }
+	}
+
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) move }
+	$(local.nameleft) waitmove
+	$(local.nameleft) stoploopsound; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) stoploopsound }
+	$(local.nameleft) playsound gateslide_close; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateslide_close }
+
+	self triggerable
+	self thread gates_slide local.nameleft local.nameright local.moveangle local.distance local.time
+end
+
+////////////////////////////////////////////////////////////////////////
+
+rotatedown local.amount:
+
+	self rotateydown local.amount
+	self waitmove
+end
+
+rotateup local.amount:
+
+	self rotateyup local.amount
+	self waitmove
+end
+
+rotateXdown local.amount:
+
+	self rotatexdown local.amount
+	self waitmove
+end
+
+rotateXup local.amount:
+
+	self rotatexup local.amount
+	self waitmove
+end
+
+rotateZdown local.amount:
+
+	self rotatezdown local.amount
+	self waitmove
+end
+
+rotateZup local.amount:
+
+	self rotatezup local.amount
+	self waitmove
+end

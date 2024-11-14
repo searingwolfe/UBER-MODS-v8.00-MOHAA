@@ -283,6 +283,7 @@ playergetin:
 	local.drivervelocity_old = ( 0 0 0 )
 	local.forward = 0
 	local.backward = 0
+	local.d = local.c	// vehicle turnrate will increase equally when accelerating, but will decrease 4x as fast when decelerating.
 
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
@@ -358,15 +359,19 @@ playergetin:
 			{
 				if(local.forward == 1 && local.c < local.deceleration) // slowing down, before reversing begins.
 				{
-					local.c += local.deceleration / local.decel_rate
+					local.c += local.deceleration * 2.000 / local.decel_rate
+					local.d += 4.000 * local.deceleration / local.decel_rate
 					if(local.c > local.deceleration) { local.c = local.deceleration; self.boatspeed = 0 }
+					if(local.d > local.deceleration) { local.d = local.deceleration }
 					self.boatspeed = self.boatspeed_max / local.c
 					self.velocity = self.driver.velocity * (self.boatspeed / self.boatspeed_max * -1) + self.forwardvector * self.boatspeed
 				}
 				else
 				{
 					local.c -= local.deceleration / local.decel_rate
+					local.d -= local.deceleration / local.decel_rate
 					if(local.c < 1) { local.c = 1 }
+					if(local.d < 1) { local.d = 1 }
 					self.boatspeed = self.boatspeed_max / local.c
 					self.velocity = self.driver.velocity + self.forwardvector * self.boatspeed * -0.500 // only reverse at half the maximum boat speed
 					local.forward = 0
@@ -377,15 +382,19 @@ playergetin:
 			{
 				if(local.backward == 1 && local.c < local.deceleration) // slowing down, before driving forward begins.
 				{
-					local.c += local.deceleration / local.decel_rate
+					local.c += local.deceleration * 2.000 / local.decel_rate
+					local.d += 4.000 * local.deceleration / local.decel_rate
 					if(local.c > local.deceleration) { local.c = local.deceleration; self.boatspeed = 0 }
+					if(local.d > local.deceleration) { local.d = local.deceleration }
 					self.boatspeed = self.boatspeed_max / local.c
 					self.velocity = self.driver.velocity * (self.boatspeed / self.boatspeed_max * -1) + self.forwardvector * self.boatspeed * -0.500 // only reverse at half the maximum boat speed
 				}
 				else
 				{
 					local.c -= local.deceleration / local.decel_rate
+					local.d -= local.deceleration / local.decel_rate
 					if(local.c < 1) { local.c = 1 }
+					if(local.d < 1) { local.d = 1 }
 					self.boatspeed = self.boatspeed_max / local.c
 					self.velocity = self.driver.velocity + self.forwardvector * self.boatspeed
 					local.forward = 1
@@ -393,14 +402,17 @@ playergetin:
 				}
 			}
 
-			if(self.turningrate / local.c < 1) { self.turnrate = 1 }
-			else if(self.turningrate / local.c < self.turningrate) { self turnrate (self.turningrate / (local.c * 0.500)) }
+			if(self.turningrate / local.d < 1) { self.turnrate = 1 }
+			else if(self.turningrate / local.d < self.turningrate) { self turnrate (self.turningrate / (local.d * 0.500)) }
 			else { self turnrate self.turningrate }
 		}
-		else if(self.driver.velocity == ( 0 0 0 ))
+		else
 		{
 			self.driver loopsound wavelaps
 			if(local.c == 1) { self playsound sdkfz_snd_shift2 }
+
+			local.d += 4.000 * local.deceleration / local.decel_rate
+			if(local.d > local.deceleration) { local.d = local.deceleration }
 
 			local.c += local.deceleration / local.decel_rate
 			if(local.c > local.deceleration) { local.c = local.deceleration; self.boatspeed = 0 }

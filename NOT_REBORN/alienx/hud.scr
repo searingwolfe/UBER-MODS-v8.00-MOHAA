@@ -1,0 +1,81 @@
+main:
+
+	local.gametype = int(getcvar("g_gametype"))
+	if(local.gametype != 1 && local.gametype != 2 && local.gametype != 3 && local.gametype != 4) { end }
+
+	while($player.size < 1) { wait 1 }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].huddraw != 1)
+			{
+				$player[local.i] thread huddraw local.gametype
+				$player[local.i].huddraw = 1
+			}
+		}
+		wait 3
+	}
+	thread main
+end
+
+huddraw local.gametype:
+
+	waitframe
+	huddraw_align						24 right top
+	huddraw_alpha 						24 .8
+	huddraw_font 						24 "courier-15"
+	huddraw_color 						24 .7 .7 .7
+	if(local.gametype == 1) { huddraw_string 		24 ("*** UBER Free-For-All ***") }
+	if(local.gametype == 2) { huddraw_string 		24 ("*** UBER Team-Match ***") } 
+	if(local.gametype == 3) { huddraw_string 		24 ("*** UBER Round-Based-Match ***") } 
+	if(local.gametype == 4) { huddraw_string 		24 ("*** UBER Objective-Match ***") } 
+	if(level.bombsites == NIL) { huddraw_rect 		24 -260 55 50 14 }
+	else if(level.bombsites >= 1) { huddraw_string 		24 ("") }
+	if(getcvar("g_ubergametype") == "ft") { huddraw_string  24 ("") }
+
+	huddraw_align						26 right top
+	huddraw_alpha 						26 .8
+	huddraw_font 						26 "courier-15"
+	huddraw_color 						26 .7 0 0
+	if(level.bombsites == NIL) { huddraw_rect 		26 -260 77 50 14 }
+	else if(level.bombsites >= 1) { huddraw_rect   		26 -260 165 50 14 }
+	if(getcvar("g_ubergametype") == "ft") { huddraw_rect    26 -260 165 50 14 }
+	huddraw_string 						26 ("Objects: Crates, Teles, Spotlights, Blunt.")
+
+	huddraw_align						28 right top
+	huddraw_alpha 						28 .8
+	huddraw_font 						28 "courier-15"
+	huddraw_color 						28 .7 .7 0
+	if(level.bombsites == NIL) { huddraw_rect 		28 -260 99 50 14 }
+	else if(level.bombsites >= 1) { huddraw_rect   		28 -260 187 50 14 }
+	if(getcvar("g_ubergametype") == "ft") { huddraw_rect    28 -260 187 50 14 }
+	huddraw_string 						28 ("Weapons: Giant Bombs, Light Bombs.")
+
+	huddraw_align						30 right top
+	huddraw_alpha 						30 .8
+	huddraw_font 						30 "courier-15"
+	huddraw_color 						30 0 .7 0
+	if(level.bombsites == NIL) { huddraw_rect 		30 -260 121 50 14 }
+	else if(level.bombsites >= 1) { huddraw_rect   		30 -260 209 50 14 }
+	if(getcvar("g_ubergametype") == "ft") { huddraw_rect    30 -260 209 50 14 }
+	huddraw_string 						30 ("Tools: Living Dog, LED Dot, +200 HP.")
+
+	huddraw_align						32 right top
+	huddraw_alpha 						32 .8
+	huddraw_font 						32 "courier-15"
+	huddraw_color 						32 0 .7 .7
+	if(level.bombsites == NIL) { huddraw_rect 		32 -260 143 50 14 }
+	else if(level.bombsites >= 1) { huddraw_rect   		32 -260 231 50 14 }
+	if(getcvar("g_ubergametype") == "ft") { huddraw_rect    32 -260 231 50 14 }
+	huddraw_string 						32 ("Ammo: Grenades, Rockets, Snowballs.")
+
+	huddraw_align						34 right top
+	huddraw_alpha 						34 .8
+	huddraw_font 						34 "courier-15"
+	huddraw_color 						34 .7 0 .7
+	if(level.bombsites == NIL) { huddraw_rect 		34 -260 165 50 14 }
+	else if(level.bombsites >= 1) { huddraw_rect   		34 -260 253 50 14 }
+	if(getcvar("g_ubergametype") == "ft") { huddraw_rect    34 -260 253 50 14 }
+	huddraw_string 						34 ("Killstreaks: 3, 5, 7, 9 Kills.")	
+end

@@ -1,0 +1,377 @@
+main local.name local.origin local.angles local.light local.thrown local.remove:
+
+	if(local.origin == NIL || (local.name == NIL && local.remove == 1)) { end } // if player spawned with a knife from global/give_players_knives.scr, remove it instead of dropping it to the ground.
+
+	if(level.knife_resettime == NIL || level.knife_resettime <= 0) { level.knife_resettime = 45 }
+	if(level.knife_velocity == NIL || level.knife_velocity <= 0) { level.knife_velocity = 1400 }
+
+	if(local.thrown != 1) // run one time after map loads.
+	{
+		level.knife_origin[local.name] = local.origin
+		level.knife_angles[local.name] = local.angles
+
+		if(local.light == 1) { level.knife_light[local.name] = 1 }
+	}
+	local.trigger = spawn trigger_use
+	local.trigger model "static/screwdriver.tik" 
+	local.trigger.origin = local.origin
+	local.trigger.angles = local.angles
+	local.trigger setsize ( -30 -30 -30 ) ( 30 30 30 )
+	local.trigger.angles = ( 0 90 -45 )
+	local.trigger.scale = 2
+	local.trigger show
+	if(local.light == 1) { local.trigger light 0 1 0 35 }
+	local.trigger.name = local.name
+	if(local.name != NIL) { local.trigger.targetname = ("throwingknife_" + local.name) }
+	else { local.trigger.targetname = "throwingknife_NIL" }
+
+	local.trigger setthread pickup
+
+	if(local.thrown == 1) { local.trigger thread resettimer local.name level.knife_light[local.name] }
+	waitframe
+	local.trigger.angles = local.angles // sometimes, angles do not update unless a waitframe occurs first
+
+	if(level.throwingknife_scriptmaster != 1) { thread initialize }
+	level.throwingknife_scriptmaster = 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+pickup:
+
+	self nottriggerable
+	local.player = parm.other
+
+	if(local.player.knivesheld == NIL) { local.player.knivesheld = 0 }
+	local.player.knifename[local.player.knivesheld] = self.name // all knives's names are stored in "knifename" array.
+	local.player.knivesheld++
+
+	if(self != NULL && local.player.knivesheld <= 3) 
+	{
+		if(local.player.iprint_knife == NIL) { local.player iprint ("Hold USE + Right-click to throw a knife."); local.player.iprint_knife = 1 } // only iprint the instructions one time for each player.
+		self message ("Knives: " + local.player.knivesheld)
+		//local.player iprint ("Knives: " + local.player.knivesheld)
+
+		local.originold = self.origin
+		local.anglesold = self.angles
+
+		if(local.player.knivesheld == 1) { local.player thread give_knife self.name local.originold local.anglesold }
+		if(local.player.knivesheld == 2) { local.player thread scan_player2 self.name local.originold local.anglesold }		
+		if(local.player.knivesheld == 3) { local.player thread scan_player3 self.name local.originold local.anglesold }
+
+		self nottriggerable // must be nottriggerable before any waitframes, otherwise players can grab 4+ nearby knives by pressing USE key only once, deleting all the extra knives.
+		self hide
+		self.remove = 1
+	}
+	if(self != NULL && local.player.knivesheld > 3) 
+	{
+		local.player.knivesheld = 3
+		local.player iprint ("Cannot hold more than 3 throwing knives.")
+	}
+
+	if(self != NULL && self.remove != 1) { self triggerable; end }
+	waitframe			     // waitframe is placed at the end of "pickup" after doing everything else, so unwanted extra knives don't spawn.
+	if(self.remove == 1) { self remove } // waitframe also allows trigger's message to print first, before trigger is removed.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+give_knife local.name local.originold local.anglesold:
+
+	if(self.scanplayer == 1) { end } // make sure no unwanted extra knives are spawned in.
+	self.scanplayer = 1
+
+	self attachmodel models/static/screwdriver.tik "Bip01 L Thigh" 1 ("knife_1" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 -6 ) //( -up +down, +forward -backward, +right -left )
+	$("knife_1" + self.entnum).angles = ( 0 180 20 )
+
+	self waitthread scan_player local.name local.originold local.anglesold
+
+	if(self != NULL) 
+	{
+		self.scanplayer = 0; self.knivesheld = 0; self.knifename[0] = NIL; self.knifename[1] = NIL; self.knifename[2] = NIL
+		if($("knife_1" + self.entnum) != NULL) { $("knife_1" + self.entnum) remove }
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scan_player local.name local.originold local.anglesold:
+	
+	self.turreting_toggle = 0
+	local.team = self.dmteam
+	while(isalive self && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
+ 	{
+		if(self != NULL && (self.useheld != 1 || self.fireheld != 1 || self.secfireheld != 1)) { local.holding = 0 }
+
+		if(self.turreting == 1 && self.turreting_toggle != 1) { $("knife_1" + self.entnum) hide; self.turreting_toggle = 1 } // hide the knife attachmodel if using a vehicle turret.
+		if(self.turreting != 1 && self.turreting_toggle == 1) { $("knife_1" + self.entnum) show; self.turreting_toggle = 0 }
+
+		while(isalive self && local.holding != 1 && self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1 && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
+		{
+			if(self != NULL && self.knivesheld >= 1 && self.knivesheld <= 3 && self.driving != 1 && self.flying != 1 && self.isfiredboomerweenie != 1 && self.placing_killstreak_old != 1)
+			{
+				self thread throw_knife // slowed down slightly by wait 0.1, boomerweenie is for Giant Bomb and Light Bomb UBER mods.
+			}
+			wait 0.1
+			local.holding = 1
+			break
+		}
+  		waitframe
+ 	}	
+	if(self == NULL) { goto main local.name local.originold local.anglesold 1 1 } 		   	// "goto" ends this thread immediately, if player left or switched teams.
+	if(self.dmteam != local.team) { goto main local.name local.originold local.anglesold 1 1 } 	// isolate and run self==NULL if-statement first, to avoid "applied to NULL listener" console error.
+
+	local.r = randomint(360)
+	local.anglesrandom = self.angles + ( 0 local.r 0 )
+	if(self != NULL && !isalive self) { thread main local.name self.origin local.anglesrandom 1 1 1 } // if player dies, randomize all dropped knives' angles; looks like multiple knives are on the ground.
+end
+
+scan_player2 local.name local.originold local.anglesold: // need 3 separate "scan_player" threads, so all held knives can reset to their map-inital origins/angles.
+
+	if(self.scanplayer2 == 1) { end }
+	self.scanplayer2 = 1
+	
+	local.team = self.dmteam
+	while(isalive self && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team) { waitframe }
+
+	if(self != NULL) { self.scanplayer2 = 0 }
+
+	if(self == NULL) { goto main local.name local.originold local.anglesold 1 1 }
+	if(self.dmteam != local.team) { goto main local.name local.originold local.anglesold 1 1 } // isolate and run self==NULL if-statement first, to avoid "applied to NULL listener" console error.
+
+	local.r = randomint(360)
+	local.anglesrandom = self.angles + ( 0 local.r 0 )
+	if(self != NULL && !isalive self) { thread main local.name self.origin local.anglesrandom 1 1 }
+end
+
+scan_player3 local.name local.originold local.anglesold:
+
+	if(self.scanplayer3 == 1) { end }
+	self.scanplayer3 = 1
+	
+	local.team = self.dmteam
+	while(isalive self && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team) { waitframe }
+
+	if(self != NULL) { self.scanplayer3 = 0 }
+
+	if(self == NULL) { goto main local.name local.originold local.anglesold 1 1 }
+	if(self.dmteam != local.team) { goto main local.name local.originold local.anglesold 1 1 } // isolate and run self==NULL if-statement first, to avoid "applied to NULL listener" console error.
+
+	local.r = randomint(360)
+	local.anglesrandom = self.angles + ( 0 local.r 0 )
+	if(self != NULL && !isalive self) { thread main local.name self.origin local.anglesrandom 1 1 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+throw_knife:
+
+	self.knivesheld--
+	local.name = self.knifename[self.knivesheld]
+	self.knifename[self.knivesheld] = NIL
+
+	local.fwd_vec = angles_toforward self.viewangles // fwd_vec[2] = 0 when player looks horizontal, -0.999 looking down, 0.999 looking up.
+
+	if(local.fwd_vec[2] <= 0) { local.height = local.fwd_vec[2] * 60 } 	// when player is looking down and falling, the knife can get stuck to the player's head.
+	if(local.fwd_vec[2] > 0) { local.height = 0 }			   	// if looking vertically down, the knife's height will start a max of 60 units lower initially. 
+
+	local.sin = (waitthread global/math.scr::sine self.angles[1]) * 25   	// always spawn the knife 25 units in front of the player's eyes.
+	local.cos = (waitthread global/math.scr::cosine self.angles[1]) * 25 	
+	local.origin = self gettagposition "eyes bone" // Bip01 Head works too.
+
+	local.knife = spawn script_model
+	local.knife model "static/screwdriver.tik"
+	local.knife.origin = local.origin + ( local.cos local.sin 25 ) + ( 0 0 local.height )
+	local.knife.angles = self.angles + ( 90 0 0 )
+	local.knife light 1 0 0 75
+	local.knife.scale = 2
+	local.knife.rotate = 1
+	local.knife solid
+	local.knife physics_on    // need this for gravity and waittill touch to work.
+	//local.knife gravity 1.2 // keep this commented out for game default gravity.
+
+	local.knife.velocity = (angles_toforward self.viewangles) * level.knife_velocity
+
+	local.anglesold = self.viewangles + ( 180 0 0 ) // begin throwing the knife, sharp end facing vertically down.
+	local.anglesoldinv = self.viewangles
+	local.knife thread rotate
+	local.knife thread flytimer
+	local.knife.player_owner = self
+
+	local.hitthing = self
+	while(local.hitthing == self)
+	{
+		local.knife waittill touch
+		local.hitthing = parm.other
+	}
+	
+	local.knife.velocity = ( 0 0 0 ) // velocity = 0 works, but gives a "cannot cast integer to vector" console error.
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		$player[local.i].originxy = ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ) 	// check if knife's XY origin vector length is < 42.5 units from an enemy player's XY origin, prevents knife floating in air.
+		local.knife.originxy = ( local.knife.origin[0] local.knife.origin[1] 0 )			// players' origins start at their feet. players' physical size = 30 x 30 x 95. Maximum length is hypotenuse of 30 x 30
+														// 30^2 + 30^2 = (squareroot(1800))^2 = (42.4254)^2, so 42.5 = max possible distance for knife to touch a player.
+		local.position = $player[local.i] getposition
+		local.playerheight = 95
+		if(local.position == crouching) { local.playerheight = 55 } // lower players' "hitboxes" if they're crouching.
+
+		if(vector_length(local.knife.originxy - $player[local.i].originxy) < 42.5 && local.knife.origin[2] - $player[local.i].origin[2] > 0 && local.knife.origin[2] - $player[local.i].origin[2] <= local.playerheight)
+		{
+			if(isalive $player[local.i] && $player[local.i] != self)
+			{
+				if($player[local.i].dmteam != self.dmteam || (getcvar("g_gametype") == "1"))
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+					{
+						$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+						local.touchedplayer = 1
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						$player[local.i].drivingent.shooter = self
+						//if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0; local.touchedplayer = 1 } // planes are immune to knives.
+
+						if($player[local.i].flying != 1 && $player[local.i].turreting != 1) // turretplayers will always get hit by knives.
+						{
+							if($player[local.i].drivingent.classname != VehicleTank)
+							{
+								if($player[local.i].drivingent.passengers.size < 1)
+								{
+									if($player[local.i].drivingent.model != "models/vehicles/sdkfz.tik" && $player[local.i].drivingent.model != "models/vehicles/sdkfz_afrika.tik" && $player[local.i].drivingent.model != "models/vehicles/shermantank.tik")
+									{
+										$player[local.i] takedamage
+										$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+										local.touchedplayer = 1
+									}
+								}
+								else
+								{
+									local.r = 1 + randomint($player[local.i].drivingent.passengers.size)
+									if(local.r == 1)
+									{
+										if($player[local.i].drivingent.model != "models/vehicles/sdkfz.tik" && $player[local.i].drivingent.model != "models/vehicles/sdkfz_afrika.tik" && $player[local.i].drivingent.model != "models/vehicles/shermantank.tik")
+										{
+											$player[local.i] takedamage
+											$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+											local.touchedplayer = 1
+										}
+									}
+									else
+									{
+										$player[local.i].drivingent.passengers[local.r - 1] takedamage
+										$player[local.i].drivingent.passengers[local.r - 1] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+										local.touchedplayer = 1
+									}
+								}
+							}
+						}
+					}
+				}
+				local.knife droptofloor
+				
+				local.knife.angles = ( 0 local.knife.angles[1] local.knife.angles[2] ) // if a player was killed, droptofloor the knife and make knife's angles horizontal.
+				local.iold = local.i
+			}
+			if(isalive $player[local.i] && $player[local.i] == self) 
+			{
+				if(level.knife_killself == 1)
+				{
+					killent self.entnum // "self kill" does not work if the player just respawned.
+					local.knife droptofloor
+					local.knife.angles = ( 0 local.knife.angles[1] local.knife.angles[2] )
+				}
+				local.touchedself = 1
+				local.iold = local.i
+			}
+
+			local.knife playsound fleshimpact
+		}
+		else if(local.touchedplayer != 1 && local.touchedself != 1) { local.knife playsound groundimpact }
+
+	}
+	if(local.touchedplayer != 1 && local.knife.flewlong != 1) 
+	{							// if player throws knife upwards, knife's origin lowers a few units in height so it's not inside the wall
+		local.height = local.fwd_vec[2] * -23		// if player throws knife downwards, knife's origin raises a few units in height.
+		local.knife.angles = local.anglesold 		// if knife stuck to a wall or object, make sure the knife's sharp end is always facing into the wall.
+	}
+	if(local.touchedplayer != 1 && local.knife.flewlong == 1) 
+	{	
+		local.height = local.fwd_vec[2] * 23		     					// invert height adjustment, since anglesold is reversed.		
+		local.knife.angles = local.anglesold + ( 180 180 0 ) 					// if knife flew for a while and gravity brought it down, reverse anglesold so sharp end is facing the ground again.
+		if(local.fwd_vec[2] < 0.06 && local.fwd_vec[2] >= -0.06) { local.knife.angles = local.knife.angles + ( 0 180 0 ) } 	// undo horizontal angle-reversal if player was looking horizontally.
+		if(local.fwd_vec[2] < -0.06) 												// undo vertical reversal if player was looking more vertically downward.
+		{
+			local.knife.angles = local.knife.angles + ( 180 180 0 )
+			local.knife.origin = local.knife.origin + ( 0 0 -(2*local.height) ) // re-adjust height back upwards 23 units, only when looking downward and when local.knife.flewlong = 1.
+		}
+	}
+
+	if(local.fwd_vec[2] < 0) { local.fwd_vec[2] = local.fwd_vec[2] * -1 } // absolute-value.
+	if(local.fwd_vec[2] <= 0.06) { local.knife.angles = ( 0 local.knife.angles[1] local.knife.angles[2] ) + ( 0 180 0 ) } 	// if player's angles were almost horizontal, then keep the knife's angles horizontal.
+	if(local.fwd_vec[2] > 0.06) { local.knife.origin = local.knife.origin + ( 0 0 local.height ) }			      	// otherwise, make the height adjustment as needed.
+
+	local.knife.rotate = 0
+	waitframe // wait for droptofloor to finish
+
+	if(local.touchedplayer == 1 && local.touchedself != 1) 
+	{
+		if(local.fwd_vec[2] > 0.06) { local.knife.angles = local.knife.angles + ( 0 180 0 ) }  // if a player was touched, rotate the knife 180 degrees (sharp end faces forward), only if not looking horizontally.
+		local.knife.origin = $player[local.iold].origin
+	}
+	if(local.touchedplayer != 1 && local.touchedself == 1 && level.knife_killself != 1)
+	{
+		local.knife.origin = ( local.knife.origin[0] local.knife.origin[1] ($player[local.iold].origin[2] + 20) ) // set knife's height to player's feet (not horizontal) if player's knife landed on himself.
+	}
+
+	thread main local.name local.knife.origin local.knife.angles 1 1
+	local.knife remove	
+end
+
+////////////////////////////////////////////////////////////////////////
+
+rotate:
+
+	local.rotatespeed = randomint(50) + 80 // randomize rotation speed. min of 80, max of 130
+	while(self.rotate == 1)
+	{
+		self.angles = (self.angles + ( local.rotatespeed 0 0 ))
+		waitframe
+	}
+end
+
+flytimer:
+
+	for(local.c = 0; self != NULL && local.c <= 5.5; local.c++) // 0.55 seconds estimated time until knife begins falling (downward trajectory) again due to gravity.
+	{
+		self.flewlong = 0	
+		wait 0.1	
+	}
+	if(self != NULL) { self.flewlong = 1 }
+end
+
+resettimer local.name local.light:
+
+	for(local.c = 0; local.c <= (level.knife_resettime * 10); local.c++) 
+	{
+		if(self == NULL) { end }		   	// if knife was picked up, end.
+		if(level.change_team_score == 1) { break } 	// for cyber attack / search & destroy mod, immediately reset all knives (not including those still held by living players).
+		wait 0.1
+	}
+	if(local.name == NIL || level.knife_origin[local.name] == NIL) { self remove; end }
+
+	self.origin = ( level.knife_origin[local.name][0] level.knife_origin[local.name][1] level.knife_origin[local.name][2] ) // reset back to map-initial origins/angles for the knife.
+	self.angles = ( level.knife_angles[local.name][0] level.knife_angles[local.name][1] level.knife_angles[local.name][2] )
+	if(local.light != 1) { self light 0 0 0 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+initialize:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+
+	local.master aliascache groundimpact sound/weapons/impact/wpn_impdirt01.wav soundparms 0.7 0.3 1.5 0.5 50 500 auto loaded maps level.mapname
+	local.master aliascache fleshimpact sound/weapons/impact/wpn_impflesh16.wav soundparms 1.3 0.3 1.0 0.3 350 3000 auto loaded maps level.mapname
+end

@@ -1,0 +1,1276 @@
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/playerspawns.scr
+exec cvars/coord_pointer.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "m3l1b"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "m3l1b"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "maxentities" "2000"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills"
+local.v = exec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1"; thread ffa_spawns }
+if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"; thread tdm_spawns
+						spawn info_player_deathmatch "origin" "944 -1537 340" "angle" "-98" // for spectators when joining game
+						spawn info_player_deathmatch "origin" "2567 -944 466" "angle" "170"
+						spawn info_player_deathmatch "origin" "1466 -1382 -50" "angle" "-70"
+}
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread snd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+//level.basebuild_laserdist = 700
+}
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr airstrikes
+exec global/aliascache_triggersounds.scr generator_loop
+exec global/aliascache_triggersounds.scr valve_switch
+exec global/aliascache_triggersounds.scr light_switch
+exec global/aliascache_triggersounds.scr radio_music2
+exec global/aliascache_triggersounds.scr pipesteam
+exec global/aliascache_triggersounds.scr explode_building_small
+exec global/aliascache_triggersounds.scr explode_building_large
+exec global/aliascache_triggersounds.scr explode_wood_small
+cache models/vehicles/tigertank.tik		// needed for aagun threads
+}
+exec global/aliascache_triggersounds.scr arty_exp_sand
+exec global/aliascache_triggersounds.scr arty_exp_water
+exec global/aliascache_triggersounds.scr arty_leadinmp
+
+waitthread setup
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m3l1b.scr
+	exec global/ambient.scr m3l1b
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	//exec global/barrel.scr::explosive_barrel
+	//exec global/crate.scr::explosive_crate
+
+	setcvar "r_fastsky" "1"
+	exec global/fastsky.scr 1
+	$world farplane 7000 //15000, reduced to boost fps
+	$world farplane_color ( 0.6784 0.8353 0.9686 )
+
+exec global/victory_podium.scr ( 280 -4667 -372 ) -90 auto auto 5
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( -1250 -1563 248 ) ( 0 0 0 ) 15 10
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+
+	thread UBER_mapextras
+	thread UBER_teleporters
+
+	thread mapedge ( .3608 .6627 .0016 ) ( 1 0 0 )
+
+	thread random_explode_setup 256 384 275 250 // local.damage, beachradius, midradius, hillradius (explosion radius)
+	thread random_explode_anywhere 256 600
+}
+
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( -3789 7603 392 )
+
+exec map_triggers/lightbomb.scr ( 1683 -2320 547 ) ( -1070 -2663 464 ) ( 3226 -2263 216 ) ( 2326 -534 572 ) ( -2807 -1171 379 ) ( -7085 -2181 149 ) ( 7004 -2077 194 ) ( -1852 -6073 -467 ) ( 2339 -5681 -438 ) ( 1898 -2380 -315 )
+exec map_triggers/bomb.scr ( -5279 -904 483 ) ( -3796 2519 565 ) ( -1361 1285 662 ) ( 3052 1160 651 ) ( 1667 -1383 592 ) ( -1080 -1754 592 ) ( 5111 -3069 -241 ) ( -306 -7766 -497 ) ( -3621 -4147 -191 ) ( 3096 -4208 -200 )
+exec map_triggers/grenade_ammo.scr ( -303 -5546 -439 ) ( 926 -4489 -383 ) ( 146 -3005 -372 ) ( 2585 -2624 -512 ) ( 2451 -119 384 ) ( -412 -344 328 ) ( 1702 -1659 -57 ) ( 1430 -1683 110 ) ( 1674 -1790 336 ) ( 1426 -1866 88 )
+exec map_triggers/rocket_ammo.scr ( 1431 -1855 320 ) ( -1047 -1911 272 ) ( 1375 -3338 -303 ) ( 1319 -5832 -467 ) ( -3522 -5974 -447 ) ( 714 -476 320 ) ( 2085 -796 278 ) ( 725 333 432 ) ( 2380 -818 392 ) ( -1262 -1221 464 )
+exec map_triggers/snowball_ammo.scr ( -4566 5455 772 ) ( -5821 3011 216 ) ( -6924 -1103 334 ) ( -4394 -1258 -143 ) ( -3221 -625 324 ) ( 1359 847 387 ) ( -815 -1675 -615 ) ( 5425 -1122 318 ) ( 3426 -8007 -500 ) ( -3827 -8006 -500 )
+exec map_triggers/health.scr ( 7984 -7047 -501 ) ( -7856 -7047 -501 ) ( -7323 -637 413 ) ( -7272 3434 420 ) ( -4562 8097 395 ) ( -3299 7069 434 ) ( -1689 1435 450 ) ( 5400 1439 545 ) ( 7984 -1117 320 ) ( -1328 -1675 -615 )
+
+//exec map_triggers/led_trap.scr ( 7984 -8113 -567 ) led1 1
+//exec map_triggers/led_trap.scr ( -7984 -8113 -567 ) led2 2
+
+if(getcvar("g_ubergametype") != "bb")
+{
+	//exec map_triggers/player_spotlight.scr ( -1071 -2648 319 ) ( 1 1 1 ) s0 700 -90 0 0 1		// white, removed to lower entity count
+	//exec map_triggers/player_spotlight.scr ( 1679 -2255 319 ) ( 1 1 1 ) s1 700 -90 0 0 1		// white
+
+	//exec map_triggers/spotlight_colorswitch.scr ( -1000 -2024 352 ) ( 0 -90 0 ) s0 rainbow
+	//exec map_triggers/spotlight_colorswitch.scr ( 1679 -1839 352 ) ( 0 -90 0 ) s1 rainbow
+
+// Available playervehicle models:
+// bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
+// gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
+//
+// Vehicle speeds: trucks/boats = 250, jeeps/euro_vehicles/mercedes = 400, bikes = 500, halftracks/uboats = 40
+//
+exec global/playervehicle.scr bmwbike1 vehicles/bmwbike.tik ( 4781 -955 340 ) ( 12 -90 358 ) 250 500 45 1 		// axis // health, speed, reset time, headlights on (0 or 1), no headlights (0 or 1)
+//exec global/playervehicle.scr bmwbike2 vehicles/bmwbike.tik ( -2039 -1342 400 ) ( 0 -90 0 ) 250 500 45 1	// axis
+exec global/playervehicle.scr bmwbike3 vehicles/bmwbike.tik ( -6057 -248 650 ) ( 12 -90 341 ) 250 500 45 1	// axis
+exec global/playervehicle.scr bmwbike4 vehicles/bmwbike.tik ( -6000 -6600 -400 ) ( 0 90 0 ) 250 500 45 1	// allies
+exec global/playervehicle.scr bmwbike5 vehicles/bmwbike.tik ( 6000 -6600 -400 ) ( 0 90 0 ) 250 500 45 1		// allies
+
+// Available playertank models:
+// kingtank, panzer_tank, panzer_tank_europe.
+//
+exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( 3064 -6165 -350 ) ( 0 90 0 ) 1000 45	// allies
+exec global/playertank.scr tank02 vehicles/panzer_tank_europe.tik ( -2881 -5865 -350 ) ( 0 90 0 ) 1000 45	// allies
+//exec global/playertank.scr tank03 vehicles/kingtank.tik ( -2176 -3530 -200 ) ( 0 180 0 ) 1000 45		// middle
+exec global/playertank.scr tank04 vehicles/panzer_tank.tik ( 4231 -308 300 ) ( 0 -90 0 ) 1000 45		// axis
+//exec global/playertank.scr tank05 vehicles/panzer_tank.tik ( -2120 192 500 ) ( 0 -90 0 ) 1000 45		// axis
+exec global/playertank.scr tank06 vehicles/kingtank.tik ( -5580 1224 750 ) ( 0 -90 0 ) 1000 45			// axis
+
+exec global/playernebelwerfer.scr NIL 200 45 ( 1524 -5167 -406 ) ( -12 90 0 ) // -5967, +50
+exec global/playernebelwerfer.scr NIL 200 45 ( -1428 -4867 -407 ) ( -16 90 0 )
+//exec global/playernebelwerfer.scr NIL 200 45 ( -2868 583 510 ) ( -5 140 0 )
+exec global/playerflak88.scr NIL 200 45 ( 3582 -3520 75 ) ( 0 -135 0 ) 0 ( 0 45 0 )
+exec global/playerflak88.scr NIL 200 45 ( -2645 -1689 336 ) ( 0 -90 0 ) 0 ( 0 45 0 )
+exec global/playerflak88.scr NIL 200 45 ( -5165 -2467 204 ) ( 0 -45 0 ) 0 ( 0 45 0 )
+
+exec server_planes/trigger.scr ( -2070 -6734 -471 ) "allies" 1 0 ( -2070 -6734 529 )	// team (only 1 per modelpair), flying plane scale, modelpair, starting origin (default = origin + 500)
+exec server_planes/trigger.scr ( -2136 -907 430 ) "axis" 1 0				// Allies/Axis modelpair: 0 = p47/fockwulf, 1 = stuka_dsrt/stuka, 2 = c47 for both teams
+exec server_planes/trigger.scr ( 3455 -6708 -471 ) "allies" 1 1 ( 3455 -6708 529 )
+exec server_planes/trigger.scr ( 3830 -2015 216 ) "axis" 1 1
+exec server_planes/trigger.scr ( -5087 4600 869 ) "axis" 1 2
+}
+
+exec jetpack/trigger.scr ( 644 -6634 -478 ) // allies
+exec jetpack/trigger.scr ( 657 -4102 -322 ) // middle
+exec jetpack/trigger.scr ( 386 -1512 307 ) // axis
+
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( 818 352 384 ) ( 0 0 0 ) ( 771 286 320 ) ( 0 239 0 ) 500 1 1 8
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 1856 -1568 -79 ) ( 0 90 0 ) ( 1853 -1568 -15 ) ( 0 180 0 ) 500 1 1 8
+
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( -1087.5 -1655 417 ) ( 60 90 0 ) 100 0
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -999 -1723 315 ) ( 0 0 0 ) bb1 60 450 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 1663.5 -1263 417 ) ( 60 90 0 ) 100 0
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 1752 -1332 315 ) ( 0 0 0 ) bb2 60 450 2
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( 1839.5 -896 407 ) ( 60 -90 0 ) 100 0
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 1887 -758 313 ) ( 0 180 0 ) bb3 60 450 2
+
+	thread vehicles_undermap
+	thread explodesounds
+
+	thread minenbombs ( 1424 -1756 -80 ) 50 400 620 40 // origin, health, damage, radius, offtime, check if two $minenbomb_destructible entities have been destroyed.
+	thread minenbombs ( 1508 -1822 -80 ) 50 400 620 40 1
+	thread minenbombs ( 2157 -650 288 ) 50 400 620 40
+	thread aagun1 400 500 1100 // local.health, damage, radius
+	thread aagun2 400 500 1100
+	thread radio_music ( 1425 -1399 132 ) ( 0 0 0 )
+	thread radio_music ( 1466 -2207 132 ) ( 0 90 0 )
+}
+
+thread airstrikes_alternate
+
+level waittill spawn
+
+	thread ambience
+	thread water_volumes
+	exec global/water_wade_sounds.scr 1
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
+}
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( 2080 -1272 87 ) ( 0 -247 -487 ) ( 319 96 0 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+		( 2079 -1272 87 ) ( -671 -951 -487 ) ( 0 0 160 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+		( 2079 -1272 248 ) ( -671 -568 0 ) ( 0 0 167 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+
+		( 1792 -869 383 ) ( 0 0 -127 ) ( 383 549 0 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+
+		( 833 -501 415 ) ( -561 0 -351 ) ( 0 427 0 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+
+		( -1343 -1668 415 ) ( 0 -228 -159 ) ( 311 0 0 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+		( -1031 -1668 415 ) ( 0 -356 -159 ) ( 231 0 0 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+		( -1343 -1668 255 ) ( 0 -979 -1000 ) ( 543 0 0 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+water_volumes: // these are for any airstrikes that drop bombs into the ocean.
+
+	level.water_volumes = makeArray
+		( 0 -6735 0 ) ( -8000 -8000 -4000 ) ( 8000 0 4000 )
+	endArray
+end
+
+////////////////////////////////////////////////////////////////////////
+
+explodesounds: // this thread prevents duplicate aliases from playervehicle, playerboat.
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	if(level.vehiclescriptmaster2 != 1)
+	{
+		local.master aliascache explode_truck1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+		local.master aliascache explode_truck2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+		local.master aliascache explode_truck3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+		local.master aliascache explode_truck4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+		local.master aliascache explode_truck5 sound/weapons/explo/Explo_MetalMed5.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	}
+	if(level.vehiclescriptmaster[2] != 1)
+	{
+		local.master aliascache sdkfz_snd_off sound/vehicle/veh_track_off.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	}
+end
+
+setup:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache explode_aagun1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 0.9 0.2 0.8 0.2 1000 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_aagun2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 0.9 0.2 0.8 0.2 1000 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_aagun3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 0.9 0.2 0.8 0.2 1000 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_aagun4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 0.9 0.2 0.8 0.2 1000 8000 weapon loaded maps level.mapname
+	
+	removeclass actor
+	removeclass TurretGun
+	removeclass TouchField
+	removeclass Weapon
+	removeclass Health
+	removeclass ScriptOrigin
+	removeclass TriggerOnce
+	removeclass TriggerAll // removes $allied_beach_target and $minefield.
+	//removeclass BarrelObject // 55 entities
+	//removeclass CrateObject // 163 entities, including $explosive_barrel.
+	//removeclass InteractObject // 8 entities
+	//removeclass EffectEntity // 45 entities
+
+	$progress_player remove
+	$end_level_trigger remove
+	$higgins1 remove
+	$higgins2 remove
+	$bunker_radio remove // fx/dummy.tik, not a radio model
+	$door_bunker_exit_lock remove
+	$door_floor_hatch1_lock remove
+	$door_locked remove //[1] and [2]
+
+	$beach_scene_mortar remove // [1] - [20]
+
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
+	{
+		$beach_scene_mortar remove // [1] - [20]
+		$bunker_dust1 remove // [1] - [25]
+		$88mm_explosive1 remove
+		$88mm_explosive2 remove
+		$88mm_trigger1 remove
+		$88mm_trigger2 remove
+
+		//thread global/minefield.scr::minefield_setup
+
+		$door_bunker_exit time 1
+		$door_bunker_exit playsound metal_bunker_door_open
+		$door_bunker_exit rotateyup 90
+		$door_bunker_exit move
+		$door_bunker_exit disconnect_paths
+
+		$door_bunker_entrance_lower time 1
+		$door_bunker_entrance_lower playsound metal_bunker_door_open
+		$door_bunker_entrance_lower rotateYup 90
+		$door_bunker_entrance_lower move
+	
+		$door_floor_hatch1 time 1.3
+		$door_floor_hatch1 playsound metal_bunker_hatch_open
+		$door_floor_hatch1 rotateXup 90
+		$door_floor_hatch1 move
+	}
+	else
+	{
+		thread bunker_dust_triggered
+
+		$88mm_explosive1 hide
+		$88mm_explosive2 hide
+
+		local.bunker_entrance_lower = spawn trigger_use targetname "bunker_entrance_lower_trigger"
+ 		local.bunker_entrance_lower.origin = $door_bunker_entrance_lower.origin
+ 		local.bunker_entrance_lower setsize ( -70 -40 0 ) ( 40 40 30 )
+		local.bunker_entrance_lower thread maps/gen_mapscripts/doorsgates.scr::metal_doors_solid $door_bunker_entrance_lower NIL 90
+
+		local.bunker_entrance_upper = spawn trigger_use targetname "bunker_entrance_upper_trigger"
+ 		local.bunker_entrance_upper.origin = $door_bunker_entrance_upper.origin
+ 		local.bunker_entrance_upper setsize ( -70 -40 0 ) ( 40 40 30 )
+		local.bunker_entrance_upper thread maps/gen_mapscripts/doorsgates.scr::metal_doors_solid $door_bunker_entrance_upper NIL 90
+
+		local.bunker_exit = spawn trigger_use targetname "bunker_exit_trigger"
+ 		local.bunker_exit.origin = $door_bunker_exit.origin
+ 		local.bunker_exit setsize ( -40 -40 -70 ) ( 40 70 70 )
+		local.bunker_exit thread maps/gen_mapscripts/doorsgates.scr::metal_doors_solid $door_bunker_exit NIL -90
+
+		local.door_floor_hatch = spawn trigger_use targetname "door_floor_hatch1_trigger"
+ 		local.door_floor_hatch.origin = $door_floor_hatch1.origin
+ 		local.door_floor_hatch setsize ( -70 -70 -70 ) ( 70 70 70 )
+		local.door_floor_hatch thread maps/gen_mapscripts/doorsgates.scr::metal_hatch $door_floor_hatch1 90
+	}
+
+	//$88mm_weapon1 remove
+	//$88mm_weapon2 remove
+	//$door_bunker_exit remove
+	//$door_floor_hatch1 remove
+	//$door_bunker_entrance_upper remove
+	//$door_bunker_entrance_lower remove
+	//$e2_table remove
+	//$blocker1 remove // already removed by removeclasses.
+
+	// origin, ladder angle, height, width, thickness (going into wall), spawn solid clip (0 = no, 1 = yes), spawn lasers (1 = 1 laser, 2 = 2 lasers for ladder, 3 = ladder with rungs), laser color (R G B).
+	exec global/spawnladder.scr ( 1375.5 -3247 -503 ) -90 200 31 1 0 1 ( 0 0 1 )
+	exec global/spawnladder.scr ( -832 -1887.5 -615 ) 0 887 39.5 79 1 1 ( 1 0 1 )
+	exec global/spawnladder.scr ( -1303.5 -2624 -615 ) -90 483 39.5 79 1 1 ( 1 0 1 )
+
+	exec global/doorlocked.scr ( 984 374 320 ) metal 1
+	exec global/doorlocked.scr ( 1478 105 320 ) metal 1
+
+	exec global/doorlocked.scr ( 818 -287 64 ) metal 1
+	exec global/doorlocked.scr ( -1090 -1663 256 ) metal 1
+
+	level.springfield = 1
+	level.bar = 1
+	level.bazooka = 1
+	level.mp44 = 1
+	level.shotgun = 1
+	level.rifle = 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+airstrikes_alternate:
+
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { end }
+
+	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane.scr
+	level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
+	level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
+
+	level.bomberplane_map_setsize1 = ( -7871 -8127 0 )	// just like a .tik file, adjust these map_setsizes so the planes aren't dropping bombs outside of the map (also includes skybox height).
+	level.bomberplane_map_setsize2 = ( 7999 8127 1423 )	// start at ( 0 0 0 ) on the map. setsize1 must have - numbers, and setsize2 must have + numbers.
+
+	while(1) //parameters: team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike)
+	{
+		local.rtime = randomint(90) + 60	// randomize time between 90 and 180 seconds. NOTE: any offtime between 1 and 2 is essentially waiting 0 seconds.
+		local.r = randomint(2)
+		if(getcvar("g_ubermods") == "2") { local.bombs = 25; local.timetodrop = 0.1 }	// these are NIL if g_ubermods = 1, preventing bombs from dropping.
+
+		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime local.bombs local.timetodrop 1 }	// axis = 50% chance
+		if(local.r == 1)												// allies = 33% chance
+		{														// c47 = 17% chance
+			local.r2 = randomint(5)
+			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bunker_dust_triggered: // if any plane, vehicle, tank, mortar, airstrike bomb, Giant Bomb or Light Bomb explosions hit within the bunker_roof_volumes, start the $bunker_dust1 emitters.
+
+	if($bunker_dust1 == NULL) { end }
+
+	local.bunker_roof_volumes = makeArray
+		( 1279 -2368 -350 ) ( 0 0 0 ) ( 1121 1201 1000 )
+	endArray
+
+	while($bunker_dust1 != NULL)
+	{
+		for(local.m = 1; local.m <= $mortar_dirt_nosound.size; local.m++)
+		{
+			for(local.v = 1; local.bunker_roof_volumes != NIL && local.bunker_roof_volumes.size >= 1 && local.v <= local.bunker_roof_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = local.bunker_roof_volumes[local.v][1][0] + local.bunker_roof_volumes[local.v][2][0]
+				local.X_max[local.v] = local.bunker_roof_volumes[local.v][1][0] + local.bunker_roof_volumes[local.v][3][0]
+				local.Y_min[local.v] = local.bunker_roof_volumes[local.v][1][1] + local.bunker_roof_volumes[local.v][2][1]
+				local.Y_max[local.v] = local.bunker_roof_volumes[local.v][1][1] + local.bunker_roof_volumes[local.v][3][1]
+				local.Z_min[local.v] = local.bunker_roof_volumes[local.v][1][2] + local.bunker_roof_volumes[local.v][2][2]
+				local.Z_max[local.v] = local.bunker_roof_volumes[local.v][1][2] + local.bunker_roof_volumes[local.v][3][2]
+	
+				if(int($mortar_dirt_nosound[local.m].origin[0]) >= local.X_min[local.v] && int($mortar_dirt_nosound[local.m].origin[0]) <= local.X_max[local.v] && int($mortar_dirt_nosound[local.m].origin[1]) >= local.Y_min[local.v] && int($mortar_dirt_nosound[local.m].origin[1]) <= local.Y_max[local.v] && int($mortar_dirt_nosound[local.m].origin[2]) >= local.Z_min[local.v] && int($mortar_dirt_nosound[local.m].origin[2]) <= local.Z_max[local.v])
+				{
+					for(local.i = 1; local.i <= $bunker_dust1.size; local.i++)	
+					{
+						$bunker_dust1[local.i] anim idle // stop and restart the emitter.
+						$bunker_dust1[local.i] anim start
+					}
+
+					if($door_bunker_entrance_lower != NULL) { $door_bunker_entrance_lower playsound arty_exp_interior }
+					if($door_floor_hatch1 != NULL) { $door_floor_hatch1 playsound arty_exp_interior }
+					if($e2_table != NULL) { $e2_table playsound arty_exp_interior }
+					if($radio_music[1] != NULL) { $radio_music[1] playsound arty_exp_interior }
+					if($radio_music[2] != NULL) { $radio_music[2] playsound arty_exp_interior }
+
+					local.break = 1
+					break
+				}
+				if(local.break == 1) { break }
+			}
+			if(local.break == 1) { break }
+
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+door_metal_lock:
+
+	local.self playsound door_metal_locked
+end
+
+table_kickover:
+
+	if($e2_table == NULL) { end }
+
+	$e2_table playsound table_kickover
+	$e2_table time 0.3
+	$e2_table rotateZdown 40
+	$e2_table waitmove
+	$e2_table time 0.1
+	$e2_table rotateZdown 30
+	$e2_table waitmove
+	$e2_table time 0.05
+	$e2_table rotateZdown 10
+	$e2_table waitmove
+	$e2_table time 0.01
+	$e2_table rotateZdown 5
+	$e2_table waitmove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+vehicles_undermap:
+
+	while(1)
+	{
+		for(local.a = 0; local.a <= level.drivable_entities.size; local.a++)
+		{
+			for(local.s = 1; $(level.drivable_entities[local.a]) != NULL && local.s <= $(level.drivable_entities[local.a]).size; local.s++)
+			{
+				if($(level.drivable_entities[local.a])[local.s].origin[2] >= 800 || $(level.drivable_entities[local.a])[local.s].origin[2] <= -600)
+				{
+					$(level.drivable_entities[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "88mm (15cm) AA Gun Explosions"
+//*** --------------------------------------------
+
+aagun1 local.health local.damage local.radius: // tanks are used since only rocket impacts and explosions can kill them.
+
+	local.tank = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank.origin = $88mm_weapon1.origin + ( -100 0 250 )
+	local.tank.angles = $88mm_weapon1.angles
+	local.tank.health = local.health
+	local.tank.scale = 0.1
+	local.tank hide
+
+	local.tank2 = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank2.origin = $88mm_weapon1.origin + ( 100 0 250 )
+	local.tank2.angles = $88mm_weapon1.angles
+	local.tank2.health = local.health
+	local.tank2.scale = 0.1
+	local.tank2 hide
+
+	local.tank3 = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank3.origin = $88mm_weapon1.origin + ( 0 -100 250 )
+	local.tank3.angles = $88mm_weapon1.angles
+	local.tank3.health = local.health
+	local.tank3.scale = 0.1
+	local.tank3 hide
+
+	local.tank4 = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank4.origin = $88mm_weapon1.origin + ( 0 100 250 )
+	local.tank4.angles = $88mm_weapon1.angles
+	local.tank4.health = local.health
+	local.tank4.scale = 0.1
+	local.tank4 hide
+
+	while(local.tank != NULL && local.tank2 != NULL && local.tank3 != NULL && local.tank4 != NULL) { wait 0.1 }
+
+	println("----- Blowing up AA Gun #1.")
+	if(local.tank != NULL) { local.tank remove } // get rid of the other tanks if one didn't blow up
+	if(local.tank2 != NULL) { local.tank2 remove }
+	if(local.tank3 != NULL) { local.tank3 remove }
+	if(local.tank4 != NULL) { local.tank4 remove }
+
+	local.explode = spawn script_model
+	local.explode.origin = $88mm_weapon1.origin
+	local.explode model "animate//fx_mortar_higgins.tik"
+	local.explode.scale = 1.5
+
+ 	radiusdamage ( 2483 1423 498 ) local.damage local.radius 
+	$88mm_explosive1 thread global/obj_dm.scr::bomb_explode local.damage local.radius
+
+	waitframe
+	local.explode anim start
+	waitframe
+	local.explode remove
+end
+
+aagun2 local.health local.damage local.radius: // tanks are used since only rocket impacts and explosions can kill them.
+
+	local.tank = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank.origin = $88mm_weapon2.origin + ( -100 0 250 )
+	local.tank.angles = $88mm_weapon2.angles
+	local.tank.health = local.health
+	local.tank.scale = 0.1
+	local.tank hide
+
+	local.tank2 = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank2.origin = $88mm_weapon2.origin + ( 100 0 250 )
+	local.tank2.angles = $88mm_weapon2.angles
+	local.tank2.health = local.health
+	local.tank2.scale = 0.1
+	local.tank2 hide
+
+	local.tank3 = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank3.origin = $88mm_weapon2.origin + ( 0 -100 250 )
+	local.tank3.angles = $88mm_weapon2.angles
+	local.tank3.health = local.health
+	local.tank3.scale = 0.1
+	local.tank3 hide
+
+	local.tank4 = spawn "vehicles/tigertank.tik" // need one behind the AA gun, where the explosives usually go
+	local.tank4.origin = $88mm_weapon2.origin + ( 0 100 250 )
+	local.tank4.angles = $88mm_weapon2.angles
+	local.tank4.health = local.health
+	local.tank4.scale = 0.1
+	local.tank4 hide
+
+	while(local.tank != NULL && local.tank2 != NULL && local.tank3 != NULL && local.tank4 != NULL) { wait 0.1 }
+
+	println("----- Blowing up AA Gun #2.")
+	if(local.tank != NULL) { local.tank remove } // get rid of the other tanks if one didn't blow up
+	if(local.tank2 != NULL) { local.tank2 remove }
+	if(local.tank3 != NULL) { local.tank3 remove }
+	if(local.tank4 != NULL) { local.tank4 remove }
+
+	local.explode = spawn script_model
+	local.explode.origin = $88mm_weapon2.origin
+	local.explode model "animate//fx_mortar_higgins.tik"
+	local.explode.scale = 1.5
+
+ 	radiusdamage ( -1169 1625 498 ) local.damage local.radius 
+	$88mm_explosive2 thread global/obj_dm.scr::bomb_explode local.damage local.radius
+
+	waitframe
+	local.explode anim start
+	waitframe
+	local.explode remove
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Minen (entmint) Crate Explosions"
+//*** --------------------------------------------
+
+minenbombs local.origin local.health local.damage local.radius local.offtime local.check_destructibles:
+
+	local.mine = spawn trigger_multiple spawnflags 128
+	local.mine.origin = local.origin
+	local.mine setsize ( -40 -40 -40 ) ( 40 40 40 )
+	local.mine.health = local.health
+	local.mine thread trig_healthboost
+
+	local.fire = spawn script_model
+	local.fire model "animate/fire.tik"
+	local.fire.origin = local.origin + ( 0 0 33 )
+	local.fire.scale = 0.5
+	local.fire notsolid
+	local.fire hide
+
+	while(local.mine.health > 0) { waitframe }
+
+	local.explode = spawn script_model
+	local.explode.origin = local.origin
+	local.explode model "emitters/explosion_mine.tik" // this has its own explosion sound
+	local.explode.scale = 0.8
+
+	local.explode2 = spawn script_model
+	local.explode2.origin = local.origin
+	local.explode2 model "animate//fx_mortar_higgins.tik"
+	local.explode2.scale = 0.45
+
+ 	radiusdamage local.origin local.damage local.radius
+
+	local.random = randomint(2)
+	if(local.random == 0) { local.fire playsound explode_wood_small1 }
+	if(local.random == 1) { local.fire playsound explode_wood_small2 }
+
+	if(local.check_destructibles == 1 && $minenbomb_destructible == NULL)
+	{
+		local.fire.origin -= ( 0 0 33 )
+		local.dontrespawn = 1
+
+		thread table_kickover
+	}
+
+	local.mine remove
+	waitframe
+	local.fire show
+	local.explode anim start
+	local.explode2 anim start
+	waitframe
+	local.explode remove
+	local.explode2 remove
+	
+	wait local.offtime
+	local.fire remove
+	if(local.dontrespawn != 1) { thread minenbombs local.origin local.health local.damage local.radius local.offtime local.check_destructibles }
+end
+
+trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0) // prevent regular bullets from killing trigger (i.e. if 250 health, trigger can still be killed by 2 grenades or a shotgun blast)
+	{
+		self.health = local.health
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Random Crater Explosions"
+//*** --------------------------------------------
+
+random_explode_setup local.damage local.beachradius local.midradius local.hillradius:
+
+	thread random_explode ( -1472 -5437 -476 ) local.damage local.beachradius
+	thread random_explode ( 55 -5920 -477 ) local.damage local.beachradius
+	thread random_explode ( 552 -5427 -481 ) local.damage local.beachradius
+   	thread random_explode ( 1583 -5923 -476 ) local.damage local.beachradius
+   	thread random_explode ( 55 -4422 -343 ) local.damage local.beachradius
+
+   	thread random_explode ( -1007 -3348 -321 ) local.damage local.midradius
+   	thread random_explode ( -469 -2857 -343 ) local.damage local.midradius
+   	thread random_explode ( 46 -2349 -424 ) local.damage local.midradius
+   	thread random_explode ( 546 -2810 -458 ) local.damage local.midradius
+   	thread random_explode ( -3005 -2855 -231 ) local.damage local.beachradius
+   	thread random_explode ( 2089 -3377 -323 ) local.damage local.midradius
+
+   	thread random_explode ( 1032 -290 262 ) local.damage local.hillradius
+   	thread random_explode ( 2079 719 250 ) local.damage local.hillradius
+end
+
+random_explode local.origin local.damage local.radius local.off local.waitlonger:
+
+	if(local.off != 1)
+	{
+		if(local.waitlonger == 1) { wait (randomfloat 65 + 25) }
+		else { wait (randomfloat 20 + 25) }
+	}
+
+   	local.exp = spawn script_model targetname "mortar_dirt_nosound"
+	local.exp model "animate/fx_mortar_dirt.tik"
+   	local.exp.origin = local.origin
+   	local.exp.scale = 1.5
+
+	local.exp playsound arty_leadinmp
+	wait 1
+
+	radiusdamage local.origin local.damage local.radius
+	local.exp anim start
+	waitframe
+	local.exp remove
+
+	if(local.off != 1) { thread random_explode local.origin local.damage local.radius }
+end
+
+random_explode_water local.origin local.damage local.radius local.off:
+
+	if(local.off != 1) { wait (randomfloat 30 + 15) }
+
+   	local.exp = spawn script_model
+	local.exp model "animate/fx_mortar_water.tik"
+   	local.exp.origin = local.origin
+   	local.exp.scale = 1.5
+
+	local.exp playsound arty_leadinmp
+	wait 1
+
+	local.spray = spawn script_model
+	local.spray model "emitters/fx_oceanspray.tik"
+	local.spray.origin = local.origin + ( 0 0 50 )
+	local.spray.scale = 1.8
+
+	radiusdamage (local.origin + ( 0 0 50 )) local.damage local.radius
+	local.exp playsound artyexp_water
+	local.exp anim start
+	local.spray anim start
+	waitframe
+	local.exp remove
+	local.spray remove
+
+	if(local.off != 1) { thread random_explode_water local.origin local.damage local.radius }
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Random Explosions Anywhere"
+//*** --------------------------------------------
+
+random_explode_anywhere local.damage local.radius:
+
+	wait ((randomfloat(190) / 10) + 0.1)
+
+	local.x_min = 7870 // map X-Y setsizes (-1 unit from the edges, only use + values)
+	local.x_max = 7998
+	local.y_min = 8126
+	local.y_max = 8126
+
+	local.r = randomint(2)
+	if(local.r == 1) { local.x = randomint(local.x_min) * -1 }
+	else { local.x = randomint(local.x_max) }
+	if(local.r == 1) { local.y = randomint(local.y_min) * -1 }
+	else { local.y = randomint(local.y_max) }
+
+	local.origin = ( local.x local.y 1423 )
+	local.z = trace local.origin (local.origin + ( 0 0 -5000 )) 0
+	if(local.z_inv == 1) { local.z = local.z * -1 }
+
+	if(local.y <= -6735) { thread random_explode_water ( local.x local.y local.z[2] ) local.damage local.radius 1 }
+	else { thread random_explode ( local.x local.y local.z[2] ) local.damage local.radius 1 }
+
+	thread random_explode_anywhere local.damage local.radius
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Military Radio Music"
+//*** --------------------------------------------
+
+radio_music local.origin local.angles:
+
+	local.radio = spawn script_model targetname "radio_music"
+	local.radio model "miscobj/radio_military.tik"
+	local.radio.origin = local.origin
+	local.radio.angles = local.angles
+	local.radio notsolid
+	local.radio.scale = 0.01 // cannot "hide" radio model, otherwise "loopsound" will not work.
+
+	local.trig = spawn trigger_use
+	local.trig.origin = local.radio.origin
+	local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic3
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic2
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound
+	local.radio loopsound radiomusic
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic1
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound	
+	local.radio remove
+	local.trig remove
+
+	thread radio_music local.origin local.angles
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	spawn info_player_allied "origin" "-3599.108 -7196.532 -514.983" "angle" "88" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-1940.729 -7292.486 -523.979" "angle" "88" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-78.130 -6984.107 -495.069" "angle" "88" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1002.719 -6470.375 -463.819" "angle" "88" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "3601.824 -7208.098 -516.068" "angle" "90" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "2734.639 -4643.826 -371.875" "angle" "90" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1359.434 -4622.594 -383.875" "angle" "82" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "230.563 -5423.684 -431.875" "angle" "90" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-393.492 -4560.175 -383.875" "angle" "92" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-2440.130 -4626.510 -375.082" "angle" "71" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-1058.718 -2775.125 -204.636" "angle" "-88" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "-655.199 -2322.243 -302.703" "angle" "-37" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1244.211 -2188.406 -309.835" "angle" "-141" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1706.832 -2383.063 -323.875" "angle" "-79" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1389.340 -3360.875 -303.875" "angle" "97" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1126.853 -3946.637 -323.875" "angle" "92" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "115.001 -4001.386 -329.352" "angle" "80" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1359.127 -2910.630 -503.875" "angle" "6" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1664.000 -2597.390 -503.875" "angle" "-67" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "2176.000 -2597.390 -503.875" "angle" "-75" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "2664.875 -2495.125 -530.849" "angle" "-122" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "2357.933 -1504.789 -383.875" "angle" "89" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "2140.407 -1199.127 -199.875" "angle" "-91" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1934.875 -1542.875 -79.875" "angle" "131" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1425.125 -1345.125 -79.875" "angle" "-38" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1877.835 -1917.125 -79.875" "angle" "-134" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1910.050 -2141.660 -79.875" "angle" "146" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1934.875 -1822.874 -79.875" "angle" "150" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1934.875 -1922.166 88.125" "angle" "-164" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1934.875 -2149.515 88.125" "angle" "141" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1425.127 -1521.125 88.125" "angle" "-28" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1471.126 -1353.125 88.125" "angle" "-24" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1934.873 -1617.125 88.125" "angle" "-155" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1432.301 -2140.874 88.125" "angle" "57" "targetname" "allied_spawn"
+	spawn info_player_allied "origin" "1432.302 -1915.129 -79.875" "angle" "-18" "targetname" "allied_spawn"
+
+	spawn info_player_axis "origin" "1510.425 -1909.143 257.125" "angle" "-28" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "1895.058 -1684.108 256.125" "angle" "-141" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "1467.276 -1757.671 256.125" "angle" "58" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "1485.502 -1324.161 256.125" "angle" "-31" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2095.125 -1279.125 326.422" "angle" "-54" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "1264.838 -1371.987 294.181" "angle" "-129" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "951.540 -1552.875 242.601" "angle" "-94" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-126.745 -1464.875 356.086" "angle" "-91" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-724.468 -1560.157 343.604" "angle" "-27" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-1487.125 -1688.287 343.835" "angle" "-130" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-1262.478 -1102.201 362.018" "angle" "-32" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-815.125 -2039.127 272.125" "angle" "-128" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-1144.585 -1911.125 272.125" "angle" "-89" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-1328.875 -1711.126 256.125" "angle" "-35" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-815.125 -1711.125 256.125" "angle" "-129" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-984.874 -1976.875 272.125" "angle" "34" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-496.875 -477.125 336.125" "angle" "-56" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "48.874 400.875 322.215" "angle" "-128" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-639.127 -569.685 328.125" "angle" "-121" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-925.596 16.875 328.125" "angle" "-21" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-1219.125 335.125 379.298" "angle" "145" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-1124.875 688.875 392.125" "angle" "-39" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "-591.125 783.125 336.167" "angle" "141" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "624.875 678.875 328.125" "angle" "-127" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "1328.875 368.875 320.163" "angle" "-122" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2460.001 335.125 351.744" "angle" "34" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2959.578 -129.008 343.667" "angle" "-54" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2856.209 74.400 392.125" "angle" "-149" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2474.396 -794.768 384.125" "angle" "-152" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2156.874 -796.873 256.125" "angle" "123" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "1811.125 -659.125 256.125" "angle" "-55" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "2176.875 -240.875 263.340" "angle" "125" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "800.875 -404.874 256.125" "angle" "161" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "800.875 -141.125 256.125" "angle" "-155" "targetname" "axis_spawn"
+	spawn info_player_axis "origin" "291.125 -476.875 256.125" "angle" "33" "targetname" "axis_spawn"
+end
+
+ffa_spawns: 
+
+	spawn info_player_deathmatch "origin" "-1124.87 688.87 392.13" "angle" "-49"
+	spawn info_player_deathmatch "origin" "-904.87 2.61 328.13" "angle" "-20"
+	spawn info_player_deathmatch "origin" "-573.15 -1047.76 248.13" "angle" "48"
+	spawn info_player_deathmatch "origin" "-1310.87 -1607.03 248.13" "angle" "4"
+	spawn info_player_deathmatch "origin" "143.13 -950.47 353.44" "angle" "36"
+
+	spawn info_player_deathmatch "origin" "354.87 -48.87 328.13" "angle" "104"
+	spawn info_player_deathmatch "origin" "291.13 -476.87 256.13" "angle" "32"
+	spawn info_player_deathmatch "origin" "1254.79 -1395.56 281.82" "angle" "125"
+	spawn info_player_deathmatch "origin" "2095.13 -1572.88 265.32" "angle" "62"
+	spawn info_player_deathmatch "origin" "2864.87 -195.38 392.13" "angle" "160"
+
+	spawn info_player_deathmatch "origin" "1811.13 -659.13 256.13" "angle" "-54"
+	spawn info_player_deathmatch "origin" "1517.11 -1897.13 256.13" "angle" "-84"
+	spawn info_player_deathmatch "origin" "1471.13 -1357.26 88.13" "angle" "-22"
+	spawn info_player_deathmatch "origin" "1909.64 -1922.17 88.13" "angle" "-167"
+	spawn info_player_deathmatch "origin" "1878.87 -2158.88 -79.88" "angle" "129"
+end
+
+////////////////////////////////////////////////////////////////////////
+
+UBER_teleporters:
+
+	exec map_triggers/undermap.scr ( -750 -1610 -615 ) ( 0 -1087 -1000 ) ( 8000 8000 1 ) undermap_tele1
+	exec map_triggers/undermap.scr ( -750 -2697 -615 ) ( -643 -8000 -1000 ) ( 8000 0 1 ) undermap_tele2
+	exec map_triggers/undermap.scr ( -1393 -2697 -615 ) ( -8000 -8000 -1000 ) ( 0 1087 1 ) undermap_tele3
+	exec map_triggers/undermap.scr ( -1393 -1610 -615 ) ( -8000 0 -1000 ) ( 643 8000 1 ) undermap_tele4
+
+	exec map_triggers/tele.scr ( 2624 -2495 -530 ) ( 2360 -1504 -383 ) 1
+	exec map_triggers/tele.scr ( 2271 -1215 -245 ) ( 2224 -1213 -222 ) 1
+	exec map_triggers/tele.scr ( -1089 -1644 256 ) ( -1087 -1683 256 ) 1
+	exec map_triggers/tele.scr ( -3200 918 405 ) ( -4829 898 406 ) 1
+	exec map_triggers/tele.scr ( -4849 1930 290 ) ( -4203 2072 401 ) 1
+	exec map_triggers/tele.scr ( -1328 -2663 464 ) ( -1328 -2621 592 ) 0
+
+	exec map_triggers/tele.scr ( 1425 -1345 -79 ) ( 818 -287 64 ) 1
+
+	exec map_triggers/tele.scr ( 800 -476 320 ) ( 527 -239 64 ) 0
+	exec map_triggers/telecrouch.scr ( 527 -336 64 ) ( 800 -437 320 ) 0 1 0
+
+	exec map_triggers/tele.scr ( -815 -2632 -143 ) ( -656 -2632 -217 ) 1
+
+if(getcvar("g_ubergametype") != "bb")
+{
+	exec map_triggers/tele.scr ( -711 -1640 392 ) ( -826 -1711 592 ) 0
+	exec map_triggers/tele.scr ( -1350 -1640 392 ) ( -1305 -1692 592 ) 0
+	exec map_triggers/tele.scr ( 1353 -1248 392 ) ( 1437 -1306 592 ) 0
+	exec map_triggers/tele.scr ( 2057 -1248 392 ) ( 1929 -1309 592 ) 0
+}
+end
+
+UBER_mapextras:
+
+	thread mapwall ( -7871 -1600 215 ) ( -7359 -1600 276 ) 20
+	thread mapwall ( -7359 -1600 306 ) ( -7359 -576 426 ) 20
+	thread mapwall ( -7359 -576 436 ) ( -6846 -576 588 ) 20
+	thread mapwall ( -6846 -576 588 ) ( -6846 -319 492 ) 20
+	thread mapwall ( -6846 -319 577 ) ( -6846 3008 756 ) 20
+	thread mapwall ( -6846 3008 671 ) ( -7359 3008 420 ) 20
+	thread mapwall ( -7359 3008 420 ) ( -7359 5055 768 ) 20
+	thread mapwall ( -7359 5055 778 ) ( -5823 5055 870 ) 20
+	thread mapwall ( -5823 5055 860 ) ( -5823 5567 750 ) 20
+	thread mapwall ( -5823 5567 750 ) ( -5311 5567 882 ) 20
+	thread mapwall ( -5311 5567 882 ) ( -5311 8127 564 ) 20
+
+	thread mapwall ( -4544 8127 412 ) ( -4544 7618 638 ) 0 500 100 ( 30 0 -13 )
+	thread mapwall ( -4276 7653 446 ) ( -3264 5311 542 ) 0 100 1
+	thread mapwall ( -3710 7103 404 ) ( -3264 5697 512 ) 0 100 1
+
+	thread mapwall ( -3710 7103 404 ) ( -3264 7103 424 ) 20
+	thread mapwall ( -3264 7103 454 ) ( -3264 5697 542 ) 20
+	thread mapwall ( -3264 5312 585 ) ( -3264 2496 562 ) 20
+	thread mapwall ( -3264 2496 562 ) ( -3776 2496 568 ) 20
+	thread mapwall ( -3776 2496 568 ) ( -3776 1984 504 ) 20
+	thread mapwall ( -3776 1984 504 ) ( -4287 1984 386 ) 70
+	thread mapwall ( -4287 1984 386 ) ( -4287 3008 528 ) 20
+	thread mapwall ( -4287 3008 528 ) ( -5312 3008 384 ) 20
+	thread mapwall ( -5312 3008 384 ) ( -5312 1983 384 ) 20
+	thread mapwall ( -5312 1983 384 ) ( -4800 1983 453 ) 20
+	thread mapwall ( -4800 1983 453 ) ( -4800 959 396 ) 20
+	thread mapwall ( -4800 959 396 ) ( -4288 959 48 ) 0 1930 20
+	thread mapwall ( -4288 959 48 ) ( -4288 -2113 -143 ) 20
+	thread mapwall ( -4288 -2113 -93 ) ( -3263 -2113 -106 ) 20
+	thread mapwall ( -3263 -2113 -106 ) ( -3263 -1599 264 ) 20
+	thread mapwall ( -3263 -1599 264 ) ( -3263 959 512 ) 20
+	thread mapwall ( -3263 959 512 ) ( -1727 959 535 ) 20
+	thread mapwall ( -1727 959 535 ) ( -1727 1471 442 ) 20
+
+	thread mapwall ( 5439 1471 800 ) ( 5439 -1087 460 ) 20
+	thread mapwall ( 5439 -1087 360 ) ( 7999 -1088 320 ) 20
+
+	thread mapwall ( 2031 -2335 272 ) ( 1327 -2335 272 ) 25 // origin (top corner of a wall), endpoint (top corner of wall's other side), thickness.
+	thread mapwall ( 2679 -2470 -376 ) ( 2568 -2470 -376 ) 0 500 10 ( 0 180 0 )
+
+	thread mapwall ( -6849 3008 645 ) ( -6849 3560 372 ) 0 500 500 ( 28 90 0 ) 	// origin (top center of a mountain), endpoint (bottom center of a mountain),
+	thread mapwall ( -6336 5054 970 ) ( -6336 3524 373 ) 0 1100 1100 ( 19 -90 0 )	// 0 (ignore this if doing custom thicknesses or custom angles), thickness 1 (- setsize1), thickness 2 (+ setsize2),
+						// angles ( (- look up, + look down) (horizontal angle, make sure this points at the endpoint!) (- tilt head left, + tilt head right) ).
+
+	thread mapwall ( -1344 -1640 247 ) ( -800 -1640 247 ) 20
+
+	thread mapwall ( -4323 -1039 -60 ) ( -4541 -1039 50 ) 0 1 100 ( -15 180 0 )
+
+	thread emitterstuff emitters/inferno.tik ( -1472 -5437 -476 ) ( 0 0 0 ) 5
+	thread emitterstuff emitters/inferno.tik ( 55 -5920 -477 ) ( 0 0 0 ) 5
+	thread emitterstuff emitters/inferno.tik ( 552 -5427 -481 ) ( 0 0 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( 1583 -5923 -476 ) ( 0 0 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( 55 -4422 -343 ) ( 0 90 0 ) 5
+
+   	thread emitterstuff emitters/inferno.tik ( -1007 -3348 -321 ) ( 0 180 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( -469 -2857 -343 ) ( 0 0 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( 46 -2349 -424 ) ( 0 0 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( 546 -2810 -458 ) ( 0 0 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( -3005 -2855 -231 ) ( 0 0 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( 2089 -3377 -310 ) ( 0 -90 0 ) 5
+
+   	thread emitterstuff emitters/inferno.tik ( 1032 -290 282 ) ( 0 -90 0 ) 5
+   	thread emitterstuff emitters/inferno.tik ( 2079 719 270 ) ( 0 -90 0 ) 5
+
+	thread cratesstuff vehicles/stuka_d.tik ( -2930 -2863 -235 ) ( 0 0 0 )
+	thread cratesstuff vehicles/shermantank_damaged.tik ( 2338 -5511 -432 ) ( 0 90 0 )
+	thread cratesstuff vehicles/shermantank_damaged.tik ( -1850 -6244 -457 ) ( 0 90 0 )
+	thread emitterstuff emitters/firefill.tik ( 2338 -5511 -312 ) ( 0 0 0 )
+	thread emitterstuff emitters/firefill.tik ( -1850 -6244 -337 ) ( 0 0 0 )
+
+	thread spawnlight ( -1100 -1856 272 ) ( 1.000000 0.925490 0.760784 ) 500 // origin, light color, light radius
+
+	exec maps/gen_mapscripts/bonfire.scr ( -2930 -2863 -235 ) "emitters/firefill.tik" 1.5 4.0 200 1 0.5 // origin, model, scale, burn time, burn distance, damageinc (damage dealt per iteration), burn model scale.
+
+	thread cratesstuff static/banquet_table.tik ( -1171 -1369 319 ) ( 0 -90 0 )
+	thread cratesstuff static/banquet_table.tik ( -1079 -1369 319 ) ( 0 -90 0 )
+	thread cratesstuff static/banquet_table.tik ( -1171 -1169 319 ) ( 0 -90 0 )
+	thread cratesstuff static/banquet_table.tik ( -1079 -1169 319 ) ( 0 -90 0 )
+	thread cratesstuff static/indycrate.tik ( -1074 -1046 315 ) ( 0 -90 0 )
+
+if(getcvar("g_ubergametype") != "bb")
+{
+}
+end
+
+mapedge local.color local.color2:
+
+	thread spawnlaser ( -800 -2648 319 ) ( -800 -1500 319 ) local.color2 1
+end
+
+cratesstuff local.model local.origin local.angles local.hide local.scale local.targetname local.setsize1 local.setsize2:
+
+	local.ent = spawn script_model
+	local.ent model local.model
+	local.ent.origin = local.origin
+	if(local.angles[2] != NIL) { local.ent.angles = local.angles }
+	if(local.hide == 1) { local.ent hide }
+	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
+	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
+	if(local.setsize2 != NIL) { local.ent setsize local.setsize1 local.setsize2 }
+end
+
+emitterstuff local.model local.origin local.angles local.scale local.anim:
+
+	local.emitter = spawn script_model
+	local.emitter model local.model
+	local.emitter.origin = local.origin
+	if(local.angles[2] != NIL) { local.emitter.angles = local.angles }
+	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
+	if(local.anim != NIL) { local.emitter anim local.anim }
+	local.emitter notsolid
+end
+
+solidclip local.origin local.setsize1 local.setsize2 local.angle local.targetname:
+
+	local.clip = spawn script_object
+	local.clip.origin = local.origin
+	local.clip setsize local.setsize1 local.setsize2
+	local.clip.angle = local.angle
+	local.clip solid
+	local.clip nodamage
+	if(local.targetname != NIL) { local.clip.targetname = local.targetname }
+end
+
+spawnlaser local.origin local.endpoint local.color local.scale:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
+
+mapwall local.origin1 local.origin2 local.thickness local.thick1 local.thick2 local.angles local.targetname:
+
+	local.wall = spawn script_object // draw an invisible 20-unit-thick wall between any two points that extends 5000 units downward.
+	local.wall.origin = local.origin1
+	local.fwd_vector = ( (local.origin2[0] - local.origin1[0]) (local.origin2[1] - local.origin1[1]) (local.origin2[2] - local.origin1[2]) ) // make a vector from origin1 to origin2.
+	local.wall.angles = vector_toangles(local.fwd_vector)
+	local.wall solid
+	local.wall nodamage
+	if(local.targetname != NIL) { local.wall.targetname = local.targetname }
+
+	local.dist = waitthread global/math.scr::sqrt ((local.origin2[0] - local.origin1[0]) * (local.origin2[0] - local.origin1[0]) + (local.origin2[1] - local.origin1[1]) * (local.origin2[1] - local.origin1[1]) + (local.origin2[2] - local.origin1[2]) * (local.origin2[2] - local.origin1[2]))
+	local.thick = local.thickness / 2.000
+
+	local.wall setsize ( 0 (local.thickness * -1) -5000 ) ( local.dist local.thickness 0 )
+	if(local.thick2 != NIL) { local.wall setsize ( 0 (local.thick1 * -1) -5000 ) ( local.dist local.thick2 0 ) }
+	if(local.angles != NIL) { local.wall.angles = local.angles }
+end
+
+spawnlight local.origin local.color local.radius:
+
+	local.light = spawn script_model
+	local.light model "fx/dummy.tik"
+	local.light.origin = local.origin
+	local.light light local.color[0] local.color[1] local.color[2] local.radius
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cyb:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.keepsamesides = 1
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 611 494 320 ) 180 axis    // for cyber attack only
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 272 -6855 -483 ) 90 allies
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( 599 -3123 -336 ) -90 		// allies bomb (snd), axis bomb (snd), radiobomb (cyb).
+	exec global/cyberattack_searchdestroy.scr								// none of these can be NIL. instead, use ( 0 0 0 ) 0 if not being used.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+snd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.bombcamera = 1
+	//level.cameradistance = 200 // this can be changed for each "changesides" if a bombsite is inside a small room, so the camera is not inside of a wall
+
+	if(level.changesides == 0) // allies are planting (axis bombsite origins)
+	{
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 611 494 320 ) 180		// for search & destroy only, team parameter doesn't matter
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1709 -1876 256 ) -90	// make sure to include initial bombsites before the while-loop begins.
+	}
+	if(level.changesides == 1) // axis are planting (allies bombsite origins)
+	{
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 272 -6855 -483 ) 90
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1572 -1357 -79 ) -90
+	}
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 1918 -1355 -79 ) 0 ( 2070 -1103 324 ) 0 ( 0 0 0 ) 0
+	exec global/cyberattack_searchdestroy.scr // begin the main script
+
+//-----------------------------------------------------------------------------
+
+	local.sides = level.changesides	// when the sides change each 3 rounds, old bombsites are removed and 2 ones are added closer to the defending team's spawn.
+	while(1)
+	{
+		if(level.changesides != local.sides)
+		{
+			waitthread global/cyberattack_searchdestroy.scr::bombsites_remove
+
+			if(level.changesides == 0)
+			{
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 611 494 320 ) 180
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1709 -1876 256 ) -90
+			}
+			if(level.changesides == 1)
+			{
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 272 -6855 -483 ) 90
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1572 -1357 -79 ) -90
+			}
+			local.sides = level.changesides
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+//allies
+exec alienx/basebuild.scr::basebuild ( 630.21 -4740.40 -384.44 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 730.21 -4740.40 -384.44 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 830.21 -4740.40 -384.44 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 930.21 -4740.40 -384.44 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1030.21 -4740.40 -380.44 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( 1130.21 -4740.40 -380.44 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( 1230.21 -4740.40 -384.44 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1330.21 -4740.40 -384.44 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1430.21 -4740.40 -384.44 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1530.21 -4740.40 -384.44 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1630.21 -4740.40 -384.44 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1730.21 -4740.40 -384.44 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1830.21 -4740.40 -384.44 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1930.21 -4740.40 -384.44 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+
+//axis
+exec alienx/basebuild.scr::basebuild ( -808.16 -1210.04 350.32 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -708.16 -1210.04 350.32 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -608.16 -1210.04 350.32 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -508.16 -1210.04 350.32 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -408.16 -1210.04 350.32 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( -308.16 -1210.04 350.32 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( -208.16 -1210.04 350.32 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -108.16 -1210.04 350.32 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -8.16 -1210.04 350.32 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 91.84 -1210.04 350.32 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 191.84 -1210.04 350.32 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 291.84 -1210.04 350.32 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 391.84 -1210.04 350.32 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 491.84 -1210.04 350.32 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+end
+
+clickitem_fail:
+end
+
+beach_scene_targeting:
+end
+beach_scene_targeting_loop:
+end
+beach_scene_mortar:
+end
+bunker_dust_trigger:
+end
+end_level_thread:
+end
+mg42_bunker_upper_fodder:
+end
+seq_flip_table:
+end
+close_door_floor_hatch1:
+end
+seq_bunker_entrance:
+end
+seq_open_lower_hatch:
+end
+seq_bunker_middle_radio:
+end
+seq_bunker_upper_start:
+end
+open_door_bunker_entrance_lower:
+end
+seq_mg42_retreat:
+end
+weh_off_bunker_upper_1_alarm:
+end
+door:
+end

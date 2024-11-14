@@ -1,0 +1,1494 @@
+// MOHAA allows up to 1024 entities per map, but the real maximum is closer to 725 entities for Training (limit = "Entities remaining: 300" or less).
+
+// In the server console window, type in "entities 1" without quotes, and wait a few seconds for console to count how many available entities are remaining.
+// In the server console window, type in "entities 2" to see each entity number and its targetname (or NULL if it doesn't exist).
+// In the server console window, type in "entities 3" for slower printing of each entity.
+// In the server console window, type in "entities 0" to prematurely stop counting.
+
+// The "entities" cvar can only count up to 868, but players cannot join the server unless at least 300 available entities are remaining.
+// To use this cvar from the console window, make sure "exec global/entitiescount.scr" is in the map script. 
+
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/coord_pointer.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "Training"
+setcvar "g_obj_alliedtext2" "Blow up tank with a bomb"
+setcvar "g_obj_alliedtext3" "to access gun ranges."
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "training"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "maxentities" "2000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills"
+local.v = exec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_axistext1" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1"; thread spawns_FFA }
+if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_axistext1" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"; thread spawns_TDM 
+						spawn info_player_deathmatch "origin" "-327 -3480 0" "angle" "42" // for spectators when joining game
+						spawn info_player_deathmatch "origin" "-6000 0 0" "angle" "0"
+}
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_axistext1" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_axistext1" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread snd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_axistext1" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+}
+// Most mods are turned off for base-builder for Training map.
+
+if(getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr explode_wood_small
+exec global/aliascache_triggersounds.scr explode_building_small
+exec global/aliascache_triggersounds.scr explode_building_large
+exec global/aliascache_triggersounds.scr explode_mine_large
+exec global/aliascache_triggersounds.scr track_sounds
+}
+
+	level.dmrespawning = 1
+	level.objectives = 0 // must complete all 7 objective before spawning the final key and changing final door's light from red to yellow.
+	level.objectives_field = 0 // do the 4 pistol, smg, sniper, and grenades objectives to unlock the final field area (mg42, final door).
+	level.finaldoorunlocked = 0
+	level.flags[tank] = 0 
+
+	//removeclass TurretGun
+	removeclass TriggerClickItem
+	removeclass TriggerOnce
+	removeclass TouchField
+	
+level waittill prespawn
+
+thread remove_bsp_entities 1 1 1 // local.removeammo, removeguns, removeplanes_frombsp; removes ammo and guns from the gun ranges.
+
+	exec global/dmprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+
+   	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 150000
+	$world farplane_color ( 0.6784 0.8353 0.9686 )
+
+	level.script = maps/training.scr
+	exec global/ambient.scr training
+	exec global/door_locked.scr
+	thread global/barrel.scr::explosive_barrel
+	exec global/bomber.scr
+
+	$explosive_on hide
+	$explosive_off hide
+	$explosive remove
+	$obj6 remove
+	$door_2 lock // the 1st left door 
+	$door_3 lock // the 1st right door
+	$door_4a unlock
+	$door_5a unlock
+	$door_6a unlock
+	$door_7a lock //door before mg42 gunrange
+	$door_8a unlock
+	$exit_door lock
+
+	//$pistol_ammo thread ammo_spawners pistol
+	//$rifle_ammo thread ammo_spawners rifle
+	//$smg_ammo thread ammo_spawners smg
+	//$ammo_grenade thread ammo_spawners grenade
+
+	$mg42 maxYawOffset 45
+	$mg42 pitchCaps ( -15 15 0 )
+
+exec global/victory_podium.scr ( 3735 -1800 -403 ) -90 auto auto 5
+
+if(getcvar("g_ubergametype") != "bb" && getcvar("g_ubergametype") != "cyb" && getcvar("g_ubergametype") != "snd" && getcvar("g_ubergametype") != "ft")
+{
+	thread door_2_trigger
+	thread door_3_trigger
+	thread door_7a_trigger
+
+	//$tank_turret solid // this is NULL
+	$tank solid
+	//removeclass VehicleTurretGun
+	//removeclass VehicleTank // just in case $tank isn't removed if doing "$tank remove".
+	
+
+// Entities = 135, if all mods below are removed, not including the entities for sv_maxclients.
+
+
+////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// driveable obj6 tank, or use explosives to blow up static obj6 tank.
+if(getcvar("g_ubermods") == "2")
+{
+	exec maps/training_mapscripts/tank_m3_replace.scr drive 1 0.125 0.0 0.333 // local.type = "static" or "drive" (make tank static or driveable), local.laserprism (0 = off or 1 = on), 
+									          			   // local.r, local.g, local.b (laser color).
+
+	//exec maps/training_mapscripts/obj6b_explosive_tanktrig.scr ( -4751 420 -308 ) ( 0 70 0 ) 1 1 0 65 // tank explosives origin, angles, local.r, local.g, local.b (explosives rgb light), local.lightradius
+
+		// comment out "obj6b_explosive_tanktrig.scr" script (tank explosives) if using "drive". if using "static", then uncomment these both.
+}
+if(getcvar("g_ubermods") != "2")
+{
+	exec maps/training_mapscripts/tank_m3_replace.scr static 1 0.125 0.0 0.333
+	exec maps/training_mapscripts/obj6b_explosive_tanktrig.scr ( -4751 420 -308 ) ( 0 70 0 ) 1 1 0 65
+}
+////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// standard mods used in most maps (not including "playertank.scr")
+
+
+
+
+
+
+thread drivetank_tempimmunity // this fix makes sure the "drive" tank ($tank1) cannot be destroyed by any airstrike bombs.
+}
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( 934 -3558 -387 ) ( 0 90 0 ) 15 10 // origin, angles, bulletsanger, angertime
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+if(getcvar("g_ubermods") == "2")
+{	
+	exec global/playertank.scr tank2 vehicles/panzer_tank_europe.tik ( 2301 2127 -403 ) ( 0 -90 0 ) 1000 30 //name, model, origin, angles, health, resettime
+
+	exec map_triggers/joint.scr ( 6497 3298 -367 )
+
+exec map_triggers/lightbomb.scr ( -4167 1106 64 ) ( -4255 -1170 64 ) ( -1778 -1279 -97 ) ( 80 -2414 -127 ) ( 695 -3386 -127 ) 					//( 1975 -2766 -123 ) ( 2689 2755 -260 ) ( 5216 2329 -405 ) ( 4798 315 -123 ) ( 6176 -2960 -387 )
+exec map_triggers/bomb.scr ( -7808 -1927 -190 ) ( -5992 1106 64 ) ( -6080 -1170 64 ) ( -3112 -276 -296 ) ( -1723 -2295 -375 ) ( 165 -3251 -264 ) ( 980 -2467 -159 ) 	//( 2023 367 -403 ) ( 4448 -1720 -239 ) ( 6354 -2887 -387 )
+exec map_triggers/grenade_ammo.scr ( -4717 -851 -309 ) ( -5696 712 -309 ) ( -1888 -843 -309 ) ( -1432 -1054 -289 ) ( 318 -1990 -387 ) ( 688 -3603 -387 ) 			//( 4744 2303 -403 ) ( 4459 -2960 -387 ) ( 4768 -2543 -387 ) ( 4949 263 -403 )
+exec map_triggers/rocket_ammo.scr ( -5660 -817 -309 ) ( -4741 764 -309 ) ( -1624 -79 -290 ) ( -877 -2412 -378 ) ( 731 -1994 -387 ) ( 71 -2278 -321 ) 			//( 2023 1888 -403 ) ( 3733 -2960 -387 ) ( 4839 2971 -211 ) ( 5138 -2960 -387 )
+exec map_triggers/snowball_ammo.scr ( -6511 241 -300 ) ( -1479 -843 -309 ) ( 391 -2222 -387 ) ( 1511 2740 -247 ) ( 1793 -3012 -393 ) 					//( 2023 -2427 -403 ) ( 3733 355 -395 ) ( 6497 3099 -282 ) ( 6152 -2448 -403 ) ( 6176 -1126 -123 )
+exec map_triggers/health.scr ( -5982 -1233 -305 ) ( -4220 1135 -305 ) ( -1914 -1450 -331 ) ( -368 -3445 -376 ) ( 1339 -2136 -376 ) ( 1764 2347 -402 ) 			//( 3384 1297 -395 ) ( 3384 -1551 -395 ) ( 6497 2333 -399 ) ( 5519 -2908 -387 )
+
+exec map_triggers/led_trap.scr ( 1511 2345 -386 ) led1 2
+exec map_triggers/led_trap.scr ( 5335 1034 -403 ) led2 1
+exec map_triggers/led_trap.scr ( 6350 -3004 -239 ) led3 2
+
+if(getcvar("g_ubergametype") != "bb")
+{
+exec map_triggers/player_spotlight.scr ( -4304 -1011 200 ) ( 0 0 1 ) s1 700 90 2 0 1 // origin, color rgb, name, health, anglestart, mountwall (0 = floor, 1 = left side wall mount, 2 = ceiling, 3 = right side wall mount), ...
+exec map_triggers/player_spotlight.scr ( -4304 951 200 ) ( 0 0 1 ) s3 700 -90 2 0 1 // local.orient (0 = rotate along x-axis, 1 = along y-axis, only for mountwall = 1 or 3), removeafterdeath (1 = remove light, 2 = remove light and base).
+exec map_triggers/player_spotlight.scr ( 696 -3145 -127 ) ( 1 0 0 ) s6 700 90 0 0 1
+exec map_triggers/player_spotlight.scr ( 3824 1870 -307 ) ( 0 0 1 ) s11 700 0 3 1 1 // attached to sniper target board
+exec map_triggers/player_spotlight.scr ( 5992 -2496 -277 ) ( 1 0 0 ) s13 700 180 1 1 1 // final gunrange
+exec map_triggers/spotlight_colorswitch.scr ( 3705 1959 -401 ) ( 270 90 0 ) s11
+exec map_triggers/spotlight_colorswitch.scr ( 6008 -2528 -376 ) ( 0 -90 0 ) s13 rainbow
+
+//exec map_triggers/player_spotlight.scr ( -5944 -1011 200 ) ( 0 0 1 ) s0 700 90 2 0 1 
+//exec map_triggers/player_spotlight.scr ( -5944 951 200 ) ( 0 0 1 ) s2 700 -90 2 0 1 
+//exec map_triggers/player_spotlight.scr ( 80 -2454 -127 ) ( 1 0 0 ) s4 700 -90 0 0 1
+//exec map_triggers/player_spotlight.scr ( 704 -2454 -127 ) ( 1 0 0 ) s5 700 -90 0 0 1
+//exec map_triggers/player_spotlight.scr ( 3176 -2496 -277 ) ( 1 0 0 ) s7 700 180 1 1 1 
+//exec map_triggers/player_spotlight.scr ( 3880 -2496 -277 ) ( 1 0 0 ) s8 700 180 1 1 1 
+//exec map_triggers/player_spotlight.scr ( 2680 3240 -102 ) ( 0 0 1 ) s9 700 -90 0 0 1
+//exec map_triggers/player_spotlight.scr ( 3384 3240 -76 ) ( 0 0 1 ) s10 700 -90 0 0 1 // adjacent to final gunrange
+//exec map_triggers/player_spotlight.scr ( 6172 383 -123 ) ( 1 0 0 ) s12 700 90 0 0 1 // on top of final gunrange wall
+//exec map_triggers/spotlight_colorswitch.scr ( 3896 -2531 -376 ) ( 0 -90 0 ) s8 
+//exec map_triggers/spotlight_colorswitch.scr ( 3181 3309 -137 ) ( 270 0 0 ) s10 rainbow
+}
+
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( -4643 701 -256 ) ( 0 160 0 ) ( -4622 -784 -256 ) ( 0 -71 0 ) 400 1 1 8 // targetname, bomb origin, bomb angles, radio origin, radio angles, ...
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 944 -2120 -334 ) ( 0 180 0 ) ( 463 -3480 -334 ) ( 0 90 0 ) 400 1 1 8   // damageradius, movefromorigin1st_b4blowingup (0 or 1) ...
+																       // pulsatingoff (0 or 1), pulsetime (default: 8).
+}
+
+if(getcvar("g_ubergametype") != "bb" && getcvar("g_ubergametype") != "cyb" && getcvar("g_ubergametype") != "snd" && getcvar("g_ubergametype") != "ft")
+{
+
+// Entities = 225, if all mods below are removed
+
+
+////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// custom mods made specifically for "training" map.
+
+exec maps/UBER_mapextras/training_teleporters.scr 1 // local.nogoingbehindwalls (0 = no, 1 = yes, removes teles that go behinds map walls, keeps only essential teles at gunranges).
+						    // making this = 1 is ideal for "trenchbombs.scr" script, since players cannot tele behind the walls and walk around the trench.
+
+exec maps/UBER_mapextras/training_cratesstuff.scr 0 0 1 1 1 // local.midshow (1 to show objects b4 tank blows up), finalshow (1 to show b4 gunrange objectives are done), boundaryshow (0 = hide, 1 = show), ...
+						// nogoingbehindwalls (0 or 1, removes all objects + teles behind map walls), spawnfewerobjects (0 = no, 1 = yes, frees up space for 101 more entities).
+
+
+// Entities = 345, if all mods below are removed
+
+
+//exec map_triggers/gen_switches/lampswitch.scr lamp1_tent 1 0.96 0.8 300 // uncomment these two lampswitches if "local.spawnfewerobjects" = 0.
+//exec map_triggers/gen_switches/lampswitch.scr lamp2_tent 1 0.96 0.8 300
+//exec map_triggers/gen_switches/lampswitch.scr lamp3_tent 1 0.96 0.8 300
+//exec map_triggers/gen_switches/lampswitch.scr lamp4_tent 1 0.96 0.8 300
+//exec map_triggers/gen_switches/lampswitch.scr lamp5_tent 1 0.96 0.8 300
+//exec map_triggers/gen_switches/lampswitch.scr lamp1_hangar 1 0.96 0.8 300
+//exec map_triggers/gen_switches/lampswitch.scr lamp2_hangar 1 0.96 0.8 300
+//exec map_triggers/gen_switches/lampswitch.scr lamp3_hangar 1 0.96 0.8 300
+//exec map_triggers/gen_switches/lampswitch.scr lamp4_hangar 1 0.96 0.8 300
+
+exec maps/training_mapscripts/finaldoor_keytrig.scr::main ( 5533 -2627 -387 ) // only load the 1st key origin, next to the final door for 1st-time unlock. 
+exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorlight 	      // when final key spawns for the 2nd time, 1st origin changes to ( -7734 -2341 -123 ) in "addremaining_keyorigins" thread,
+exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoor_trigger	      // and the other 9 random origins are inputted.
+
+exec maps/training_mapscripts/uboatmapwalls.scr
+//exec maps/training_mapscripts/uboatmapwalls.scr::modify mid 1 1 // local.wallname (mid or final), local.solid (0 = no, 1 = yes), local.show (0 = no, 1 = yes). 	
+
+exec maps/training_mapscripts/explosiveboxes.scr //.scr::main
+exec maps/training_mapscripts/tankexplosions.scr
+
+exec maps/training_mapscripts/tentwall_lasers.scr .3608 .6627 .0016 // local.r local.g local.b
+exec map_triggers/map_switches/training_trainswitch.scr ( -4695 -500 -307.5 ) ( 0 289 0 ) clip_2 door_mid 3.4 .3608 .6627 .0016 // origin, angles, wallclip, barbwirewall, rotatetime, r, g, b
+
+if(getcvar("g_ubermods") == "2")
+{
+//exec maps/gen_mapscripts/radios_musictrig.scr ( -4890 697 -256 ) ( 0 340 0 )  // in tents. local.origin_civradio, local.angles_civradio
+//exec maps/gen_mapscripts/radios_musictrig.scr ( 462 -2121 -334 ) ( 0 0 0 )    // in hangars near tank
+//exec maps/gen_mapscripts/radios_musictrig.scr ( 6166 -2653 -338 ) ( 0 180 0 ) // in gunrange fields
+
+exec maps/training_mapscripts/trucksounds_trig.scr ( 133 -2334 -345 ) ( 80 -2393 -340 ) truck_engine truck 1
+exec maps/training_mapscripts/trucksounds_trig.scr ( 620 -3343 -345 ) ( 705 -3266 -340 ) track_engine halftrack 0
+
+exec map_triggers/map_switches/training_valveswitch_final.scr 1 ( 4825 2382 -329 ) ( 0 0 0 ) 5 270 1 // name (1 or 2), origin, angles, rotatetime, rotateamount, clockwise (0 = countercw, 1 = cw).
+exec map_triggers/map_switches/training_valveswitch_final.scr 2 ( 6200 418 -329 ) ( 0 90 0 ) 5 270 0 // make sure clockwise is not the same for both valves, otherwise double cw, ccw motions happen.
+
+exec maps/training_mapscripts/bangalore_wallbomb.scr b1 ( 4441 -2528 -190 ) ( 60 -90 0 ) 100 0   // bangalore name, origin, angles, horizontal & vertical dists of explosions from bangalore's origin.
+//exec maps/training_mapscripts/bangalore_wallbomb.scr b2 ( 3735 -2528 -190 ) ( 60 -90 0 ) 100 0 // exec these scripts before the detonator_gunrange.scr scripts
+//exec maps/training_mapscripts/bangalore_wallbomb.scr b3 ( 3029 -2528 -190 ) ( 60 -90 0 ) 100 0
+exec maps/training_mapscripts/bangalore_wallbomb.scr b4 ( 2323 -2528 -190 ) ( 60 -90 0 ) 100 0
+
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 4800 -2814 -311 ) ( 0 0 0 ) b1 60 430 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
+//exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 4096 -2814 -311 ) ( 0 0 0 ) b2 60 430 2 // pulsatingoff = 0 for on/default, = 1 for off, = 2 for pulsating only for 8 seconds.
+//exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 3392 -2814 -311 ) ( 0 0 0 ) b3 60 430 2
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 2688 -2814 -311 ) ( 0 0 0 ) b4 60 430 2
+
+exec maps/training_mapscripts/airstrikebombs.scr::splinepath
+
+//exec maps/training_mapscripts/airstrikebombs.scr::splinepath_change final // uncomment these 3 lines for continuous "final" airstrikes, every 240 seconds (4 minutes), mainly for testing.
+//exec maps/training_mapscripts/airstrikebombs.scr::main final first 0 240  // otherwise if using "airstrike_radiotrig.scr", keep these 3 commented out.
+//exec maps/training_mapscripts/airstrikebombs.scr::main final second 0 240 // local.pathname, position (first or second, pathnames must be the same), offtime, bombsoff (0 = no, 1 = yes).
+
+exec maps/training_mapscripts/airstrike_radiotrig.scr allies ( -4868 753 -256 ) ( 0 340 0 ) 180 0 10 2.75 // local.airstrikename, originradio, anglesradio, offtimeradio, bombsoff (0 = on, 1 = off)...
+exec maps/training_mapscripts/airstrike_radiotrig.scr axis ( 465 -2061 -334 ) ( 0 0 0 ) 180 0 10 2.75     // bulletstokill (until plane begins smoking), killtime (time until smoking/burning plane explodes).
+exec maps/training_mapscripts/airstrike_radiotrig.scr final ( 6166 -2591 -338 ) ( 0 180 0 ) 120 0 10 2.75 // "airstrikename" = the path name that planes will travel on, when called by radio ($bomberpath_allies). 
+
+
+// Entities = 460, if all mods below are removed
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// comment some of these out if map crashes with "no free edicts" error, from too many entities being spawned in.
+// for Reborn servers, the Tunnel Base (and everything inside it) and the Fire Fields triggers are commented out (too many entities).
+
+//exec maps/UBER_mapscripts/sky_platform.scr ( 6466 -1508 1205 ) ( 1 0 0 ) sky1 0 // do not change the "sky1" targetnames, or the finaldoor_keytrig.scr script will not turn this on.
+//exec maps/UBER_mapscripts/sky_platform.scr ( 1877 -1975 800 ) ( 1 0 0 ) sky2 0 // add "exec maps/UBER_mapscripts/sky_platform.scr::on sky1", or sky2, sky3, sky4, sky5 to turn them on (or "off").
+//exec maps/UBER_mapscripts/sky_platform.scr ( -245 -3453 625 ) ( 1 0 0 ) sky3 1 
+//exec maps/UBER_mapscripts/sky_platform.scr ( -2080 230 695 ) ( 1 0 0 ) sky4 1
+//exec maps/UBER_mapscripts/sky_platform.scr ( -6195 695 685 ) ( 1 0 0 ) sky5 0
+
+// Entities = 500, if all mods below are removed
+
+
+exec maps/UBER_mapscripts/tunnelbase_nazi.scr ( -5200 500 -730 ) 0   // each tunnelbase_nazi.scr has 140 entities
+//exec maps/obj_medicstuff/medics.scr ( -4365 592 -685 ) 0 2 1 75 1 ( -5 -30 -5 ) ( 30 30 80 ) 
+//exec maps/obj_medicstuff/medics.scr ( -6031 408 -685 ) 180 1 1 75 0( -30 -30 -5 ) ( 5 30 80 )
+exec map_triggers/map_switches/training_valveswitch.scr ( -4175 633 -623 ) ( 0 -90 0 ) 5 270 0
+exec map_triggers/map_switches/training_electricalswitch.scr ( -4175 368 -623 ) ( 0 90 0 ) ( 1 0 0 ) 200 ( 0 0 1 ) 200 4 32
+exec map_triggers/player_spotlight.scr ( -5794 366 -596 ) ( 1 1 1 ) tunnel 0 0 3 0 1
+//exec map_triggers/spotlight_colorswitch.scr ( -5920 366 -623 ) ( 0 90 0 ) tunnel 
+exec map_triggers/spotlight_colorswitch.scr ( -5992 483 -685 ) ( 270 310 0 ) tunnel rainbow
+
+
+// Entities = 662, if all mods below are removed
+
+
+//exec maps/training_mapscripts/firefields.scr ( 3384.5 2395 -395 ) // centerpoint origin of all fire emitters, requires more than 70 entities.
+//exec map_triggers/map_switches/training_detonator_field.scr mid ( 3384.5 2395 -395 ) ( 0 90 0 ) 5 10 0.2 60  // name, origin, angles, fusetime, firetime, ...
+//exec map_triggers/map_switches/training_detonator_field.scr left ( 4088.5 2395 -395 ) ( 0 90 0 ) 8 10 0.2 60 // fire start waitmultiplier (behind fuses, keep below 0.5), offtime.
+//exec map_triggers/map_switches/training_detonator_field.scr right ( 2680.5 2395 -395 ) ( 0 90 0 ) 8 10 0.2 60
+
+
+// Entities = 736, if all mods below are removed
+
+
+exec maps/training_mapscripts/trenchbombs.scr 1.5 // explosion scale (only the fireball ones, not the mortar dirt).
+exec map_triggers/map_switches/training_alarmswitch_trench.scr tents ( -3144 208 -254 ) ( 0 -180 0 ) 75 450 2 // name, origin, angles, offtime, damageradius, pulsatingoff
+exec map_triggers/map_switches/training_alarmswitch_trench.scr tank ( -1563 -1040 -254 ) ( 0 -90 0 ) 75 450 2
+
+
+// Entities = 764, if all mods below are removed
+
+
+exec maps/training_mapscripts/finalfield_bombs.scr
+exec map_triggers/map_switches/training_detonator_final.scr ( 5495 193 -395 ) ( 0 90 0 ) 0 45 400 2 // local.fusetime (0 for 2-5 random), local.offtime, local.minedamageradius, local.pulsatingoff
+
+
+// Entities = 782. Note: Training for Reborn servers cannot go above 725 entities.
+
+
+// Entities = 708 without firefields.scr and detonator_field.scr mods.
+// Entities = 622 without tunnelbase_nazi.scr and other mods inside it.
+// Entities = 547 without tunnelbase_nazi.scr & firefields.scr & complementary mods.
+// Entities = 630 without sky_playform.scrs & firefields.scr & finalfield_bombs.scr (default, these counts do not include sv_maxclients.
+}
+
+if(getcvar("g_ubermods") == "1")
+{
+exec maps/training_mapscripts/airstrikebombs.scr::splinepath
+
+exec maps/training_mapscripts/airstrikebombs.scr::splinepath_change final
+exec maps/training_mapscripts/airstrikebombs.scr::main final first 1 200 10 2.75 1 // "1" parameter at the end allows splinepath to randomize allies, axis, final after each airstrike.
+exec maps/training_mapscripts/airstrikebombs.scr::main final second 1 200 10 2.75 1
+}
+}
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// below are essential threads for completing objectives.
+
+
+level waittill spawn
+
+	level.grenade_target = 0
+	thread tank_sound
+	thread ambience
+
+if(getcvar("g_ubergametype") != "bb" && getcvar("g_ubergametype") != "cyb" && getcvar("g_ubergametype") != "snd" && getcvar("g_ubergametype") != "ft")
+{
+	$grenade_target1 thread grenade_target
+	$grenade_target2 thread grenade_target
+	$grenade_target3 thread grenade_target
+	thread grenade
+	thread mg42
+	thread pistol
+	thread smg
+	thread rifle
+}
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
+}
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	wait 1
+	if($tunnelbase_centerpoint != NULL)
+	{
+		level.spawnamb = makeArray
+			( 6174 -3023 -475 ) ( 0 0 0 ) ( 225 319 227 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
+
+			( -6295 366 -800 ) ( 0 0 0 ) ( 2190 267 296 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
+		endArray
+	}
+	else
+	{
+		level.spawnamb = makeArray
+			( 6174 -3023 -475 ) ( 0 0 0 ) ( 225 319 227 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
+		endArray
+	}
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_03.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+////////////////////////////////////////////////////////////////////////
+// some randomized origins (10 per trigger) for the 6 map_triggers are not added until the tank blows up (level.flags[tank] = 1), and when level.objectives_field = 4.
+
+addremaining_levelspotorigins local.final:
+
+   wait 0.1 // make sure that the level spot variables have been loaded in first
+	
+   if(local.final != 1)
+   {
+	level.spot_bbomb[7] = ( 2023 367 -403 ) + ( 0 0 30 ) // bomb.scr
+	level.spot_bbomb[8] = ( 4448 -1720 -239 ) + ( 0 0 30 )
+
+	level.spot_grenade[6] = ( 4744 2303 -403 ) + ( 0 0 15 ) // grenade_ammo.scr
+	level.spot_grenade[7] = ( 4459 -2960 -387 ) + ( 0 0 15 )
+	level.spot_grenade[8] = ( 4768 -2543 -387 ) + ( 0 0 15 )
+
+	level.spot_rocket[6] = ( 2023 1888 -403 ) + ( 0 0 15 ) // rocket_ammo.scr
+	level.spot_rocket[7] = ( 3733 -2960 -387 ) + ( 0 0 15 )
+
+	level.spot_health[6] = ( 3384 1297 -395 ) + ( 0 0 15 ) // health.scr
+	level.spot_health[7] = ( 3384 -1551 -395 ) + ( 0 0 15 )
+
+	level.spot_lbomb[5] = ( 1975 -2766 -123 ) + ( 0 0 50 ) // lightbomb.scr
+	level.spot_lbomb[6] = ( 2689 2755 -260 ) + ( 0 0 50 )
+
+	level.spot_snowball[5] = ( 2023 -2427 -403 ) + ( 0 0 20 ) // snowball_ammo.scr
+	level.spot_snowball[6] = ( 3733 355 -395 ) + ( 0 0 20 )
+   }
+   if(local.final == 1)
+   {
+	level.spot_bbomb[9] = ( 6354 -2887 -387 ) + ( 0 0 30 )
+
+	level.spot_grenade[9] = ( 4949 263 -403 ) + ( 0 0 15 )
+
+	level.spot_rocket[8] = ( 4839 2971 -211 ) + ( 0 0 15 )
+	level.spot_rocket[9] = ( 5138 -2960 -387 ) + ( 0 0 15 )
+
+	level.spot_health[8] = ( 6497 2333 -399 ) + ( 0 0 15 )
+	level.spot_health[9] = ( 5519 -2908 -387 ) + ( 0 0 15 )
+
+	level.spot_lbomb[7] = ( 5216 2329 -405 ) + ( 0 0 50 )
+	level.spot_lbomb[8] = ( 4798 315 -123 ) + ( 0 0 50 )
+	level.spot_lbomb[9] = ( 6176 -2960 -387 ) + ( 0 0 50 )
+
+	level.spot_snowball[7] = ( 6497 3099 -282 ) + ( 0 0 20 )
+	level.spot_snowball[8] = ( 6152 -2448 -403 ) + ( 0 0 20 )
+	level.spot_snowball[9] = ( 6176 -1126 -123 ) + ( 0 0 20 )
+   }
+end
+
+////////////////////////////////////////////////////////////////////////
+// the final door key will always spawn near the door when it spawns for the first time. 
+// when the final door is opened and locks again after 4 seconds, the final door key will randomize to a new origin (10 possible locations).
+
+addremaining_keyorigins:
+
+	level.finalkey_spot[0] = ( -7734 -2341 -123 ) // change the 1st key spot origin after the door is unlocked/locked again for the 1st time;
+	level.finalkey_spot[1] = ( 5510 2340 -405 ) // changing [0]'s origin stops the key from spawning near the final door again.
+	level.finalkey_spot[2] = ( 4705 1088 -403 )
+	level.finalkey_spot[3] = ( 2308 -1935 -403 )
+	level.finalkey_spot[4] = ( 4448 -1720 -387 )
+	level.finalkey_spot[5] = ( 737 -2000 -387 )
+	level.finalkey_spot[6] = ( -32 -3351 -264 )
+	level.finalkey_spot[7] = ( -2295 174 -296 )
+	level.finalkey_spot[8] = ( -4883 -714 -309 )
+	level.finalkey_spot[9] = ( -5826 1050 64 )
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// more essential objectives threads and code from original training.scr (from "Pak5.pk3" in mohaa "main" folder).
+
+tank_sound:
+
+	if($tank == NULL) { thread tank_sound_driveable; end }
+
+	level.tank_idle_entity = spawn script_model model "fx/dummy.tik"
+	level.tank_idle_entity.origin = ($tank.origin + ( 0 0 200))
+	level.tank_idle_entity notsolid
+	level.tank_idle_entity anim idle
+	
+	level.tank_idle_entity loopsound tank_idle_training
+	$tank loopsound tank_snd_idle
+end
+
+tank_sound_driveable:
+
+	level.tank_idle_entity = spawn script_model model "fx/dummy.tik"
+	level.tank_idle_entity.origin = ($tank1.origin + ( 0 0 200))
+	level.tank_idle_entity notsolid
+	level.tank_idle_entity anim idle
+	level.tank_idle_entity glue $tank1
+	
+	level.tank_idle_entity loopsound tank_idle_training
+	$tank1 loopsound tank_snd_idle
+
+	while($tank1 != NULL) { waitframe }
+	level.tank_idle_entity remove
+end
+
+door_2_trigger:
+
+$door_2_triggeruse waittill trigger
+if(level.flags[tank] == 1) { $door_2_triggeruse remove }
+else if(level.flags[tank] != 1)
+{
+	local.player = parm.other
+	//local.player thread global/messagetrig_print.scr::message "*** This door is locked. ***" .8
+	$door_2_triggeruse message ("*** This door is locked. ***")
+	local.player iprint "To unlock middle doors, you must first blow up the tank."
+	$door_2_triggeruse nottriggerable
+	wait 1
+	$door_2_triggeruse triggerable
+	thread door_2_trigger
+
+}
+end
+
+door_3_trigger:
+
+$door_3_triggeruse waittill trigger
+if(level.flags[tank] == 1) { $door_3_triggeruse remove }
+else if(level.flags[tank] != 1)
+{
+	local.player = parm.other
+	//local.player thread global/messagetrig_print.scr::message "*** This door is locked. ***" .8
+	$door_3_triggeruse message ("*** This door is locked. ***")
+	local.player iprint "To unlock middle doors, you must first blow up the tank."
+	$door_3_triggeruse nottriggerable
+	wait 1
+	$door_3_triggeruse triggerable
+	thread door_3_trigger
+}
+end
+
+door_7a_trigger:
+
+local.door7a = spawn trigger_use
+local.door7a.origin = $door_7a.origin
+local.door7a setsize ( -30 -30 -70 ) ( 30 30 70 )
+
+local.door7a waittill trigger
+if(level.objectives_field >= 4) { local.door7a remove }
+else if(level.objectives_field < 4)
+{
+	local.player = parm.other
+	//local.player thread global/messagetrig_print.scr::message "*** This door is locked. ***" .8
+	local.door7a message ("*** This door is locked. ***")
+	local.player iprint "To unlock final mg42 gunrange, you must first complete the first 4 gunrange objectives."
+	local.door7a nottriggerable
+	wait 1
+	local.door7a remove
+	thread door_7a_trigger
+}
+end
+
+pistol:
+	if (level.pistol_done == 1)
+		end
+	level.pistol_done = 1
+
+	local.count = 0
+	while (local.count < 10)
+	{
+		$pistol_target waittill trigger
+		local.count++
+		waitframe
+	}	
+	
+	level.objectives_field++	// local.wallname, local.solid (0/default or 1, 0 = notsolid), local.show (0/default or 1, 0 = hide).
+	if(level.objectives_field >= 4) 
+	{ 
+		$door_7a unlock
+		iprintlnbold ("*** The door to the mg42 gunrange has been unlocked! ***")
+		println("----- The door to the mg42 gunrange has been unlocked!")
+
+		exec maps/training_mapscripts/uboatmapwalls.scr::modify final 0 0
+		exec maps/UBER_mapextras/training_cratesstuff.scr::finalshow // make visible some crates near the mg42 after previous gunrange objectives are done
+
+		thread addremaining_levelspotorigins 1 // add a few more origins for lightbomb, grenade_ammo, snowball_ammo, etc. to spawn at after being triggered by a player.
+		thread spawns_enable 1 // enable more player spawns for final gunrange, disable a few to keep max spawn points at 20.
+
+		setcvar "g_obj_alliedtext2" "Do 2 gun range objectives" 
+		setcvar "g_obj_alliedtext3" "to spawn final door key." 
+	}
+
+	level.objectives++
+	iprintlnbold ("Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	println("----- Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	if (level.objectives >= 7) 
+	{ 
+		wait 2
+		iprintlnbold ("*** The final door is now active! Find the key to unlock it! ***")
+		println("----- The final door is now active! Find the key to unlock it!")
+		$final_doorlight light 1 .75 0 80
+		exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorkey
+
+		setcvar "g_obj_alliedtext2" "Find the final door key" 
+		setcvar "g_obj_alliedtext3" "to open the final door." 
+	}
+	wait 1
+	thread global/bomber.scr::bomb 4
+	thread global/bomber.scr::bomb 5
+end	
+
+smg:
+	if (level.smg_done == 1)
+		end
+	level.smg_done = 1
+
+	local.count = 0
+	while (local.count < 50)
+	{
+		$thompson_target waittill trigger
+		local.count++
+		waitframe
+	}	
+
+	level.objectives_field++
+	if(level.objectives_field >= 4) 
+	{ 
+		$door_7a unlock
+		iprintlnbold ("*** The door to the mg42 gunrange has been unlocked! ***")
+		println("----- The door to the mg42 gunrange has been unlocked!")
+
+		exec maps/training_mapscripts/uboatmapwalls.scr::modify final 0 0 
+		exec maps/UBER_mapextras/training_cratesstuff.scr::finalshow 
+
+		thread addremaining_levelspotorigins 1
+		thread spawns_enable 1
+
+		setcvar "g_obj_alliedtext2" "Do 2 gun range objectives" 
+		setcvar "g_obj_alliedtext3" "to spawn final door key." 
+	}
+
+	level.objectives++
+	iprintlnbold ("Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	println("----- Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+
+	if (level.objectives >= 7) 
+	{ 
+		wait 2
+		iprintlnbold ("*** The final door is now active! Find the key to unlock it! ***")
+		println("----- The final door is now active! Find the key to unlock it!")
+		$final_doorlight light 1 .75 0 80
+		exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorkey
+
+		setcvar "g_obj_alliedtext2" "Find the final door key" 
+		setcvar "g_obj_alliedtext3" "to open the final door." 
+	}
+end	
+
+rifle:
+	if (level.rifle_done == 1)
+		end
+	level.rifle_done = 1
+
+	$sniper_target waittill trigger
+	waitframe
+	$sniper_target waittill trigger
+	waitframe
+	$sniper_target waittill trigger
+	waitframe
+	$sniper_target waittill trigger
+	waitframe
+	$sniper_target waittill trigger
+	waitframe
+
+	level.objectives_field++
+	if(level.objectives_field >= 4) 
+	{ 
+		$door_7a unlock
+		iprintlnbold ("*** The door to the mg42 gunrange has been unlocked! ***")
+		println("----- The door to the mg42 gunrange has been unlocked!")
+
+		exec maps/training_mapscripts/uboatmapwalls.scr::modify final 0 0
+		exec maps/UBER_mapextras/training_cratesstuff.scr::finalshow
+
+		thread addremaining_levelspotorigins 1
+		thread spawns_enable 1
+
+		setcvar "g_obj_alliedtext2" "Do 2 gun range objectives" 
+		setcvar "g_obj_alliedtext3" "to spawn final door key." 
+	}
+
+	level.objectives++
+	iprintlnbold ("Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	println("----- Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	if (level.objectives >= 7) 
+	{ 
+		wait 2
+		iprintlnbold ("*** The final door is now active! Find the key to unlock it! ***")
+		println("----- The final door is now active! Find the key to unlock it!")
+		$final_doorlight light 1 .75 0 80
+		exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorkey
+
+		setcvar "g_obj_alliedtext2" "Find the final door key" 
+		setcvar "g_obj_alliedtext3" "to open the final door." 
+	}
+	wait 1
+	thread global/bomber.scr::bomb 1 1
+	thread global/bomber.scr::bomb 2 1
+	thread global/bomber.scr::bomb 3 1
+	thread global/bomber.scr::bomb 7 1
+end 
+
+grenade:
+	if (level.grenade_done == 1)
+		end
+	level.grenade_done = 1
+
+	while ( level.grenade_target < 3 )
+		wait 1
+
+	level.objectives_field++
+	if(level.objectives_field >= 4) 
+	{ 
+		$door_7a unlock
+		iprintlnbold ("*** The door to the mg42 gunrange has been unlocked! ***")
+		println("----- The door to the mg42 gunrange has been unlocked!")
+
+		exec maps/training_mapscripts/uboatmapwalls.scr::modify final 0 0
+		exec maps/UBER_mapextras/training_cratesstuff.scr::finalshow
+
+		thread addremaining_levelspotorigins 1
+		thread spawns_enable 1
+
+		setcvar "g_obj_alliedtext2" "Do 2 gun range objectives" 
+		setcvar "g_obj_alliedtext3" "to spawn final door key." 
+	}
+
+	level.objectives++
+	iprintlnbold ("Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	println("----- Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	if (level.objectives >= 7) 
+	{ 
+		wait 2
+		iprintlnbold ("*** The final door is now active! Find the key to unlock it! ***")
+		println("----- The final door is now active! Find the key to unlock it!")
+		$final_doorlight light 1 .75 0 80
+		exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorkey
+
+		setcvar "g_obj_alliedtext2" "Find the final door key" 
+		setcvar "g_obj_alliedtext3" "to open the final door." 
+	}
+end 
+
+mg42:
+	if (level.mg42_done == 1)
+		end
+	level.mg42_done = 1
+
+	for (local.i = 1; local.i <= $mg42_target.size; local.i++)
+	{
+		if (IsAlive $mg42_target[local.i])
+			$mg42_target[local.i] waittill death
+	}
+
+	level.objectives++
+	iprintlnbold ("Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	println("----- Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	if (level.objectives >= 7) 
+	{ 
+		wait 2
+		iprintlnbold ("*** The final door is now active! Find the key to unlock it! ***")
+		println("----- The final door is now active! Find the key to unlock it!")
+		$final_doorlight light 1 .75 0 80
+		exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorkey
+
+		setcvar "g_obj_alliedtext2" "Find the final door key" 
+		setcvar "g_obj_alliedtext3" "to open the final door." 
+	}
+end
+
+easter_egg: //in mg42 range, back right corner, two-barrel pair. blow up the left one.
+
+	if(getcvar("g_ubergametype") == "cyb" || getcvar("g_ubergametype") == "snd" || getcvar("g_ubergametype") == "ft" || getcvar("g_ubergametype") == "bb") { end }
+
+	if (level.easteregg_done == 1)
+		end
+	level.easteregg_done = 1
+
+	level.objectives++
+	iprintlnbold ("Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	println("----- Objectives completed: " + level.objectives + "/7 until the final door key spawns!")
+	if (level.objectives >= 7) 
+	{ 
+		wait 2
+		iprintlnbold ("*** The final door is now active! Find the key to unlock it! ***")
+		println("----- The final door is now active! Find the key to unlock it!")
+		$final_doorlight light 1 .75 0 80
+		exec maps/training_mapscripts/finaldoor_keytrig.scr::finaldoorkey
+
+		setcvar "g_obj_alliedtext2" "Find the final door key" 
+		setcvar "g_obj_alliedtext3" "to open the final door." 
+	}
+	wait 1
+	thread global/bomber.scr::bomb 6
+end
+
+grenade_target:
+
+	self waittill death
+	level.grenade_target++
+end
+
+////////////////////////////////////////////////////////////////////////
+
+drivetank_tempimmunity: // this fix makes sure the "drive" tank ($tank1) cannot be destroyed by any airstrike bombs.
+
+	wait 2 // initialize everything
+	if($tank1 == NULL) { end }
+
+	while($tank1 != NULL)
+	{
+ 		if(level.airspace_toobusy == 1)
+ 		{
+			local.health = $tank1.health
+ 			wait 3
+			$tank1.health = 9999999 // bombs reach the tank 3 seconds for "final" path, 5 seconds for "allies" path.
+			wait 5.5
+			$tank1.health = local.health // wait 5.5 seconds before returning to normal health.
+
+			while(level.airspace_toobusy == 1) { waitframe } // don't let the if-statement run again until the next airstrike.
+ 		}
+		wait 0.1
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+// mohaa's maxentities is hard-coded for 1024 entities, cannot be increased.
+// this thread removes up to 80 entities, since "maxentities 2048" doesn't work.
+
+remove_bsp_entities local.removeammo local.removeguns local.removeplanes_frombsp:
+
+	$mg42_trigger remove
+	$grenade_trigger remove
+	$trigger_health remove
+	$doors_dialog_trigger remove
+	$explosives_trigger remove
+	$ladder_top remove
+	$tower_trigger remove
+	$lookat remove
+	$obj2 remove
+	$obj3 remove
+	$obj1b remove
+	$exterior remove
+	$stand_up remove
+	$exit_trigger remove
+
+	if(local.removeammo == 1)
+	{
+		removeclass ammoentity
+		removeclass health
+		$pistol_ammo remove
+		$health remove
+		$smg_ammo remove
+		$rifle_ammo remove
+		$ammo_grenade remove
+	}
+
+	if(local.removeguns == 1)
+	{
+		$pistol remove
+		$sniper remove
+		$thompson remove
+		removeclass Weapon // this also removes $mg42
+	}
+
+	if(local.removeplanes_frombsp == 1)
+	{
+		$bomberpath remove
+		$bomberspeaker remove
+		$t50 remove
+		$t51 remove
+		$t52 remove
+		$t53 remove
+		$t54 remove
+		$t55 remove
+		$t56 remove
+		$t57 remove
+		$t58 remove
+		$t59 remove
+		$t60 remove
+		$t61 remove
+		$t62 remove
+		$t63 remove
+		$t64 remove
+		$t65 remove
+		$t66 remove
+		$t67 remove
+		$t89 remove
+		$t90 remove
+		$t91 remove
+		$t92 remove
+		$t100 remove
+		$t101 remove
+		$t102 remove
+		$t103 remove
+		$t104 remove
+		$t105 remove
+		$t106 remove
+		$t121 remove
+		$t122 remove
+		$t124 remove
+		$t125 remove
+		$t126 remove
+		$t127 remove
+		$t128 remove
+		$t129 remove
+		$t130 remove
+		$t131 remove
+		$t133 remove
+		$t134 remove
+		$t135 remove
+		$t136 remove
+		$t137 remove
+		$t138 remove
+		$t139 remove
+		$t140 remove
+		$t142 remove
+		$t143 remove
+		$t144 remove
+		$t145 remove
+		$t146 remove
+		$t147 remove
+		$t148 remove
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// customize playerspawn origins. spawns change when level.objectives_field = 4 and when level.objectives = 7.
+
+spawns_TDM:
+
+	spawn info_player_allied "origin" "-7280 -1543 -210" "angle" "90" "targetname" "playerspawn_allied1"
+	spawn info_player_allied "origin" "-7661 -1007 -312" "angle" "38" "targetname" "playerspawn_allied2"
+	spawn info_player_allied "origin" "-7081 -708 -279" "angle" "46" "targetname" "playerspawn_allied3"
+	spawn info_player_allied "origin" "-7081 -130 -299" "angle" "0" "targetname" "playerspawn_allied4"
+	spawn info_player_allied "origin" "-6562 205 -299" "angle" "-35" "targetname" "playerspawn_allied5" // the 1st 5 allied spawns are behind the gate, make sure there's a tele to get out.
+	spawn info_player_allied "origin" "-5938 1037 -309" "angle" "-20" "targetname" "playerspawn_allied6"
+	spawn info_player_allied "origin" "-6054 479 -309" "angle" "-10" "targetname" "playerspawn_allied7"
+	spawn info_player_allied "origin" "-6054 -638 -309" "angle" "12" "targetname" "playerspawn_allied8"
+	spawn info_player_allied "origin" "-5938 -1109 -309" "angle" "21" "targetname" "playerspawn_allied9"
+	spawn info_player_allied "origin" "-5732 717 -309" "angle" "-51" "targetname" "playerspawn_allied10"
+	spawn info_player_allied "origin" "-5481 -920 -309" "angle" "80" "targetname" "playerspawn_allied11"
+	spawn info_player_allied "origin" "-4902 657 -309" "angle" "-82" "targetname" "playerspawn_allied12"
+	spawn info_player_allied "origin" "-4830 -895 -309" "angle" "91" "targetname" "playerspawn_allied13"
+	spawn info_player_allied "origin" "-5165 1180 -309" "angle" "-33" "targetname" "playerspawn_allied14"
+	spawn info_player_allied "origin" "-5165 -1229 -309" "angle" "33" "targetname" "playerspawn_allied15"
+	spawn info_player_allied "origin" "-4300 -1098 -309" "angle" "90" "targetname" "playerspawn_allied16"
+	spawn info_player_allied "origin" "-4300 1040 -309" "angle" "-90" "targetname" "playerspawn_allied17"
+	spawn info_player_allied "origin" "-4073 694 -309" "angle" "-90" "targetname" "playerspawn_allied18"
+	spawn info_player_allied "origin" "-4101 -908 -309" "angle" "90" "targetname" "playerspawn_allied19"
+	spawn info_player_allied "origin" "-3405 -277 -318" "angle" "25" "targetname" "playerspawn_allied20"
+	
+	spawn info_player_axis "origin" "-1081 -2818 -375" "angle" "110" "targetname" "playerspawn_axis1"
+	spawn info_player_axis "origin" "-695 -2618 -395" "angle" "157" "targetname" "playerspawn_axis2"
+	spawn info_player_axis "origin" "-310 -2142 -387" "angle" "-105" "targetname" "playerspawn_axis3"
+	spawn info_player_axis "origin" "-131 -3380 -387" "angle" "120" "targetname" "playerspawn_axis4"
+	spawn info_player_axis "origin" "311 -2029 -387" "angle" "-124" "targetname" "playerspawn_axis5"
+	spawn info_player_axis "origin" "266 -2048 -149" "angle" "-90" "targetname" "playerspawn_axis6"
+	spawn info_player_axis "origin" "313 -3197 -381" "angle" "136" "targetname" "playerspawn_axis7"
+	spawn info_player_axis "origin" "351 -3709 -378" "angle" "119" "targetname" "playerspawn_axis8"
+	spawn info_player_axis "origin" "432 -1813 -375" "angle" "-130" "targetname" "playerspawn_axis9"
+	spawn info_player_axis "origin" "867 -1983 -387" "angle" "-114" "targetname" "playerspawn_axis10"
+	spawn info_player_axis "origin" "896 -2035 -149" "angle" "-125" "targetname" "playerspawn_axis11"
+	spawn info_player_axis "origin" "530 -3616 -387" "angle" "90" "targetname" "playerspawn_axis12"
+	spawn info_player_axis "origin" "898 -3557 -150" "angle" "124" "targetname" "playerspawn_axis13"
+	spawn info_player_axis "origin" "395 -2300 -387" "angle" "-90" "targetname" "playerspawn_axis14"
+	spawn info_player_axis "origin" "1219 -2045 -375" "angle" "-116" "targetname" "playerspawn_axis15"
+	spawn info_player_axis "origin" "1113 -3574 -382" "angle" "80" "targetname" "playerspawn_axis16"
+	spawn info_player_axis "origin" "1487 -2472 -387" "angle" "-148" "targetname" "playerspawn_axis17"
+	spawn info_player_axis "origin" "1482 -3181 -370" "angle" "155" "targetname" "playerspawn_axis18"
+	spawn info_player_axis "origin" "1635 -3021 -395" "angle" "155" "targetname" "playerspawn_axis19"
+	spawn info_player_axis "origin" "1655 -2538 -387" "angle" "-159" "targetname" "playerspawn_axis20"
+	
+	spawn info_player_allied "origin" "-2724 -239 -296" "angle" "0" "targetname" "playerspawn_allied21"
+	spawn info_player_allied "origin" "-2027 153 -315" "angle" "-66" "targetname" "playerspawn_allied22"
+	spawn info_player_allied "origin" "-1635 -86 -289" "angle" "-95" "targetname" "playerspawn_allied23"
+	spawn info_player_allied "origin" "-1479 -1008 -309" "angle" "148" "targetname" "playerspawn_allied24"
+	spawn info_player_allied "origin" "-1858 -1076 -302" "angle" "-67" "targetname" "playerspawn_allied25"
+	spawn info_player_allied "origin" "-1480 -1063 -299" "angle" "-90" "targetname" "playerspawn_allied26"
+	spawn info_player_allied "origin" "1659 2503 -350" "angle" "-50" "targetname" "playerspawn_allied27"
+	spawn info_player_allied "origin" "1700 3256 -189" "angle" "-50" "targetname" "playerspawn_allied28"
+	spawn info_player_allied "origin" "2236 2539 -371" "angle" "-78" "targetname" "playerspawn_allied29"
+	spawn info_player_allied "origin" "2505 3312 -103" "angle" "-90" "targetname" "playerspawn_allied30"
+	spawn info_player_allied "origin" "3558 3311 -71" "angle" "-90" "targetname" "playerspawn_allied31"
+	spawn info_player_allied "origin" "4092 3288 -120" "angle" "-90" "targetname" "playerspawn_allied32"
+	
+	spawn info_player_axis "origin" "1999 -2608 -387" "angle" "-10" "targetname" "playerspawn_axis21"
+	spawn info_player_axis "origin" "2656 -2861 -387" "angle" "171" "targetname" "playerspawn_axis22"
+	spawn info_player_axis "origin" "2703 -2861 -387" "angle" "11" "targetname" "playerspawn_axis23"
+	spawn info_player_axis "origin" "3360 -2640 -387" "angle" "-174" "targetname" "playerspawn_axis24"
+	spawn info_player_axis "origin" "3407 -2640 -387" "angle" "-7" "targetname" "playerspawn_axis25"
+	spawn info_player_axis "origin" "4064 -2861 -387" "angle" "168" "targetname" "playerspawn_axis26"
+	spawn info_player_axis "origin" "4111 -2861 -387" "angle" "11" "targetname" "playerspawn_axis27"
+	spawn info_player_axis "origin" "4768 -2640 -387" "angle" "-174" "targetname" "playerspawn_axis28"
+	spawn info_player_axis "origin" "4720 -2424 -403" "angle" "180" "targetname" "playerspawn_axis29"
+	spawn info_player_axis "origin" "4368 -1644 -403" "angle" "-157" "targetname" "playerspawn_axis30"
+	spawn info_player_axis "origin" "3383 -2830 -123" "angle" "150" "targetname" "playerspawn_axis31"
+	spawn info_player_axis "origin" "4088 -2831 -123" "angle" "146" "targetname" "playerspawn_axis32"
+	
+	spawn info_player_allied "origin" "4732 2390 -403" "angle" "-128" "targetname" "playerspawn_allied33"
+	spawn info_player_allied "origin" "4732 1354 -403" "angle" "-128" "targetname" "playerspawn_allied34"
+	spawn info_player_allied "origin" "4990 3308 -143" "angle" "-90" "targetname" "playerspawn_allied35"
+	spawn info_player_allied "origin" "5892 3298 -188" "angle" "-115" "targetname" "playerspawn_allied36"
+	spawn info_player_allied "origin" "6478 3043 -247" "angle" "-126" "targetname" "playerspawn_allied37"
+	
+	spawn info_player_axis "origin" "4815 -2861 -387" "angle" "11" "targetname" "playerspawn_axis33"
+	spawn info_player_axis "origin" "5472 -2640 -387" "angle" "-174" "targetname" "playerspawn_axis34"
+	spawn info_player_axis "origin" "5519 -2861 -387" "angle" "9" "targetname" "playerspawn_axis35"
+	spawn info_player_axis "origin" "6176 -2884 -387" "angle" "166" "targetname" "playerspawn_axis36"
+	spawn info_player_axis "origin" "6136 -2424 -403" "angle" "126" "targetname" "playerspawn_axis37"
+	
+	$playerspawn_allied21 disablespawn
+	$playerspawn_allied22 disablespawn
+	$playerspawn_allied23 disablespawn
+	$playerspawn_allied24 disablespawn
+	$playerspawn_allied25 disablespawn
+	$playerspawn_allied26 disablespawn
+	$playerspawn_allied27 disablespawn
+	$playerspawn_allied28 disablespawn
+	$playerspawn_allied29 disablespawn
+	$playerspawn_allied30 disablespawn
+	$playerspawn_allied31 disablespawn
+	$playerspawn_allied32 disablespawn
+
+	$playerspawn_axis21 disablespawn
+	$playerspawn_axis22 disablespawn
+	$playerspawn_axis23 disablespawn
+	$playerspawn_axis24 disablespawn
+	$playerspawn_axis25 disablespawn
+	$playerspawn_axis26 disablespawn
+	$playerspawn_axis27 disablespawn
+	$playerspawn_axis28 disablespawn
+	$playerspawn_axis29 disablespawn
+	$playerspawn_axis30 disablespawn
+	$playerspawn_axis31 disablespawn
+	$playerspawn_axis32 disablespawn
+
+	$playerspawn_allied33 disablespawn
+	$playerspawn_allied34 disablespawn
+	$playerspawn_allied35 disablespawn
+	$playerspawn_allied36 disablespawn
+	$playerspawn_allied37 disablespawn
+
+	$playerspawn_axis33 disablespawn
+	$playerspawn_axis34 disablespawn
+	$playerspawn_axis35 disablespawn
+	$playerspawn_axis36 disablespawn
+	$playerspawn_axis37 disablespawn
+end
+
+spawns_FFA:
+
+	spawn info_player_deathmatch "origin" "-7280 -1543 -210" "angle" "90" "targetname" "playerspawn_allied1"
+	spawn info_player_deathmatch "origin" "-7661 -1007 -312" "angle" "38" "targetname" "playerspawn_allied2"
+	spawn info_player_deathmatch "origin" "-7081 -708 -279" "angle" "46" "targetname" "playerspawn_allied3"
+	spawn info_player_deathmatch "origin" "-7081 -130 -299" "angle" "0" "targetname" "playerspawn_allied4"
+	spawn info_player_deathmatch "origin" "-6562 205 -299" "angle" "-35" "targetname" "playerspawn_allied5" // the 1st 5 allied spawns are behind the gate, make sure there's a tele to get out.
+	spawn info_player_deathmatch "origin" "-5938 1037 -309" "angle" "-20" "targetname" "playerspawn_allied6"
+	spawn info_player_deathmatch "origin" "-6054 479 -309" "angle" "-10" "targetname" "playerspawn_allied7"
+	spawn info_player_deathmatch "origin" "-6054 -638 -309" "angle" "12" "targetname" "playerspawn_allied8"
+	spawn info_player_deathmatch "origin" "-5938 -1109 -309" "angle" "21" "targetname" "playerspawn_allied9"
+	spawn info_player_deathmatch "origin" "-5732 717 -309" "angle" "-51" "targetname" "playerspawn_allied10"
+	spawn info_player_deathmatch "origin" "-5481 -920 -309" "angle" "80" "targetname" "playerspawn_allied11"
+	spawn info_player_deathmatch "origin" "-4902 657 -309" "angle" "-82" "targetname" "playerspawn_allied12"
+	spawn info_player_deathmatch "origin" "-4830 -895 -309" "angle" "91" "targetname" "playerspawn_allied13"
+	spawn info_player_deathmatch "origin" "-5165 1180 -309" "angle" "-33" "targetname" "playerspawn_allied14"
+	spawn info_player_deathmatch "origin" "-5165 -1229 -309" "angle" "33" "targetname" "playerspawn_allied15"
+	spawn info_player_deathmatch "origin" "-4300 -1098 -309" "angle" "90" "targetname" "playerspawn_allied16"
+	spawn info_player_deathmatch "origin" "-4300 1040 -309" "angle" "-90" "targetname" "playerspawn_allied17"
+	spawn info_player_deathmatch "origin" "-4073 694 -309" "angle" "-90" "targetname" "playerspawn_allied18"
+	spawn info_player_deathmatch "origin" "-4101 -908 -309" "angle" "90" "targetname" "playerspawn_allied19"
+	spawn info_player_deathmatch "origin" "-3405 -277 -318" "angle" "25" "targetname" "playerspawn_allied20"
+	
+	spawn info_player_deathmatch "origin" "-1081 -2818 -375" "angle" "110" "targetname" "playerspawn_axis1"
+	spawn info_player_deathmatch "origin" "-695 -2618 -395" "angle" "157" "targetname" "playerspawn_axis2"
+	spawn info_player_deathmatch "origin" "-310 -2142 -387" "angle" "-105" "targetname" "playerspawn_axis3"
+	spawn info_player_deathmatch "origin" "-131 -3380 -387" "angle" "120" "targetname" "playerspawn_axis4"
+	spawn info_player_deathmatch "origin" "311 -2029 -387" "angle" "-124" "targetname" "playerspawn_axis5"
+	spawn info_player_deathmatch "origin" "266 -2048 -149" "angle" "-90" "targetname" "playerspawn_axis6"
+	spawn info_player_deathmatch "origin" "313 -3197 -381" "angle" "136" "targetname" "playerspawn_axis7"
+	spawn info_player_deathmatch "origin" "351 -3709 -378" "angle" "119" "targetname" "playerspawn_axis8"
+	spawn info_player_deathmatch "origin" "432 -1813 -375" "angle" "-130" "targetname" "playerspawn_axis9"
+	spawn info_player_deathmatch "origin" "867 -1983 -387" "angle" "-114" "targetname" "playerspawn_axis10"
+	spawn info_player_deathmatch "origin" "896 -2035 -149" "angle" "-125" "targetname" "playerspawn_axis11"
+	spawn info_player_deathmatch "origin" "530 -3616 -387" "angle" "90" "targetname" "playerspawn_axis12"
+	spawn info_player_deathmatch "origin" "898 -3557 -150" "angle" "124" "targetname" "playerspawn_axis13"
+	spawn info_player_deathmatch "origin" "395 -2300 -387" "angle" "-90" "targetname" "playerspawn_axis14"
+	spawn info_player_deathmatch "origin" "1219 -2045 -375" "angle" "-116" "targetname" "playerspawn_axis15"
+	spawn info_player_deathmatch "origin" "1113 -3574 -382" "angle" "80" "targetname" "playerspawn_axis16"
+	spawn info_player_deathmatch "origin" "1487 -2472 -387" "angle" "-148" "targetname" "playerspawn_axis17"
+	spawn info_player_deathmatch "origin" "1482 -3181 -370" "angle" "155" "targetname" "playerspawn_axis18"
+	spawn info_player_deathmatch "origin" "1635 -3021 -395" "angle" "155" "targetname" "playerspawn_axis19"
+	spawn info_player_deathmatch "origin" "1655 -2538 -387" "angle" "-159" "targetname" "playerspawn_axis20"
+	
+	spawn info_player_deathmatch "origin" "-2724 -239 -296" "angle" "0" "targetname" "playerspawn_allied21"
+	spawn info_player_deathmatch "origin" "-2027 153 -315" "angle" "-66" "targetname" "playerspawn_allied22"
+	spawn info_player_deathmatch "origin" "-1635 -86 -289" "angle" "-95" "targetname" "playerspawn_allied23"
+	spawn info_player_deathmatch "origin" "-1479 -1008 -309" "angle" "148" "targetname" "playerspawn_allied24"
+	spawn info_player_deathmatch "origin" "-1858 -1076 -302" "angle" "-67" "targetname" "playerspawn_allied25"
+	spawn info_player_deathmatch "origin" "-1480 -1063 -299" "angle" "-90" "targetname" "playerspawn_allied26"
+	spawn info_player_deathmatch "origin" "1659 2503 -350" "angle" "-50" "targetname" "playerspawn_allied27"
+	spawn info_player_deathmatch "origin" "1700 3256 -189" "angle" "-50" "targetname" "playerspawn_allied28"
+	spawn info_player_deathmatch "origin" "2236 2539 -371" "angle" "-78" "targetname" "playerspawn_allied29"
+	spawn info_player_deathmatch "origin" "2505 3312 -103" "angle" "-90" "targetname" "playerspawn_allied30"
+	spawn info_player_deathmatch "origin" "3558 3311 -71" "angle" "-90" "targetname" "playerspawn_allied31"
+	spawn info_player_deathmatch "origin" "4092 3288 -120" "angle" "-90" "targetname" "playerspawn_allied32"
+	
+	spawn info_player_deathmatch "origin" "1999 -2608 -387" "angle" "-10" "targetname" "playerspawn_axis21"
+	spawn info_player_deathmatch "origin" "2656 -2861 -387" "angle" "171" "targetname" "playerspawn_axis22"
+	spawn info_player_deathmatch "origin" "2703 -2861 -387" "angle" "11" "targetname" "playerspawn_axis23"
+	spawn info_player_deathmatch "origin" "3360 -2640 -387" "angle" "-174" "targetname" "playerspawn_axis24"
+	spawn info_player_deathmatch "origin" "3407 -2640 -387" "angle" "-7" "targetname" "playerspawn_axis25"
+	spawn info_player_deathmatch "origin" "4064 -2861 -387" "angle" "168" "targetname" "playerspawn_axis26"
+	spawn info_player_deathmatch "origin" "4111 -2861 -387" "angle" "11" "targetname" "playerspawn_axis27"
+	spawn info_player_deathmatch "origin" "4768 -2640 -387" "angle" "-174" "targetname" "playerspawn_axis28"
+	spawn info_player_deathmatch "origin" "4720 -2424 -403" "angle" "180" "targetname" "playerspawn_axis29"
+	spawn info_player_deathmatch "origin" "4480 -1690 -239" "angle" "-142" "targetname" "playerspawn_axis30"
+	spawn info_player_deathmatch "origin" "3383 -2830 -123" "angle" "150" "targetname" "playerspawn_axis31"
+	spawn info_player_deathmatch "origin" "4088 -2831 -123" "angle" "146" "targetname" "playerspawn_axis32"
+	
+	spawn info_player_deathmatch "origin" "4732 2390 -403" "angle" "-128" "targetname" "playerspawn_allied33"
+	spawn info_player_deathmatch "origin" "4732 1354 -403" "angle" "-128" "targetname" "playerspawn_allied34"
+	spawn info_player_deathmatch "origin" "4990 3308 -143" "angle" "-90" "targetname" "playerspawn_allied35"
+	spawn info_player_deathmatch "origin" "5892 3298 -188" "angle" "-115" "targetname" "playerspawn_allied36"
+	spawn info_player_deathmatch "origin" "6478 3043 -247" "angle" "-126" "targetname" "playerspawn_allied37"
+	
+	spawn info_player_deathmatch "origin" "4815 -2861 -387" "angle" "11" "targetname" "playerspawn_axis33"
+	spawn info_player_deathmatch "origin" "5472 -2640 -387" "angle" "-174" "targetname" "playerspawn_axis34"
+	spawn info_player_deathmatch "origin" "5519 -2861 -387" "angle" "9" "targetname" "playerspawn_axis35"
+	spawn info_player_deathmatch "origin" "6176 -2884 -387" "angle" "166" "targetname" "playerspawn_axis36"
+	spawn info_player_deathmatch "origin" "6136 -2424 -403" "angle" "126" "targetname" "playerspawn_axis37"
+
+	$playerspawn_allied21 disablespawn
+	$playerspawn_allied22 disablespawn
+	$playerspawn_allied23 disablespawn
+	$playerspawn_allied24 disablespawn
+	$playerspawn_allied25 disablespawn
+	$playerspawn_allied26 disablespawn
+	$playerspawn_allied27 disablespawn
+	$playerspawn_allied28 disablespawn
+	$playerspawn_allied29 disablespawn
+	$playerspawn_allied30 disablespawn
+	$playerspawn_allied31 disablespawn
+	$playerspawn_allied32 disablespawn
+
+	$playerspawn_axis21 disablespawn
+	$playerspawn_axis22 disablespawn
+	$playerspawn_axis23 disablespawn
+	$playerspawn_axis24 disablespawn
+	$playerspawn_axis25 disablespawn
+	$playerspawn_axis26 disablespawn
+	$playerspawn_axis27 disablespawn
+	$playerspawn_axis28 disablespawn
+	$playerspawn_axis29 disablespawn
+	$playerspawn_axis30 disablespawn
+	$playerspawn_axis31 disablespawn
+	$playerspawn_axis32 disablespawn
+
+	$playerspawn_allied33 disablespawn
+	$playerspawn_allied34 disablespawn
+	$playerspawn_allied35 disablespawn
+	$playerspawn_allied36 disablespawn
+	$playerspawn_allied37 disablespawn
+
+	$playerspawn_axis33 disablespawn
+	$playerspawn_axis34 disablespawn
+	$playerspawn_axis35 disablespawn
+	$playerspawn_axis36 disablespawn
+	$playerspawn_axis37 disablespawn
+end
+
+////////////////////////////////////////////////////////////////////////
+
+spawns_enable local.final:
+
+   if(local.final != 1)
+   {
+	$playerspawn_allied4 disablespawn
+	$playerspawn_allied5 disablespawn
+	$playerspawn_allied6 disablespawn
+	$playerspawn_allied7 disablespawn
+	$playerspawn_allied8 disablespawn
+	$playerspawn_allied9 disablespawn
+	$playerspawn_allied10 disablespawn
+	$playerspawn_allied11 disablespawn
+	$playerspawn_allied12 disablespawn
+	$playerspawn_allied13 disablespawn
+	$playerspawn_allied16 disablespawn
+	$playerspawn_allied17 disablespawn
+
+	$playerspawn_axis1 disablespawn
+	$playerspawn_axis2 disablespawn
+	$playerspawn_axis5 disablespawn
+	$playerspawn_axis6 disablespawn
+	$playerspawn_axis7 disablespawn
+	$playerspawn_axis10 disablespawn
+	$playerspawn_axis11 disablespawn
+	$playerspawn_axis12 disablespawn
+	$playerspawn_axis13 disablespawn
+	$playerspawn_axis14 disablespawn
+	$playerspawn_axis19 disablespawn
+	$playerspawn_axis20 disablespawn
+
+	$playerspawn_allied21 enablespawn
+	$playerspawn_allied22 enablespawn
+	$playerspawn_allied23 enablespawn
+	$playerspawn_allied24 enablespawn
+	$playerspawn_allied25 enablespawn
+	$playerspawn_allied26 enablespawn
+	$playerspawn_allied27 enablespawn
+	$playerspawn_allied28 enablespawn
+	$playerspawn_allied29 enablespawn
+	$playerspawn_allied30 enablespawn
+	$playerspawn_allied31 enablespawn
+	$playerspawn_allied32 enablespawn
+
+	$playerspawn_axis21 enablespawn
+	$playerspawn_axis22 enablespawn
+	$playerspawn_axis23 enablespawn
+	$playerspawn_axis24 enablespawn
+	$playerspawn_axis25 enablespawn
+	$playerspawn_axis26 enablespawn
+	$playerspawn_axis27 enablespawn
+	$playerspawn_axis28 enablespawn
+	$playerspawn_axis29 enablespawn
+	$playerspawn_axis30 enablespawn
+	$playerspawn_axis31 enablespawn
+	$playerspawn_axis32 enablespawn
+   }
+   if(local.final == 1)
+   {
+	$playerspawn_allied3 disablespawn
+	$playerspawn_allied14 disablespawn
+	$playerspawn_allied15 disablespawn
+	$playerspawn_allied18 disablespawn
+	$playerspawn_allied19 disablespawn
+	
+	$playerspawn_axis3 disablespawn
+	$playerspawn_axis4 disablespawn
+	$playerspawn_axis8 disablespawn
+	$playerspawn_axis9 disablespawn
+	$playerspawn_axis16 disablespawn
+
+	$playerspawn_allied33 enablespawn
+	$playerspawn_allied34 enablespawn
+	$playerspawn_allied35 enablespawn
+	$playerspawn_allied36 enablespawn
+	$playerspawn_allied37 enablespawn
+
+	$playerspawn_axis33 enablespawn
+	$playerspawn_axis34 enablespawn
+	$playerspawn_axis35 enablespawn
+	$playerspawn_axis36 enablespawn
+	$playerspawn_axis37 enablespawn
+   }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cyb:
+
+	thread nomods
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.keepsamesides = 1
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 6163 -2850 -388 ) 180 axis    // for cyber attack only
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -4935 547 -310 ) -22 allies
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( -826 -2604 -324 ) 180
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+snd:
+
+	thread nomods
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -1744 -1226 -128 ) 0 // for search & destroy only, team parameter doesn't matter
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4731 1871 -404 ) 180 
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( -4751 420 -308 ) 70 ( 2003 -2766 -339 ) 180 ( 0 0 0 ) 0
+									
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+//Allies
+exec alienx/basebuild.scr::basebuild ( -5565.13 235.04 -315.18 ) "static/indycrate.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5443.51 231.19 -316.27 ) "statweapons/mg42_gun.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5694.69 240.89 -313.46 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5324.40 235.89 -314.94 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5200.78 237.57 -314.47 ) "static/static_cablespool_full.tik" 1 .5 0 .5 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4999.63 245.59 -312.22 ) "static/barbwire.tik" 1 .5 0 .5 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4859.10 257.78 -309.88 ) "static/static_naziflag1.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -4769.34 -343.37 -309.88 ) "static/static_nazibanner.tik" 1 .5 0 .5 90 .5 0 0 0
+exec alienx/basebuild.scr::basebuild ( -4898.50 -336.95 -309.88 ) "static/bush_full.tik" 1 .5 0 .5 90 .5 0 0 0 
+exec alienx/basebuild.scr::basebuild ( -5174.00 -323.54 -309.88 ) "static/bodies_tarp.tik" 1 .5 0 .5 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -5036.15 -319.33 -309.87 ) "static/banquet_table.tik" 1 1 1 0 90 .5 0 0 1
+
+//Axis
+exec alienx/basebuild.scr::basebuild ( -103.40 -2553.06 -387.88 ) "static/indycrate.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -0.16 -2550.78 -387.88 ) "statweapons/mg42_gun.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 313.33 -3082.86 -382.76 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 125.57 -2544.04 -387.88 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 220.05 -2548.50 -387.88 ) "static/banquet_table.tik" 1 1 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 317.74 -2548.53 -387.88 ) "static/barbwire.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 448.02 -2548.05 -387.88 ) "static/bookcase.tik" 1 .5 0 .5 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 441.63 -3077.69 -385.37 ) "static/bush_full.tik" 1 .5 0 .5 90 .5 0 0 0
+exec alienx/basebuild.scr::basebuild ( 186.90 -3085.76 -381.03 ) "static/bodies_tarp.tik" 1 0 1 0 90 .5 1 0 1
+
+//Gunrange
+exec alienx/basebuild.scr::basebuild ( 3149.42 -1882.34 -331.88 ) "static/indycrate.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3065.61 -1897.32 -403.88 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 3001.14 -1897.74 -403.88 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2893.05 -1899.73 -403.88 ) "static/banquet_table.tik" 1 .5 0 .5 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 2828.43 -1901.85 -403.88 ) "static/bush_full.tik" 1 .5 0 .5 90 .5 0 0 0
+exec alienx/basebuild.scr::basebuild ( 2680.65 -1910.80 -403.88 ) "static/bodies_tarp.tik" 1 0 1 0 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 4449.83 -1703.82 -387.63 ) "static/cabinet_large.tik" 1 0 1 0 90 .5 0 0 1
+
+//MG42Range
+exec alienx/basebuild.scr::basebuild ( 5315.39 -1961.07 -403.88 ) "static/indycrate.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5742.79 -1710.93 -403.88 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1 
+exec alienx/basebuild.scr::basebuild ( 5636.34 -2012.42 -403.88 ) "static/bookcase.tik" 1 .5 0 .5 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 5566.49 -1923.51 -403.88 ) "static/static_naziflag1.tik" 1 0 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5712.05 -1936.09 -403.88 ) "static/sandbag_link_main.tik" 1 0 1 0 90 .5 0 0 1
+
+thread nomods
+end
+
+////////////////////////////////////////////////////////////////////////
+
+nomods:
+
+thread spawns_enable 0
+thread spawns_enable 1
+thread addremaining_levelspotorigins 0
+thread addremaining_levelspotorigins 1
+
+level waittill spawn
+
+	$door_2 unlock // the 1st left door 
+	$door_3 unlock // the 1st right door
+	$door_4a unlock
+	$door_5a unlock
+	$door_6a unlock
+	$door_7a unlock //door before mg42 gunrange
+	$door_8a unlock
+	$exit_door unlock
+
+if(getcvar("g_ubergametype") == "bb" && getcvar("g_ubermods") == "2")
+{
+	exec maps/UBER_mapextras/training_teleporters.scr 0 // local.nogoingbehindwalls (0 = no, 1 = yes, removes teles that go behinds map walls, keeps only essential teles at gunranges).
+						    	// making this = 1 is ideal for "trenchbombs.scr" script, since players cannot tele behind the walls and walk around the trench.
+
+	exec maps/UBER_mapextras/training_cratesstuff.scr 1 1 1 0 1 // local.midshow (1 to show objects b4 tank blows up), finalshow (1 to show b4 gunrange objectives are done), boundaryshow (0 = hide, 1 = show), ...
+}							// nogoingbehindwalls (0 or 1, removes all objects + teles behind map walls), spawnfewerobjects (0 = no, 1 = yes, frees up space for 101 more entities).
+
+if((getcvar("g_ubergametype") == "cyb" || getcvar("g_ubergametype") == "snd" || getcvar("g_ubergametype") == "ft") && getcvar("g_ubermods") == "2")
+{
+	exec maps/UBER_mapextras/training_teleporters.scr 1
+	exec maps/UBER_mapextras/training_cratesstuff.scr 1 1 1 1 0
+
+	exec map_triggers/map_switches/training_valveswitch_final.scr 1 ( 4825 2382 -329 ) ( 0 0 0 ) 5 270 1 // name (1 or 2), origin, angles, rotatetime, rotateamount, clockwise (0 = countercw, 1 = cw).
+	exec map_triggers/map_switches/training_valveswitch_final.scr 2 ( 6200 418 -329 ) ( 0 90 0 ) 5 270 0 // make sure clockwise is not the same for both valves, otherwise double cw, ccw motions happen.
+
+	exec maps/training_mapscripts/tank_m3_replace.scr drive 1 0.125 0.0 0.333 // local.type = "static" or "drive" (make tank static or driveable), local.laserprism (0 = off or 1 = on), local.r, local.g, local.b (laser color).
+
+	thread cybsndmods
+}
+
+if(getcvar("g_ubermods") != "2")
+{
+	exec maps/UBER_mapextras/training_teleporters.scr 1
+	exec maps/UBER_mapextras/training_cratesstuff.scr 1 1 1 1 1
+
+	exec maps/training_mapscripts/tank_m3_replace.scr static 1 0.125 0.0 0.333 // local.type = "static" or "drive" (make tank static or driveable), local.laserprism (0 = off or 1 = on), local.r, local.g, local.b (laser color).
+	//exec maps/training_mapscripts/obj6b_explosive_tanktrig.scr ( -4751 420 -308 ) ( 0 70 0 ) 1 1 0 65 // keep this commented out, since doors are already unlocked, and we're in cyb / snd with a bomb explosive already.
+}
+
+	$clip_2 notsolid
+	$door_mid time 3.4
+	$door_mid rotatexdown 175
+	$door_mid waitmove
+
+	if($tank != NULL) // for ubergametype bb & ubermods 2 only.
+	{
+		$tank.gun = $tank QueryTurretSlotEntity 0
+		if($tank.gun == NIL || $tank.gun == NULL) { $tank spawnturret 0 "vehicles/tigercannon.tik" }
+		$tank.gun = $tank QueryTurretSlotEntity 0
+		$tank.gun.scale = 1
+	}
+end
+
+cybsndmods:
+
+	exec maps/training_mapscripts/airstrikebombs.scr::splinepath
+	exec maps/training_mapscripts/airstrike_radiotrig.scr allies ( -4868 753 -256 ) ( 0 340 0 ) 180 0 10 2.75 // local.airstrikename, originradio, anglesradio, offtimeradio, bombsoff (0 = on, 1 = off)...
+	exec maps/training_mapscripts/airstrike_radiotrig.scr axis ( 465 -2061 -334 ) ( 0 0 0 ) 180 0 10 2.75     // bulletstokill (until plane begins smoking), killtime (time until smoking/burning plane explodes).
+	exec maps/training_mapscripts/airstrike_radiotrig.scr final ( 6166 -2591 -338 ) ( 0 180 0 ) 180 0 10 2.75 // "airstrikename" = the path name that planes will travel on, when called by radio ($bomberpath_allies). 
+
+	exec maps/gen_mapscripts/radios_musictrig.scr ( -4890 697 -256 ) ( 0 340 0 )  // in tents. local.origin_civradio, local.angles_civradio
+	exec maps/gen_mapscripts/radios_musictrig.scr ( 462 -2121 -334 ) ( 0 0 0 )    // in hangars near tank
+	exec maps/gen_mapscripts/radios_musictrig.scr ( 6166 -2653 -338 ) ( 0 180 0 ) // in gunrange fields
+
+	exec maps/training_mapscripts/trucksounds_trig.scr ( 133 -2334 -345 ) ( 80 -2393 -340 ) truck_engine truck 1
+	exec maps/training_mapscripts/trucksounds_trig.scr ( 620 -3343 -345 ) ( 705 -3266 -340 ) track_engine halftrack 0
+
+	exec maps/training_mapscripts/trenchbombs.scr 1.5 // explosion scale (only the fireball ones, not the mortar dirt).
+	exec map_triggers/map_switches/training_alarmswitch_trench.scr tents ( -3144 208 -254 ) ( 0 -180 0 ) 75 450 2 // name, origin, angles, offtime, damageradius, pulsatingoff
+	exec map_triggers/map_switches/training_alarmswitch_trench.scr tank ( -1563 -1040 -254 ) ( 0 -90 0 ) 75 450 2
+
+	exec maps/training_mapscripts/finalfield_bombs.scr
+	exec map_triggers/map_switches/training_detonator_final.scr ( 5495 193 -395 ) ( 0 90 0 ) 0 45 400 2 // local.fusetime (0 for 2-5 random), local.offtime, local.minedamageradius, local.pulsatingoff
+
+	exec maps/training_mapscripts/firefields.scr ( 3384.5 2395 -395 ) // centerpoint origin of all fire emitters, requires more than 70 entities.
+	exec map_triggers/map_switches/training_detonator_field.scr mid ( 3384.5 2395 -395 ) ( 0 90 0 ) 5 10 0.2 60  // name, origin, angles, fusetime, firetime, ...
+	exec map_triggers/map_switches/training_detonator_field.scr left ( 4088.5 2395 -395 ) ( 0 90 0 ) 8 10 0.2 60 // fire start waitmultiplier (behind fuses, keep below 0.5), offtime.
+	exec map_triggers/map_switches/training_detonator_field.scr right ( 2680.5 2395 -395 ) ( 0 90 0 ) 8 10 0.2 60
+end
+
+////////////////////////////////////////////////////////////////////////
+
+obj2: // end the setthreads called by the .bsp's triggers/func_stuff, so the console stops giving errors.
+end
+obj3:
+end
+obj6:
+end
+obj6b:
+end
+obj1b:
+end
+tower:
+end
+theplane:
+end
+seencheck:
+end
+
+clickitem_fail:
+end
+
+
+

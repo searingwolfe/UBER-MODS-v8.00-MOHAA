@@ -1,0 +1,127 @@
+// This script spawns 3 crates for creating a 1st, 2nd, 3rd place podium for those with the highest kills in the game.
+// The podium spawns dummy player models for the 3 winners, based on highest kills, on their respective podium spots (1st on top of 2 crates, 2nd on one crate, 3rd on the floor).
+// If 2+ winners have the same kills, the player with the lowest deaths will be deemed the actual winner.
+// If 2+ winners still have the same kills and deaths, then the player who joined first (the lowest clientnum) will be deemed the actual winner.
+//
+// This script also spawns an intermission camera, and launches fireworks when all players are teleported to the camera near the end of the map (based on "timeduration" parameter).
+// If "timeduration" is set as 0 or NIL, then fireworks will not launch, since all while-loops end when the map's intermission actually begins (when scoreboard is visible, fading to black, changing maps).
+//
+// If camera origin & camera angles are set to "auto", then the script will automatically set the camera's origin & angles roughly 550 units away from "angle" parameter facing forward, with camera's angle +180 degrees from "angle" and looking 17 degrees upward.
+//
+// Parameters: origin, angle for podium players, camera origin (or "auto"), camera angles (or "auto"), time duration of fireworks (5 = 00:05 seconds of map time remaining to end game; 0 or NIL = no fireworks), ...
+// ... distance until exploding (default = 300), particle time (default = 2.5), explosion scale (default = 0.8).
+//
+// Example: exec global/victory_podium.scr ( 220 -41 48 ) -90 auto auto 5
+//
+// For testing where the podium will be, run "exec global/victory_podium.scr::test ( 220 -41 48 ) -90" and change origin + angle to spawn 3 visible solid crates.
+// For testing only the fireworks, run "exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90" and change origin + angle to continuously launch fireworks (to check distance, particle time, explosion scale, etc).
+//
+// exec global/victory_podium.scr::test ( 220 -41 48 ) -90	// testing purposes only; spawn and show the podium crates.
+// exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90	// testing purposes only; launch fireworks continuously.
+//
+// NOTE: If setcvar "timelimit" "0" or "", then the podium winners threads will never run, since the map will never end.
+// An optional thread ends the game immediately for "timeduration" seconds while launching fireworks, then ends the map.
+// NOTE: the "main" thread must run first too! ("exec global/victory_podium.scr ( -700 -1200 -3 ) -90 auto auto 5") must have executed already, otherwise the intermission camera will be missing.
+//
+// Parameters: origin, angle for podium players, time duration until map ends (0 to end now), distance until exploding, particle time, explosion scale.
+//
+// Example: exec global/victory_podium.scr::map_ended ( -700 -1200 -3 ) -90 7
+//
+// Before the ::map_ended line, an optional "level.VP_winnertype = allies" or "axis" can be included to only show podium winners from that team (i.e. for a custom OBJ gametype).
+//
+
+main local.podium_origin local.podium_angle local.camera_origin local.camera_angles local.timeduration:
+
+	if(local.podium_origin == NIL || local.podium_origin[2] == NIL) { wait 1; println("----- ERROR victory_podium.scr: 'podium_origin' parameter is missing!"); end }
+	if(local.podium_angle == NIL) { wait 1; println("----- ERROR victory_podium.scr: 'podium_angle' parameter is missing!"); end }
+	if((local.camera_origin == NIL || local.camera_origin[2] == NIL) && local.camera_origin != "auto") { wait 1; println("----- ERROR victory_podium.scr: 'camera_origin' parameter is missing!"); end }
+	if((local.camera_angles == NIL || local.camera_angles[2] == NIL) && local.camera_angles != "auto") { wait 1; println("----- ERROR victory_podium.scr: 'camera_angles' parameter is missing!"); end }
+	if(local.podium_angle.size > 1) { wait 1; println("----- ERROR victory_podium.scr: 'podium_angle' parameter must be an angle integer!"); end }
+
+	if(local.timeduration == NIL) { local.timeduration = 0 } // distance, particletime, explosionscale don't matter if timeduration = 0, since fireworks will not be fired.
+	if(local.distance == NIL) { local.distance = 300 }
+	if(local.particletime == NIL) { local.particletime = 2.5 }
+	if(local.explosionscale == NIL) { local.explosionscale = 0.8 }
+	if(local.camera_origin == "auto" || local.camera_angles == "auto") { local.camera_origin = "auto"; local.camera_angles = "auto" }
+
+	thread countdown local.podium_origin local.podium_angle local.timeduration local.camera_origin local.camera_angles // wait until intermission begins
+end
+
+countdown local.origin local.angle local.timeduration local.camera_origin local.camera_angles:
+
+	if(getcvar("timelimit") == "0" || getcvar("timelimit") == "")
+	{
+		thread time_change local.origin local.angle local.timeduration local.camera_origin local.camera_angles
+		end
+	}
+	else
+	{
+		local.seconds = int(getcvar("timelimit")) * 60 - int(level.time)
+		local.timelimit_old = int(getcvar("timelimit"))
+	}
+
+	while(local.seconds > local.timeduration + 1)
+	{
+		local.seconds--
+		if(getcvar("timelimit") == "0" || getcvar("timelimit") == "")
+		{
+			thread time_change local.origin local.angle local.timeduration local.camera_origin local.camera_angles
+			end
+		}
+		if(int(getcvar("timelimit")) != local.timelimit_old)
+		{
+			thread countdown local.origin local.angle local.timeduration local.camera_origin local.camera_angles
+			end
+		}
+		wait 1
+	}
+
+	if(local.timeduration == 0)
+	{
+		wait 0.5
+		thread map_ended local.origin local.angle NIL local.camera_origin local.camera_angles 1
+	}
+	else { thread map_ended local.origin local.angle NIL local.camera_origin local.camera_angles }
+end
+
+time_change local.origin local.angle local.timeduration local.camera_origin local.camera_angles:
+
+	while(getcvar("timelimit") == "0" || getcvar("timelimit") == "") { waitframe }
+
+	thread countdown local.origin local.angle local.timeduration local.camera_origin local.camera_angles
+end
+
+//-----------------------------------------------------------------------------
+
+map_ended local.origin local.angle local.timeduration local.camera_origin local.camera_angles local.nofireworks:
+
+	if(level.VP_mapended == 1) { end }
+	level.VP_mapended = 1
+
+	thread change_maps local.timeduration local.origin local.angle local.camera_origin local.camera_angles
+end
+
+change_maps local.time local.podium_origin local.podium_angle local.camera_origin local.camera_angles:
+
+	if(local.time == NIL || local.time < 0) { local.time = 1 }
+	else { local.time = int(local.time) }
+
+	local.c = 0
+	while(local.c <= local.time) { local.c++; wait 1 }
+
+	removeclass PlayerIntermission
+	local.camera = spawn info_player_intermission targetname "intermission_camera"
+	if(local.camera_origin == "auto" && local.camera_angles == "auto")
+	{
+		local.sin = (waitthread global/math.scr::sine local.podium_angle) * 550
+		local.cos = (waitthread global/math.scr::cosine local.podium_angle) * 550
+
+		local.camera.origin = local.podium_origin + ( local.cos local.sin 65 ) // camera lens is at player's feet origin, not their head! (if height is too low, camera will be inside the ground)
+		local.camera.angles = ( -17 (local.podium_angle + 180) 0 )
+	}
+	else
+	{
+		local.camera.origin = local.camera_origin
+		local.camera.angles = local.camera_angles
+	}
+end

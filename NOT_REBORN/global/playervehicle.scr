@@ -1,0 +1,1699 @@
+main local.name local.model local.origin local.angles local.health local.vehiclespeed local.resettime local.headlights local.noheadlights local.gotout:
+
+	if(local.model == NIL) { wait 1; println("----- ERROR playervehicle.scr: 'model' parameter is missing!"); end }
+	if(local.model[0] != "m" && local.model[1] != "o" && local.model[2] != "d" && local.model[3] != "e" && local.model[4] != "l" && local.model[5] != "s")
+	{
+		local.model = "models/" + local.model
+		if(level.vehiclescriptmaster[local.model] != 1) { cache local.model }
+	}
+
+	if($(local.name) != NULL) 
+	{
+		waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe; if($(local.name) != NULL) { waitframe } } } }
+		if($(local.name) != NULL)
+		{
+			if(level.vehiclescriptmaster[local.model] != 1) { wait 1; println("----- ERROR playervehicle.scr: $" + local.name + " must be removed before spawning a drivable vehicle.") }
+			end
+		}
+	}
+
+	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] != 1)) { wait 1; println("----- ERROR playervehicle.scr: health must be greater than 0."); end }
+	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] == 1)) { end } // end when in rare cases, a 2nd vehicle with local.health = 0 could spawn after getting destroyed
+
+	if(local.model == "models/vehicles/sdkfz.tik")
+	{
+		local.desmodel = models/vehicles/sdkfz_green_d.tik
+		//if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/sdkfz_mg42.tik; cache models/vehicles/sdkfz_mg42_viewmodel.tik } // cache models/vehicles/sdkfz_shield.tik
+		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik }
+	}
+	if(local.model == "models/vehicles/sdkfz_afrika.tik")
+	{
+		local.desmodel = models/vehicles/sdkfz_desert_d.tik
+		//if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/sdkfz_mg42.tik; cache models/vehicles/sdkfz_mg42_viewmodel.tik }
+		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik }
+	}
+	if(local.model == "models/vehicles/jeep.tik")
+	{
+		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik }
+	}
+	if(local.model == "models/vehicles/european_car_grey.tik" || local.model == "models/vehicles/european_car_silver.tik") { local.desmodel = models/static/vehicle_car_rusted.tik }
+	if(local.model == "models/vehicles/european_car_tan.tik") { local.desmodel = models/static/vehicle_car_burnt.tik }
+	if(local.model == "models/vehicles/european_delivery_truck_green.tik" || local.model == "models/vehicles/european_delivery_truck_grey.tik") { local.desmodel = models/static/vehicle_dtruck_burnt.tik }
+	if(local.model == "models/vehicles/european_delivery_truck_red3.tik") { local.desmodel = models/static/vehicle_dtruck_rusted.tik }
+	if(local.model == "models/vehicles/opeltruckgreen.tik" || local.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.desmodel = models/vehicles/opeltruckgreen_d.tik }
+	if(local.model == "models/vehicles/shermantank.tik") { local.desmodel = models/vehicles/shermantank_damaged.tik }
+	if(local.model == "models/vehicles/opeltruck.tik") { local.desmodel = models/vehicles/opeltruck_d.tik }
+	if(local.model == "models/vehicles/bmwbike.tik") { local.desmodel = models/vehicles/bmwbike_d.tik }
+	// if model == jeep, jeep_bench, mercedes, or gmctruck, keep desmodel = current model
+
+	local.vehicle = spawn local.model targetname (local.name) // scriptmasters are already added in ubersound.scr
+	local.vehicle.name = local.name
+	local.vehicle.origin = local.origin
+	local.vehicle.angles = local.angles
+	local.vehicle.desmodel = local.desmodel
+	local.vehicle.health = local.health
+	local.vehicle.vehiclespeed = local.vehiclespeed
+	local.vehicle.vehiclespeed_max = local.vehiclespeed
+	local.vehicle.resettime = local.resettime
+	local.vehicle.headlights = local.headlights
+	local.vehicle.noheadlights = local.noheadlights
+
+	if(local.vehicle.classname != "DrivableVehicle") { local.vehicle remove; wait 1; println("----- ERROR playervehicle.scr: .tik model is not a DrivableVehicle."); end }
+
+	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/opeltruck.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/gmctruck.tik") { local.vehicle turnrate 8; local.vehicle.turningrate = 8.000 }
+	else if(local.vehicle.model == "models/vehicles/bmwbike.tik") { local.vehicle turnrate 13; local.vehicle.turningrate = 13.000 }
+	else { local.vehicle turnrate 10; local.vehicle.turningrate = 10.000 }
+
+	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik") { local.vehicle.noheadlights = 1 }
+	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/shermantank.tik" || local.vehicle.model == "models/vehicles/bmwbike.tik") { local.vehicle.nohorn = 1 }
+
+	if(local.gotout == 1)
+	{
+		if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/shermantank.tik") { local.vehicle playsound sdkfz_snd_stop }
+		if(local.vehicle.model == "models/vehicles/opeltruck.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == models/vehicles/opeltruckgreen_canopy.tik" || local.vehicle.model == "models/vehicles/gmctruck.tik") { local.vehicle playsound opeltruck_snd_stop }
+		else { local.vehicle playsound jeep_snd_stop }
+	}
+
+	local.vehicle.gun = local.vehicle queryturretslotentity 0
+	if(local.vehicle.gun != NIL && local.vehicle.gun != NULL)
+	{
+		local.vehicle.gun notsolid
+		local.vehicle.gun pitchcaps ( -60 35 0 )
+		if(local.vehicle.model != "models/vehicles/jeep.tik") { local.vehicle.gun.scale = 0.5 }
+	}
+
+	local.vehicle.seats = 1		// initialize this before adding seats in "seatstuff" thread to avoid NIL errors
+	local.vehicle thread vehiclereset
+	local.vehicle thread vehicledamage
+	local.vehicle thread vehicledeath
+	local.vehicle thread vehicletrigger
+
+	local.trig = spawn trigger_multiple spawnflags 128
+	local.trig.origin = local.vehicle.origin
+	local.trig.vehicle = local.vehicle
+	local.trig glue local.vehicle
+	local.trig thread removetrig
+	local.trig setthread shottrig
+	if(local.vehicle.model == "models/vehicles/opeltruck.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.vehicle.model == "models/vehicles/gmctruck.tik" || local.vehicle.model == "models/vehicles/jeep.tik" || local.vehicle.model == "models/vehicles/jeep_bench.tik") { local.trig setsize ( -65 -65 0 ) ( 65 65 100 ) }
+	else if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/shermantank.tik") { local.trig setsize ( -80 -80 0 ) ( 80 80 100 ) }
+	else { local.trig setsize ( -50 -50 0 ) ( 50 50 100 ) }
+
+	if(level.vehicle_initorigin[local.name] == NIL) { level.vehicle_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
+	if(level.vehicle_initangles[local.name] == NIL) { level.vehicle_initangles[local.name] = local.angles }
+	if(level.vehicle_inithealth[local.name] == NIL) { level.vehicle_inithealth[local.name] = local.health }
+
+	if(level.vehiclescriptmaster[local.vehicle.model] != 1) // this only runs once
+	{
+		cache local.vehicle.model
+		if(local.desmodel != NIL) { cache local.desmodel }
+		if(local.desmodel == NIL || local.vehicle.model == "models/vehicles/bmwbike.tik") { cache models/emitters/fancyfire.tik; cache models/emitters/linger_smoke.tik }
+		cache models/emitters/mortar_higgins.tik
+		cache models/emitters/mortar_dirt_nosound.tik
+		cache models/fx/searchlight.tik
+		cache models/miscobj/searchlight.tik
+		cache models/static/jug.tik
+		thread scriptmaster local.vehicle.model
+		level.vehiclescriptmaster[local.vehicle.model] = 1
+		level.vehiclescriptmaster[local.model] = 1
+	}
+/*
+	if(local.vehicle.model == "models/vehicles/sdkfz.tik")
+	{
+		local.vehicle attachmodel models/vehicles/sdkfz_shield.tik "Box02" 1 ("shielddummy_" + local.vehicle.entnum) 1 -1 -1 -1 -1 ( -42 106 4.25 ) //( +backward -forward, +up -down, +left -right )
+		$("shielddummy_" + local.vehicle.entnum).angles = ( 180 0 -90 )
+	}
+*/
+	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.tank }
+	else
+	{
+		for(local.c = 1; local.c <= 999; local.c++)
+		{
+			if(level.chainreactors[local.c] == NIL)
+			{
+				level.chainreactors[local.c] = local.tank
+				local.vehicle thread chainreactors_remove local.c
+				break
+			}
+		}
+	}
+
+	if(level.drivable_entities == NIL) { level.drivable_entities[1] = local.name }
+	else
+	{
+		for(local.d = 1; local.d <= level.drivable_entities.size; local.d++)
+		{
+			if(level.drivable_entities[local.d] == local.name) { end }
+		}
+		level.drivable_entities[level.drivable_entities.size + 1] = local.name
+	}
+end
+
+chainreactors_remove local.c:
+
+	while(self != NULL) { waitframe }
+	level.chainreactors[local.c] = NIL
+end
+
+shottrig:
+
+	if(self.vehicle != NULL) { self.vehicle.shooter = self }
+end
+
+removetrig:
+
+	while(self != NULL && self.vehicle != NULL) { waitframe }
+	if(self != NULL) { self remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+vehiclereset: // vehicle animations must be set each time a new vehicle spawns (after player exits); vehicle.gun must be queried before removal, if it exists.
+
+	self fullstop
+	if(self.headlights != 1) 	// since the opeltruck isn't spawned in as "= script_model" above, any animations will forcibly turn off 
+	{				// the headlights (including idlelights & stop_wheels); opeltruck headlight rays cannot be turned back on until the player exits the opeltruck (once truck is removed and respawned).
+		self anim idle
+		self anim idlenolights // some models don't have these anims, but errors do not print
+		self anim stop_wheels
+		self.headlights = 0
+	}
+	if(self.headlights == 1 && self.noheadlights != 1) 
+	{
+		if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+		{
+			self thread deadcorona "light left" // opeltruck headlight "tags" from .skd file
+			self thread deadcorona "light right"
+		}
+		else { self thread deadcorona }
+		self thread illuminate "left"
+		self thread illuminate "right"
+	}
+	self thread healthboost
+	removeclass Camera // also removes PlayerIntermission and other func_cameras
+end
+
+healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0)
+	{
+		if(self.health < local.health && self.shooter != NIL && self.shooter != NULL)
+		{
+			if(self.passengers != NIL && self.passengers.size >= 1)
+			{
+				local.damage = ((local.health - self.health) / self.passengers.size)
+				for(local.i = 1; local.i <= self.passengers.size; local.i++)
+				{
+					self.passengers[local.i] takedamage
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.passengers[local.i] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					self.passengers[local.i] nodamage
+				}
+			}
+			if(self.driver != NIL && self.driver != NULL && self.model != "models/vehicles/sdkfz.tik" && self.model != "models/vehicles/sdkfz_afrika.tik" && self.model != "models/vehicles/shermantank.tik")
+			{
+				if(self.driver.health > 1)
+				{
+					self.driver takedamage
+					if(self.passengers != NIL && self.passengers.size >= 1) { local.damage = ((local.health - self.health) / (2 + self.passengers.size)) }
+					else { local.damage = ((local.health - self.health) / 2) }
+
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.driver damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					self.driver nodamage
+				}
+				else
+				{
+					self thread driverreset 1
+					self thread vehiclereset
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					self.driver = NIL
+
+				}
+			}
+
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self && $player[local.i].passenger != 1)
+				{
+					for(local.i = 1; local.i <= self.passengers.size; local.i++)
+					{
+						self.passengers[local.i] damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+				}
+			}
+		}
+
+		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(self.shooter != NIL) { self thread shooter_NIL }
+		waitframe
+	}
+end
+
+shooter_NIL:
+
+	waitframe
+	if(self != NULL) { self.shooter = NIL }
+end
+
+vehicletrigger:
+
+	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
+	local.trig = spawn trigger_use targetname (self.name + "_trig")
+	local.trig.origin = self.origin
+	local.trig setsize ( -105 -105 -5 ) ( 105 105 125 )
+	local.trig.vehicle = self
+	local.trig glue self
+	local.trig setthread triggered
+end
+
+triggered:
+
+	local.player = parm.other
+	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.dead == 1) { end }
+
+	if(self.vehicle != NULL)
+	{
+		if(self.vehicle.driver != NIL)
+		{
+			if(self.vehicle.gun != NIL && self.vehicle.gun != NULL && (self.vehicle.turretplayer == NIL || self.vehicle.turretplayer == NULL))
+			{
+				if(local.player.isdog != 1)
+				{
+					self.vehicle thread turretslot local.player
+					end
+				}
+				else if(self.vehicle.passengers.size >= self.vehicle.seats)
+				{
+					local.player iprint ("Dogs cannot use vehicle turrets.")
+					end
+				}
+			}
+			if(self.vehicle.passengers.size < self.vehicle.seats) { self.vehicle thread passengers }
+		}
+		if(self.vehicle.driver == NIL)
+		{
+			if(local.player.isdog != 1) { self.vehicle thread playergetin }
+			if(local.player.isdog == 1) { local.player iprint ("Dogs cannot drive vehicles.") } // set other exceptions here
+		}
+	}
+end
+
+playergetin:
+
+	local.player = parm.other
+	local.team = local.player.dmteam
+	if(self.attachingdriver == 1) { end }
+	self.attachingdriver = 1
+
+	local.player safeholster 1
+	wait 1
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		end
+	}
+
+	self.driver = local.player
+	self.driver.driving = 1
+	self.driver.drivingent = self
+	local.driver = self.driver
+	self.player_owner = self.driver
+
+	self.passengers[1] = NIL // initialize as array to make size = 0 instead of size = -1
+	self thread seatstuff
+
+	self.driver forcelegsstate STAND
+	self.driver hide
+	self.driver nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
+	self.driver notsolid
+	//if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
+	//if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
+	//if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn.") }
+	self.driver iprint ("JUMP = exit vehicle, hold FIRE = look behind.")
+	self.driver.driving_state_jump = 0
+
+	self attachdriverslot 0 self.driver //attachpassengerslot //attachturretslot
+	self thread dummyavatar
+
+	if(local.driver.using_pack == 1)
+	{
+		local.driver stufftext "globalwidgetcommand june6 linkcvar phealth"
+		local.driver stufftext "globalwidgetcommand june6 statbar vertical 0 100"
+		local.driver stufftext "globalwidgetcommand charliesector linkcvar phealth"
+		local.driver stufftext "set phealth 100"
+	}
+	else { local.driver thread display }
+
+	local.c = 5.000 	// vehicle speed divisor; Higher = starting speed is much slower (total change is larger), Lower = starting speed is closer to max speed (total change is smaller).
+	local.decel_rate = 30 	// how many divisions of local.c for deceleration/acceleration. Higher = more time to reach max speed, Lower = less time to reach max speed.
+	local.deceleration = local.c
+	local.drivervelocity_old = ( 0 0 0 )
+	local.forward = 0
+	local.backward = 0
+	local.d = local.c	// vehicle turnrate will increase equally when accelerating, but will decrease 3.750x as fast when decelerating.
+
+	self.attachingdriver = 0
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
+		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
+		{
+			self thread driverreset
+			self thread vehiclereset
+			self.driver thread wallstuck_fix
+			self.driver = NIL
+			break
+		}
+
+		if(self.driver.useheld != 1)
+		{
+			if(self.driver.fireheld == 1) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) } // hold FIRE for rear-view mirror (look backwards)
+	
+			if((self.driver getcontrollerangles 0)[2] > 15 && local.toggle != 1 && self.nohorn != 1) // lean left to honk horn
+			{
+				self.driver iprint "Honking the horn."
+				self playsound truckhorn
+				local.toggle = 1
+			}
+			if((self.driver getcontrollerangles 0)[2] < -15 && local.toggle != 1 && self.noheadlights != 1) // lean right to turn on/off headlights
+			{
+				if(self.corona != 1 && local.toggle2 != 1) { self thread headlights; local.toggle2 = 1 }
+				if(self.corona == 1 && local.toggle2 != 1) { self thread headlights; local.toggle2 = 1 }
+				local.toggle = 1
+			}
+			if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] >= -15) { local.toggle = 0; local.toggle2 = 0 }
+		}
+
+		if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind).
+		{
+			if(self.driver.driving_state_backward == 1)
+			{
+				if(local.forward == 1 && local.c < local.deceleration) // slowing down, before reversing begins.
+				{
+					local.c += local.deceleration * 2.000 / local.decel_rate
+					local.d += 3.750 * local.deceleration / local.decel_rate
+					if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
+					if(local.d > local.deceleration) { local.d = local.deceleration }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity * (self.vehiclespeed / self.vehiclespeed_max * -1) + self.forwardvector * self.vehiclespeed
+				}
+				else
+				{
+					local.c -= local.deceleration / local.decel_rate
+					local.d -= local.deceleration / local.decel_rate
+					if(local.c < 1) { local.c = 1 }
+					if(local.d < 1) { local.d = 1 }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -0.500 // only reverse at half the maximum vehicle speed
+					local.forward = 0
+					local.backward = 1
+				}
+			}
+			else // make vehicles drive faster, only when holding W (forward key).
+			{
+				if(local.backward == 1 && local.c < local.deceleration) // slowing down, before driving forward begins.
+				{
+					local.c += local.deceleration * 2.000 / local.decel_rate
+					local.d += 3.750 * local.deceleration / local.decel_rate
+					if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
+					if(local.d > local.deceleration) { local.d = local.deceleration }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity * (self.vehiclespeed / self.vehiclespeed_max * -1) + self.forwardvector * self.vehiclespeed * -0.500 // only reverse at half the maximum vehicle speed
+				}
+				else
+				{
+					local.c -= local.deceleration / local.decel_rate
+					local.d -= local.deceleration / local.decel_rate
+					if(local.c < 1) { local.c = 1 }
+					if(local.d < 1) { local.d = 1 }
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed
+					local.forward = 1
+					local.backward = 0
+				}
+			}
+
+			if(self.turningrate / local.d < 1) { self.turnrate = 1 }
+			else if(self.turningrate / local.d < self.turningrate) { self turnrate (self.turningrate / (local.d * 0.500)) }
+			else { self turnrate self.turningrate }
+		}
+		else
+		{
+			if(local.c == 1)
+			{
+				if(local.model == "models/vehicles/opeltruck.tik" || local.model == "models/vehicles/opeltruckgreen.tik" || local.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.model == "models/vehicles/gmctruck.tik")
+				{
+					self playsound opeltruck_snd_shift2
+				}
+				else if(local.model == "models/vehicles/sdkfz.tik" || local.model == "models/vehicles/sdkfz_afrika.tik" || local.model == "models/vehicles/m3.tik" || local.model == "models/vehicles/shermantank.tik")
+				{
+					self playsound sdkfz_snd_shift2
+				}
+				else { self playsound jeep_snd_shift2 }
+			}
+			local.d += 3.750 * local.deceleration / local.decel_rate
+			if(local.d > local.deceleration) { local.d = local.deceleration }
+
+			local.c += local.deceleration / local.decel_rate
+			if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
+			else { self.vehiclespeed = self.vehiclespeed_max / local.c }
+
+			if(self.driver.driving_state_backward == 1) { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed * -1 }
+			else { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed }
+		}
+
+		local.drivervelocity_old = self.driver.velocity
+		local.driver stufftext ("set phealth " + int(local.driver.health))
+		waitframe
+	}
+
+	if(self != NULL) // spawn in the new vehicle and remove the old one.
+	{
+		thread main self.name self.model self.origin self.angles self.health self.vehiclespeed_max self.resettime self.headlights self.noheadlights 1
+
+		if(self.driver != NIL && self.driver != NULL)
+		{
+			if(self.driver.dmteam == local.team && level.change_team_score != 1 && level.bbactive != 0) { self thread driverreset }
+			else { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle
+			self thread vehiclereset
+		}
+		if(self.turretplayer != NIL && self.turretplayer != NULL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer }
+
+		self.driver = NIL // the old vehicle must be properly removed, otherwise the server will crash if anyone driving the vehicle leaves the game (becomes NULL).
+		if(self.gun != NIL && self.gun != NULL) { self.gun remove }
+		self remove
+	}
+	waitframe
+	if(local.driver != NULL)
+	{
+		local.driver.driving = 0
+		local.driver.drivingent = NIL
+		if(!isalive local.driver) { local.driver stufftext ("set phealth 0") }
+
+		if(local.driver.using_pack == 1)
+		{
+			local.driver stufftext "globalwidgetcommand june6 linkcvar fuel"
+			local.driver stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.jetpack_max_fuel)
+			local.driver stufftext "globalwidgetcommand charliesector linkcvar fuel"
+		}
+		else
+		{
+			local.driver stufftext "hidemenu dday1"
+			local.driver stufftext "hidemenu dday2"
+		}
+
+		local.origin = local.driver.origin
+		while(local.driver != NULL && !isalive local.driver && local.driver.dmteam != "spectator")
+		{
+			local.driver.origin = ( local.origin[0] local.origin[1] local.driver.origin[2] ) // for some reason, drivers' dead bodies would move forward across the ground until they hit a wall.
+			local.driver notsolid
+			local.driver droptofloor
+			waitframe
+		}
+	}
+end
+
+driverreset local.status:
+
+	if(self.driver == NIL) { end } // if the vehicle blew up with nobody driving it, end this thread.
+
+	if(local.status != 1) { cueplayer }				// reattaches camera to player's head
+	self detachdriverslot 0 self.driver
+	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
+
+	if(self.model == "models/vehicles/shermantank.tik") { local.outheight = 128 }
+	else if(self.model == "models/vehicles/bmwbike.tik" || self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik") { local.outheight = 50 }
+	else if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.outheight = 60 }
+	else if(self.model == "models/vehicles/m3.tik" || self.model == "models/vehicles/gmctruck.tik") { local.outheight = 70 }
+	else if(self.model == "models/vehicles/mercedes.tik") { local.outheight = 90 }
+	else { local.outheight = 100 }
+
+	if(self.driver.dmteam != spectator)
+	{
+		self.driver show
+		if(local.status != 1) { self.driver solid }
+		self.driver takedamage
+		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
+		if(local.status != 1 && local.status != 2)
+		{
+			self.driver.origin = self.origin + (angles_toup self.angles * local.outheight)
+			self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
+		}
+	}
+end
+
+headlights:
+
+	if(self.headlights_inuse == 1) { end }
+	self.headlights_inuse = 1
+
+	self playsound light_switch
+	if(self != NULL && self.driver != NIL && self.driver != NULL && self.corona != 1)
+	{
+		wait 0.23 // getting the timing right
+		if(self == NULL) { end }
+		self.driver iprint "Turning on headlights."
+		self.headlights = 1
+
+		if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+		{
+			self thread deadcorona "light left"
+			self thread deadcorona "light right"
+		}
+		else { self thread deadcorona }
+		waitframe
+		waitframe
+		self thread illuminate "left"
+		self thread illuminate "right"
+		self.headlights_inuse = 0
+		end
+	}
+	if(self != NULL && self.driver != NIL && self.driver != NULL && self.corona == 1)
+	{
+		wait 0.28
+		if(self == NULL) { end }
+		self.driver iprint "Turning off headlights."
+		self.corona = 0
+		self.headlights = 0
+		self.headlights_inuse = 0
+	}
+end
+
+vehicledamage:
+
+	local.c = 0
+	while(self != NULL && self.health > 0)
+	{
+		if(self != NULL)
+		{
+			local.previoushealth = self.health
+			if(local.c > 0) { local.c-- }
+		}
+		waitframe
+		if(self != NULL && local.previoushealth > self.health)
+		{
+			local.c = local.c + 2
+			self playsound damage_vehicle
+			//if(local.c == 2) { exec global/earthquake.scr .2 3 0 0 } // if tank is getting constantly damaged per frame, stop earthquake from spamming. (removed, since it was still getting annoying)
+		}
+	}
+end
+
+vehicledeath:
+
+	self waittill death // when waiting until "death", vehicle is not NULL yet
+	self playsound explode_truck
+
+	local.desvehicle = spawn script_model
+	local.desvehicle.origin = self.origin
+	local.desvehicle.scale = self.scale
+	if(self.desmodel != NIL || self.desmodel == models/vehicles/bmwbike_d.tik)
+	{
+		local.desvehicle model self.desmodel
+		local.desvehicle.angles = self.angles
+	}
+	if(self.desmodel == NIL || self.desmodel == models/vehicles/bmwbike_d.tik)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { local.one = 1 }
+		if(local.r == 1) { local.one = -1 }
+		if(self.desmodel != models/vehicles/bmwbike_d.tik)
+		{
+			local.desvehicle model self.model
+			local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
+		}
+
+		if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.distance = 70 }
+		if(self.model == "models/vehicles/mercedes.tik") { local.distance = 80 }
+		if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
+		if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
+		else { local.distance = 25 } // bmwbikes
+
+		local.fire = spawn script_model
+		local.fire model "models/emitters/fancyfire.tik"
+		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + local.desvehicle.upvector * 42
+		local.fire.angles = ( 270 0 0 )
+		local.fire.scale = 1
+		local.fire anim start
+		local.fire notsolid
+		local.smoke = spawn script_model
+		local.smoke model "models/emitters/linger_smoke.tik"
+		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + local.desvehicle.upvector * 42
+		local.smoke.angles = ( 270 0 0 )
+		local.smoke.scale = 0.7
+		local.smoke anim start
+		local.smoke notsolid
+
+		if(self.desmodel == models/vehicles/bmwbike_d.tik) { local.fire.origin += ( 0 0 -25 ); local.smoke.origin += ( 0 0 -25 ) }
+	}
+
+	self thread driverreset 1					// use local.status = 1 for drivers that died
+	self thread mainreset local.desvehicle local.fire local.smoke	// waiting self.resettime seconds until a new vehicle is spawned in
+
+	self thread kill_riders
+	self.driver = NIL
+
+	if(self.turretplayer != NIL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer 1 } // ensures that the turretplayer is alaways detached after vehicle dies
+
+	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
+	if(self.gun != NIL && self.gun != NULL) { self.gun remove }
+	exec global/earthquake.scr .35 2 0 0
+
+	if(self.shooter != NIL && self.shooter != NULL)
+	{
+		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
+		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
+		else { local.shooter = self.shooter }
+	}
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.
+	{
+		if(vector_length(self.origin - $player[local.i].origin) <= 600) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.shooter == NIL || local.shooter == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.desvehicle 360) // "cansee self" does not work.
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.shooter && $player[local.i].dmteam == local.shooter.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.desvehicle 360)
+				{
+					$player[local.i] damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.shooter
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	self remove
+
+	local.boom = spawn script_model
+	local.boom model "models/emitters/mortar_higgins.tik"
+	local.boom.origin = local.desvehicle.origin
+	local.boom.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.boom.scale = 1.0
+	local.boom anim start
+	local.boom notsolid
+
+	local.debris = spawn script_model targetname "mortar_dirt_nosound"
+	local.debris model "emitters/mortar_dirt_nosound.tik" 
+	local.debris.origin = local.desvehicle.origin
+	local.debris.scale = 0.8
+	local.debris anim start
+	local.debris notsolid
+	waitframe
+	local.boom remove
+	local.debris remove
+	if(local.blewup == 1) { radiusdamage local.desvehicle.origin 500 600 } // this must be one frame after other damages in this thread, otherwise chain-reaction kills will not count.
+end
+
+kill_riders:
+
+	if(self.turretplayer != NIL && self.turretplayer != NULL)
+	{
+		if(self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.turretplayer damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.turretplayer damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter != NULL) { self.turretplayer damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { self.turretplayer volumedamage 9999999 }
+	}
+
+	if(self.passengers.size >= 1)
+	{
+		for(local.i = 1; local.i <= self.passengers.size; local.i++)
+		{
+			if(self.passengers[local.i] != NIL && self.passengers[local.i] != NULL)
+			{
+				if(self.shooter != NIL)
+				{
+					self.passengers[local.i] takedamage
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.passengers[local.i] damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else if(self.shooter != NULL) { self.passengers[local.i] damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					self.passengers[local.i] nodamage
+				}
+				else { self.passengers[local.i] volumedamage 9999999 }
+			}
+		}
+	}
+
+	if(self.shooter != NIL)
+	{
+		if(self.driver != NIL)
+		{
+			self.driver takedamage
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter != NULL) { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			self.driver nodamage
+		}
+	}
+	else if(self.driver != NIL) { self.driver volumedamage 9999999 } // let's make sure the driver is dead.
+end
+
+mainreset local.desvehicle local.fire local.smoke:
+
+	if(self.resettime == NIL || self.resettime <= 0) { end }
+
+	local.name = self.name
+	local.model = self.model
+	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
+	local.angles = self.angles
+	local.health = level.vehicle_inithealth[self.name]
+	local.vehiclespeed = self.vehiclespeed_max
+	local.resettime = self.resettime
+	local.headlights = self.headlights
+	local.noheadlights = self.noheadlights
+
+	while(self != NULL) { waitframe }
+	wait local.resettime
+
+	if(local.fire != NIL && local.fire != NULL) { local.fire remove }
+	if(local.smoke != NIL && local.smoke != NULL) { local.smoke remove }
+	local.desvehicle remove
+	thread main local.name local.model level.vehicle_initorigin[local.name] level.vehicle_initangles[local.name] local.health local.vehiclespeed local.resettime local.headlights local.noheadlights
+end
+
+////////////////////////////////////////////////////////////////////////
+
+turretslot local.player:
+
+	if(local.player.isdog == 1) { local.player iprint ("Dogs cannot use vehicle turrets."); end }
+	if(local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
+	{
+		local.player iprint ("An enemy player is driving this vehicle!")
+		end
+	}
+
+	local.team = local.player.dmteam
+	waitframe	// need this here, otherwise driver & turret player could be attached to the same seat!
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
+
+	self.turretplayer = local.player
+	self.turretplayer.passenger = 1
+	self.turretplayer.driving = 1
+	self.turretplayer.turreting = 1
+	self.turretplayer.remove_viewmodel = 0
+	self.turretplayer.driving_state_jump = 0
+	self.turretplayer forcetorsostate TURRET_START
+	self.turretplayer iprint ("JUMP = exit turret.")
+	self.turretplayer.turretingent = self // used with killstreaks/damagehandler.scr to properly give score to shooter if turretplayer's vehicle gets blown up by an enemy bazooka rocket.
+
+	self unlock
+	self.gun unlock
+	self attachturretslot 0 local.player
+	self.gun lock
+	self lock
+	if(self.model != "models/vehicles/jeep.tik") { self.turretplayer.scale = 0.5 } // self.turretplayer hide
+	local.player glue self.gun // keep player's angles aligned with 30cal turret.
+
+	local.driver = self.driver
+	local.team = local.player.dmteam
+
+	while(self != NULL && self.driver != NIL && self.driver != NULL && isalive self.driver && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		local.player.origin = self.gun.origin
+		if(local.player.fireheld == 1) { self.gun playsound sndfire30cal }
+
+		if(self.turretplayer.driving_state_jump == 1)
+		{
+			self waitthread turretplayer_reset local.team local.player
+			end
+		}
+		waitframe
+	}
+	if(self != NULL) { self waitthread turretplayer_reset local.team local.player }
+
+	if(local.player != NULL)
+	{
+		local.player.passenger = 0
+		local.player.driving = 0
+		local.player.turreting = 0
+		local.player.remove_viewmodel = 1
+		local.player.scale = 1
+		local.player unglue
+		//local.player show
+	}
+end
+
+turretplayer_reset local.team local.player local.dead:
+
+	if(local.player == NIL || local.player == NULL) // if turret player left the game
+	{
+		self lock
+		self.gun lock
+		self.turretplayer = NIL // if turret player leaves, then rejoins, he cannot see the vehicle's turretgun, but everyone else can (weird graphics glitch?).
+		end			// for the rejoining player to fix it: enter the turret again, or wait for the vehicle to respawn.
+	}
+
+	local.player unglue
+	local.player.passenger = 0
+	local.player.driving = 0
+	local.player.turreting = 0
+	local.player.scale = 1
+	if(local.player.dmteam != "spectator") { local.player show }
+	local.player thread wallstuck_fix
+	local.player forcetorsostate STAND
+	local.player takedamage // this prevents a rare bug that kept the turret player from ever dying again (player is somehow, but only sometimes given "nodamage"?)
+	local.player.turretingent = NIL
+
+	if(isalive local.player && local.player.dmteam != "spectator")
+	{
+		self unlock
+		self.gun unlock
+		self douse local.player
+		local.player exit
+		local.player forcelegsstate STAND
+	}
+	self lock
+	self.gun lock
+	self.turretplayer = NIL
+
+	if(self.model == "models/vehicles/jeep.tik") { local.outheight = 100 }
+	else { local.outheight = 180 }
+
+	if(local.player.dmteam != local.team && local.player.dmteam != "spectator") { local.player respawn }
+	else { local.player.viewangles = ( self.gun.angles[0] self.gun.angles[1] 0 ) }
+
+	if(local.player.dmteam == local.team) { local.player.origin = self.origin + self.forwardvector * -100 + (angles_toup self.angles * local.outheight) }
+
+	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver) || local.dead == 1)
+	{
+		if(self != NULL && self.shooter != NIL)
+		{
+			if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.player damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+passengers:
+	
+	local.player = parm.other
+	local.team = local.player.dmteam
+	waitframe	// need this here, otherwise driver & passenger could be attached to the same seat!
+
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
+
+	for(local.s = 1; local.s <= self.seats; local.s++)
+	{
+		if(self.passengers[local.s] == NIL) { self.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
+	}
+	if(local.s > self.seats) { end } // no seats available.
+
+	if(local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
+	{
+		self.passengers[local.s] = NIL
+		local.player iprint ("An enemy player is driving this vehicle!")
+		end
+	}
+
+	if(self.dist_offset[local.s] == NIL) { end }
+	local.distoffset = self.dist_offset[local.s]
+
+	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/bmwbike.tik") { local.outheight = 100 }
+	else { local.outheight = 180 }
+
+	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
+	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
+	local.player forcelegsstate STAND
+	//local.player hide
+	//local.player noclip
+	local.player nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
+	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
+	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE(zoom) = look around.")
+	local.player.origin = self.origin
+	local.player.passenger = 1
+	local.player.ridingent = self
+	local.player.driving = 1 // should help with other scripts.
+	local.player.driving_state_jump = 0
+	local.PI = 3.14159265359
+	local.driver = self.driver
+
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
+
+		local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
+		local.sin = (waitthread global/math.scr::sine local.degrees) * self.dist_offset[local.s]
+		local.cos = (waitthread global/math.scr::cosine local.degrees) * self.dist_offset[local.s]
+
+		if(self.driver.driving_state_backward == 1) { local.direction = -1 }
+		else { local.direction = 1 }
+		if(self.velocity != ( 0 0 0 ))
+		{
+			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
+		}
+		else { local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) }
+
+		if(local.player.fireheld != 1)
+		{
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
+			else { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) }
+		}
+
+		if(local.player.driving_state_jump == 1) // Press JUMP to exit vehicle.
+		{
+			if(local.player.isdog != 1) { local.player show }
+			local.player give "models/items/binoculars.tik"
+			local.player solid
+			local.player takedamage
+			//local.player noclip
+			local.player forcetorsostate STAND
+			if(self != NULL && self.model == "models/vehicles/jeep.tik" && self.turretplayer != NIL && self.turretplayer != NULL)
+			{
+				local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s] * 1.5) + (angles_toup self.angles * local.outheight)
+			}
+			else  // using player's origin prevents passengers getting stuck inside each other
+			{
+				local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight)
+			}
+			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+
+			local.player thread wallstuck_fix
+			self.passengers[local.s] = NIL
+			local.player.passenger = 0
+			local.player.ridingent = NIL
+			local.player.driving = 0
+			end
+		}
+		waitframe
+	}
+	if(self != NULL) { self.passengers[local.s] = NIL }
+
+	if(local.player != NULL)
+	{
+		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
+		local.player.passenger = 0
+		local.player.ridingent = NIL
+		local.player.driving = 0
+		if(local.player.dmteam != spectator)
+		{
+			if(isalive local.player) { local.player give "models/items/binoculars.tik" }
+			if(local.player.isdog != 1) { local.player show }
+			local.player solid
+			local.player takedamage
+			//local.player noclip
+			local.player forcetorsostate STAND
+			if(local.player.dmteam == local.team) // if the passenger did not switch teams
+			{
+				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units
+				local.cos = local.cos / local.distoffset * 25
+	
+				if(self != NULL) { local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight) }
+				else { local.player.origin += ( local.cos local.sin local.outheight ) }
+				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+				local.player thread wallstuck_fix
+	
+				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1))
+				{
+					if(self != NULL && self.shooter != NIL)
+					{
+						if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.player damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+					else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+
+			local.origin = local.player.origin
+			while(local.player != NULL && !isalive local.player && local.player.dmteam != "spectator")
+			{
+				local.player.origin = ( local.origin[0] local.origin[1] local.player.origin[2] ) // for some reason, passengers' dead bodies would move forward across the ground until they hit a wall.
+				local.player notsolid
+				local.player droptofloor
+				waitframe
+			}
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+seatstuff:
+
+	if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+	{
+		self.seats = 5 // not including driver's seat
+		self.degree_offset[1] = 160		// [1] = front passenger, [2] & [3] = left side rear passengers, [4] & [5] = right side rear passengers 
+		self.dist_offset[1] = 60
+		self.height_offset[1] = 17
+		self.degree_offset[2] = -55
+		self.dist_offset[2] = 36
+		self.height_offset[2] = 60
+		self.degree_offset[3] = -17
+		self.dist_offset[3] = 100
+		self.height_offset[3] = 60
+		self.degree_offset[4] = 55
+		self.dist_offset[4] = 36
+		self.height_offset[4] = 60
+		self.degree_offset[5] = 17
+		self.dist_offset[5] = 100
+		self.height_offset[5] = 60
+
+		if(self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+		{
+			self.height_offset[2] = 42
+			self.height_offset[3] = 42
+			self.height_offset[4] = 42
+			self.height_offset[5] = 42
+			self.playerang_offset[2] = 180
+			self.playerang_offset[3] = 180
+			self.playerang_offset[4] = 180
+			self.playerang_offset[5] = 180
+		}
+	}
+	if(self.model == "models/vehicles/jeep.tik")
+	{
+		self.seats = 1
+		self.degree_offset[1] = 40		// [1] = front passenger
+		self.dist_offset[1] = 39
+		self.height_offset[1] = 10
+	}
+	if(self.model == "models/vehicles/jeep_bench.tik")
+	{
+		self.seats = 2
+		self.degree_offset[1] = 40		// [1] = front passenger, [2] = back seat (30cal spot)
+		self.dist_offset[1] = 39
+		self.height_offset[1] = 10
+		self.degree_offset[2] = 0
+		self.dist_offset[2] = 80
+		self.height_offset[2] = 10
+	}
+	if(self.model == "models/vehicles/bmwbike.tik")
+	{
+		self.seats = 2
+		self.degree_offset[1] = 50		// [1] = side car seat, [2] = behind driver
+		self.dist_offset[1] = 24
+		self.height_offset[1] = 0
+		self.degree_offset[2] = -25
+		self.dist_offset[2] = 52
+		self.height_offset[2] = 0
+	}
+	if(self.model == "models/vehicles/m3.tik")
+	{
+		self.seats = 5
+		self.degree_offset[1] = 100		// [1] = front passenger, [2] & [3] = left side rear passengers, [4] & [5] = right side rear passengers 
+		self.dist_offset[1] = 35
+		self.height_offset[1] = 35
+		self.degree_offset[2] = -25
+		self.dist_offset[2] = 67
+		self.height_offset[2] = 35
+		self.degree_offset[3] = -12
+		self.dist_offset[3] = 135
+		self.height_offset[3] = 35
+		self.degree_offset[4] = 25
+		self.dist_offset[4] = 67
+		self.height_offset[4] = 35
+		self.degree_offset[5] = 12
+		self.dist_offset[5] = 135
+		self.height_offset[5] = 35
+	}
+	if(self.model == "models/vehicles/gmctruck.tik")
+	{
+		self.seats = 5
+		self.degree_offset[1] = 164		// [1] = front passenger, [2] & [3] = left side rear passengers, [4] & [5] = right side rear passengers 
+		self.dist_offset[1] = 65
+		self.height_offset[1] = 35	
+		self.degree_offset[2] = -25
+		self.dist_offset[2] = 50
+		self.height_offset[2] = 60
+		self.degree_offset[3] = -10
+		self.dist_offset[3] = 120
+		self.height_offset[3] = 60
+		self.degree_offset[4] = 25
+		self.dist_offset[4] = 50
+		self.height_offset[4] = 60
+		self.degree_offset[5] = 10
+		self.dist_offset[5] = 120
+		self.height_offset[5] = 60
+
+		self.playerang_offset[2] = 180
+		self.playerang_offset[3] = 180
+		self.playerang_offset[4] = 180
+		self.playerang_offset[5] = 180
+	}
+	if(self.model == "models/vehicles/mercedes.tik")
+	{
+		self.seats = 3
+		self.degree_offset[1] = 90		// [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
+		self.dist_offset[1] = 15
+		self.height_offset[1] = -10
+		self.degree_offset[2] = -18
+		self.dist_offset[2] = 50
+		self.height_offset[2] = -10
+		self.degree_offset[3] = 18
+		self.dist_offset[3] = 50
+		self.height_offset[3] = -10
+	}
+	if(self.model == "models/vehicles/shermantank.tik")
+	{
+		self.seats = 1
+		self.degree_offset[1] = 9		// [1] = tank's port hole
+		self.dist_offset[1] = 155
+		self.height_offset[1] = 85
+	}
+	if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik")
+	{
+		self.seats = 4
+		self.degree_offset[1] = -65		// [1] & [2] = left side rear passengers, [3] & [4] = right side rear passengers 
+		self.dist_offset[1] = 25
+		self.height_offset[1] = 35
+		self.degree_offset[2] = -14
+		self.dist_offset[2] = 93
+		self.height_offset[2] = 35
+		self.degree_offset[3] = 65
+		self.dist_offset[3] = 25
+		self.height_offset[3] = 35
+		self.degree_offset[4] = 14
+		self.dist_offset[4] = 93
+		self.height_offset[4] = 35
+	}
+	if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik")
+	{
+		self.seats = 3
+		self.degree_offset[1] = 46		// [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
+		self.dist_offset[1] = 25
+		self.height_offset[1] = 0
+		self.degree_offset[2] = -12
+		self.dist_offset[2] = 81
+		self.height_offset[2] = 0
+		self.degree_offset[3] = 12
+		self.dist_offset[3] = 81
+		self.height_offset[3] = 0
+	}
+	if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
+	{
+		self.seats = 3
+		self.degree_offset[1] = 60		// [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
+		self.dist_offset[1] = 15
+		self.height_offset[1] = -7
+		self.degree_offset[2] = -12
+		self.dist_offset[2] = 75
+		self.height_offset[2] = -7
+		self.degree_offset[3] = 12
+		self.dist_offset[3] = 75
+		self.height_offset[3] = -7
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+illuminate local.side:
+
+	if(self.model == "models/vehicles/bmwbike.tik" && local.side == "right") { end }
+	if(self.model == "models/vehicles/bmwbike.tik" && local.side == "left") { local.side = "bike" }
+
+	if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.distance = 340; local.height = 57 } // distance = how far away from the vehicle's origin
+	else if(self.model == "models/vehicles/bmwbike.tik") { local.distance = 215; local.height = 52 }
+	else if(self.model == "models/vehicles/m3.tik") { local.distance = 335; local.height = 77 }
+	else if(self.model == "models/vehicles/shermantank.tik") { local.distance = 195; local.height = 80.5 }
+	else if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 350; local.height = 72.5 }
+	else if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik" || self.model == "models/vehicles/mercedes.tik") { local.distance = 300 }
+	else { local.distance = 275 }
+
+	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.height = 53 }
+	if(self.model == "models/vehicles/mercedes.tik") { local.height = 46.5 }
+	if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik") { local.height = 55 }
+	if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik") { local.height = 44.25 }
+	if(local.height == NIL) { local.height = 55 }
+
+	local.light = spawn script_model
+	local.light model "fx/searchlight.tik"
+	local.light.origin = self.origin
+	local.light.scale = 0.001
+	local.light notsolid
+	local.light light 1 1 1 250
+
+	local.PI = 3.14159265359
+	local.origin = self.origin
+
+	while(self != NULL && self.corona == 1)
+	{
+		if(local.side == "bike") { local.degrees = self.angles[1] }
+		if(local.side == "left") { local.degrees = self.angles[1] + 20 }
+		if(local.side == "right") { local.degrees = self.angles[1] - 20 }
+
+		local.speed = waitthread global/math.scr::sqrt ((self.origin[0] - local.origin[0]) * (self.origin[0] - local.origin[0]) + (self.origin[1] - local.origin[1]) * (self.origin[1] - local.origin[1]) + (self.origin[2] - local.origin[2]) * (self.origin[2] - local.origin[2]))
+		local.sin2 = (waitthread global/math.scr::sine local.degrees) * (local.distance + (local.speed * 0.55))
+		local.cos2 = (waitthread global/math.scr::cosine local.degrees) * (local.distance + (local.speed * 0.55))
+
+		local.origin = self.origin
+ 		local.light.origin = trace (self.origin + ( 0 0 50 )) (self.origin + ( local.cos2 local.sin2 local.height )) 0 // use trace to ensure the light doesn't go into walls when vehicle is facing walls
+		waitframe
+	}
+	if(local.light != NULL) { local.light remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+deadcorona local.tag:
+
+	if(local.tag != NIL) // opeltruck, opeltruckgreen, opeltruckgreen_canopy
+	{
+		local.flare = spawn script_model
+		local.flare model "fx/searchlight.tik"
+		local.flare.scale = 3
+		local.flare notsolid
+		local.flare attach self local.tag 0 ( 0 0 0 )
+	}
+	self.corona = 1
+	local.entnum = self.entnum
+
+	while($("headlight_1_" + local.entnum) != NULL) { waitframe } // make sure the old headlight attachmodels are removed first
+
+	if(self != NULL && local.tag == NIL)
+	{
+		if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") // simulate headlight tags for jeeps
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.45 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 20 53 74 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.45 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -22 53 74 )
+			self attachmodel models/static/jug.tik "Box01" 1 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 20 53 84 )
+			self attachmodel models/static/jug.tik "Box01" 1 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -22 53 84 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+		if(self.model == "models/vehicles/bmwbike.tik") // simulate headlight tag for bmwbikes
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.365 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 22.5 52 34 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/static/jug.tik "Box02" 0.9 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( 22.5 52 42 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 0 0 180 )
+		}
+		if(self.model == "models/vehicles/m3.tik") // simulate headlight tags for m3 halftracks
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 125 77 25.5 ) //( +forward -backward, +up -down, +left -right )
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( 125 77 -29.5 )
+			self attachmodel models/static/jug.tik "Box01" 0.6 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 130 77 25.5 )
+			self attachmodel models/static/jug.tik "Box01" 0.6 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( 130 77 -29.5 )
+			$("headlight_1_" + self.entnum).angles = ( 180 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 180 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 90 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 90 0 180 )
+		}
+		if(self.model == "models/vehicles/shermantank.tik") // simulate headlight tags for shermantanks
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 45.8 80.5 -23 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -45.5 80.5 -23 )
+			self attachmodel models/static/jug.tik "Box02" 0.6 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 45.8 80.5 -17 )
+			self attachmodel models/static/jug.tik "Box02" 0.6 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -45.5 80.5 -17 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+		if(self.model == "models/vehicles/gmctruck.tik") // simulate headlight tags for gmctrucks
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.32 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 26 72.5 160 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.32 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -27.5 72.5 160 )
+			self attachmodel models/static/jug.tik "Box01" 0.75 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 26 72.5 165 )
+			self attachmodel models/static/jug.tik "Box01" 0.75 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -27.5 72.5 165 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+		if(self.model == "models/vehicles/mercedes.tik") // simulate headlight tags for mercedes cars
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.4 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 22 46.5 98 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.4 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -23 46.5 98 )
+			self attachmodel models/static/jug.tik "Box02" 0.8 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 22 46.5 106 )
+			self attachmodel models/static/jug.tik "Box02" 0.8 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -23 46.5 106 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+		if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik")
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.32 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 26 55 95.25 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.32 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -26.5 55 95.25 )
+			self attachmodel models/static/jug.tik "Box02" 0.75 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 26 55 101.25 )
+			self attachmodel models/static/jug.tik "Box02" 0.75 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -26.5 55 101.25 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+		if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 15.75 44.25 86.5 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -16.2 44.25 86.5 )
+			self attachmodel models/static/jug.tik "Box02" 0.75 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 15.75 44.25 92 )
+			self attachmodel models/static/jug.tik "Box02" 0.75 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -16.2 44.25 92 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+
+		if(self.model == "models/vehicles/bmwbike.tik") // spawning the blinding bright white corona flares
+		{
+			local.flare = spawn script_model
+			local.flare model fx/searchlight.tik
+			local.flare.scale = 2
+			local.flare attach $("headlight_2_" + self.entnum) "Box06" 0 ( 0 0 0 )
+			local.flare notsolid
+			self.flare1 = local.flare
+		}
+		else // two for each non-opeltruck vehicle, except for bmwbike
+		{
+			local.flare1 = spawn script_model
+			local.flare1 model fx/searchlight.tik
+			local.flare1.scale = 3
+			local.flare1 attach $("headlight_3_" + self.entnum) "Box06" 0 ( 0 0 0 )
+			local.flare1 notsolid
+			local.flare2 = spawn script_model
+			local.flare2 model fx/searchlight.tik
+			local.flare2.scale = 3
+			local.flare2 attach $("headlight_4_" + self.entnum) "Box06" 0 ( 0 0 0 )
+			local.flare2 notsolid
+			self.flare1 = local.flare1
+			self.flare2 = local.flare2
+		}
+	}
+
+	while(self != NULL && self.corona == 1) { waitframe }
+
+	if(local.flare != NIL && local.flare != NULL) { local.flare remove }
+	if($("headlight_1_" + local.entnum) != NULL) { $("headlight_1_" + local.entnum) remove } // attach & attachmodels automatically get removed if self = NULL
+	if($("headlight_2_" + local.entnum) != NULL) { $("headlight_2_" + local.entnum) remove }
+	if($("headlight_3_" + local.entnum) != NULL) { $("headlight_3_" + local.entnum) remove }
+	if($("headlight_4_" + local.entnum) != NULL) { $("headlight_4_" + local.entnum) remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+dummyavatar:
+
+	local.avatar = spawn func_beam
+	local.avatar attach self.driver "Bip01 Head"
+	local.avatar.origin = self.driver.origin + ( 0 0 100 )
+	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+	local.avatar minoffset 0.0
+	local.avatar maxoffset 0.0
+	local.avatar color ( 1 1 1 )
+	local.avatar scale 7.0
+	local.avatar life 0
+	if(self.driver.dmteam == "allies") { local.avatar shader ("textures/hud/allies_headicon") }
+	if(self.driver.dmteam == "axis") { local.avatar shader ("textures/hud/axis_headicon") }
+	local.avatar numsegments 1
+	local.avatar alpha 0.80
+	local.avatar activate
+	local.heightinc = 0
+	if(self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.heightinc = 10 }
+	if(self.model == "models/vehicles/gmctruck.tik") { local.heightinc = 40 }
+
+	local.entnum = self.entnum
+	while($("driverdummy_" + local.entnum) != NULL) { waitframe } // make sure the old dummy attachmodel is removed first
+
+	if(self != NULL)
+	{
+		if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+		{
+			self attachmodel self.driver.model "Box07" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( 20 -35 17 ) //( +left -right, +backward -forward, +up -down )
+			$("driverdummy_" + self.entnum).angles = ( 0 -90 0 )
+		}
+		if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik")
+		{
+			self attachmodel self.driver.model "Box01" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( 24.5 10 -30 ) //( +left -right, +up -down, +forward -backward )
+			$("driverdummy_" + self.entnum).angles = ( -90 0 -90 )
+		}
+		if(self.model == "models/vehicles/m3.tik")
+		{
+			self attachmodel self.driver.model "Box01" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( 3 30 -32 ) //( +forward -backward, +up -down, +left -right )
+			$("driverdummy_" + self.entnum).angles = ( 0 0 -90 )
+		}
+		if(self.model == "models/vehicles/bmwbike.tik" || self.model == "models/vehicles/gmctruck.tik" || self.model == "models/vehicles/mercedes.tik" || self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik" || self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
+		{
+			self.driver show
+		}
+
+		local.team = self.driver.dmteam
+	}
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		local.avatar.origin = self.driver.origin + ( 0 0 (100 + local.heightinc) )
+		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+		waitframe
+	}
+	local.avatar remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+wallstuck_fix:
+
+	local.c = 0
+	local.origin = self.origin
+	local.team = self.dmteam
+
+	if(self.wallstuck_fixing == 1) { end }
+	self.wallstuck_fixing = 1
+
+	while(self != NULL && isalive self && self.dmteam == local.team) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
+	{
+		if(local.c >= 60) // about 3 seconds
+		{
+			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
+			if(self.isdog == 1) { self hide }
+			break
+		}
+		local.c++
+		waitframe
+	}
+	if(self != NULL) { self.wallstuck_fixing = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+display:
+
+	if(game.game != "AA") { local.menu1 = "bastogne1"; local.menu2 = "bastogne2" }
+	else { local.menu1 = "dday1"; local.menu2 = "dday2" }
+
+	self stufftext ("globalwidgetcommand " + local.menu1 + " shader townhallwindow")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " menu " + local.menu1 + " 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand june6 borderstyle NONE"
+	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
+	self stufftext "globalwidgetcommand june6 rect 16 420 16 64"
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand june6 linkcvar phealth"
+	self stufftext "globalwidgetcommand june6 statbar vertical 0 100"
+	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
+	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
+
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " menu " + local.menu2 + " 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	self stufftext "globalwidgetcommand charliesector textalign left "
+	self stufftext "globalwidgetcommand charliesector rect 40 470 150 20"
+	self stufftext "globalwidgetcommand charliesector fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand charliesector linkcvar phealth"
+	self stufftext "globalwidgetcommand charliesector font facfont-20"
+	self stufftext "globalwidgetcommand charliesector shader townhallwindow"
+
+	self stufftext ("showmenu " + local.menu2)
+	self stufftext ("showmenu " + local.menu1)
+	self stufftext "set phealth 100"
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster local.model:
+
+level.mapname = getcvar "mapname"
+local.master = spawn scriptmaster
+
+if(local.model == "models/vehicles/opeltruck.tik" || local.model == "models/vehicles/opeltruckgreen.tik" || local.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.model == "models/vehicles/gmctruck.tik")
+{
+	local.soundtype = 1
+}
+else if(local.model == "models/vehicles/sdkfz.tik" || local.model == "models/vehicles/sdkfz_afrika.tik" || local.model == "models/vehicles/m3.tik" || local.model == "models/vehicles/shermantank.tik")
+{
+	local.soundtype = 2
+}
+else { local.soundtype = 3 }
+
+if(level.vehiclescriptmaster[local.soundtype] != NIL) { end }
+level.vehiclescriptmaster[local.soundtype] = 1
+
+if(local.soundtype == 2 && level.mapname != "training" && level.mapname != "m3l3" && level.mapname != "m5l2a")
+{
+	local.master aliascache sdkfz_snd_idle sound/vehicle/veh_track_idle.wav soundparms .5 0 1 0 800 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 1 && level.mapname != "m1l2a" && level.mapname != "m1l2b" && level.mapname != "m1l3b" && level.mapname != "m1l3c" && level.mapname != "m4l0" && level.mapname != "m4l1" && level.mapname != "m4l2" && level.mapname != "m4l3")
+{
+	local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms .7 0 1 0 300 7000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_run sound/vehicle/veh_truck_move.wav soundparms 1.2 0 1 0 600 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_revup sound/vehicle/veh_truck_revup.wav soundparms 1 0 1 0 100 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_revdown sound/vehicle/veh_truck_revdown.wav soundparms 1 0 1 0 100 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_shift1 sound/vehicle/veh_truck_shiftin.wav soundparms 1 0 1 0 200 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_shift2 sound/vehicle/veh_truck_shiftout.wav soundparms 1 0 1 0 200 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_on sound/vehicle/veh_truck_on.wav soundparms 1 0 1 0 100 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_start sound/vehicle/veh_truck_on.wav soundparms 1 0 1 0 100 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_off sound/vehicle/veh_truck_off.wav soundparms 1 0 1 0 100 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_stop sound/vehicle/veh_truck_off.wav soundparms 1 0 1 0 100 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 600 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_tread_snd_stone sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 600 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 600 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_tread_snd_wood sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 600 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 600 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_doorclose sound/mechanics/DoorJeepClose_02.wav soundparms 1 0 1 0 400 4000 auto loaded maps level.mapname
+	local.master aliascache opeltruck_snd_dooropen sound/mechanics/DoorJeepOpen_01.wav soundparms 1 0 1 0 400 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 1 && level.mapname != "m1l3b" && level.mapname != "m1l3c" && level.mapname != "m4l0" && level.mapname != "m4l1" && level.mapname != "m4l2" && level.mapname != "m4l3")
+{
+	local.master aliascache opeltruck_vehicle_crash1 sound/null.wav soundparms .7 .4 1 .5 100 1600 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 2 && level.mapname != "m3l3" && level.mapname != "m5l2a")
+{
+	local.master aliascache sdkfz_snd_run sound/vehicle/veh_track_move.wav soundparms 1.5 0 1 0 1000 6000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_revup sound/vehicle/veh_track_revup.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_revdown sound/vehicle/veh_track_revdown.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_shift1 sound/vehicle/veh_track_shiftin.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_shift2 sound/vehicle/veh_track_shiftout.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_on sound/vehicle/veh_track_on.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_start sound/vehicle/veh_track_on.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_off sound/vehicle/veh_track_off.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_stop sound/vehicle/veh_track_off.wav soundparms 1.5 0 1 0 1000 6000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_stone sound/vehicle/veh_tread_metal.wav soundparms .25 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_wood sound/vehicle/veh_tread_metal.wav soundparms .25 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms .25 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_doorclose sound/null.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache sdkfz_snd_dooropen sound/null.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 3 && level.mapname != "m1l2b" && level.mapname != "m1l3a" && level.mapname != "m1l3b")
+{
+	local.master aliascache jeep_snd_idle sound/vehicle/veh_jeep_idle.wav soundparms .5 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_snd_run sound/vehicle/veh_jeep_move.wav soundparms .8 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_snd_revup sound/vehicle/veh_jeep_start.wav soundparms 1.2 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_snd_revdown sound/vehicle/veh_jeep_revdown.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_tread_snd_stone sound/vehicle/veh_tread_grass.wav soundparms .28 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_snd_off sound/vehicle/veh_jeep_off.wav soundparms 1.5 0 1 0 800 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 3 && level.mapname != "m1l3a" && level.mapname != "m1l3b")
+{
+	local.master aliascache jeep_snd_shift1 sound/vehicle/veh_jeep_shiftin.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_snd_shift2 sound/vehicle/veh_jeep_shiftout.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms .28 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms .28 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_tread_snd_wood sound/vehicle/veh_tread_grass.wav soundparms .28 0 1 0 800 4000 auto loaded maps level.mapname
+	local.master aliascache jeep_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 2.8 0 1 0 800 4000 auto loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname != "m1l2b" && level.mapname != "m1l3a" && level.mapname != "m1l3b")
+{
+	local.master aliascache jeep_snd_stop sound/vehicle/veh_jeep_off.wav soundparms 1.5 0 1 0 800 4000 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 3)
+{
+	if(level.mapname != "m1l2b" && level.mapname != "m1l3a")
+	{
+		local.master aliascache jeep_snd_on sound/vehicle/veh_jeep_start.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+		local.master aliascache jeep_snd_start sound/vehicle/veh_jeep_on.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+
+		if(level.mapname != "m1l3b" && level.mapname != "m1l3c")
+		{
+			local.master aliascache jeep_snd_doorclose sound/mechanics/DoorJeepClose_02.wav soundparms 1.2 0 1 0 800 4000 auto loaded maps level.mapname
+		}
+	}
+	local.master aliascache jeep_snd_dooropen sound/mechanics/DoorJeepOpen_01.wav soundparms 1 0 1 0 400 4000 auto loaded maps level.mapname // this alias was never added to original ubersound.scr
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname[2] == "/" || level.mapname[3] == "/")
+{
+	local.master aliascache jeep_vehicle_crash sound/null.wav soundparms .7 .4 1 .5 100 1600 auto loaded maps level.mapname
+}
+
+if(local.soundtype == 2 && level.mapname != "m3l3" && level.mapname != "m5l2a" && level.mapname != "m5l2b")
+{
+	local.master aliascache sdkfz_vehicle_crash1 sound/null.wav soundparms .7 .4 1 .5 100 1600 auto loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname != "m1l3a" && level.mapname != "m1l3b" && level.mapname != "m4l1")
+{
+	local.master aliascache explode_truck1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname != "m1l3a" && level.mapname != "m1l3b")
+{
+	local.master aliascache explode_truck2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_truck3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_truck4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+	local.master aliascache explode_truck5 sound/weapons/explo/Explo_MetalMed5.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.mapname != "m5l1a" && level.mapname != "m5l1b" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache damage_vehicle1 sound/null.wav soundparms .7 .4 .9 .2 160 1600 auto loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.scriptmaster[truck_sounds] != 1 && local.soundtype != 2)
+{	
+	local.master aliascache truckhorn sound/vehicle/horn.wav soundparms 1.5 0 1 0 800 6000 auto loaded maps level.mapname
+}
+
+if(level.vehiclescriptmaster2 != 1 && level.scriptmaster[truck_sounds] != 1 && level.scriptmaster[light_switch] != 1 && local.soundtype != 2)
+{	
+	local.master aliascache light_switch sound/items/hit_notify.wav soundparms 1.5 0 1 0 320 2200 auto loaded maps level.mapname	
+}
+
+if(level.vehiclescriptmaster3 != 1)
+{
+	local.master aliascache sndfire30cal sound/weapons/fire/50CalFire2.wav soundparms 1.05 .2 .95 .1 800 4000 weapon loaded maps level.mapname
+}
+
+level.vehiclescriptmaster2 = 1
+level.vehiclescriptmaster3 = 1
+end

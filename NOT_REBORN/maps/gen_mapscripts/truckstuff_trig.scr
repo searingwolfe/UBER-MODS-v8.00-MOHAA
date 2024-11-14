@@ -1,0 +1,259 @@
+main local.targetname local.horn local.headlights local.health local.name2nd:
+
+exec global/aliascache_triggersounds.scr truck_sounds
+
+	if($(local.targetname) == NULL) { wait 1; println("----- ERROR truckstuff_trig.scr: $(local.targetname) = NULL"); end }
+	if($(local.targetname).model == "models/static/opeltruck_hoodopen.tik) { local.headlights = 0 } 	// do not use opeltruck_hoodopen.tik & headlights = 1 for this script, otherwise turning them on will crash the server.
+
+	local.sin = (waitthread global/math.scr::sine $(local.targetname).angles[1]) * 130
+	local.cos = (waitthread global/math.scr::cosine $(local.targetname).angles[1]) * 130
+
+	local.sin2 = (waitthread global/math.scr::sine ($(local.targetname).angles[1] + 35)) * 75
+	local.cos2 = (waitthread global/math.scr::cosine ($(local.targetname).angles[1] + 35)) * 75
+
+	local.trig = spawn trigger_use
+	local.trig.origin = $(local.targetname).origin + ( local.cos2 local.sin2 80 )
+	local.trig setsize ( -30 -30 -80 ) ( 30 30 40 )
+	local.trig setthread engine_onoff_horn
+
+	local.engine = spawn script_model targetname (local.targetname + "_engine")
+	local.engine model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.engine.origin = $(local.targetname).origin + ( local.cos local.sin 73 ) 
+	local.engine notsolid
+	local.engine.scale = 0.001
+	//local.engine hide // loopsound does not work if script_model is hidden; use .scale = 0.001 instead.
+
+	local.trig.engine = 0 				// holds the truck trigger's current state (engine off/on: 0 or 1).
+	local.trig.horn = local.horn 			// 0 = no horn, 1 = honk while vehicle is on only, 2 = honk while on or off.
+	local.trig.headlights = local.headlights 	// 0 = none, 1 = turn on/off while vehicle is on only, 2 = turn on/off anytime.
+	local.trig.lightson = 0				// headlights off/on: 0 or 1.
+	local.trig.enginename = local.engine.targetname // the horn and light switch sounds will come from our engine model, not the opeltruck's centerpoint.
+	local.trig.truckname = local.targetname		// only need this for the idlelights anim.
+	local.trig.name2nd = local.name2nd		// name for optional 2nd truck player-clip, 2nd entity model, or 2nd trigger for "giant bomb istouching truck" cases.
+	
+	$(local.targetname) anim idlenolights
+	$(local.targetname) anim stop_wheels
+	$(local.targetname).health = 9999999
+
+	if(local.health != NIL && local.health > 0) { local.trig thread truckexploders local.targetname local.health local.damage local.radius }
+end
+
+engine_onoff_horn:
+
+	local.player = parm.other
+	local.team = local.player.dmteam // dmteam checks probably not needed, but helps prevent triggering if player changes team or goes to spectator.
+	
+	local.holdtimer = 0
+	while(local.player.useheld == 1 && local.player.dmteam == local.team && isalive local.player)
+	{ 
+		if(local.holdtimer == 0) 
+		{ 
+			local.player stopwatch 3 // begin counting when USE key is held.
+		}
+		if(local.holdtimer >= 60) // 20 loops/sec * 3 seconds = 60.
+		{  
+			local.player stopwatch 0
+
+			if(self.engine == 0) 
+			{ 
+				local.player iprint ("Truck has turned on.")
+				$(self.enginename) playsound truck_ignitionstart
+				wait 1
+				$(self.enginename) loopsound truck_idleloop
+				if(self.horn != 0 && self.headlights != 0) { local.player iprint ("Hold USE: < 1 second to honk horn; 1 - 3 seconds to toggle headlights.") }
+			}
+			if(self.engine == 1) 
+			{ 
+				local.player iprint ("Truck has turned off.")
+				$(self.enginename) stoploopsound
+				$(self.enginename) playsound truck_ignitionstop
+				if(self.lightson != 1) { wait 1 }
+				if(self.lightson == 1) 
+				{ 
+					waitframe
+					$(self.enginename) playsound light_switch 
+					wait 0.28
+					$(self.truckname) anim idlenolights
+					$(self.truckname).corona = 0
+					self.lightson = 0
+					wait 0.72
+				}
+			}
+			self.engine++
+			if(self.engine > 1) { self.engine = 0 }
+
+			end
+		}
+									      
+		local.holdtimer++
+		local.team = local.player.dmteam // if player is still alive, then make player's dmteam = local.team.
+		wait 0.05 // 20 while-loop increments per second.
+	}
+
+	if((self.engine == 1 || self.horn == 2) && local.holdtimer <= 20 && self.horn != 0) // if player releases USE key within 1 second while engine is on, or while off if self.horn = 2.
+	{ 
+		local.player iprint ("Honking the horn.") 
+		$(self.enginename) playsound truckhorn
+	}
+
+	if((self.engine == 1 || self.headlights == 2) && local.holdtimer > 20 && local.holdtimer < 60 && self.headlights != 0) // if player releases USE key after 1 second & before 3 seconds
+	{ 														       // while engine is on, or while off if self.headlights = 2.
+		$(self.enginename) playsound light_switch
+		local.player stopwatch 0
+
+		wait 0.28 // getting the timing right
+		if(self.lightson != 1) 
+		{
+			local.player iprint ("Turning on the headlights.")
+			$(self.truckname) anim idlelights
+			$(self.truckname) thread deadcorona "light left"
+			$(self.truckname) thread deadcorona "light right"
+			$(self.truckname) thread illuminate
+		}
+		if(self.lightson == 1)
+		{
+			local.player iprint ("Turning off the headlights.")
+			$(self.truckname) anim idlenolights
+			$(self.truckname).corona = 0
+		}
+		
+		self.lightson++
+		if(self.lightson >= 2) { self.lightson = 0 }
+	}
+
+	local.player stopwatch 0
+
+	if(self.engine == 0 && self.horn != 2 && self.headlights != 2) { local.player iprint ("Hold USE for 3 seconds to turn on the truck") }
+	if(self.engine == 1 && self.horn == 0 && self.headlights == 0) { local.player iprint ("Hold USE for 3 seconds to turn off the truck") }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+deadcorona local.tag: 
+
+	local.flare = spawn script_model
+	local.flare model "fx/searchlight.tik"
+	local.flare.scale = 3
+	local.flare notsolid
+	
+	self.corona = 1
+	local.flare attach self local.tag 0 ( 0 0 0 )
+
+	while(self != NULL && self.corona == 1) { waitframe }
+
+	if(local.flare != NULL) { local.flare remove }
+end
+
+illuminate:
+
+	local.light = spawn script_model
+	local.light model "fx/searchlight.tik"
+	local.light.origin = self.origin
+	local.light.scale = 0.001
+	local.light notsolid
+	local.light light 1 1 1 250
+
+	local.PI = 3.14159265359
+	local.distance = 325		// how far away from the vehicle's origin
+
+	while(self != NULL && self.corona == 1)
+	{
+		local.sin = (waitthread global/math.scr::sine self.angles[1]) * local.distance
+		local.cos = (waitthread global/math.scr::cosine self.angles[1]) * local.distance
+
+		local.light.origin = self.origin + ( local.cos local.sin 50 )
+		waitframe
+	}
+	if(local.light != NULL) { local.light remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+truckexploders local.name local.health local.damage local.radius:
+
+	local.sin = (waitthread global/math.scr::sine $(self.truckname).angles[1]) * 125
+	local.cos = (waitthread global/math.scr::cosine $(self.truckname).angles[1]) * 125
+	local.facingleft = $(self.truckname).angles[1] + 90
+	local.facingright = $(self.truckname).angles[1] - 90
+	local.sin2 = (waitthread global/math.scr::sine local.facingleft) * 75
+	local.cos2 = (waitthread global/math.scr::cosine local.facingleft) * 75
+	local.sin3 = (waitthread global/math.scr::sine local.facingright) * 75
+	local.cos3 = (waitthread global/math.scr::cosine local.facingright) * 75
+
+	local.tank = spawn "vehicles/tigertank.tik" targetname ("truckexploder1_" + local.name)
+	local.tank.origin = $(self.truckname).origin + ( local.cos local.sin 100 )
+	local.tank.angles = ( 0 $(self.truckname).angles[1] 0 )
+	local.tank.health = local.health
+	local.tank.scale = 0.1
+	local.tank notsolid
+	local.tank hide
+
+	local.tank2 = spawn "vehicles/tigertank.tik" targetname ("truckexploder2_" + local.name)
+	local.tank2.origin = $(self.truckname).origin + ( local.cos2 local.sin2 100 )
+	local.tank2.angles = ( 0 $(self.truckname).angles[1] 0 )
+	local.tank2.health = local.health
+	local.tank2.scale = 0.1
+	local.tank2 notsolid
+	local.tank2 hide
+
+	local.tank3 = spawn "vehicles/tigertank.tik" targetname ("truckexploder3_" + local.name)
+	local.tank3.origin = $(self.truckname).origin + ( local.cos3 local.sin3 100 )
+	local.tank3.angles = ( 0 $(self.truckname).angles[1] 0 )
+	local.tank3.health = local.health
+	local.tank3.scale = 0.1
+	local.tank3 notsolid
+	local.tank3 hide
+	//removeclass VehicleTurretGun // remove tank's turret after spawning in the vehicle,
+				       // not needed anymore since spawnturret 0 "vehicles/kingcannon.tik" is commented out in models/vehicles/kingtank.tik.
+
+	while(local.tank != NULL && local.tank2 != NULL && local.tank3 != NULL) // inside the for-loop, checking if "$bigbombweap != NULL" must be added to prevent console spamming (seen with "set developer 1").
+	{ 										 // MOHAA doesn't like checking if something istouching a NULL object, without first checking if it exists.
+		for(local.p = 0; local.p <= $player.size; local.p++) 
+		{ 
+			if($("bigbombweap" + local.p) != NULL && ($(self.truckname) istouching $("bigbombweap" + local.p) || ($(self.name2nd) != NULL && $(self.name2nd) istouching $("bigbombweap" + local.p)))) { local.istouching = 1 }
+		}
+		if(local.istouching == 1) { break }
+		wait 0.1
+	}
+	if(local.tank != NULL) { local.tank remove }
+	if(local.tank2 != NULL) { local.tank2 remove }
+	if(local.tank3 != NULL) { local.tank3 remove }
+
+	if($(self.truckname) != NULL && $(self.truckname).corona == 1) { $(self.truckname).corona = 0 }
+	exec global/earthquake.scr .35 2 0 0
+
+	self thread explode local.damage local.radius
+end
+
+explode local.damage local.radius: // meansofdeath rocket or explosion only. explode after "waitframe".
+	
+	local.explode = spawn script_model
+	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
+	if($(self.truckname) != NULL) { local.explode.origin = $(self.truckname).origin }
+	if($(self.truckname) == NULL) { local.explode.origin = self.origin }
+	local.explode.scale = 1.0 //2.5
+	local.explode anim start
+
+	local.r = randomint(5)
+	if(local.r == 0) { local.explode playsound explode_building_large3 }
+	if(local.r == 1) { local.explode playsound explode_building_small4 }
+	if(local.r == 2) { local.explode playsound explode_building_small5 }
+	if(local.r == 3) { local.explode playsound explode_building_large4 }
+	if(local.r == 4) { local.explode playsound explode_building_small3 }
+
+ 	if($(self.truckname) == NULL) { radiusdamage (self.origin + ( 0 0 155 )) 500 600 }
+	if($(self.truckname) != NULL)
+	{
+		radiusdamage ($(self.truckname).origin + ( 0 0 155 )) 500 600
+		$(self.truckname).model = "vehicles/opeltruck_d.tik"
+		$(self.truckname).origin = $(self.truckname).origin + ( 0 0 -16 )
+		if($(self.name2nd) != NULL) { $(self.name2nd).origin = $(self.name2nd).origin + ( 0 0 -16 ) }
+	}
+	waitframe
+	local.explode remove
+	$(self.truckname + "_engine") remove
+	self remove
+end
+

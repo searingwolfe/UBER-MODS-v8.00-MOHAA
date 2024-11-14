@@ -1,0 +1,256 @@
+main local.origin0 local.origin1 local.origin2 local.origin3 local.origin4 local.origin5 local.origin6 local.origin7 local.origin8 local.origin9:
+
+ level.finalkey_spot[0] = local.origin0
+ level.finalkey_spot[1] = local.origin1
+ level.finalkey_spot[2] = local.origin2 
+ level.finalkey_spot[3] = local.origin3
+ level.finalkey_spot[4] = local.origin4
+ level.finalkey_spot[5] = local.origin5
+ level.finalkey_spot[6] = local.origin6
+ level.finalkey_spot[7] = local.origin7
+ level.finalkey_spot[8] = local.origin8
+ level.finalkey_spot[9] = local.origin9
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+finaldoorkey local.playerorigin:
+
+ local.finalkey = spawn trigger_use targetname "final_doorkey"
+ local.finalkey setsize ( -30 -30 -50 ) ( 30 30 50 )
+ local.finalkey model "items/camera.tik"
+ local.finalkey.scale = 2.5 
+ local.finalkey show
+ local.finalkey droptofloor
+ local.finalkey message "*** You have picked up the final door key. ***"
+
+ local.random = randomint(level.finalkey_spot.size) 
+ if(level.keydropped != 1) { local.finalkey.origin = level.finalkey_spot[local.random] + ( 0 0 15 ) }
+ if(level.keydropped == 1) { local.finalkey.origin = local.playerorigin + ( 0 0 15 ) }
+
+ local.finalkey setthread do_random_key // always put setthread after the trigger's origin.
+
+ exec global/flickerrotate.scr final_doorkey ( 0 0.75 0 ) 65 25 25 0
+end
+
+do_random_key:
+
+ self nottriggerable
+ local.player = parm.other
+ if(local.player.inuse)
+  {
+  local.player iprint "Cannot use. You are holding something already."
+  wait 1
+  self triggerable
+  end
+  }
+ else
+  {
+  local.player iprint "*** You have picked up the final door key. ***"
+  local.player.inuse = 1
+  local.player thread doit_key self.origin
+  }
+ self triggerable
+end
+
+doit_key local.origin:
+
+   self iprint ("*** Go to the red final door and unlock it.*** ")
+   local.number = randomint 999999999
+   self attachmodel models/items/camera.tik "Bip01 R Thigh" 2.5 ("cig_1" + local.number) 1 -1 -1 -1 -1 ( -1 0 3 ) //( -up +down, +forward -backward, +right -left )
+   local.static = spawn script_model
+   local.static model "static/corona_reg.tik"
+   local.static.scale = 0.001
+   local.static.origin = self.origin
+   local.static notsolid
+   local.static light .25 1 0 80
+   local.static glue self
+   local.static show
+
+   $("cig_1" + local.number).angles = ( 0 180 20 )
+   self stufftext "say *** I have found the final door key! ***"
+   $"final_doorkey" nottriggerable
+   waitframe
+   $"final_doorkey" remove 
+   
+   local.result = self waitthread scan_player_key //cannot use self in "doit"
+   if(local.result != left)
+   {
+	self.inuse = 0
+    	$("cig_1" + local.number) remove
+	local.static unglue
+	local.static remove
+	if($final_doorkey != NULL) { $final_doorkey remove }
+	local.originold = local.origin + ( 0 0 -15 )
+
+	if(level.finaldoorunlocked != 1)
+	{
+		self stufftext "say *** I dropped the final door key! ***"
+		level.keydropped = 1
+		level.dooropening = 0
+
+		if(level.finalkey_went2spectator == 1) 
+		{ 
+			level.finalkey_went2spectator = 0
+			goto finaldoorkey local.originold 
+		}
+    		goto finaldoorkey self.origin
+	}
+
+	else if(level.finaldoorunlocked == 1)
+	{
+		self stufftext "say *** I have unlocked the final door! Soon after it opens, it will lock again once closed! ***"
+		self iprint "*** Door unlocked: Press the USE key to open it. ****"
+		level.keydropped = 0 
+		level.dooropening = 0
+		//$exit_door unlock //if you click press use too fast, you'll open the door before the light turns green
+
+		goto finaldoor_triggertemp
+	}
+   }
+   if(local.result == left) { goto finaldoorkey local.originold }
+end
+
+scan_player_key:
+
+ local.result = ok
+ local.team = self.dmteam
+ local.count = 0
+ while(1)
+  {
+     if(self == NULL)
+     {
+   	local.result = left
+   	end local.result
+     }
+     else
+     {
+	level.holdingthekey = 1
+	if($finaldoor_triggeruse != NULL && self.useheld == 1 && (self istouching $finaldoor_triggeruse || self istouching $exit_door || self istouching $finaldoor_locklight))
+	{
+		level.finaldoorunlocked = 1
+		$finaldoor_locklight light .25 1 0 16
+		$finaldoor_locklightt light .25 1 0 16
+		end local.result
+	}
+  	else if(!isalive self || self.dmteam != local.team || self.dmteam == spectator)
+    	{
+		if(self.dmteam == spectator || isalive self) { level.finalkey_went2spectator = 1 }
+		level.keydropped = 1
+    	   	end local.result
+    	}
+     }
+     wait 0.1
+  }
+end local.result
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+finaldoor_trigger:
+
+ local.finaldoor_trigger = spawn trigger_use targetname "finaldoor_triggeruse"
+ local.finaldoor_trigger setsize ( -30 -30 -70 ) ( 30 30 70 )
+ local.finaldoor_trigger.origin = $exit_door.origin
+ $finaldoor_triggeruse waittill trigger
+
+ if(level.dooropening != 1 && level.holdingthekey != 1)
+ {
+	local.player = parm.other
+	local.finaldoor_trigger message ("*** This door is locked. ***")
+	if(level.objectives < 7) { local.player iprint "To unlock the final door, you must first complete all 7 objectives." }
+	else if(level.objectives >= 7) { local.player iprint "To unlock the final door, you must find the key." }
+ }
+
+ waitframe
+ $finaldoor_triggeruse remove
+ wait 1
+ thread finaldoor_trigger
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+finaldoor_triggertemp: //spawns a temporary trigger to avoid opening doors before "waittill trigger" begins waiting for a player.
+
+ local.finaldoor_trigger = spawn trigger_use targetname "finaldoor_triggertemp"
+ local.finaldoor_trigger setsize ( -50 -50 -70 ) ( 50 50 70 )
+ local.finaldoor_trigger.origin = $exit_door.origin
+
+ $finaldoor_triggertemp waittill trigger
+
+ local.player = parm.other
+ local.player iprint ("Make sure to close the door behind you!")
+ $exit_door unlock
+
+ $final_doorlight light .25 1 0 80
+ level.keydropped = 0
+ level.dooropening = 1
+
+ if($skywalk1sky1 != NULL) { exec maps/UBER_mapscripts/sky_platform.scr::on sky1 }
+ if($skywalk1sky2 != NULL) { exec maps/UBER_mapscripts/sky_platform.scr::on sky2 }
+ if($skywalk1sky3 != NULL) { exec maps/UBER_mapscripts/sky_platform.scr::on sky3 }
+ if($skywalk1sky4 != NULL) { exec maps/UBER_mapscripts/sky_platform.scr::on sky4 }
+ if($skywalk1sky5 != NULL) { exec maps/UBER_mapscripts/sky_platform.scr::on sky5 }
+
+ if(level.finaldoor_open1sttime != 1)
+ {
+ 	exec maps/UBER_mapextras/training_teleporters.scr::activate // turn on teles between final door, tunnelbase, and sky platforms.
+	level.finaldoor_open1sttime = 1
+ }
+
+ wait 4 // 4 seconds to keep both the doorlight green and keypad-light green.
+ $exit_door lock
+
+ iprintlnbold "*** The final door key has respawned! ***"
+ println("----- The final door key has respawned!")
+ $final_doorlight light 1 .75 0 80
+ $finaldoor_locklight light 1 0 0 16
+ $finaldoor_locklightt light 1 0 0 16
+
+ level.finaldoorunlocked = 0
+ level.holdingthekey = 0
+ $finaldoor_triggertemp remove	
+
+ waitthread maps/training.scr::addremaining_keyorigins // or waitframe after this line, to make sure "level.finalkey_spot" variables have loaded in first.
+
+ goto finaldoorkey // no origin here, since key is now inside the keyhole.
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+finaldoorlight:
+
+ local.doorlight = spawn script_model targetname "final_doorlight"
+ local.doorlight model "static/alarmbell.tik" 
+ local.doorlight.origin = ( 6163 -2751.5 -235 )
+ local.doorlight.angles = ( 0 180 0 )
+ local.doorlight light 1 0 0 80
+
+ local.lock = spawn script_model
+ local.lock model "miscobj/picklock.tik" 
+ local.lock.origin = ( 6163 -2740.5 -353.2 )
+ local.lock.angles = ( 0 270 0 )
+ local.lock notsolid
+
+ local.locklight = spawn script_model targetname "finaldoor_locklight"
+ local.locklight model "static/corona_reg.tik" 
+ local.locklight.origin = ( 6163 -2783 -324 )
+ local.locklight light 1 0 0 16
+ local.locklight.scale = 0.01
+ local.locklight notsolid
+
+ local.locklight2 = spawn script_model targetname "finaldoor_locklightt" // extra light entity to brighten the first red light, since its radius is only 16.
+ local.locklight2 model "static/corona_reg.tik" 
+ local.locklight2.origin = ( 6163 -2783 -324 )
+ local.locklight2 light 1 0 0 16
+ local.locklight2.scale = 0.01
+ local.locklight2 notsolid
+end
+

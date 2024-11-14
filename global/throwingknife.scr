@@ -173,7 +173,7 @@ throw_knife:
 	local.fwd_vec = angles_toforward self.viewangles // fwd_vec[2] = 0 when player looks horizontal, -0.999 looking down, 0.999 looking up.
 
 	if(local.fwd_vec[2] <= 0) { local.height = local.fwd_vec[2] * 60 } 	// when player is looking down and falling, the knife can get stuck to the player's head.
-	if(local.fwd_vec[2] > 0) { local.height = 0 }			   		// if looking vertically down, the knife's height will start a max of 60 units lower initially. 
+	if(local.fwd_vec[2] > 0) { local.height = 0 }			   	// if looking vertically down, the knife's height will start a max of 60 units lower initially. 
 
 	local.sin = (waitthread global/math.scr::sine self.angles[1]) * 25   	// always spawn the knife 25 units in front of the player's eyes.
 	local.cos = (waitthread global/math.scr::cosine self.angles[1]) * 25 	
@@ -196,6 +196,7 @@ throw_knife:
 	local.anglesoldinv = self.viewangles
 	local.knife thread rotate
 	local.knife thread flytimer
+	local.knife.player_owner = self
 
 	local.hitthing = self
 	while(local.hitthing == self)
@@ -210,7 +211,7 @@ throw_knife:
 	{
 		$player[local.i].originxy = ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ) 	// check if knife's XY origin vector length is < 42.5 units from an enemy player's XY origin, prevents knife floating in air.
 		local.knife.originxy = ( local.knife.origin[0] local.knife.origin[1] 0 )			// players' origins start at their feet. players' physical size = 30 x 30 x 95. Maximum length is hypotenuse of 30 x 30
-																	// 30^2 + 30^2 = (squareroot(1800))^2 = (42.4254)^2, so 42.5 = max possible distance for knife to touch a player.
+														// 30^2 + 30^2 = (squareroot(1800))^2 = (42.4254)^2, so 42.5 = max possible distance for knife to touch a player.
 		local.position = $player[local.i] getposition
 		local.playerheight = 95
 		if(local.position == crouching) { local.playerheight = 55 } // lower players' "hitboxes" if they're crouching.
@@ -219,11 +220,57 @@ throw_knife:
 		{
 			if(isalive $player[local.i] && $player[local.i] != self)
 			{
-				if($player[local.i].dmteam != self.dmteam || (getcvar("g_gametype") == "1")) { $player[local.i] damage self 15000 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0 } // use "damage" so self's kills are counted.
+				if($player[local.i].dmteam != self.dmteam || (getcvar("g_gametype") == "1"))
+				{
+					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+					{
+						$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+						local.touchedplayer = 1
+					}
+					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+					{
+						$player[local.i].drivingent.shooter = self
+						//if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0; local.touchedplayer = 1 } // planes are immune to knives.
+
+						if($player[local.i].flying != 1 && $player[local.i].turreting != 1) // turretplayers will always get hit by knives.
+						{
+							if($player[local.i].drivingent.classname != VehicleTank)
+							{
+								if($player[local.i].drivingent.passengers.size < 1)
+								{
+									if($player[local.i].drivingent.model != "models/vehicles/sdkfz.tik" && $player[local.i].drivingent.model != "models/vehicles/sdkfz_afrika.tik" && $player[local.i].drivingent.model != "models/vehicles/shermantank.tik")
+									{
+										$player[local.i] takedamage
+										$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+										local.touchedplayer = 1
+									}
+								}
+								else
+								{
+									local.r = 1 + randomint($player[local.i].drivingent.passengers.size)
+									if(local.r == 1)
+									{
+										if($player[local.i].drivingent.model != "models/vehicles/sdkfz.tik" && $player[local.i].drivingent.model != "models/vehicles/sdkfz_afrika.tik" && $player[local.i].drivingent.model != "models/vehicles/shermantank.tik")
+										{
+											$player[local.i] takedamage
+											$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+											local.touchedplayer = 1
+										}
+									}
+									else
+									{
+										$player[local.i].drivingent.passengers[local.r - 1] takedamage
+										$player[local.i].drivingent.passengers[local.r - 1] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+										local.touchedplayer = 1
+									}
+								}
+							}
+						}
+					}
+				}
 				local.knife droptofloor
 				
 				local.knife.angles = ( 0 local.knife.angles[1] local.knife.angles[2] ) // if a player was killed, droptofloor the knife and make knife's angles horizontal.
-				local.touchedplayer = 1
 				local.iold = local.i
 			}
 			if(isalive $player[local.i] && $player[local.i] == self) 
@@ -244,7 +291,7 @@ throw_knife:
 
 	}
 	if(local.touchedplayer != 1 && local.knife.flewlong != 1) 
-	{									// if player throws knife upwards, knife's origin lowers a few units in height so it's not inside the wall
+	{							// if player throws knife upwards, knife's origin lowers a few units in height so it's not inside the wall
 		local.height = local.fwd_vec[2] * -23		// if player throws knife downwards, knife's origin raises a few units in height.
 		local.knife.angles = local.anglesold 		// if knife stuck to a wall or object, make sure the knife's sharp end is always facing into the wall.
 	}
@@ -253,7 +300,7 @@ throw_knife:
 		local.height = local.fwd_vec[2] * 23		     					// invert height adjustment, since anglesold is reversed.		
 		local.knife.angles = local.anglesold + ( 180 180 0 ) 					// if knife flew for a while and gravity brought it down, reverse anglesold so sharp end is facing the ground again.
 		if(local.fwd_vec[2] < 0.06 && local.fwd_vec[2] >= -0.06) { local.knife.angles = local.knife.angles + ( 0 180 0 ) } 	// undo horizontal angle-reversal if player was looking horizontally.
-		if(local.fwd_vec[2] < -0.06) 																// undo vertical reversal if player was looking more vertically downward.
+		if(local.fwd_vec[2] < -0.06) 												// undo vertical reversal if player was looking more vertically downward.
 		{
 			local.knife.angles = local.knife.angles + ( 180 180 0 )
 			local.knife.origin = local.knife.origin + ( 0 0 -(2*local.height) ) // re-adjust height back upwards 23 units, only when looking downward and when local.knife.flewlong = 1.
@@ -307,7 +354,7 @@ resettimer local.name local.light:
 
 	for(local.c = 0; local.c <= (level.knife_resettime * 10); local.c++) 
 	{
-		if(self == NULL) { end }		   		// if knife was picked up, end.
+		if(self == NULL) { end }		   	// if knife was picked up, end.
 		if(level.change_team_score == 1) { break } 	// for cyber attack / search & destroy mod, immediately reset all knives (not including those still held by living players).
 		wait 0.1
 	}

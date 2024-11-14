@@ -1,0 +1,357 @@
+main:
+
+	thread hacker_kill
+	thread hacker_takeall
+	thread spectator
+	setcvar "hacker_kill" "0"
+	setcvar "hacker_takeall" "0"
+	setcvar "spectator" "0"
+
+	thread noclip2
+	thread wuss2
+
+	thread nodamage
+	thread takedamage
+	thread show2
+	thread hide2
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+hacker_kill local.start:
+
+	local.cvar = getcvar("hacker_kill")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(int(local.cvar) == local.i)
+		{
+			local.on = 1
+			println("----- Killing $player[" + local.i + "] for HACKING!")
+			iprintlnbold("Killing $player[" + local.i + "] for HACKING!")
+			$player[local.i] thread hacker_leftgame
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		else
+		{
+			if(local.start == 1 && (local.cvar.size <= 0 || local.cvar == "0")) { println("----- Hacker spam-killing: Disabled") } // if hacker_kill "" or hacker_kill 0 into console, then turn off spam-killing
+		}
+	}
+
+	while(getcvar("hacker_kill") == local.cvar)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(int(local.cvar) == local.i) // do stuff to the hacker in here
+			{
+				if(isalive $player[local.i])
+				{
+					killent $player[local.i].entnum
+					$player[local.i] iprint "You are being killed for HACKING!"
+				}
+			}
+		}
+		waitframe
+	}
+	thread hacker_kill 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+hacker_takeall local.start:
+
+	local.cvar = getcvar("hacker_takeall")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(int(local.cvar) == local.i)
+		{
+			local.on = 1
+			println("----- Taking all $player[" + local.i + "]'s weapons for HACKING!")
+			iprintlnbold("Taking all $player[" + local.i + "]'s weapons for HACKING!")
+			$player[local.i] thread hacker_leftgame
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		else
+		{
+			if(local.start == 1 && (local.cvar.size <= 0 || local.cvar == "0")) { println("----- Hacker spam-takeall: Disabled") } // if hacker_takeall "" or hacker_takeall 0 into console, then turn off spam-weapon-taking
+		}
+	}
+
+	while(getcvar("hacker_takeall") == local.cvar)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(int(local.cvar) == local.i) // do stuff to the hacker in here
+			{
+				if(isalive $player[local.i])
+				{
+					$player[local.i] takeall
+					$player[local.i] iprint "Your weapons are being taken for HACKING!"
+				}
+			}
+		}
+		waitframe
+	}
+	thread hacker_takeall 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+spectator local.start:
+
+	local.cvar = getcvar("spectator")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(int(local.cvar) == local.i)
+		{
+			local.on = 1
+			println("----- Forcing $player[" + local.i + "] into spectator.")
+			$player[local.i] thread hacker_leftgame
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		else
+		{
+			if(local.start == 1 && (local.cvar.size <= 0 || local.cvar == "0")) { println("----- Force-spectate: Disabled") } // if spectator "" or spectator 0 into console, then turn off force-spectate
+		}
+	}
+
+	while(getcvar("spectator") == local.cvar)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(int(local.cvar) == local.i) // do stuff in here
+			{
+				if($player[local.i].dmteam != "spectator")
+				{
+					$player[local.i] spectator
+					println("----- Moving $player[" + local.i + "] to spectator.")
+				}
+			}
+		}
+		waitframe
+	}
+	thread spectator 1
+end
+
+hacker_leftgame:
+
+	if(self.adminstuff_hacker == 1) { end }
+	self.adminstuff_hacker = 1
+
+	while(self != NULL && (getcvar("hacker_kill") != "0" || getcvar("hacker_takeall") != "0" || getcvar("spectator") != "0")) { waitframe }
+
+	setcvar "hacker_kill" "0"
+	setcvar "hacker_takeall" "0"
+	setcvar "spectator" "0"
+
+	if(self != NULL) { self.adminstuff_hacker = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+noclip2:
+
+	while(getcvar("noclip2") == "0" || getcvar("noclip2") == "") { waitframe }
+
+	local.cvar = getcvar("noclip2")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] noclip
+				println("----- $player[" + local.i + "] noclip2")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be noclipped right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+	}
+
+	if(getcvar("noclip2") != "0") { setcvar "noclip2" "0" }
+	thread noclip2
+end
+
+wuss2:
+
+	while(getcvar("wuss2") == "0" || getcvar("wuss2") == "") { waitframe }
+
+	local.cvar = getcvar("wuss2")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator)
+			{
+				$player[local.i] wuss
+				println("----- $player[" + local.i + "] wuss2")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be given weapons right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+	}
+
+	if(getcvar("wuss2") != "0") { setcvar "wuss2" "0" }
+	thread wuss2
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+nodamage:
+
+	while(getcvar("nodamage") == "0" || getcvar("nodamage") == "") { waitframe }
+
+	local.cvar = getcvar("nodamage")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] nodamage
+				println("----- $player[" + local.i + "] nodamage")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot get 'nodamage' right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+	}
+
+	if(getcvar("nodamage") != "0") { setcvar "nodamage" "0" }
+	thread nodamage
+end
+
+takedamage:
+
+	while(getcvar("takedamage") == "0" || getcvar("takedamage") == "") { waitframe }
+
+	local.cvar = getcvar("takedamage")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] takedamage
+				println("----- $player[" + local.i + "] takedamage")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot get 'takedamage' right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+	}
+
+	if(getcvar("takedamage") != "0") { setcvar "takedamage" "0" }
+	thread takedamage
+end
+
+////////////////////////////////////////////////////////////////////////
+
+show2:
+
+	while(getcvar("show") == "0" || getcvar("show") == "") { waitframe }
+
+	local.cvar = getcvar("show")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] show
+				println("----- $player[" + local.i + "] show")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be shown right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+	}
+
+	if(getcvar("show") != "0") { setcvar "show" "0" }
+	thread show2
+end
+
+hide2:
+
+	while(getcvar("hide") == "0" || getcvar("hide") == "") { waitframe }
+
+	local.cvar = getcvar("hide")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != spectator && $player[local.i].driving != 1 && $player[local.i].flying != 1)
+			{
+				$player[local.i] hide
+				println("----- $player[" + local.i + "] hide")
+			}
+			else { println("----- ERROR. $player[" + local.i + "] cannot be hidden right now!") }
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+	}
+
+	if(getcvar("hide") != "0") { setcvar "hide" "0" }
+	thread hide2
+end

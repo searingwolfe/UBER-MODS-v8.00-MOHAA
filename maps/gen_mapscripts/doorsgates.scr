@@ -49,6 +49,8 @@ exec global/aliascache_triggersounds.scr wood_doors
 	self thread wood_doors local.nameleft local.nameright local.rotate
 end
 
+////////////////////////////////////////////////////////////////////////
+
 wood_gates local.nameleft local.nameright local.rotate:
 
 exec global/aliascache_triggersounds.scr wood_gates
@@ -85,6 +87,8 @@ exec global/aliascache_triggersounds.scr wood_gates
 	self triggerable
 	self thread wood_gates local.nameleft local.nameright local.rotate
 end
+
+////////////////////////////////////////////////////////////////////////
 
 metal_doors local.nameleft local.nameright local.rotate:
 
@@ -124,6 +128,8 @@ exec global/aliascache_triggersounds.scr metal_doorsgates
 	self triggerable
 	self thread metal_doors local.nameleft local.nameright local.rotate
 end
+
+////////////////////////////////////////////////////////////////////////
 
 metal_doors_solid local.nameleft local.nameright local.rotate:
 
@@ -173,6 +179,8 @@ exec global/aliascache_triggersounds.scr metal_doors_solid
 	self thread metal_doors_solid local.nameleft local.nameright local.rotate
 end
 
+////////////////////////////////////////////////////////////////////////
+
 metal_gates local.nameleft local.nameright local.rotate:
 
 exec global/aliascache_triggersounds.scr metal_doorsgates
@@ -213,6 +221,8 @@ exec global/aliascache_triggersounds.scr metal_doorsgates
 	self thread metal_gates local.nameleft local.nameright local.rotate
 end
 
+////////////////////////////////////////////////////////////////////////
+
 shutters local.nameleft local.nameright local.rotate:
 
 exec global/aliascache_triggersounds.scr shutters
@@ -244,6 +254,8 @@ exec global/aliascache_triggersounds.scr shutters
 	self thread shutters local.nameleft local.nameright local.rotate
 end
 
+////////////////////////////////////////////////////////////////////////
+
 metal_hatch local.name local.rotate:
 
 exec global/aliascache_triggersounds.scr metal_hatch
@@ -269,6 +281,60 @@ exec global/aliascache_triggersounds.scr metal_hatch
 	self triggerable
 	self thread metal_hatch local.name local.rotate
 end
+
+////////////////////////////////////////////////////////////////////////
+
+// targetname left gate, targetname right gate, move angle (move left gate towards this angle, right gate moves opposite direction), distance to move gates, time duration.
+//
+gates_slide local.nameleft local.nameright local.moveangle local.distance local.time:
+
+exec global/aliascache_triggersounds.scr gates_slide
+
+	if(local.time == NIL) { local.time = 4 }
+	if(local.distance == NIL) { local.distance = 100 }
+	if(local.moveangle == NIL) { local.move = 0 }
+
+	self waittill trigger
+	self nottriggerable
+	$(local.nameleft) time local.time
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) time local.time }
+
+	local.PI = 3.14159265359
+	if(local.moveangle >= 180) { local.moveangle -= 360 }
+	local.radians = local.moveangle * (local.PI / 180)
+	local.sin = (sin local.radians) * local.distance
+	local.cos = (cos local.radians) * local.distance
+	local.origin_leftopen = $(local.nameleft).origin + ( local.cos local.sin 0 )
+	local.origin_leftclose = $(local.nameleft).origin - ( local.cos local.sin 0 )
+	if(local.nameright != NIL && $(local.nameright) != NULL)
+	{
+		local.origin_rightopen = $(local.nameright).origin - ( local.cos local.sin 0 )
+		local.origin_rightclose = $(local.nameright).origin + ( local.cos local.sin 0 )
+	}
+
+	$(local.nameleft) loopsound gateslide_open; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) loopsound gateslide_open }
+
+	self.inc++
+	if(self.inc == NIL || self.inc > 1) { self.inc = 0 }
+	if(self.inc == 0)
+	{
+		$(local.nameleft) moveto local.origin_leftopen; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) moveto local.origin_rightopen }
+	}
+	if(self.inc == 1)
+	{
+		$(local.nameleft) moveto local.origin_leftclose; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) moveto local.origin_rightclose }
+	}
+
+	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) move }
+	$(local.nameleft) waitmove
+	$(local.nameleft) stoploopsound; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) stoploopsound }
+	$(local.nameleft) playsound gateslide_close; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateslide_close }
+
+	self triggerable
+	self thread gates_slide local.nameleft local.nameright local.moveangle local.distance local.time
+end
+
+////////////////////////////////////////////////////////////////////////
 
 rotatedown local.amount:
 

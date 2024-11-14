@@ -1,0 +1,23 @@
+main:
+end
+
+chain_reaction:
+
+	local.killstreaks = makeArray 				// matrix array starts with [1][1] at top-left. one column down = [2][1]. one row right = [1][2]. rows are separated by spaces only.
+		sentry_turret level.sentry_deadradius		// killstreaks.size = # of rows. killstreaks[1].size = # of columns.
+		claymore level.claymore_radius
+		cluster_mine level.mines_radius
+	endArray
+
+	for(local.k = 1; local.k <= local.killstreaks.size; local.k++)
+	{
+		for(local.i = 1; local.i <= $(local.killstreaks[local.k][1]).size; local.i++)
+		{
+			if(self != $(local.killstreaks[local.k][1])[local.i] && vector_length(self.origin - $(local.killstreaks[local.k][1])[local.i].origin) <= local.killstreaks[local.k][2])
+			{
+				$(local.killstreaks[local.k][1])[local.i].enemy_killer = self.enemy_killer
+				killent $(local.killstreaks[local.k][1])[local.i].entnum
+			}
+		}
+	}
+end

@@ -1,81 +1,70 @@
 main:
 
-setcvar "g_obj_alliedtext1" "m4l2" 
-setcvar "g_obj_alliedtext3" ""
-setcvar "g_obj_axistext1" "Created by:"
-setcvar "g_obj_axistext2" "Searingwolfe"
-setcvar "g_obj_axistext3" ""
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/playerspawns.scr
+exec cvars/coord_pointer.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "m4l2"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
 
 setcvar "g_scoreboardpic" "m4l2"
 
 setcvar "fraglimit" "0"
-setcvar "timelimit" "50"
+setcvar "timelimit" "20"
+setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-setcvar "maxentities" "5000"
+setcvar "cheats" "1"
+setcvar "thereisnomonkey" "1"
 
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
-setcvar "level.clockside" "kills" 
+setcvar "level.clockside" "kills"
+local.v = exec global/uberversion.scr
 
-//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
 
-if((getcvar("g_gametype") == "2"))
-{
-	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
-	setcvar "g_gametypestring" "Team-Match UBER"
-	setcvar "g_gametype" "2"
-	thread tdm_spawns	
-	spawn info_player_deathmatch "origin" "-151 1419 110" "angle" "-168" // for spectators when joining game
-	spawn info_player_deathmatch "origin" "-4405 4234 504" "angle" "-156"
-	spawn info_player_deathmatch "origin" "-3841 878 243" "angle" "135"
+if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1"; thread ffa_spawns }
+if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"; thread tdm_spawns
+						spawn info_player_deathmatch "origin" "-151 1419 110" "angle" "-168" // for spectators when joining game
+						spawn info_player_deathmatch "origin" "-4405 4234 504" "angle" "-156"
+						spawn info_player_deathmatch "origin" "-3841 878 243" "angle" "135"
 }
-else
-{
-	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
-	setcvar "g_gametypestring" "Free-For-All UBER"
-	setcvar "g_gametype" "1"
-	thread ffa_spawns
+//if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cyb }
+//if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread snd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+//level.basebuild_laserdist = 700
 }
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr airstrikes
+exec global/aliascache_triggersounds.scr explode_building_small
+exec global/aliascache_triggersounds.scr explode_building_large
+exec global/aliascache_triggersounds.scr explode_wood_small
+}
+exec global/aliascache_triggersounds.scr arty_exp_sand
 
 waitthread setup
 
 level waittill prespawn
-
-//allies
-exec alienx/basebuild.scr::basebuild ( 6604 892 136 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 992 126 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1092 116 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1192 106 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1292 96 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1392 86 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
-exec alienx/basebuild.scr::basebuild ( 6604 1492 76 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1592 66 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1692 56 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1792 46 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1892 36 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 1992 26 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( 6604 2092 16 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
-exec alienx/basebuild.scr::basebuild ( 6604 2192 6 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
-
-//axis
-exec alienx/basebuild.scr::basebuild ( -5958 4843 377 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 4743 377 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 4643 377 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 4543 377 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 4443 377 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 4343 377 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
-exec alienx/basebuild.scr::basebuild ( -5958 4243 377 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 4143 377 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 4043 377 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 3943 377 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 3843 377 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 3743 377 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( -5958 3643 377 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
-exec alienx/basebuild.scr::basebuild ( -5958 3543 377 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
-
-exec global/dog.scr ( 180 2018 -423 ) ( 0 0 0 ) 15 10
 
 	exec global/DMprecache.scr
 	exec alienx/hud.scr
@@ -89,140 +78,324 @@ exec global/dog.scr ( 180 2018 -423 ) ( 0 0 0 ) 15 10
 	exec global/barrel.scr::explosive_barrel
 
 	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
 	$world farplane 150000
 	$world farplane_color ( 0.04314 0.05882 0.16471 )
 
-exec map_triggers/health.scr ( 4772 3475 327 ) ( 2096 1216 220 ) ( -1472 1536 92 ) ( -1696 813 48 ) ( -4359 -2206 0 ) ( -5223 1744 98 ) ( -4549 1840 314 ) ( -2932 3471 -189 ) ( -2821 4750 48 ) ( -6360 2860 376 )
+exec global/victory_podium.scr ( -4327 3840 0 ) 0 auto auto 5
 
-thread port1
-thread port2
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( 180 2018 -423 ) ( 0 0 0 ) 15 10
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+
+	thread UBER_mapextras
+	thread UBER_teleporters
+}
+
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( 0 0 0 )
+
+//exec map_triggers/lightbomb.scr (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  )
+//exec map_triggers/bomb.scr (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  )
+//exec map_triggers/grenade_ammo.scr (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  )
+//exec map_triggers/rocket_ammo.scr (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  )
+//exec map_triggers/snowball_ammo.scr (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  )
+//exec map_triggers/health.scr (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  ) (  )
+
+exec map_triggers/led_trap.scr ( 0 0 0 ) led1 1
+exec map_triggers/led_trap.scr ( 0 0 0 ) led2 1
+exec map_triggers/led_trap.scr ( 0 0 0 ) led3 2
+
+	level.autospot_trigdist = 300 // distance until spotlight tracks player
+	level.autospot_movespeed = 2.5
+	// origin, color, name, health, angle, mountwall (0 = floor), orient (only for mountwall = 1 or 3), removeafterdeath (0 = no, 1 = remove spotlight keep base, 2 = remove everything), initial spot angles, pathname to follow automatically.
+	exec global/player_spotlight.scr ( -4392.71 1704.54 360.00 ) ( 1 0 0 ) s_auto0 9999 270 0 0 1 ( 0 270 0 ) spotpath2_2
+	exec global/player_spotlight.scr ( -2607.71 3996.54 450.00 ) ( 1 1 0 ) s_auto1 9999 270 0 0 1 ( 0 270 0 ) spotpath1_1
+/*
+if(getcvar("g_ubergametype") != "bb")
+{
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 1 1 1 ) s0 700 -135 0 0 1		// white
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 1 0 0 ) s1 700 -118 0 0 1		// red
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 1 .5 0 ) s2 700 -45 0 0 1		// orange
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 1 1 0 ) s3 700 45 0 0 1		// yellow
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 0 1 0 ) s4 700 45 0 0 1		// green
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 0 1 1 ) s5 700 135 0 0 1		// teal
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 0 0 1 ) s6 700 135 0 0 1		// blue
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( .5 0 1 ) s7 700 -90 2 0 1		// purple 
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( 1 0 1 ) s8 700 -90 2 0 1		// magenta 
+	exec map_triggers/player_spotlight.scr ( 0 0 0 ) ( .125 0 .333 ) s9 700 0 0 0 1		// uv
+
+	exec map_triggers/spotlight_colorswitch.scr ( 0 0 0 ) ( 270 90 0 ) s3
+	exec map_triggers/spotlight_colorswitch.scr ( 0 0 0 ) ( 270 0 0 ) s2
+	exec map_triggers/spotlight_colorswitch.scr ( 0 0 0 ) ( 270 0 0 ) s4 rainbow
+}
+
+// Available playervehicle models:
+// bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
+// gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
+//
+// Vehicle speeds: trucks/boats = 250, jeeps/euro_vehicles/mercedes = 400, bikes = 500, halftracks/uboats = 40
+//
+exec global/playervehicle.scr opel1 vehicles/opeltruckgreen_canopy.tik ( 2873 -6197 -135 ) ( 0 93 3 ) 250 250 45 0	// allies side
+exec global/playervehicle.scr s1_jeep1 vehicles/jeep.tik ( 3232 -5187 -101 ) ( 353 180 350 ) 250 400 45 1
+local.r1 = randomint(3); local.r2 = randomint(3)
+if(local.r1 == 0) { exec global/playervehicle.scr eurocar vehicles/european_car_grey.tik ( 0 0 0 ) ( 0 177 0 ) 250 400 45 0 }
+if(local.r1 == 1) { exec global/playervehicle.scr eurocar vehicles/european_car_silver.tik ( 0 0 0 ) ( 0 177 0 ) 250 400 45 0 }
+if(local.r1 == 2) { exec global/playervehicle.scr eurocar vehicles/european_car_tan.tik ( 0 0 0 ) ( 0 177 0 ) 250 400 45 0 }
+if(local.r2 == 0) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_green.tik ( 0 0 0 ) ( 0 170 4 ) 250 400 45 0 }
+if(local.r2 == 1) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_grey.tik ( 0 0 0 ) ( 0 170 4 ) 250 400 45 0 }
+if(local.r2 == 2) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_red3.tik ( 0 0 0 ) ( 0 170 4 ) 250 400 45 0 }
+
+exec global/playervehicle.scr gmctruck vehicles/gmctruck.tik ( 0 0 0 ) ( 0 90 0 ) 250 250 45 0 		// middle
+exec global/playervehicle.scr sdkfz1 vehicles/sdkfz_afrika.tik ( 0 0 0 ) ( 0 -50 0 ) 250 40 45 1 // health, speed, reset time, headlights on (0 or 1), no headlights (0 or 1)
+exec global/playervehicle.scr bmwbike1 vehicles/bmwbike.tik ( 0 0 0 ) ( 0 33 0 ) 250 500 45 0
+//exec global/playervehicle.scr m3halftrack vehicles/m3.tik ( 0 0 0 ) ( 0 0 0 ) 250 40 45 1
+//exec global/playervehicle.scr sherman vehicles/shermantank.tik ( 0 0 0 ) ( 2 18 1 ) 250 40 45 1
+
+exec global/playervehicle.scr sdkfz2 vehicles/sdkfz.tik ( 0 0 0 ) ( 7 -130 350 ) 250 40 45 1
+exec global/playervehicle.scr opel2 vehicles/opeltruck.tik ( 0 0 0 ) ( 4 180 12 ) 250 250 45 1			// axis side
+exec global/playervehicle.scr bmwbike2 vehicles/bmwbike.tik ( 0 0 0 ) ( 0 -95 348 ) 250 500 45 0
+exec global/playervehicle.scr mercedes vehicles/mercedes.tik ( 0 0 0 ) ( 0 -135 0 ) 250 400 45 1
+
+exec global/playerboat.scr boat1 vehicles/higginsxtrahull.tik ( 0 0 0 ) ( 0 173.5 0 ) 250 250 45
+exec global/playerboat.scr boat2 vehicles/higginsxtrahull.tik ( 0 0 0 ) ( 0 144.5 0 ) 250 250 45
+
+// Available playertank models:
+// kingtank, panzer_tank, panzer_tank_europe.
+//
+exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( 0 0 0 ) ( 0 166 0 ) 1000 45	// allies side
+exec global/playertank.scr tank02 vehicles/panzer_tank.tik ( 0 0 0 ) ( 0 -149 0 ) 1000 45		// axis side
+exec global/playertank.scr tank03 vehicles/kingtank.tik ( 0 0 0 ) ( 0 90 0 ) 1000 45			// middle
+
+exec global/playernebelwerfer.scr NIL 200 45 ( 0 0 0 ) ( 0 0 0 )
+exec global/playerflak88.scr NIL 200 45 ( 0 0 0 ) ( 0 0 0 ) 0 ( 0 45 0 )
+
+exec server_planes/trigger.scr ( 0 0 0 ) "allies" 1 0 ( 2806 -5438 843 )	// team (only 1 per modelpair), flying plane scale, modelpair, starting origin (default = origin + 500)
+exec server_planes/trigger.scr ( 0 0 0 ) "axis" 1 1 ( -1607 -2610 1020 )	// Allies/Axis modelpair: 0 = p47/fockwulf, 1 = stuka_dsrt/stuka, 2 = c47 for both teams
+exec server_planes/trigger.scr ( 0 0 0 ) "axis" 1 0 ( 4268 -668 1223 )
+exec server_planes/trigger.scr ( 0 0 0 ) "axis" 1 2 ( 6368 3748 1112 )
+
+exec jetpack/trigger.scr ( 0 0 0 ) // allies
+exec jetpack/trigger.scr ( 0 0 0 ) // middle
+exec jetpack/trigger.scr ( 0 0 0 ) // axis
+
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 500 1 1 8
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 500 1 1 8
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie3 ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 500 1 1 8
+
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( 0 0 0 ) ( 60 90 0 ) 100 0
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 0 0 0 ) ( 0 0 0 ) bb1 60 450 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
+exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 0 0 0 ) ( 60 180 0 ) 100 0
+exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 0 0 0 ) ( 0 90 0 ) bb2 60 450 2
+
+	//thread vehicles_undermap
+*/
+}
+
+exec global/playervehicle.scr bmwbike1 vehicles/bmwbike.tik ( 1033 1214 100 ) ( 0 180 0 ) 250 500 45 1
+exec global/playervehicle.scr jeep1 vehicles/jeep.tik ( 2557 1523 100 ) ( 0 -157 0 ) 250 500 45 1
+
 
 level waittill spawn
 
-	waitthread furniture
-	thread elevator
+	thread consoleprint
+	thread ambience
+	//exec alienx/hud_test.scr
+
+while(level.bbactive == 1) { wait 1 }
+/*
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
+
+	exec global/throwingknife.scr k1 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k2 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k3 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k4 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k5 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k6 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k7 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k8 ( 0 0 0 ) ( 0 0 0 )
+}
+*/
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( -1982 929 -30 ) ( -363 -283 0 ) ( 0 0 253 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+		( -1728 1227 -30 ) ( -941 -297 0 ) ( 0 0 253 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+		( -1728 1228 -30 ) ( -79 0 0 ) ( 240 179 253 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+
+		( -4544 1888 479 ) ( -886 0 -239 ) ( 0 519 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+		( -4864 1887 479 ) ( -566 -575 -239 ) ( 0 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+		( -4768 928 479 ) ( -863 0 -239 ) ( 0 367 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+		( -5631 1120 239 ) ( 0 0 -280 ) ( 717 895 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+		( -4751 2287 239 ) ( 0 -159 -287 ) ( 159 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+
+		( -4751 1920 -49 ) ( 0 0 -300 ) ( 431 1391 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+		//( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+
+		//( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_TrainTrackExt.mp3 1 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////
 
 setup:
 
+	level.mapname = getcvar "mapname"
 	local.master = spawn scriptmaster
-	local.master aliascache electrical_hum2 sound/null.wav soundparms 0.25 0.0 1.2 0.0 100 2000 auto loaded maps "m dm moh obj train"
-	local.master aliascache m4l2_radio sound/mechanics/Mec_RadioLoop_04.wav soundparms 1.0 0.0 1.0 0.0 100 500 auto loaded maps "m4l2 m dm moh obj train"
-	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
-	local.master aliascache tank_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps "m  dm obj "
+	local.master aliascache movingobject sound/mechanics/M1_LightTurn.wav soundparms 1.2 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
+	local.master aliascache movingobject_stop sound/mechanics/Mec_GeneratorOff_01.wav soundparms 1.0 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
 
 	removeclass actor
+	removeclass Health
+	removeclass Weapon
+	removeclass AmmoEntity
+	removeclass TouchField
+	removeclass InfoNotNull
+	removeclass TriggerOnce
+	removeclass TriggerUseOnce
+	removeclass DrivableVehicle
+	removeclass VehicleTank
+	removeclass EffectEntity // removes $trainswitch2_pulsating $smoke01, $train_explosion1, 2, 3, and lamp moths.
+	//removeclass SplinePath
+	//removeclass Animate // do not use this, it removes much more than "Animate" entities.
+	//removeclass InteractObject // 2 entities
+	//removeclass CrateObject // 49 entities, including $explosive_barrel[1] - [17]
+	//removeclass BarrelObject // 7 entities
+	//removeclass WindowObject // 25 entities
 
-	$smoke01 anim start
-	$smoke01 loopsound fire_med
-	$smoke02 anim start
-	$smoke02 loopsound fire_med
+	thread objectclass_replace // replace 3 entities with "Object" classname with "ScriptModel"s, since spawning "Object" entities causes console errors to print.
+
+	for(local.e = 0; local.e <= 868; local.e++) // remove some entities that don't have targetnames.
+	{
+		local.entity = getentity(local.e)
+		if(local.entity != NULL)
+		{
+			if(local.entity.classname == Trigger || local.entity.classname == ScriptOrigin)
+			{
+				local.entity remove
+			}
+			else if(local.entity.classname == TriggerUse && local.entity.targetname != "elevator_moveup_trigger" && local.entity.targetname != "elevator_movedown_trigger")
+			{
+				local.entity remove
+			}
+			else if(local.entity.classname == "ScriptModel" && local.entity.model == "models/fx/dummy.tik" && local.entity.targetname == "")
+			{
+				local.entity remove
+			}
+		}
+	}
 
 	$bomb01	remove
 	$bomb02 remove
 	$bomb03 remove
 	$bomb04 remove
-
-	$tank03 remove
-
 	$clip1 remove
 	$clip2 remove
-
-	$spotlight remove
-	
+	$car01 remove
 	$car02 remove
 	$car03 remove
 	$car04 remove
 	$car05 remove
 	$car06 remove
+	$camptruck_stopatend_trigger remove
+	$fakecamptruck_collisiontop remove
+	$getawaytruckclip remove
+	$trainclip remove
+	$fakecamptruckstep remove
+	$opelmap_closed remove
+	$tigermap remove
+	$fakecamptruck_collision remove
+	$fakegetawaytruck_collision remove
+	$opelmap_open remove
+	$sparks1 remove
+	$sparks2 remove
+	$sparks3 remove
+	$kar98sniper remove
+	$fakecamptruck remove
+	$spotlight remove //[1] and [2]
+	$fakegetawaytruck remove
+	$electrichum remove //[1] - [31]
+	$t371 remove
 
-	$explodersmashed remove
-	$exploderfire remove
+	//$exploder remove
+	//$exploderfire remove
+	//$explodersmashed remove
+	//$explodertrigger remove
+	//$sit remove //[1] - [4] furniture/cardchair.tik
 
-	$electrichum loopsound electrical_hum2
-	
-	level.springfield = 1								
-	level.bar = 1								
+	$engine remove // bp44train
+
+	//$radio1 remove
+	//$radio2 remove
+	//$radio3 remove
+	//$elevator_switch remove
+	//$elevator_gate_2 remove
+	//$elevator_cab remove
+	//$elevator_gate_1 remove
+	//$rightgate02 remove
+	//$leftgate02 remove
+	//$rightgate01 remove
+	//$leftgate01 remove
+	//$leftrail01 remove
+	//$rightrail01 remove
+	//$leftrail02 remove
+	//$rightrail02 remove
+	//$trainswitch1 remove
+	//$trainswitch1_pulsating remove
+
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
+	{
+		$leftgate01 remove
+		$rightgate01 remove
+	}
+	else
+	{
+		local.gate01 = spawn trigger_use targetname "gate01_trigger"
+ 		local.gate01.origin = ( -1596 2025 0 )
+ 		local.gate01 setsize ( -50 -50 -70 ) ( 50 50 70 )
+		local.gate01 thread maps/gen_mapscripts/doorsgates.scr::gates_slide $leftgate01 $rightgate01 220 125 4.0
+		//
+		// targetname left gate, targetname right gate, move angle (move left gate towards this angle, right gate moves opposite direction), distance to move gates, time duration.
+
+		local.gate02 = spawn trigger_use targetname "gate02_trigger"
+ 		local.gate02.origin = ( -5840 4874 320 )
+ 		local.gate02 setsize ( -50 -50 -70 ) ( 50 50 70 )
+		local.gate02 thread maps/gen_mapscripts/doorsgates.scr::gates_slide $leftgate02 $rightgate02 180 125 4.0
+	}
+
+	thread elevator
+	thread elevatorplayers_fellout
+
+	level.springfield = 1
+	level.bar = 1
 	level.bazooka = 1
-	level.panzer = 1 
-	level.mp44 = 1		
+	level.panzer = 1
+	level.mp44 = 1
 	level.shotgun = 1
 	level.rifle = 1
 end
 
-// Re-arrange some things for better gameplay :)
-furniture:
+objectclass_replace:
 
-	// Remove the MG42s
-	$t376 remove
-	$t394 remove
-	$turret1 remove
-	$turret2 remove
-	$turret3 remove
-	$turret4 remove
-
-	// Relocate a Truck 
-	$camptruck.origin = ( -5817.09 5835.95 320.13 )
-	$camptruck.angle = -97	
-	$camptruck setcollisionentity $opelmap_open
-	$camptruck anim idlenolights
-	$camptruck nodamage
-	
-	$trainswitch1_pulsating remove
-	$trainswitch1 show
-	
-	$engine.origin = ( -4364.92 4077.05 9.13 )
-	$engine.angle = 0
-	$trainclip solid
-	$trainclip nodamage
-
-	$car01.origin = ( -5207.26 4083.82 9 )
-	$car01.angle = 180
-
-	$tank01.origin = ( -5210.18 4076.36 139.14 )
-	$tank01.angle = 0
-	$tank01 thread setup_tank
-
-	$tank02.origin = ( -3873.09 -1539.64 0.12 )
-	$tank02.angle = 69
-	$tank02 thread setup_tank
-	
-	spawn script_origin "origin" "-2239.07 -57.72 125.01" "targetname" "aim2"
-	$aim2 notsolid
-	$tank02.gun = $tank02 QueryTurretSlotEntity 0
-	$tank02.gun setaimtarget $aim2
-	
-	$fakegetawaytruck model models/vehicles/opeltruckgreen.tik // fixed for SH/BT :)			
-	$fakegetawaytruck anim stop_wheels
-
-	$leftgate01.angle = -97
-	$leftgate02.angle = -97
-
-	$radio1 loopsound m4l2_radio
-	$radio2 loopsound m4l2_radio
-	$radio3 loopsound m4l2_radio
-
-	spawn script_object "targetname" "blocker1" 
-	$blocker1.origin = ( -5020.34 6847.62 320.13 )
-	$blocker1 setsize ( -1 -700 -10 ) ( 1 700 400 )
-	$blocker1 solid
-	$blocker1 nodamage
-
-	spawn script_object "targetname" "blocker2" 
-	$blocker2.origin = ( 1560 1328 96 )
-	$blocker2 setsize ( -1 -900 -10 ) ( 1 900 400 )
-	$blocker2 solid
-	$blocker2 nodamage
+	removeclass Object
+	thread cratesstuff animate/trainswitch.tik ( -5364 3788 392 ) ( 0 180 0 )
+	thread cratesstuff miscobj/clipboard.tik ( -5045 1966 96 ) ( 0 114.999992 0 )
+	thread cratesstuff miscobj/clipboard.tik ( -3273 4802 -48 ) ( 0 114.999992 0 )
 end
 
-setup_tank:
-
-	self.collisionent = self.target
-	self rendereffects "-shadow"
-	self nodamage
-end
+////////////////////////////////////////////////////////////////////////
 
 // Elevator stuff
 elevator:
@@ -230,13 +403,16 @@ elevator:
 	spawn script_model model "animate/electrical_switch_nopulse.tik" "targetname" "upper_switch"
 	$upper_switch.origin = ( -4600 2322 377 )
 	$upper_switch.angle = -3
+	$upper_switch anim turn
+	$upper_switch anim waittill animdone
+	$upper_switch anim on
 
 	spawn trigger_use "targetname" "Upper_Trig"
 	$Upper_Trig.origin = ( -4600 2322 377 )
 	$Upper_Trig setsize ( -5 -5 -5 ) ( 5 5 5 )
 	$Upper_Trig setthread elevator_moveup
-	
-	spawn script_model model "animate/electrical_switch_nopulse.tik" "targetname" "lower_switch"
+
+	spawn script_model model "animate/electrical_switch_pulse.tik" "targetname" "lower_switch"
 	$lower_switch.origin = ( -4752 2076 -181 )
 	$lower_switch.angle = -179
 
@@ -244,143 +420,165 @@ elevator:
 	$Lower_Trig.origin = ( -4752 2076 -181 )
 	$Lower_Trig setsize ( -5 -5 -5 ) ( 5 5 5 )
 	$Lower_Trig setthread elevator_movedown
-	
+
 	$elevator_gate_1 movedown 70
 	$elevator_gate_1 waitmove
-	
+
 	$elevator_switch bind $elevator_cab
 	$elevator_switch anim off
-
-	$elevator_gate_2 moveup 32
-	$elevator_gate_2 waitmove
+	$elevator_switch.model = "animate/electrical_switch_pulse.tik"
 
 	$elevator_cab time 4
 	$elevator_gate_1 time 0.75
 	$elevator_gate_2 time 0.75
 
 	$Upper_Trig nottriggerable
-
-	for (local.i = 1 ; local.i <= $electrichum.size ; local.i ++)
-	{
-		$electrichum[local.i] loopsound electrical_hum2
-	}
 end
 
-// i adjusted the Lifts blocking gates to stop players falling into the liftshaft ;)
 elevator_movedown:
 
-		$elevator_movedown_trigger nottriggerable
+	$elevator_movedown_trigger nottriggerable
+	$Upper_Trig nottriggerable
+	$Lower_Trig nottriggerable
 
-		$Upper_Trig nottriggerable
-		$Lower_Trig nottriggerable
+	$upper_switch.model = "animate/electrical_switch_nopulse.tik"
+	$upper_switch anim turn
+	$upper_switch anim waittill animdone
+	$upper_switch anim on
+	$lower_switch.model = "animate/electrical_switch_nopulse.tik"
+	$lower_switch anim turn
+	$lower_switch anim waittill animdone
+	$lower_switch anim on
+	$elevator_switch.model = "animate/electrical_switch_nopulse.tik"
+	$elevator_switch anim turn
+	$elevator_switch anim waittill animdone
+	$elevator_switch anim on
 
-		$lower_switch anim turn
-		$lower_switch anim on
+	$elevator_gate_1 playsound elevator_gate
+	$elevator_gate_1 moveup 70
+	$elevator_gate_1 waitmove
 
-		$elevator_moveup_trigger triggerable
-		
-		$elevator_switch anim turn
-		$elevator_switch anim waittill animdone
-		$elevator_switch anim on
-	
-		$elevator_gate_1 playsound elevator_gate
-		$elevator_gate_1 moveup 110 //70
-		$elevator_gate_1 waitmove
-	wait 1
-		$elevator_cab playsound elevator_start wait
-		wait .5
-		$elevator_cab playsound elevator_run
-		$elevator_cab moveto $elevator_way2
-		$elevator_cab waitmove
-	wait 1
-		$elevator_gate_2 playsound elevator_gate
-		$elevator_gate_2 movedown 100
-		$elevator_gate_2 waitmove
-	
-		$elevator_switch anim off
-		$lower_switch anim off
-		wait 5
-		$Upper_Trig triggerable
+	$elevator_cab playsound elevator_start wait
+	wait .5
+	$elevator_cab loopsound movingobject
+	$elevator_cab moveto $elevator_way2
+	$elevator_cab waitmove
+	$elevator_cab loopsound movingobject_stop
+
+	$elevator_gate_2 playsound elevator_gate
+	$elevator_gate_2 movedown 70
+	$elevator_gate_2 waitmove
+
+	$elevator_switch.model = "animate/electrical_switch_pulse.tik"
+	$elevator_switch anim off
+	$upper_switch.model = "animate/electrical_switch_pulse.tik"
+	$upper_switch anim off
+	$Upper_Trig triggerable
+	$elevator_moveup_trigger triggerable
 end
 
 elevator_moveup:
 
-		$elevator_moveup_trigger nottriggerable
+	$elevator_moveup_trigger nottriggerable
+	$Upper_Trig nottriggerable
+	$Lower_Trig nottriggerable
 
-		$Upper_Trig nottriggerable
-		$Lower_Trig nottriggerable
+	$upper_switch.model = "animate/electrical_switch_nopulse.tik"
+	$upper_switch anim turn
+	$upper_switch anim waittill animdone
+	$upper_switch anim on
+	$lower_switch.model = "animate/electrical_switch_nopulse.tik"
+	$lower_switch anim turn
+	$lower_switch anim waittill animdone
+	$lower_switch anim on
+	$elevator_switch.model = "animate/electrical_switch_nopulse.tik"
+	$elevator_switch anim turn
+	$elevator_switch anim waittill animdone
+	$elevator_switch anim on
 
-		$upper_switch anim turn
-		$upper_switch anim on
-		
-		$elevator_movedown_trigger triggerable
-		
-		$elevator_switch anim turn
-		$elevator_switch anim waittill animdone
-		$elevator_switch anim on
-		
-		$elevator_gate_2 playsound elevator_gate
-		$elevator_gate_2 moveup 100 //70
-		$elevator_gate_2 waitmove
-	wait 1	
-		$elevator_cab playsound elevator_start wait
-		wait .5
-		$elevator_cab playsound elevator_run
-		$elevator_cab moveto $elevator_way1
-		$elevator_cab waitmove
-	wait 1
-		$elevator_gate_1 playsound elevator_gate
-		$elevator_gate_1 movedown 110 //70
-		$elevator_gate_1 waitmove
-	
-		$upper_switch anim off
-		$elevator_switch anim off
-		wait 5
-		$Lower_Trig triggerable	
+	$elevator_gate_2 playsound elevator_gate
+	$elevator_gate_2 moveup 70
+	$elevator_gate_2 waitmove
+
+	$elevator_cab playsound elevator_start wait
+	wait .5
+	$elevator_cab loopsound movingobject
+	$elevator_cab moveto $elevator_way1
+	$elevator_cab waitmove
+	$elevator_cab playsound movingobject_stop
+
+	$elevator_gate_1 playsound elevator_gate
+	$elevator_gate_1 movedown 70
+	$elevator_gate_1 waitmove
+
+	$elevator_switch.model = "animate/electrical_switch_pulse.tik"
+	$elevator_switch anim off
+	$lower_switch.model = "animate/electrical_switch_pulse.tik"
+	$lower_switch anim off
+	$Lower_Trig triggerable
+	$elevator_movedown_trigger triggerable
+end
+
+elevatorplayers_fellout:
+
+	exec map_triggers/tele.scr ( -4673 2164 -335 ) ( -4673 2101 -239 ) 0 // under elevator
+
+	local.trig = spawn trigger_use
+	local.trig.origin = $elevator_cab.origin + ( 0 0 10 )
+	local.trig.destination = $elevator_cab.origin + ( 0 0 -150 )
+	local.trig model "fx/corona_red.tik"
+	local.trig setsize ( -10 -10 -10 ) ( 10 10 0 )
+	local.trig.scale = 1.5
+	local.trig notsolid
+	local.trig show
+	local.trig setthread tele
+
+	while($elevator_cab != NULL)
+	{
+		local.trig.origin = $elevator_cab.origin + ( 0 0 10 )
+		local.trig.destination = $elevator_cab.origin + ( 0 0 -150 )
+		waitframe
+	}
+end
+
+tele:
+	local.player = parm.other
+	local.player tele self.destination
 end
 
 ////////////////////////////////////////////////////////////////////////
 
-port1:
+vehicles_undermap:
 
-local.portlight = spawn script_model
-local.portlight model "fx/corona_red.tik" 
-local.portlight.origin = ( -4560 2005 -239 ) // starting point
-local.portlight.scale = 3
+	local.a = 0
+	for(local.e = 0; local.e <= 868; local.e++)
+	{
+		local.entity = getentity(local.e)
+		if(local.entity != NULL && (local.entity.classname == VehicleTank || local.entity.classname == DrivableVehicle) && local.entity.model != "models/vehicles/higginsxtrahull.tik")
+		{
+			local.vehicles[local.a] = local.entity.targetname
+			local.a++
+		}
+		if(local.e % 14 == 0) { waitframe }
+	}
+	if(local.vehicles.size < 1) { end }
 
-local.trig = spawn trigger_use
-local.trig targetname port1 
-local.trig.origin = ( -4560 2005 -239 ) // starting point
-local.trig setsize ( -30 -30 0 ) ( 30 30 80 )
-$port1 waittill trigger
-local.player = parm.other
-local.player tele ( -5056 2390 320 ) // destination
-local.portlight remove
-$port1 remove
-wait 0
-thread port1
+	while(1)
+	{
+		for(local.a = 0; local.a <= local.vehicles.size; local.a++)
+		{
+			for(local.s = 1; $(local.vehicles[local.a]) != NULL && local.s <= $(local.vehicles[local.a]).size; local.s++)
+			{
+				if($(local.vehicles[local.a])[local.s].origin[2] >= 800 || $(local.vehicles[local.a])[local.s].origin[2] <= -130)
+				{
+					$(local.vehicles[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		waitframe
+	}
 end
 
-port2:
-
-local.portlight = spawn script_model
-local.portlight model "fx/corona_red.tik" 
-local.portlight.origin = ( -4783 2353 320 ) // starting point
-local.portlight.scale = 3
-local.portlight ghost
-
-local.trig = spawn trigger_use
-local.trig targetname port2 
-local.trig.origin = ( -4783 2353 320 ) // starting point
-local.trig setsize ( -20 -20 0 ) ( 20 20 80 )
-$port2 waittill trigger
-local.player = parm.other
-local.player tele ( -4419 2400 -239 ) // destination
-local.portlight remove
-$port2 remove
-wait 0
-thread port2
-end
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -442,6 +640,219 @@ ffa_spawns:
 	spawn info_player_deathmatch "origin" "-2471.75 4118.88 392.13" "angle" "-161"
 	spawn info_player_deathmatch "origin" "-5360.81 3830.66 392.13" "angle" "-176"
 	spawn info_player_deathmatch "origin" "-5943.76 5860.64 320.13" "angle" "-88"
+end
+
+////////////////////////////////////////////////////////////////////////
+
+UBER_teleporters:
+
+	//exec map_triggers/undermap.scr ( 1500 1647 -104 ) ( -8000 -8000 -300 ) ( 8000 8000 1 ) undermap_tele1
+
+if(getcvar("g_ubergametype") != "bb")
+{
+
+}
+end
+
+UBER_mapextras:
+
+	//thread solidclip ( 816 -2080 277 ) ( -574 -3000 -1000 ) ( 0 0 0 ) 0
+
+	//thread mapwall ( 4527 503 620 ) ( 3822 502 500 ) 10
+
+if(getcvar("g_ubergametype") != "bb")
+{
+	//thread cratesstuff static/indycrate.tik ( -5545 -5558 250 ) ( 0 180 0 )
+}
+end
+
+cratesstuff local.model local.origin local.angles local.hide local.scale local.targetname:
+
+	local.ent = spawn script_model
+	local.ent model local.model
+	local.ent.origin = local.origin
+	if(local.angles[2] != NIL) { local.ent.angles = local.angles }
+	if(local.hide == 1) { local.ent hide }
+	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
+	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
+end
+
+solidclip local.origin local.setsize1 local.setsize2 local.angle local.targetname:
+
+	local.clip = spawn script_object
+	local.clip.origin = local.origin
+	local.clip setsize local.setsize1 local.setsize2
+	local.clip.angle = local.angle
+	local.clip solid
+	local.clip nodamage
+	if(local.targetname != NIL) { local.clip.targetname = local.targetname }
+end
+
+mapwall local.origin1 local.origin2 local.thickness local.thick1 local.thick2 local.angles local.targetname:
+
+	local.wall = spawn script_object // draw an invisible 20-unit-thick wall between any two points that extends 5000 units downward.
+	local.wall.origin = local.origin1
+	local.fwd_vector = ( (local.origin2[0] - local.origin1[0]) (local.origin2[1] - local.origin1[1]) (local.origin2[2] - local.origin1[2]) ) // make a vector from origin1 to origin2.
+	local.wall.angles = vector_toangles(local.fwd_vector)
+	local.wall solid
+	local.wall nodamage
+	if(local.targetname != NIL) { local.wall.targetname = local.targetname }
+
+	local.dist = sqrt ((local.origin2[0] - local.origin1[0]) * (local.origin2[0] - local.origin1[0]) + (local.origin2[1] - local.origin1[1]) * (local.origin2[1] - local.origin1[1]) + (local.origin2[2] - local.origin1[2]) * (local.origin2[2] - local.origin1[2]))
+	local.thick = local.thickness / 2.000
+
+	local.wall setsize ( 0 (local.thickness * -1) -5000 ) ( local.dist local.thickness 0 )
+	if(local.thick2 != NIL) { local.wall setsize ( 0 (local.thick1 * -1) -5000 ) ( local.dist local.thick2 0 ) }
+	if(local.angles != NIL) { local.wall.angles = local.angles }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cyb:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.keepsamesides = 1
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0 axis    // for cyber attack only
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0 allies
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( 0 0 0 ) 0 			// allies bomb (snd), axis bomb (snd), radiobomb (cyb).
+	exec global/cyberattack_searchdestroy.scr								// none of these can be NIL. instead, use ( 0 0 0 ) 0 if not being used.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+snd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.bombcamera = 1
+	//level.cameradistance = 200 // this can be changed for each "changesides" if a bombsite is inside a small room, so the camera is not inside of a wall
+
+	if(level.changesides == 0) // allies are planting (axis bombsite origins)
+	{
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0		// for search & destroy only, team parameter doesn't matter
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0		// make sure to include initial bombsites before the while-loop begins.
+	}
+	if(level.changesides == 1) // axis are planting (allies bombsite origins)
+	{
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+	}
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( 0 0 0 ) 0
+	exec global/cyberattack_searchdestroy.scr // begin the main script
+
+//-----------------------------------------------------------------------------
+
+	local.sides = level.changesides	// when the sides change each 3 rounds, old bombsites are removed and 2 ones are added closer to the defending team's spawn.
+	while(1)
+	{
+		if(level.changesides != local.sides)
+		{
+			waitthread global/cyberattack_searchdestroy.scr::bombsites_remove
+
+			if(level.changesides == 0)
+			{
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+			}
+			if(level.changesides == 1)
+			{
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+			}
+			local.sides = level.changesides
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+//allies
+exec alienx/basebuild.scr::basebuild ( 6604 892 136 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6604 992 126 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6604 1092 116 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6604 1192 106 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6604 1292 96 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( 6604 1392 86 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( 6604 1492 76 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6604 1592 66 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 6604 1692 56 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 6604 1792 46 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 6604 1892 36 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 6604 1992 26 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 6604 2092 16 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 6604 2192 6 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+
+//axis
+exec alienx/basebuild.scr::basebuild ( -5958 4843 377 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5958 4743 377 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5958 4643 377 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5958 4543 377 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5958 4443 377 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( -5958 4343 377 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( -5958 4243 377 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -5958 4143 377 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -5958 4043 377 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -5958 3943 377 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -5958 3843 377 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -5958 3743 377 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -5958 3643 377 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -5958 3543 377 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+consoleprint:
+
+	wait 1
+	if(level.objectlimit != NIL && level.build_number != NIL) { end }
+
+	local.maxclients = int(getcvar(sv_maxclients))
+	local.nullent = 0
+	local.e = 0
+	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
+	{
+		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
+
+		local.entity = getentity(local.i) // $player[1] = entity 0		
+		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
+	}
+	if(local.entity == NULL) // if entity 868 = NULL
+	{
+		println("----- Entities in map: " + (1024 - local.nullent - 155) + " / 1024")
+		println("----- Entities remaining: " + (local.nullent + 155))
+	}
+	if(local.entity != NULL)
+	{
+		println("----- Entities in map: " + "more than 869" + " / 1024")
+		println("----- Entities remaining: less than 155 entities.")
+	}
+	if(local.warning == 1)
+	{
+		wait 1
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
+		println("----- Players may soon be unable to join! (stuck connecting to sever)")
+	}
+end
+
+clickitem_fail:
 end
 
 lockedgate:
