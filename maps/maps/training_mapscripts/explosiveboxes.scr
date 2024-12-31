@@ -1,0 +1,201 @@
+// Simple script to blow up 3 groups of 3 explosive boxes, found on tables in the training map. The explosion emitters are not found in this script.
+// When running "explosiveboxes.scr::blowup" the lids are removed from the boxes, and fire emitters appear inside them.
+// When running "explosiveboxes.scr::end 16 46.5" the outer two fire emitters within each group of 3 boxes are removed after 16 seconds, timed to disappear
+//	 after the white smoke from each fx/fx_truck_explosion.tik emitter disappears. The explosions are above the middle of each group of boxes.
+// 	 After 46.5 seconds, the remaining middle fire emitters are also removed.
+
+
+main: // run before "level waittill spawn"; spawns in all explosiveboxes objects when training map loads. 
+
+if(level.explosiveboxes_objects == 1) { iprintlnbold ("Error: Must run and finish 'explosiveboxes.scr::end' first before running 'explosiveboxes.scr::reset'.") }
+if(level.explosiveboxes_objects != 1)
+{
+local.expbox1 = spawn script_model targetname "expbox1"
+local.expbox1 model "static/exp_crate1.tik" 
+local.expbox1.origin = ( 948 -2066 -334 )
+local.expbox1.angles = ( 0 90 0 )
+local.expbox1 solid
+local.expbox2 = spawn script_model targetname "expbox2"
+local.expbox2 model "static/exp_crate1.tik" 
+local.expbox2.origin = ( 948 -2091 -334 )
+local.expbox2.angles = ( 0 90 0 )
+local.expbox2 solid
+local.expbox3 = spawn script_model targetname "expbox3"
+local.expbox3 model "static/exp_crate1.tik" 
+local.expbox3.origin = ( 948 -2041 -334 )
+local.expbox3.angles = ( 0 90 0 )
+local.expbox3 solid
+
+local.expbox4 = spawn script_model targetname "expbox4"
+local.expbox4 model "static/exp_crate2.tik" 
+local.expbox4.origin = ( -165 -2057.5 -334 )
+local.expbox4.angles = ( 0 270 0 )
+local.expbox4 solid
+local.expbox5 = spawn script_model targetname "expbox5"
+local.expbox5 model "static/exp_crate2.tik" 
+local.expbox5.origin = ( -165 -2082.5 -334 )
+local.expbox5.angles = ( 0 270 0 )
+local.expbox5 solid
+local.expbox6 = spawn script_model targetname "expbox6"
+local.expbox6 model "static/exp_crate2.tik" 
+local.expbox6.origin = ( -165 -2032.5 -334 )
+local.expbox6.angles = ( 0 270 0 )
+local.expbox6 solid
+
+local.expbox7 = spawn script_model targetname "expbox7"
+local.expbox7 model "static/exp_crate3.tik" 
+local.expbox7.origin = ( 450 -3534.5 -334 )
+local.expbox7.angles = ( 0 270 0 )
+local.expbox7 solid
+local.expbox8 = spawn script_model targetname "expbox8"
+local.expbox8 model "static/exp_crate3.tik" 
+local.expbox8.origin = ( 450 -3559.5 -334 )
+local.expbox8.angles = ( 0 270 0 )
+local.expbox8 solid
+local.expbox9 = spawn script_model targetname "expbox9"
+local.expbox9 model "static/exp_crate3.tik" 
+local.expbox9.origin = ( 450 -3509.5 -334 )
+local.expbox9.angles = ( 0 270 0 )
+local.expbox9 solid
+
+local.expboxfire1 = spawn script_model targetname "expboxfire1"
+local.expboxfire1 model "animate/fire.tik" 
+local.expboxfire1.origin = $expbox1.origin + ( 0 5 0 )
+local.expboxfire1.angles = ( 0 270 0 )
+local.expboxfire1.scale = 0.25
+local.expboxfire1 notsolid
+local.expboxfire1 hide
+local.expboxfire2 = spawn script_model targetname "expboxfire2"
+local.expboxfire2 model "animate/fire.tik" 
+local.expboxfire2.origin = $expbox2.origin + ( 0 5 0 )
+local.expboxfire2.angles = ( 0 270 0 )
+local.expboxfire2.scale = 0.25
+local.expboxfire2 notsolid
+local.expboxfire2 hide
+local.expboxfire3 = spawn script_model targetname "expboxfire3"
+local.expboxfire3 model "animate/fire.tik" 
+local.expboxfire3.origin = $expbox3.origin + ( 0 5 0 )
+local.expboxfire3.angles = ( 0 270 0 )
+local.expboxfire3.scale = 0.25
+local.expboxfire3 notsolid
+local.expboxfire3 hide
+local.expboxfire4 = spawn script_model targetname "expboxfire4"
+local.expboxfire4 model "animate/fire.tik" 
+local.expboxfire4.origin = $expbox4.origin + ( 0 -5 0 )
+local.expboxfire4.angles = ( 0 270 0 )
+local.expboxfire4.scale = 0.25
+local.expboxfire4 notsolid
+local.expboxfire4 hide
+local.expboxfire5 = spawn script_model targetname "expboxfire5"
+local.expboxfire5 model "animate/fire.tik" 
+local.expboxfire5.origin = $expbox5.origin + ( 0 -5 0 )
+local.expboxfire5.angles = ( 0 270 0 )
+local.expboxfire5.scale = 0.25
+local.expboxfire5 notsolid
+local.expboxfire5 hide
+local.expboxfire6 = spawn script_model targetname "expboxfire6"
+local.expboxfire6 model "animate/fire.tik" 
+local.expboxfire6.origin = $expbox6.origin + ( 0 -5 0 )
+local.expboxfire6.angles = ( 0 270 0 )
+local.expboxfire6.scale = 0.25
+local.expboxfire6 notsolid
+local.expboxfire6 hide
+local.expboxfire7 = spawn script_model targetname "expboxfire7"
+local.expboxfire7 model "animate/fire.tik" 
+local.expboxfire7.origin = $expbox7.origin + ( 0 -5 0 )
+local.expboxfire7.angles = ( 0 270 0 )
+local.expboxfire7.scale = 0.25
+local.expboxfire7 notsolid
+local.expboxfire7 hide
+local.expboxfire8 = spawn script_model targetname "expboxfire8"
+local.expboxfire8 model "animate/fire.tik" 
+local.expboxfire8.origin = $expbox8.origin + ( 0 -5 0 )
+local.expboxfire8.angles = ( 0 270 0 )
+local.expboxfire8.scale = 0.25
+local.expboxfire8 notsolid
+local.expboxfire8 hide
+local.expboxfire9 = spawn script_model targetname "expboxfire9"
+local.expboxfire9 model "animate/fire.tik" 
+local.expboxfire9.origin = $expbox9.origin + ( 0 -5 0 )
+local.expboxfire9.angles = ( 0 270 0 )
+local.expboxfire9.scale = 0.25
+local.expboxfire9 notsolid
+local.expboxfire9 hide
+
+level.explosiveboxes_objects = 1
+}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+blowup:
+
+$expbox1.model = "static/exp_crate1a.tik" 
+$expbox2.model = "static/exp_crate1a.tik" 
+$expbox3.model = "static/exp_crate1a.tik" 
+
+$expbox4.model = "static/exp_crate2a.tik" 
+$expbox5.model = "static/exp_crate2a.tik" 
+$expbox6.model = "static/exp_crate2a.tik" 
+
+$expbox7.model = "static/exp_crate3a.tik" 
+$expbox8.model = "static/exp_crate3a.tik" 
+$expbox9.model = "static/exp_crate3a.tik" 
+
+$expboxfire1 show
+$expboxfire2 show
+$expboxfire3 show
+$expboxfire4 show
+$expboxfire5 show
+$expboxfire6 show
+$expboxfire7 show
+$expboxfire8 show
+$expboxfire9 show
+end
+
+////////////////////////////////////////////////////////////////////////
+
+endfire local.time1 local.time2:
+
+wait local.time1
+$expboxfire2 remove
+$expboxfire3 remove
+$expboxfire5 remove
+$expboxfire6 remove
+$expboxfire8 remove
+$expboxfire9 remove
+
+wait local.time2
+$expboxfire1 remove
+$expboxfire4 remove
+$expboxfire7 remove
+
+level.explosiveboxes_objects = 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+reset: // not used in training map script
+
+$expboxfire1 remove
+$expboxfire2 remove
+$expboxfire3 remove
+$expboxfire4 remove
+$expboxfire5 remove
+$expboxfire6 remove
+$expboxfire7 remove
+$expboxfire8 remove
+$expboxfire9 remove
+
+$expbox1 remove
+$expbox2 remove
+$expbox3 remove
+$expbox4 remove
+$expbox5 remove
+$expbox6 remove
+$expbox7 remove
+$expbox8 remove
+$expbox9 remove
+
+thread main // reload all deleted objects only after "endfire" has finished.
+end

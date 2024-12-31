@@ -1,0 +1,336 @@
+main:
+	self thread plane_explode
+end
+
+plane_crashing:
+
+	if(self != NULL) { self.flying = 0 }
+	if(self.plane == NIL || self.plane == NULL)
+	{
+		end
+	}
+
+	self thread plane_crash
+	local.plane = self.plane
+
+	local.flyingexplosion = spawn "models/emitters/fireandsmoke.tik"			
+	local.flyingexplosion glue self.plane
+	local.flyingexplosion.origin = self.plane.origin
+	if(self.plane.model == "models/vehicles/c47fly.tik") { local.flyingexplosion.scale = self.plane.scale * 2 }
+	else { local.flyingexplosion.scale = self.plane.scale }
+	local.flyingexplosion anim start
+	local.flyingexplosion notsolid
+
+	local.flyingsmoke = spawn "models/emitters/plane_smoke.tik"			
+	local.flyingsmoke glue self.plane
+	local.flyingsmoke.origin = self.plane.origin
+	if(self.plane.model == "models/vehicles/c47fly.tik") { local.flyingsmoke.scale = self.plane.scale * 2 }
+	else { local.flyingsmoke.scale = self.plane.scale }
+	local.flyingsmoke anim start
+	local.flyingsmoke notsolid
+
+	local.now = self.plane.angles[0]
+	local.end = local.now + 40
+
+	for(local.i=0;local.i<=45 ;local.i+=2)
+	{
+		waitframe
+		if(local.plane == NIL || local.plane == NULL)
+		{
+			break
+		}
+		else
+		{
+			local.plane.angles = ( local.i local.plane.angles[1] local.plane.angles[2] )
+		}
+	}
+
+	while(local.plane != NIL && local.plane != NULL) { waitframe }
+
+	local.flyingsmoke remove
+	local.flyingexplosion remove
+end	
+
+plane_crash:
+
+	local.plane = self.plane
+	local.scale = self.plane.scale
+
+	if(local.plane != NULL)
+	{
+		local.hitthing = self
+
+		while(local.hitthing == self || local.hitthing.targetname == "planebomb" || (local.hitthing.owner != NIL && local.hitthing.owner != NULL && (local.hitthing.owner.dmteam == self.dmteam || getcvar("g_gametype") == "1")) || (local.hitthing.player_owner != NIL && local.hitthing.player_owner != NULL && (local.hitthing.player_owner.dmteam == self.dmteam || getcvar("g_gametype") == "1")))
+		{
+			local.plane waittill touch
+			local.hitthing = parm.other
+		}
+		
+		if(self != NULL) { self thread plane_explode local.scale local.hitthing }
+		else { local.plane thread plane_explode_null }
+	}
+
+end	
+
+plane_explode local.scale local.hitthing:
+
+	self solid
+	local.plane = self.plane
+	local.entnum = self.entnum
+
+	if(self.plane != NIL && self.plane != NULL)
+	{
+		local.new_uberround = self.plane.new_uberround
+		local.origin = local.plane.origin 
+		//self.plane explode // removed, since the plane has its own radiusdamage when it explodes while touching a player.
+		self.plane remove
+	}
+	else { local.origin = self.origin }
+
+	if(self.plane != NIL && self.plane != NULL && self.plane.model == "models/vehicles/c47fly.tik")
+	{
+		local.radius = 1000 * local.scale
+		local.expscale = 3.00 * local.scale
+	}
+	else
+	{
+		local.radius = 550 * local.scale
+		local.expscale = 1.50 * local.scale
+	}
+	if(local.expscale < 0.6) { local.expscale = 0.6 }
+
+	local.Exp = spawn "emitters/mortar_higgins.tik"
+	local.Exp.origin = local.origin
+	local.Exp.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.Exp light 1 0 1 local.radius
+	local.Exp anim start
+	local.Exp.scale = local.expscale
+
+	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			//local.origin = self.plane.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.Exp2 = spawn "animate/fx_mortar_water.tik"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale * 1.20
+				local.Exp playsound artyexp_water
+			}
+			else
+			{
+				local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale
+				local.Exp playsound artyexp_sand
+			}
+		}
+	}
+	else
+	{
+		local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+		local.Exp2.origin = local.origin
+		local.Exp2 anim start
+		local.Exp2.scale = local.expscale
+		local.Exp playsound artyexp_sand
+	}
+	
+	if(self.in_para_drop != 1 && local.new_uberround != 1)
+	{
+		if(local.hitthing != NIL && local.hitthing != NULL)
+		{
+			if(local.hitthing.player_owner != NIL && local.hitthing.player_owner != NULL) { self damage local.hitthing.player_owner 9999999 local.hitthing.player_owner (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
+			else if(local.hitthing.owner != NIL && local.hitthing.owner != NULL) { self damage local.hitthing.owner 9999999 local.hitthing.owner (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
+			else { self damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
+		}
+	}
+
+	exec global/earthquake.scr .35 2 0 0
+	local.Exp2 playsound explodeplane
+
+	local.Exp2.player_owner = self
+
+	//radiusdamage local.origin 500 local.radius
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(vector_length(local.origin - $player[local.i].origin) <= local.radius)
+		{
+			if(self == NIL || self == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i].passenger != 1)
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				}
+			}
+			else if($player[local.i] != self && $player[local.i].dmteam == self.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
+				{
+					$player[local.i] damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = self
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+					else { $player[local.i].drivingent damage self 500 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				}
+			}
+		}
+	}
+
+	self.drivingent = NIL
+	local.Exp anim start
+	local.Exp2 anim start
+	waitframe
+	if(local.blewup == 1) { radiusdamage local.origin 500 local.radius }
+	waitframe
+	local.Exp remove	
+	local.Exp2 remove
+	
+	if(self != NULL) { self.flying = 0 }
+	if($("planehit" + local.entnum) != NULL) { $("planehit" + local.entnum) remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+plane_crashing_null:
+
+	self thread plane_crash_null
+
+	local.flyingexplosion = spawn "models/emitters/fireandsmoke.tik"			
+	local.flyingexplosion glue self
+	local.flyingexplosion.origin = self.origin
+	if(self.model == "models/vehicles/c47fly.tik") { local.flyingexplosion.scale = self.scale * 2 }
+	else { local.flyingexplosion.scale = self.scale }
+	local.flyingexplosion.scale = self.scale
+	local.flyingexplosion anim start
+	local.flyingexplosion notsolid
+
+	local.flyingsmoke = spawn "models/emitters/plane_smoke.tik"			
+	local.flyingsmoke glue self
+	local.flyingsmoke.origin = self.origin
+	if(self.model == "models/vehicles/c47fly.tik") { local.flyingsmoke.scale = self.scale * 2 }
+	else { local.flyingsmoke.scale = self.scale }
+	local.flyingsmoke.scale = self.scale
+	local.flyingsmoke anim start
+	local.flyingsmoke notsolid
+
+	local.now = self.angles[0]
+	local.end = local.now + 40
+
+	for(local.i=0;local.i<=45 ;local.i+=2)
+	{
+		waitframe
+		if(self==NULL)
+		{
+			break
+		}
+		else
+		{
+			self.angles = ( local.i self.angles[1] self.angles[2] )
+		}
+	}
+
+	while(self)
+	{
+		waitframe
+	}
+
+	local.flyingsmoke remove
+	local.flyingexplosion remove
+end	
+
+plane_crash_null:
+
+	self waittill touch
+	self thread plane_explode_null
+end	
+
+plane_explode_null:
+
+	local.origin = self.origin
+	local.scale = self.scale
+	local.model = self.model
+	//self explode
+	self remove
+
+	if(local.model == "models/vehicles/c47fly.tik") { local.radius = 1000 * local.scale }
+	else { local.radius = 550 * local.scale }
+
+	if(local.model == "models/vehicles/c47fly.tik") { local.expscale = 3.00 * local.scale }
+	else { local.expscale = 1.50 * local.scale }
+	if(local.expscale < 0.6) { local.expscale = 0.6 }
+
+	local.Exp = spawn "emitters/mortar_higgins.tik"
+	local.Exp.origin = local.origin
+	local.Exp.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.Exp light 1 0 1 local.radius
+	local.Exp anim start
+	local.Exp.scale = local.expscale
+
+	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			//local.origin = self.plane.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.Exp2 = spawn "animate/fx_mortar_water.tik"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale * 1.20
+				local.Exp playsound artyexp_water
+			}
+			else
+			{
+				local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+				local.Exp2.origin = local.origin
+				local.Exp2 anim start
+				local.Exp2.scale = local.expscale
+				local.Exp playsound artyexp_sand
+			}
+		}
+	}
+	else
+	{
+		local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+		local.Exp2.origin = local.origin
+		local.Exp2 anim start
+		local.Exp2.scale = local.expscale
+		local.Exp playsound artyexp_sand
+	}
+
+	exec global/earthquake.scr .35 2 0 0
+	radiusdamage local.origin 500 local.radius
+	local.Exp2 playsound explodeplane
+
+	local.Exp anim start
+	local.Exp2 anim start
+	wait 0.1
+	local.Exp remove	
+	local.Exp2 remove
+end

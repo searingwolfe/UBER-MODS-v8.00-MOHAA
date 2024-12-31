@@ -1,0 +1,230 @@
+main: // drawpath.scr. Run "exec global/drawpath.scr" in any map script to use the "drawpath [1st path node targetname]" cvar.
+
+	while(string(getcvar("drawpath")) == "") { waitframe }
+	local.path = string(getcvar("drawpath"))
+	local.pathold = local.path
+
+	if($(local.path) != NULL)
+	{
+		if($(local.path).size > 1)
+		{
+			println("----- NOTE. Multiple paths named: $" + local.path)
+			for(local.e = 1; local.e <= $(local.path).size; local.e++) { println("----- $" + local.path + "[" + local.e + "]") }
+			if(local.path != "") { setcvar "drawpath" "" }
+  			thread main
+			end
+		}
+		local.pathtargetold = $(local.path).target
+	}
+	if(local.path == "0")
+	{
+		if($drawpath_cvar_node[1] != NULL)
+		{
+			for(local.a = 1; local.a <= $drawpath_cvar_node.size; local.a++) { $drawpath_cvar_node[local.a] remove }
+			for(local.b = 1; local.b <= $drawpath_cvar_laser.size; local.b++) { $drawpath_cvar_laser[local.b] remove }
+			println("----- Node entities removed: " + (local.a - 1))
+			println("----- Laser entities removed: " + (local.b - 1))
+		}
+		level.nodeorigin_drawpathcvar = NIL
+
+		if($drawpath_cvar_node[1] == NULL) { println("----- NOTE. There are no drawn paths to remove.") }
+		if(local.path != "") { setcvar "drawpath" "" }
+  		thread main
+		end
+	}
+	if(local.path.size > 3 && local.path[local.path.size - 1] == "]")
+	{
+		if(local.path[local.path.size - 3] == "[")
+		{
+			local.arrayint = int(string(local.path[local.path.size - 2]))
+			local.subtract = 0
+		}
+		if(local.path[local.path.size - 4] == "[")
+		{
+			local.arrayint = int(string(local.path[local.path.size - 3]) + string(local.path[local.path.size - 2]))
+			local.subtract = 1
+		}
+		if(local.path[local.path.size - 5] == "[")
+		{
+			local.arrayint = int(string(local.path[local.path.size - 4]) + string(local.path[local.path.size - 3]) + string(local.path[local.path.size - 2]))
+			local.subtract = 2
+		}
+		local.arrayname = string("")
+		for(local.a = 0; local.a < (local.path.size - 3 - local.subtract); local.a++) { local.arrayname = local.arrayname + string(local.path[local.a]) }
+
+		if($(local.arrayname).size < local.arrayint)
+		{
+			if($drawpath_cvar_node[1] == NULL) { println("----- ERROR. Path: $" + local.path + " does not exist!") }
+			if(local.path != "") { setcvar "drawpath" "" }
+  			thread main
+			end
+		}
+
+		local.pathtargetold = $(local.arrayname)[local.arrayint].target
+		local.arrayintold = local.arrayint
+		local.arraynameold = local.arrayname
+	}
+	if(local.arrayint == NIL && $(local.path) == NULL)
+	{
+		println("----- ERROR. Path: $" + local.path + " does not exist!")
+		if(local.path != "") { setcvar "drawpath" "" }
+  		thread main
+		end
+	}
+
+	local.c = 0
+	local.laserorigin[0] = NIL
+	local.r1 = ((randomint(75) / 100.00) + .25)
+	local.r2 = ((randomint(75) / 100.00) + .25)
+	local.r3 = ((randomint(75) / 100.00) + .25)
+
+	if((local.arrayint == NIL && $(local.path) != NULL) || (local.arrayint != NIL && $(local.arrayname)[local.arrayint] != NULL))
+	{
+		local.node0 = spawn script_model targetname "drawpath_cvar_node"
+		local.node0 model "static/corona_util.tik"
+		if(local.arrayint == NIL) { local.node0.origin = $(local.path).origin }
+		if(local.arrayint != NIL) { local.node0.origin = $(local.arrayname)[local.arrayint].origin }
+		local.node0.scale = 1
+		local.node0 notsolid
+	}
+
+	local.k = 0
+	for(local.i = 0; local.i <= local.pathtargetold.size - 1; local.i++)
+	{
+		if(local.singletarget[local.k] == NIL) { local.singletarget[local.k] = "" }
+
+		if(local.pathtargetold[local.i] != " ") { local.singletarget[local.k] = local.singletarget[local.k] + local.pathtargetold[local.i] }
+		if(local.pathtargetold[local.i] == " ")
+		{
+			if(local.k == 0) { $(local.path).target = local.singletarget[local.k] }
+			if(local.k > 0) { $(local.singletarget[local.k - 1]).target = local.singletarget[local.k] }
+			local.k++
+		}
+	}
+	if(local.k >= 2) { $(local.singletarget[local.k - 1]).target = local.singletarget[local.k] }
+
+	while((local.arrayint == NIL && $(local.path) != NULL && $(local.path).target != "") || (local.arrayint != NIL && $(local.arrayname)[local.arrayint] != NULL && $(local.arrayname)[local.arrayint].target != ""))
+	{
+		if((local.arrayint == NIL && $($(local.path).target) != NULL) || (local.arrayint != NIL && $($(local.arrayname)[local.arrayint].target) != NULL))
+		{
+			if((local.arrayint == NIL && $($(local.path).target).size > 1) || (local.arrayint != NIL && $($(local.arrayname)[local.arrayint].target).size > 1))
+			{
+				if(local.arrayint == NIL) { println("----- $" + $($(local.path).target)[1] + " ERROR. This node shares a targetname with another entity! Drawing has stopped.") }
+				if(local.arrayint != NIL) { println("----- $" + $($(local.arrayname)[local.arrayint].target)[1] + " ERROR. This node shares a targetname with another entity! Drawing has stopped.") }
+				break
+			}
+
+			local.node = spawn script_model targetname "drawpath_cvar_node"
+			local.node model "static/corona_util.tik"
+			if(local.arrayint == NIL) { local.node.origin = $(local.path).target.origin }
+			if(local.arrayint != NIL) { local.node.origin = $(local.arrayname)[local.arrayint].target.origin }
+			local.node.scale = 1
+			local.node notsolid
+
+			if(level.nodeorigin_drawpathcvar[local.path] != NIL && local.node.origin == level.nodeorigin_drawpathcvar[local.path])
+			{
+				if(local.k < 2) { local.node0 remove; println("----- ERROR. This path has already been drawn!") }
+				local.node remove
+				if(local.k >= 2)
+				{
+					$drawpath_cvar_node[$drawpath_cvar_node.size - 1] remove
+					local.inc = 1; local.c--; break
+				}
+
+				if(local.path != "") { setcvar "drawpath" "" }
+  				thread main
+				end
+			}
+			level.nodeorigin_drawpathcvar[local.path] = local.node.origin
+
+			if(local.c == 0) { println("----- Drawing $" + local.path + " and all successive .targets") }
+			if(local.arrayint == NIL) { println("----- $" + $(local.path).target) }
+			if(local.arrayint != NIL) { println("----- $" + $(local.arrayname)[local.arrayint].target) }
+
+			local.laser = spawn func_beam targetname "drawpath_cvar_laser"
+			local.laser minoffset 0.0
+			local.laser maxoffset 0.0
+			local.laser numsegments 1
+			local.laser life 0
+			local.laser color ( local.r1 local.r2 local.r3 )
+			local.laser alpha 0.4
+			local.laser alwaysdraw
+			local.laser activate	
+			local.laser scale .5
+
+			if(local.arrayint == NIL)
+			{
+				local.laser.origin = $(local.path).origin
+				if($(local.path).target == "") { local.laser remove; break } // remove this laser if it has no endpoint (.target)
+			}
+			if(local.arrayint != NIL)
+			{
+				local.laser.origin = $(local.arrayname)[local.arrayint].origin
+				if($(local.arrayname)[local.arrayint].target == "") { local.laser remove; break }
+			}
+			local.laser endpoint local.node.origin
+			local.laserorigin[local.c] = local.laser.origin
+
+			if(local.arrayint == NIL && $(local.path).target.origin == local.laserorigin[0]) { local.node remove; local.inc = 1; break } 	// if endpoint = another laser's origin, remove endpoint node & break
+			if(local.arrayint != NIL && $(local.arrayname)[local.arrayint].target.origin == local.laserorigin[0]) { local.node remove; local.inc = 1; break }
+			local.c++
+		}
+
+		if(local.arrayint == NIL)
+		{
+			if($($(local.path).target) == NULL) { println("----- $" + $(local.path).target + " = NULL") }
+			local.path = $(local.path).target
+		}
+		if(local.arrayint != NIL)
+		{
+			if($($(local.arrayname)[local.arrayint].target) == NULL) { println("----- $" + $(local.arrayname)[local.arrayint].target + " = NULL") }
+			local.path = $(local.arrayname)[local.arrayint].target
+		}
+		if(local.path.size > 3 && local.path[local.path.size - 1] == "]")
+		{
+			if(local.path[local.path.size - 3] == "[")
+			{
+				local.arrayint = int(string(local.path[local.path.size - 2]))
+				local.subtract = 0
+			}
+			if(local.path[local.path.size - 4] == "[")
+			{
+				local.arrayint = int(string(local.path[local.path.size - 3]) + string(local.path[local.path.size - 2]))
+				local.subtract = 1
+			}
+			if(local.path[local.path.size - 5] == "[")
+			{
+				local.arrayint = int(string(local.path[local.path.size - 4]) + string(local.path[local.path.size - 3]) + string(local.path[local.path.size - 2]))
+				local.subtract = 2
+			}
+			local.arrayname = string("")
+			for(local.a = 0; local.a < (local.path.size - 3 - local.subtract); local.a++) { local.arrayname = local.arrayname + string(local.path[local.a]) }
+		}
+		if(local.path[local.path.size - 1] != "]") { local.arrayint = NIL; local.arrayname = NIL }
+		waitframe
+	}
+
+	if(local.laser == NIL || local.laser == NULL)
+	{
+		if(local.arrayint == NIL) { println("----- ERROR. Path: $" + local.path + " does not have any .targets!") }
+		if(local.arrayint != NIL) { println("----- ERROR. Path: $" + local.arrayname + "[" + local.arrayint + "] does not have any .targets!") }
+		local.node0 remove
+		if(local.path != "") { setcvar "drawpath" "" }
+  		thread main
+		end
+	}
+
+	local.c++
+	if(local.pathtargetold != NIL)
+	{
+		if(local.arrayintold == NIL) { $(local.pathold).target = local.pathtargetold }
+		if(local.arrayintold != NIL) { $(local.arraynameold)[local.arrayintold].target = local.pathtargetold }
+	}
+
+	println("----- Node entities spawned in: " + local.c)
+	if(local.inc == 1) { local.c++ }
+	println("----- Laser entities spawned in: " + (local.c - 1))
+
+	if(local.path != "") { setcvar "drawpath" "" }
+  	thread main
+end

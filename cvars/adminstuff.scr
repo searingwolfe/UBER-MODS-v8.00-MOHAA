@@ -787,7 +787,7 @@ end
 
 coord2:
 
-	while(getcvar("coord2") != "1" && getcvar("coord2") != "entity" && getcvar("coord2") != "trigger" && getcvar("coord2") != "spawn") { waitframe }
+	while(getcvar("coord2") != "1" && getcvar("coord2") != "entity" && getcvar("coord2") != "trigger" && getcvar("coord2") != "spawn" && getcvar("coord2") != "mapwall") { waitframe }
 
 	if($player.size >= 1 && $player[1] != NULL)
 	{
@@ -799,7 +799,16 @@ coord2:
 			local.tempstr = "( "
 			local.tempstr = local.tempstr + string(int($player[1].origin[0])) + " " 
 			local.tempstr = local.tempstr + string(int($player[1].origin[1])) + " "
-			local.tempstr = local.tempstr + string(int($player[1].origin[2])) + " ) "
+
+			if(getcvar("coord2") == "mapwall")
+			{
+				local.tempstr = local.tempstr + "5000 ) "
+				local.tempstr = local.tempstr + "5\n" + local.tempstr
+			}
+			else
+			{		
+				local.tempstr = local.tempstr + string(int($player[1].origin[2])) + " ) "
+			}
 
 			if(getcvar("coord2") == "entity" || getcvar("coord2") == "1")
 			{
@@ -819,7 +828,7 @@ coord2:
 		if(local.ret != 1) { local.result = fnewdir "main/cvars" }
 		local.file = fopen "main/cvars/coords.txt" "a+"
 		local.return = fseek local.file 0 2
-		if(getcvar("coord2") == "trigger") { local.result = fputs local.file local.tempstr }
+		if(getcvar("coord2") == "trigger" || getcvar("coord2") == "mapwall") { local.result = fputs local.file local.tempstr }
 		else { local.result = fputs local.file (local.tempstr + "\n") }
 		local.result = fclose local.file
 

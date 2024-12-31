@@ -293,6 +293,7 @@ exec global/aliascache_triggersounds.scr gates_slide
 	if(local.time == NIL) { local.time = 4 }
 	if(local.distance == NIL) { local.distance = 100 }
 	if(local.moveangle == NIL) { local.move = 0 }
+	$(local.nameleft).cancel = 0
 
 	self waittill trigger
 	self nottriggerable
@@ -316,16 +317,24 @@ exec global/aliascache_triggersounds.scr gates_slide
 	if(self.inc == 0)
 	{
 		$(local.nameleft) moveto local.origin_leftopen; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) moveto local.origin_rightopen }
+		local.neworigin = local.origin_leftopen
 	}
 	if(self.inc == 1)
 	{
 		$(local.nameleft) moveto local.origin_leftclose; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) moveto local.origin_rightclose }
+		local.neworigin = local.origin_leftclose
 	}
 
 	if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) move }
-	$(local.nameleft) waitmove
+	$(local.nameleft) move
+
+	while($(local.nameleft).origin != local.neworigin && $(local.nameleft).cancel != 1) { waitframe } // allows gate movement to be cancelled if other events cause them to move (vehicles crashing through them).
+
 	$(local.nameleft) stoploopsound; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) stoploopsound }
-	$(local.nameleft) playsound gateslide_close; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateslide_close }
+	if($(local.nameleft).cancel != 1)
+	{
+		$(local.nameleft) playsound gateslide_close; if(local.nameright != NIL && $(local.nameright) != NULL) { $(local.nameright) playsound gateslide_close }
+	}
 
 	self triggerable
 	self thread gates_slide local.nameleft local.nameright local.moveangle local.distance local.time

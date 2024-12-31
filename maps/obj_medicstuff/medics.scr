@@ -5,6 +5,7 @@ main local.origin local.angleyaw local.medic local.healanyone local.maxhealth lo
 	if(local.medic == 2) { local.medic = spawn human/2nd-ranger_medic.tik }
 	local.medic.origin = local.origin
 	local.medic.angle = local.angleyaw
+	local.medic.angle_init = local.angleyaw
 	local.medic nodamage
 
 	local.trigmed = spawn trigger_use
@@ -23,6 +24,16 @@ main local.origin local.angleyaw local.medic local.healanyone local.maxhealth lo
 
 	if(local.smoker != 1) { local.medic thread idlemedic }
 	if(local.smoker == 1) { local.medic thread smokemedic }
+
+	if(level.scriptmaster_medics != 1)
+	{
+		level.mapname = getcvar "mapname"
+		local.master = spawn scriptmaster
+		local.master aliascache medicheal1 sound/dialogue/m3l1/A/medic1.wav soundparms 1.5 0.0 1.0 0.0 200 1500 dialog streamed subtitle "Here you go Lieutenant!" maps level.mapname
+		local.master aliascache medicheal2 sound/dialogue/m3l1/A/medic3.wav soundparms 1.5 0.0 1.0 0.0 200 1500 dialog streamed subtitle "Here you go Powell!" maps level.mapname
+		cache models/miscobj/canteen.tik
+		level.scriptmaster_medics = 1
+	}
 end
 
 healplayer:
@@ -34,7 +45,10 @@ healplayer:
 	{
 		if(local.player.health <= self.maxhealth )
 		{
-			self.medic playsound medic_heal1
+			local.angles = vector_toangles(local.player.origin - self.medic.origin)
+			self.medic.angle = local.angles[1]
+
+			self.medic playsound medicheal
 			self message "*** Medic is fully healing you. ***"
 
 			self.medic upperanim pass_canteen_start
@@ -66,7 +80,7 @@ end
 idlemedic: // if grenades are thrown at a medic, they will duck and cover. stand back up after 10 seconds, while not healing a player (only for nonsmoker medics).
 
 	wait 10
-
+	self.angle = self.angle_init
 	self setmotionanim idle // "anim" and "upperanim" both work for "idle" too
 
 	self thread idlemedic
@@ -80,15 +94,19 @@ smokemedic:
 	// 01 = light up, 02 = first inhale, 03 = inhale, 04 = put cig out with foot, 05 = throw cig away.
 
 	wait 10
+	self.angle = self.angle_init
 	self setmotionanim idle // idle every 10 seconds (like in "idlemedic" thread) for 30 seconds before smoking begins.
+
 	wait 10
+	self.angle = self.angle_init
 	self setmotionanim idle
+
 	wait 10
-	
 	self setmotionanim idle // if medic crouched from a nearby grenade, "idle" will stand him back up before smoking again.
 	self setmotionanim smoking01
 	self waittill flaggedanimdone
 
+	self.angle = self.angle_init
 	self setmotionanim idle
 	self setmotionanim smoking02
 
@@ -97,6 +115,7 @@ smokemedic:
 		local.rand = randomint(9)
 		wait (8 + local.rand)
 
+		self.angle = self.angle_init
 		self setmotionanim idle
 		self upperanim smoking03
 	}
@@ -107,6 +126,7 @@ smokemedic:
 	if(local.random == 0) { self setmotionanim smoking04; self waittill flaggedanimdone }
 	if(local.random == 1) { self upperanim smoking05; self waittill upperanimdone }
 
+	self.angle = self.angle_init
 	self thread smokemedic
 end
 

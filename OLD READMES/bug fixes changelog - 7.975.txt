@@ -1,0 +1,67 @@
+v7.975 (9-24-2024): - For "check_player_stufftexts" thread in adminstuff.scr, players' names that contain spacebars (" " characters) will no longer be cut off at the 1st spacebar by the script.
+
+- Fixed players becoming invisible and invincible if 2+ players try to enter a tank/vehicle at the same time as drivers (not passengers or turret users).
+- Fixed drivable vehicles/boats not reversing full speed if the driver holds the "move backward" key ("S" key) while the driver is walking instead of running.
+- Fixed kills/score not properly counting when a player blows up an enemy vehicle with a turret player and/or 1+ passengers with a bazooka rocket (a one-hit kill).
+
+- When driving vehicles/tanks, more huddraw text on the right side of the screen will now indicate how many passengers are in the vehicle, and/or if the 30 Cal turret is being used by a teammate.
+- If a player destroys a vehicle/tank/boat/flak88/nebelwerfer using a rocket/grenade/giant bomb/etc, the death explosion will now give kills/score to the player if those explosions caused other enemies to die.
+- Chain-reaction death explosions also give kills/score if any of them cause other enemies to die. Death explosions caused by players will not harm their teammates anymore.
+
+- Flyable planes' bomb drops (when right-clicking) and plane crashes will now make water explosions if they land inside any "level.water_volumes".
+- Giant Bombs will also make a water explosion if it explodes inside any "level.water_volumes". Ensured that some Giant Bomb/Light Bomb explosion sounds play for all maps.
+
+- Fixed airstrikes not properly ending if CVAR "g_ubermods 1" is set (no bomb drops from airstrikes, fewer mods, but not all disabled), and combined all "airstrike_alternate2" threads into "airstrike_alternate" for simplicity.
+- Fixed victory_podium.scr script not displaying the 3rd player's name if the 3rd player is $player[1]. Players in spectator can also be included in the leaderboard now.
+
+- Jetpack triggers now have smoke emitting from the two airtanks, making them easier to see from far away.
+- Players currently driving/riding in vehicles/tanks/boats will no longer be able to pick up jetpacks (must exit vehicle first).
+
+- Fixed more ambience volumes in M1L2A, and fixed some teles in dm/mohdm2.
+- Vehicles will now explode if they fall into the water in M3L2.
+- Increased player speed during base-builder gamemodes for all maps when players are building.
+- Fixed vehicle_tele.scr lasers not always flashing green when vehicles/tanks pass through the teles.
+- Prevented iprint text spamming if spotlights target players in spectator.
+- Lowered entity counts in some singleplayer maps by removing a few mods or simplifying/reducing the map-wall entities.
+- Added huddraw text for players that pick up a Radiobomb or Walkie.
+
+- global/bomberplane.scr script updated to have similar parameters as global/bomberplane_nospline.scr, such as bullets-to-kill and player_owner (for preventing players' teammates from being killed, if desired).
+- Updated Training map's maps/training_mapscripts/airstrike_radiotrig.scr & airstrikebombs.scr for allowing the player who called an airstrike to earn kills/scorepoints from the bombs' kills (teammates will not be harmed anymore). 
+
+- Fixed ambience_mp.scr script so it doesn't fully start until base-building is completed by defaulting to the map's original ambience soundtrack. When building is done, the script changes ambiences to the map-scripted "level.spawnamb" volumes. 
+
+- Further ensured that team avatars above bombsites in cyberattack_destroy.scr do not disappear between rounds, and made bomb lights flicker a bit more when planted on bombsites.
+- If a round started (1+ players on each team) in Cyber Attack, Search & Destroy, or Freeze Tag, and a player tries joining from spectator or switching teams, the player will die and spawn a frozen body, but their death will no longer count to their score.
+
+- Added a "slowrainbow" option in the parameters for spotlight color-switches (alarm switches near some spotlights) to make spotlights' beam colors change slower than the usual rapid color-switching.
+- Parameters: origin, angles, spotlight targetname or "all" (change all spotlights' beam colors), NIL (change color one time) or "rainbow" (fast color-switching) or "slowrainbow" (slower color-switching).
+- Example: exec map_triggers/spotlight_colorswitch.scr ( 4808 453 880 ) ( 0 0 0 ) s0 slowrainbow
+
+- 3 new simple CVARs added: "time 1", "score 1", "teams 1". The "time" cvar prints the map's time remaining (in minutes:seconds format).
+- The "score" cvar prints each player's kills and deaths, along with their $player[client num] and netname.
+- The "teams" cvar prints each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num] and netname, and then print the total number of players on each team.
+
+---------------
+
+- M4L0 fully modded. 6 vehicles, 3 tanks, 4 flyable planes, 3 jetpacks, 3 flak88s, 5 nebelwerfers, 8 extra throwing knives added to the map.
+
+- NOTE: The map's .BSP did not make the road fully solid for vehicles/tanks. They will fall through the road and explode if player try to drive across the road (too many entities required to fix it).
+- 11 green laser bridges added to allow vehicles/tanks to cross the road.
+
+- 2 airstrike radio-triggers in the 2nd floor mansion room with the large tables. They will only begin pulsating red after 90 seconds (the default off-time for these triggers).
+- If players try to call an airstrike before the radio is pulsating, static sounds will play instead.
+- Holding USE(e) near a pulsating radio will begin playing a morse-code sound. Once the stopwatch timer ends, an airstrike will be called (team-based, so you will not kill your teammates).
+- If using the left radio, an airstrike will come from the Axis side and bomb the Allies side (it has a water lake).
+- If using the right radio, an airstrike will come from the Allies side and bomb the Axis side. Airstrikes calls will wait until all other $airstrike_bomberplane entities are gone.
+
+- 2 vehicle teles: one to cross the road and adjacent brick wall near the Allies spawn, and one to cross the road and adjacent brick wall near the large mansion in the middle.
+- One mortar dirt explosion will occur randomly on the map after a random short amount of time. If the explosion's origin is in a water volume, the explosion will be watery instead.
+- Airstrikes occur at random times, and along any X-Y-axis direction on the map.
+
+- 4 bangalores can be blown up with an alarm switch at the mansion's entrance.
+- 2 bangalores can be blown up with an alarm switch in the 2nd floor room with the large tables and radios.
+- One alarm switch on the mansion's roof to change the rooftop spotlight's beam colors in a slow, randomized fashion only when a player is next to the spotlight.
+
+- The "wind_replace" thread replaces all $wind entities with script_models, since the map's original $wind entities (script_origins) could not play loopsounds.
+- The "player_ceiling" thread (disabled by default) prevents players' games from crashing if they spectate/noclip too high up or too low down away from the map (crashes if $world farplane > 4500).
+- 2 civilian radios can play music or static sounds. 2 cabinets can be opened/closed.

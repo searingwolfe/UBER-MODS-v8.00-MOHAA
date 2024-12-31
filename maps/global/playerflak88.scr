@@ -1,0 +1,606 @@
+main local.turret local.health local.resettime local.origin local.angles local.removebase local.baseangles:
+
+////////////////////////////////////////////////////////////////////////
+
+level.flak88s_minangle = 165	// minimum angle-difference required between the flak88 (assuming it's at angle 0) and enemies shooting the flak88 (from flak88 shield's left side).
+level.flak88s_maxangle = 330	// maximum angle-difference required (or maxangle - 360 = minimum angle from flak88 shield's right side).
+
+////////////////////////////////////////////////////////////////////////
+
+	if(local.health == NIL || local.health < 0) { local.health = 999999 } // ideal health = 350
+	if(local.resettime == NIL || local.resettime < 0) { local.resettime = 999999 }
+	if(local.baseangles == NIL) { local.baseangles = local.angles }
+
+ 	if(local.turret != NIL && local.turret != NULL) { local.flak88 = $(local.turret) }
+	if(local.turret == NIL || local.turret == NULL)
+	{
+		if(level.flak88scriptmaster != 1) { cache models/statweapons/flak88turret.tik; cache models/statweapons/flak88base.tik }
+		local.flak88 = spawn statweapons/flak88turret.tik
+		local.flak88.targetname = ("playerflak88_" + local.flak88.entnum)
+		if(local.removebase != 1)
+		{
+			local.base = spawn script_model
+			local.base model statweapons/flak88base.tik
+			local.base.origin = local.origin
+			local.base.angles = local.baseangles
+		}
+		local.flak88.origin = local.origin + ( 0 0 56 )
+		local.flak88.angles = local.angles // does not work for VehicleTurretGun classes, but still holds a local.angles value within 1 frame (for fwd_vec)
+	}
+	local.fwd_vec = angles_toforward local.flak88.angles
+	local.init_angles = spawn script_origin		// need this entity to initially point the turret towards local.angles
+	local.init_angles.origin = trace (local.flak88.origin + local.fwd_vec * 56) (local.flak88.origin + local.fwd_vec * 10240) 0
+	local.flak88 setaimtarget local.init_angles
+
+	local.trig = spawn trigger_multiple spawnflags 128 targetname "flak88_healthtrig"
+	local.trig.health = local.health // need this, otherwise trig = NULL
+	local.trig.origin = local.flak88.origin
+	local.trig setsize ( -60 -60 -50 ) ( 60 60 85 )
+	local.trig setthread ImDead
+
+	local.flak88 setplayerusable 0
+	local.flak88.damagemodel = "models/statweapons/flak88_d.tik"
+	local.flak88 pitchCaps ( -60 25 0 )
+	local.flak88.trigshot = local.trig
+	local.flak88.init_angles = local.init_angles
+	local.flak88 thread ResetFlak
+
+	local.trig.flak88 = local.flak88
+	local.trig.health_init = local.health
+	local.trig.resettime_init = local.resettime
+
+	if(level.flak88scriptmaster != 1) // this only runs once
+	{
+		cache models/statweapons/flak88_d.tik
+		cache models/projectiles/tigercannonshell.tik
+		cache models/emitters/mortar_dirt_nosound.tik
+		cache models/emitters/mortar_higgins.tik //models/fx/fx_flak88_explosion.tik
+		cache models/fx/fx_cannonsmoke.tik
+		thread scriptmaster
+		level.flak88scriptmaster = 1
+	}
+
+	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.trig }
+	else
+	{
+		for(local.c = 1; local.c <= 999; local.c++)
+		{
+			if(level.chainreactors[local.c] == NIL)
+			{
+				level.chainreactors[local.c] = local.trig
+				local.trig thread chainreactors_remove local.c
+				break
+			}
+		}
+	}
+end
+
+chainreactors_remove local.c:
+
+	while(self != NULL && self.dead != 1) { waitframe }
+	level.chainreactors[local.c] = NIL
+end
+
+////////////////////////////////////////////////////////////////////////
+
+ResetFlak local.groundtarget:
+
+	local.trig = spawn trigger_use
+	local.trig.origin = self.origin
+	local.trig setsize ( -60 -60 -50 ) ( 60 60 85 )
+	local.trig.flak88 = self
+	local.trig.groundtarget = local.groundtarget // keep the groundtarget so the flak88 (TurretGun class) keeps its angles instead of falling backward like an mg42
+	local.trig setthread playergetin_flak
+
+	self.player_owner = NIL
+	self.trigenter = local.trig
+	self.corona = 0
+	self thread healthboost
+	//removeclass Camera // also removes PlayerIntermission and other func_cameras
+	if(level.removeclass_camera != 1) { thread removeclass_camera }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.PI = 3.14159265359
+	local.health = self.trigshot.health
+	while(self != NULL && self.dead != 1 && self.trigshot != NULL && self.trigshot.health > 0)
+	{
+		if(self.fplayer != NIL && self.fplayer != NULL && self.fplayer.health > 0)
+		{
+			if(self.trigshot.health < local.health)
+			{
+				local.damage = ((local.health - self.trigshot.health) / 3.000)
+
+				if(self.trigshot.shooter != NIL && self.trigshot.shooter != NULL && self.trigshot.shooter.viewangles != NIL)		// only damage the driver if the shooter is at a horizontal angle 150 - 330, or
+				{															// at a verical angle +/- 45 degrees from the flak88's point of view.
+					local.a_vector = self.forwardvector * 10
+					local.b_vector = self.trigshot.shooter.origin - self.origin
+					local.avec = ( local.a_vector[0] local.a_vector[1] 0 )
+					local.bvec = ( local.b_vector[0] local.b_vector[1] 0 )
+					local.angle_xy = thread angle_between_vectors local.avec local.bvec	// find the angle between flak88's forward vector and the vector between flak88 & shooter.
+					local.product = thread cross_product_vectors local.avec local.bvec	// use cross product to determine if the angle between the vectors is positive or negative.
+					if(local.product < 0) { local.angle_xy = 360 - local.angle_xy }		// keep the angle in 0 - 360 range.
+
+					if(local.angle_xy > level.flak88s_minangle && local.angle_xy < level.flak88s_maxangle)
+					{
+						if(self.trigshot.shooter.player_owner != NIL && self.trigshot.shooter.player_owner != NULL) { self.fplayer damage self.trigshot.shooter.player_owner local.damage self.trigshot.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else if(self.trigshot.shooter.owner != NIL && self.trigshot.shooter.owner != NULL) { self.fplayer damage self.trigshot.shooter.owner local.damage self.trigshot.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else { self.fplayer damage self.trigshot.shooter local.damage self.trigshot.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					}
+				}
+			}
+
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.trigshot)
+				{
+					self.fplayer damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		if(isalive self.trigshot) { self.trigshot.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(self.trigshot.shooter != NIL) { self.trigshot thread shooter_NIL }
+		waitframe
+	}
+end
+
+shooter_NIL:
+
+	waitframe
+	if(self != NULL) { self.shooter = NIL }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+angle_between_vectors local.avec local.bvec:
+
+	local.PI = 3.14159265359
+	local.dotproduct = vector_dot local.avec local.bvec
+	local.magnitude_avec = vector_length local.avec
+	local.magnitude_bvec = vector_length local.bvec
+	local.angle = (acos (local.dotproduct / (local.magnitude_avec * local.magnitude_bvec))) * (180 / local.PI)
+end local.angle
+
+cross_product_vectors local.avec local.bvec:
+
+	local.cross_vec = vector_cross local.avec local.bvec
+	if(local.cross_vec[0] != 0) { local.product = local.cross_vec[0] }
+	else if(local.cross_vec[1] != 0) { local.product = local.cross_vec[1] }
+	else if(local.cross_vec[2] != 0) { local.product = local.cross_vec[2] }
+end local.product
+
+////////////////////////////////////////////////////////////////////////
+
+playergetin_flak:
+
+	local.player = parm.other
+	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { self triggerable; end }
+	if(local.player.isdog == 1)
+	{
+		local.player iprint ("Dogs cannot use flak88s.") // set other exceptions here
+		self triggerable
+		end
+	}
+	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
+
+	self nottriggerable
+	if(self.groundtarget != NIL && self.groundtarget != NULL) { self.groundtarget remove }
+
+	self.flak88.fplayer = parm.other
+	local.team = self.flak88.fplayer.dmteam
+
+	if(self.flak88.init_angles != NIL && self.flak88.init_angles != NULL) { self.flak88.init_angles remove }
+	//self.flak88 dmprojectile models/projectiles/tigercannonshell.tik
+
+	self.flak88.fplayer.driving_state_jump = 0
+	self.flak88.fplayer forcetorsostate FN_START
+	self.flak88.fplayer forcelegsstate STAND
+	self.flak88.fplayer hide
+	self.flak88.fplayer notsolid
+	//self.flak88.fplayer nodamage
+	//self.flak88.fplayer safeholster 1 // must "wait 1" for safeholster to work, crosshair also gets removed
+	self.flak88.fplayer.driving = 1
+	self.flak88.fplayer.drivingent = self.flak88.trigshot
+	//wait 1
+	self.corona = 1
+	self.flak88.fplayer iprint ("JUMP = exit. Hold FIRE(zoom) = look around.")
+	self.flak88 thread dummydriver
+
+	self.flak88.player_owner = self.flak88.fplayer
+
+	local.groundtarget = spawn script_origin
+	self.flak88 setaimtarget local.groundtarget
+	local.holdtime = 0
+	local.flakangles = 0
+	local.lookangles = 0
+
+	while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && isalive self.flak88.fplayer && self.flak88.fplayer.dmteam == local.team && self.flak88.fplayer.health > 0 && self.flak88.fplayer.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		self.flak88.fplayer.origin = self.flak88.origin + ( -10 0 20 )
+		local.fwd_vec = angles_toforward self.flak88.fplayer.viewangles
+		local.start = self.flak88.fplayer gettagposition "Bip01 Head"
+		local.range = 10240
+		if(self.flak88.fplayer.viewangles != local.lookangles && self.flak88.fplayer.secfireheld != 1) // if holding FIRE, player can look around without moving turret.
+		{
+			local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * local.range) 0
+			self.flak88 loopsound flak_snd_move
+		}
+		if(self.flak88.angles == local.flakangles) { self.flak88 stoploopsound }
+		local.flakangles = self.flak88.angles
+		local.lookangles = self.flak88.fplayer.viewangles
+
+		if(self.flak88.fplayer.fireheld == 1 && self.flak88.fplayer.secfireheld != 1 && self.flak88.flakfiredelay != 0)
+		{
+			if(level.flak88scriptmaster_nofire_sound != 1) { self.flak88.fplayer playsound flak_snd_fire }
+			self.flak88 playsound flak_reload
+			self.flak88 anim fire_scripted // anim fire; use fire_scripted to simulate firing a round, that way a script-spawned projectile can provide kills/scorepoints.
+			self.flak88 thread projectile
+			self.flak88 thread reload_flak
+		}
+
+		if(self.flak88.fplayer.driving_state_jump == 1) // Press JUMP to exit.
+		{
+			self.flak88 stoploopsound
+			self.flak88.fplayer.origin = self.flak88.origin + ( 0 0 85 )
+			self.flak88.fplayer.viewangles = ( self.flak88.angles[0] self.flak88.angles[1] 0 )
+			self.flak88.fplayer show
+			self.flak88.fplayer solid
+			self.flak88.fplayer takedamage
+			//self.flak88.fplayer safeholster 0
+			self.flak88.fplayer.driving = 0
+			self.flak88.fplayer.drivingent = NIL
+			self.flak88.fplayer forcetorsostate STAND
+			self.flak88.fplayer = NIL
+			self.flak88 thread ResetFlak local.groundtarget
+			self remove
+			end
+		}
+		waitframe
+	}
+
+	if(local.player != NULL) { local.player.driving = 0; local.player.drivingent = NIL }
+	if(self == NULL && local.player != NIL && local.player != NULL)
+	{
+		local.player takedamage
+		if(local.player.dmteam == spectator)
+		{
+			local.player.origin = local.player.origin + ( 0 0 85 )
+			local.player.viewangles = ( local.player.angles[0] local.player.angles[1] 0 )
+		}
+		if(local.player.dmteam != spectator)
+		{
+			local.player show
+			local.player solid
+			killent local.player.entnum
+		}
+	}
+	if(self != NULL)
+	{
+		if(self.flak88 != NULL && self.flak88.dead != 1 && self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && (self.flak88.fplayer.dmteam != local.team || level.change_team_score == 1 || level.bbactive == 0))
+		{
+			if(self.flak88.fplayer.dmteam == spectator)
+			{
+				self.flak88.fplayer.origin = self.flak88.origin + ( 0 0 85 )
+				self.flak88.fplayer.viewangles = ( self.flak88.angles[0] self.flak88.angles[1] 0 )
+			}
+			if(self.flak88.fplayer.dmteam != spectator) { self.flak88.fplayer solid; self.flak88.fplayer show }
+			self.flak88 stoploopsound
+			self.flak88.fplayer takedamage
+			self.flak88.fplayer forcetorsostate STAND
+			self.flak88.fplayer = NIL
+			self.flak88 thread ResetFlak local.groundtarget
+			self remove
+			end
+		}
+		if(self.flak88 != NULL && self.flak88.dead != 1 && (self.flak88.fplayer == NIL || self.flak88.fplayer == NULL))
+		{
+			self.flak88.fplayer = NIL
+			self.flak88 thread ResetFlak local.groundtarget
+			self remove
+			end
+		}
+		if(self.flak88.fplayer != NIL && self.flak88.fplayer != NULL && (self.flak88 == NULL || self.flak88.dead == 1 || !isalive self.flak88.fplayer))
+		{
+			self.flak88 stoploopsound
+			self.flak88.fplayer.origin = self.flak88.fplayer.origin + ( 0 0 85 )
+			self.flak88.fplayer show
+			self.flak88.fplayer solid
+			self.flak88.fplayer takedamage
+			
+			if(isalive self.flak88.fplayer)
+			{
+				if(self.flak88.trigshot.killer != NIL && self.flak88.trigshot.killer != NULL)
+				{
+					if(self.flak88.trigshot.killer.player_owner != NIL && self.flak88.trigshot.killer.player_owner != NULL) { self.flak88.fplayer damage self.flak88.trigshot.killer.player_owner local.damage self.flak88.trigshot.killer.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.flak88.trigshot.killer.owner != NIL && self.flak88.trigshot.killer.owner != NULL) { self.flak88.fplayer damage self.flak88.trigshot.killer.owner local.damage self.flak88.trigshot.killer.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.flak88.fplayer damage self.flak88.trigshot.killer 9999999 self.flak88.trigshot.killer (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+				}
+				else { killent self.flak88.fplayer.entnum }
+			}
+	
+			self.flak88.fplayer forcetorsostate STAND
+			self.flak88.fplayer = NIL
+			if(self.flak88.dead != 1)
+			{
+				self.flak88 thread ResetFlak local.groundtarget
+			}
+		}
+		self remove
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+reload_flak:
+
+	self.flaksmokecount = 0
+	if(self.flaksmoking != 1) { self thread smokey }
+
+	self.flakfiredelay = 0
+	wait 5
+	if(self != NULL) { self.flakfiredelay = 1 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+projectile:
+
+	local.player = self.fplayer // used for the for-loop later
+
+	local.rocket = spawn script_model
+	local.rocket model "projectiles/tigercannonshell.tik"
+	local.rocket.origin = self gettagposition "tag_barrel"
+	local.rocket.angles = self.angles
+	local.rocket light 0 1 0 250
+	local.rocket.scale = 2
+	local.rocket solid
+	local.rocket physics_on    // need this for gravity and waittill touch to work.
+
+	local.rocket gravity 0
+	local.rocket.velocity = (angles_toforward self.angles) * 6000
+
+	local.hitthing = self
+	while(local.hitthing == self || local.hitthing == self.fplayer)
+	{
+		local.rocket waittill touch
+		local.hitthing = parm.other
+	}
+
+	local.rocket.velocity = ( 0 0 0 )
+	local.explode = spawn "fx/explosionTIGERshell.tik"
+	local.explode.origin = local.rocket.origin
+	local.explode.scale = 2.5
+	local.explode light 1 0 0 500
+	local.explode anim idle
+	//local.explode playsound bazooka_exp // already included in explosionTIGERshell
+
+	if(self != NULL) { local.rocket.player_owner = self.fplayer }
+
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
+	{
+		if(vector_length(local.explode.origin - $player[local.i].origin) <= 400) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.player == NIL || local.player == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
+				{
+					$player[local.i] damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.player
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	local.rocket remove
+	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
+	waitframe
+	local.explode remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+smokey:
+
+	local.smoke = spawn script_model
+	local.smoke model "fx/fx_cannonsmoke.tik"
+	local.smoke attach self "tag_barrel" 0 ( 0 0 0 )
+
+	while(self != NULL && self.dead != 1 && self.flaksmokecount < 120) { self.flaksmokecount++; waitframe }
+
+	if(local.smoke != NULL) { local.smoke remove }
+	if(self != NULL) { self.flaksmoking = 0; self.flaksmokecount = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+ImDead:
+
+	self nottriggerable
+	self.flak88.trigenter nottriggerable
+	self.killer = parm.other
+	self.flak88 stoploopsound
+	self.flak88 stopsound
+
+	local.turret = self.flak88
+	local.model = self.flak88.model
+	local.health = self.health_init
+	local.resettime = self.resettime_init
+	local.origin = self.flak88.origin
+	local.angles = self.flak88.angles
+
+	local.explode = spawn script_model
+	local.explode model "models/emitters/mortar_higgins.tik" // fx/fx_flak88_explosion.tik
+	local.explode.origin = self.origin + ( 0 0 -56 ) //+ ( 0 0 30 )
+	local.explode.angles = ( 0 -90 0 ) + ( 260 0 0 )
+	local.explode.scale = 1.0 //1.3
+	local.explode anim start
+	local.explode notsolid
+	
+	local.debris = spawn script_model targetname "mortar_dirt_nosound"
+	local.debris model "emitters/mortar_dirt_nosound.tik" 
+	local.debris.origin = self.origin
+	local.debris notsolid
+	local.debris.scale = .8
+	local.debris anim start
+
+	if(self.flak88.fplayer != NIL)
+	{
+		if(self.killer != NIL)
+		{
+			if(self.killer.player_owner != NIL && self.killer.player_owner != NULL) { self.flak88.fplayer damage self.killer.player_owner 9999999 self.killer.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.killer.owner != NIL && self.killer.owner != NULL) { self.flak88.fplayer damage self.killer.owner 9999999 self.killer.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+			else if(self.killer != NULL) { self.flak88.fplayer damage self.killer 9999999 self.killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+		}
+		else { self.flak88.fplayer volumedamage 9999999 } // let's make sure the driver is dead.
+	}
+	local.explode playsound explode_flak88
+	exec global/earthquake.scr .35 2 0 0
+
+	if(self.shooter != NIL && self.shooter != NULL)
+	{
+		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
+		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
+		else { local.shooter = self.shooter }
+	}
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.
+	{
+		if(vector_length(self.origin - $player[local.i].origin) <= 750) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.shooter == NIL || local.shooter == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee self 360)
+				{
+					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.shooter && $player[local.i].dmteam == local.shooter.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee self 360)
+				{
+					$player[local.i] damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.shooter
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.shooter 500 local.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+
+	self.flak88.dead = 1
+	self.flak88 hide
+	
+	local.flak88_d = spawn script_model
+	local.flak88_d model self.flak88.damagemodel
+	local.flak88_d.origin = self.flak88.origin
+	local.flak88_d.angles = self.flak88.angles
+	waitframe
+	local.explode remove
+	local.debris remove
+	if(local.blewup == 1) { radiusdamage self.origin 500 750 } // this must be one frame after other damages in this thread, otherwise chain-reaction kills will not count.
+
+	wait local.resettime
+
+	if(self.flak88.trigenter != NIL && self.flak88.trigenter != NULL) { self.flak88.trigenter remove }
+	self.flak88.model = local.model
+	self.flak88.dead = 0
+	self.flak88 show
+	self.flak88.fplayer = NIL
+	local.flak88_d remove
+	self remove
+	thread main local.turret local.health local.resettime local.origin local.angles 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+dummydriver:
+
+	self attachmodel self.fplayer.model "wheel02" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( -22 -45 9 ) //( +forward -backward, +up -down, +left -right )
+	$("driverdummy_" + self.entnum).angles = ( 0 0 -90 )
+	
+	while(self != NULL && self.fplayer != NIL && self.fplayer != NULL) { waitframe }
+
+	if($("driverdummy_" + self.entnum) != NULL) { $("driverdummy_" + self.entnum) remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+removeclass_camera:
+
+	level.removeclass_camera = 1
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == "Camera" && local.entity.targetname == "") { local.entity remove }
+			waitframe
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster:
+
+level.mapname = getcvar "mapname"
+local.master = spawn scriptmaster
+
+local.master aliascache flak_reload sound/weapons/fire/TankFire1.wav soundparms 1.5 0 1 0 800 4000 auto loaded maps level.mapname
+
+if(level.mapname != "m3l2" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3" && level.nebelscriptmaster != 1)
+{
+	if(level.mapname != "m1l3a" && level.mapname != "m1l3b" && level.mapname != "m1l3c")
+	{
+	local.master aliascache flak_snd_move sound/vehicle/veh_tank_turret1.wav soundparms .9 .2 .9 .2 800 4000 auto loaded maps level.mapname
+	}
+
+	if(level.mapname[2] == "/" || level.mapname == "m2l1" || level.mapname == "m2l2a" || level.mapname == "m2l2b" || level.mapname == "m2l2c" || level.mapname == "m2l3" || level.mapname == "m3l1a" || level.mapname == "m3l1b" || level.mapname == "m4l0" || level.mapname == "m4l1" || level.mapname == "m4l2" || level.mapname == "m4l3")
+	{
+	local.master aliascache explode_flak881 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_flak882 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_flak883 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_flak884 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	}
+}
+
+if(level.mapname != "m3l2" && level.mapname != "m5l2a" && level.mapname != "m5l2b" && level.mapname != "m5l3")
+{
+	local.master aliascache flak_snd_fire1 sound/weapons/fire/TankCannonFire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache flak_snd_fire2 sound/weapons/fire/Flak88Fire1.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache flak_snd_fire3 sound/weapons/fire/Flak88Fire3.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+	local.master aliascache flak_snd_fire4 sound/weapons/fire/Flak88Fire4.wav soundparms 1.5 0 1 0 2000 5000 weapon loaded maps level.mapname
+}
+else { level.flak88scriptmaster_nofire_sound = 1 }
+end

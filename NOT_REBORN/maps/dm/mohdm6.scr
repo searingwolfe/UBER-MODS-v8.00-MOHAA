@@ -1,0 +1,316 @@
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/coord_pointer.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+setcvar "g_obj_alliedtext1" "Stalingrad"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
+
+setcvar "g_scoreboardpic" "mohdm6"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "2000"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "g_inactivespectate" "0"
+local.v = exec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "2") {		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2" }
+if(getcvar("g_gametype") != "2") {		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1" }
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cybsnd }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+}
+
+if(getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr slidingobject
+}
+
+level waittill prespawn
+
+	removeclass TurretGun 
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.script = maps/dm/mohdm6.scr
+	exec global/ambient.scr mohdm6
+	exec global/door_locked.scr::lock
+
+   	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 150000
+	$world farplane_color ( 0.6784 0.8353 0.9686 )
+	$world northyaw 270
+
+exec global/victory_podium.scr ( 234 36 224 ) 180 auto auto 5
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( 428 -156 32 ) ( 0 120 0 ) 15 20 // origin, angles, bulletsanger, angertime
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( 235 977 976 )
+
+exec map_triggers/bomb.scr ( -976 818 720 ) ( -624 1199 721 ) ( -531 507 803 ) ( 464 434 976 ) ( 975 863 760 ) ( 704 558 736 ) ( 211 -259 565 ) ( -788 -146 783 ) ( 432 -12 369 ) ( 1435 53 763 )
+exec map_triggers/lightbomb.scr ( 237 -125 224 ) ( 702 451 32 ) ( 702 451 272 ) ( 440 455 648 ) ( -58 452 272 ) ( -58 452 512 ) ( -742 420 256 ) ( -172 -202 32 ) ( -172 -202 272 ) ( -844 87 48 )
+exec map_triggers/health.scr ( -770 -227 -132 ) ( 340 551 -151 ) ( 640 -743 14 ) ( -991 -119 48 ) ( -551 -613 32 ) ( -411 923 32 ) ( 359 1081 272 ) ( -408 1000 512 ) ( -566 1160 -151 ) ( -965 -453 256 )
+exec map_triggers/snowball_ammo.scr ( 462 -1056 576 ) ( 1514 -1047 611 ) ( 1512 1118 768 ) ( -206 946 1069 ) ( -1210 1168 -14 ) ( -1358 157 720 ) ( -1404 920 779 ) ( -1404 -889 779 ) ( 226 931 736 ) ( -549 -896 544 ) 
+exec map_triggers/rocket_ammo.scr ( 422 149 224 ) ( 985 612 320 ) ( 919 1079 272 ) ( -497 -858 272 ) ( -212 556 32 ) ( -1155 89 256 ) ( -1157 897 496 ) ( -727 -616 272 ) ( 152 -462 32 ) ( 233 148 87 )
+exec map_triggers/grenade_ammo.scr ( -771 741 -151 ) ( 167 -229 -116 ) ( 381 -475 -151 ) ( -421 -683 32 ) ( -86 727 -151 ) ( -1187 488 48 ) ( 171 456 117 ) ( 732 1077 32 ) ( 708 122 224 ) ( -503 996 272 )
+
+exec map_triggers/led_trap.scr ( -1399 429 783 ) led1 1
+exec map_triggers/led_trap.scr ( 942 -1047 611 ) led2 2
+
+if(getcvar("g_ubergametype") != "bb")
+{
+// comment these out if there are too many spotlights.
+exec map_triggers/player_spotlight.scr ( -543 326 120 ) ( 1 1 1 ) s0 700 -40 0 0 1
+exec map_triggers/player_spotlight.scr ( 1381 -82 848 ) ( 1 0 .5 ) s1 700 180 0 0 1
+exec map_triggers/player_spotlight.scr ( 311 177 404 ) ( 0 .5 1 ) s2 700 165 0 0 1
+exec map_triggers/player_spotlight.scr ( 225 -224 263 )  ( 1 .5 0 ) s3 170 155 0 0 1
+exec map_triggers/player_spotlight.scr ( 226 428 976 ) ( .5 0 1 ) s4 700 -135 0 0 1
+exec map_triggers/player_spotlight.scr ( -732 399 556 ) ( .5 .5 1 ) s5 700 -45 0 0 1
+exec map_triggers/player_spotlight.scr ( 224 -558 742 ) ( .5 1 .5 ) s6 700 90 0 0 1
+exec map_triggers/player_spotlight.scr ( -778 943 777 ) ( 1 .5 .5 ) s7 700 -75 0 0 1
+exec map_triggers/player_spotlight.scr ( -753 -553 742 ) ( .5 1 0 ) s8 700 40 0 0 1
+exec map_triggers/player_spotlight.scr ( 1381 391 848 ) ( 0 1 .5 ) s9 700 180 0 0 1
+}
+
+	thread slidingobject static/cabinet_large.tik ( 1010 -100 304 ) ( 0 0 0 ) 18 0.8 60
+	thread boiler_sounds ( 640 -720 -141 ) ( 752 -720 -141 )
+
+	exec maps/UBER_mapextras/dm6_teleporters.scr::main
+	exec maps/UBER_mapextras/dm6_cratesstuff.scr::main
+}
+
+// use these origins in a map without UBER_mapextras stuff or for more realism, and remove "lightbomb.scr" & "health.scr" triggers (if not removed, some coords will overlap).
+if(getcvar("g_ubermods") == "1")
+{
+exec map_triggers/snowball_ammo.scr ( -770 -227 -132 ) ( 340 551 -151 ) ( -23 1008 272 ) ( -1164 87 496 ) ( -551 -613 32 ) ( -411 923 32 ) ( 359 1081 272 ) ( -408 1000 512 ) ( 944 -368 224 ) ( -965 -453 256 )
+exec map_triggers/bomb.scr ( 422 149 224 ) ( 985 612 320 ) ( 919 1079 272 ) ( -497 -858 272 ) ( -212 556 32 ) ( -1155 89 256 ) ( -1157 897 496 ) ( -727 -616 272 ) ( 152 -462 32 ) ( 223 927 512 )
+exec map_triggers/rocket_ammo.scr ( -771 741 -151 ) ( 167 -229 -116 ) ( 381 -475 -151 ) ( -421 -683 32 ) ( -86 727 -151 ) ( -1187 488 48 ) ( 171 456 117 ) ( 732 1077 32 ) ( 708 122 224 ) ( -503 996 272 )
+exec map_triggers/grenade_ammo.scr ( 268 -183 224 ) ( -1164 -256 496 ) ( -1164 904 256 ) ( -169 -244 32 ) ( 160 -472 272 ) ( -55 494 272 ) ( 928 1088 512 ) ( 452 766 736 ) ( 944 -64 -141 ) ( 752 160 32 )
+
+exec maps/UBER_mapextras/dm6_cratesstuff.scr::smoke
+}
+
+level waittill spawn
+
+	thread ambience
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1
+
+	exec global/throwingknife.scr k1 ( 362 869 768 ) ( 0 270 0 )
+	exec global/throwingknife.scr k2 ( 767 -522 -103 ) ( 0 210 0 )
+	exec global/throwingknife.scr k3 ( -738 -859 322 ) ( 0 90 0 ) 
+	exec global/throwingknife.scr k4 ( -268 639 275 ) ( 0 63 0 )
+}
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( 943 1103 -250 ) ( -463 -575 0 ) ( 0 0 969 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( 943 1103 720 ) ( -463 -523 0 ) ( 0 0 223 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( 943 579 720 ) ( -463 -51 0 ) ( 0 0 195 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( 479 1103 -250 ) ( -271 -671 0 ) ( 0 0 1193 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( 207 1103 -250 ) ( -734 -591 0 ) ( 0 0 1002 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+
+		( 959 -887 -250 ) ( -192 0 0 ) ( 0 791 457 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( 766 -887 -250 ) ( -574 0 0 ) ( 0 1062 457 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( 320 -39 208 ) ( 0 0 0 ) ( 127 214 150 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+
+		( 191 -887 -250 ) ( -1370 0 0 ) ( 0 611 746 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( -1179 -275 480 ) ( 0 0 -730 ) ( 239 131 223 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( -1179 -143 256 ) ( 0 0 0 ) ( 143 198 223 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( -1179 -143 480 ) ( 0 0 0 ) ( 203 198 223 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+
+		( -1519 240 -50 ) ( 0 0 0 ) ( 340 271 489 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+		( -1178 511 -50 ) ( 0 -654 0 ) ( 362 0 293 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_01.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cybsnd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 5
+ 	level.changesides = 0
+	level.bombcamera = 1
+	level.cameradistance = 145
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 335 1075 512 ) -90 axis 
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( -573 -547 272 ) 180 allies
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 251 145 87 ) 180 ( 251 145 87 ) 180 ( 251 145 87 ) -90 
+
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+// allies spawn
+exec alienx/basebuild.scr::basebuild ( -1146 123 496 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1146 223 496 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1146 323 496 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( -1146 423 496 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1146 523 496 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1146 623 496 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+
+// axis spawn
+exec alienx/basebuild.scr::basebuild ( 1238 601 304 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .75 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1238 501 304 ) "statweapons/flak88turret.tik" 1 1 .35 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1238 401 304 ) "static/bunkertable.tik" 1 1 1 0 90 1 0 1 1
+exec alienx/basebuild.scr::basebuild ( 1238 301 304 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1238 201 304 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1238 101 304 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+end
+
+////////////////////////////////////////////////////////////////////////
+//*** --------------------------------------------
+//*** "Extra Map Stuff"
+//*** --------------------------------------------
+
+slidingobject local.model local.origin local.angles local.distance local.movetime local.fov:
+
+	local.ent = spawn script_model
+	local.ent model local.model
+	local.ent.origin = local.origin
+	local.ent.angles = local.angles
+	local.ent solid
+
+	local.wall1 = spawn trigger_use // or trigger_multiple, doesn't matter. these are only used for "istouching" object, not player triggering.
+	local.wall1.origin = ( 1254 614 304 ) // wall with 4 black windows
+	local.wall1 setsize ( -1 -972 -1 ) ( 1 1 100 )
+
+	local.wall2 = spawn trigger_use
+	local.wall2.origin = ( 1254 614 304 ) // left side, near sloped wood beam
+	local.wall2 setsize ( -250 -1 -1 ) ( 1 1 100 )
+
+	local.wall3 = spawn trigger_use
+	local.wall3.origin = ( 1004 -358 304 ) // right side, next to metal stairs
+	local.wall3 setsize ( -1 -1 -1 ) ( 250 1 100 )
+
+	local.wall4 = spawn trigger_use
+	local.wall4.origin = ( 1004 -358 304 ) // parallel to long sandbags
+	local.wall4 setsize ( -1 -1 -1 ) ( 1 972 100 )
+
+	if(local.fov == NIL) { local.fov = 45 } // for whenever a player "cansee" the entity within an FOV of local.fov units, default = 45.
+	
+	while($player.size <= 0) { waitframe }
+	while($player.size >= 1 && local.ent != NULL)
+	{
+		local.player = parm.other
+		if(local.player != NULL && local.player istouching local.ent && local.player cansee local.ent local.fov)
+		{
+			local.ent time local.movetime
+			local.ent loopsound slidingobject
+
+			local.sin = (waitthread global/math.scr::sine local.player.angles[1]) * local.distance
+			local.cos = (waitthread global/math.scr::cosine local.player.angles[1]) * local.distance
+
+			local.ent moveto (local.ent.origin + ( local.cos local.sin 0 ))
+			local.ent waitmove
+
+			if(local.ent istouching local.wall1)
+			{
+				local.ent.origin = local.ent.origin + ( -15 0 0 )
+				if(isalive local.player && local.player.dmteam != "spectator") { local.player tele (local.player.origin + ( -15 0 0 )) }
+			}
+			if(local.ent istouching local.wall2)
+			{
+				local.ent.origin = local.ent.origin + ( 0 -15 0 )
+				if(isalive local.player && local.player.dmteam != "spectator") { local.player tele (local.player.origin + ( 0 -15 0 )) }
+			}
+			if(local.ent istouching local.wall3)
+			{
+				local.ent.origin = local.ent.origin + ( 0 15 0 )
+				if(isalive local.player && local.player.dmteam != "spectator") { local.player tele (local.player.origin + ( 0 15 0 )) }
+			}
+			if(local.ent istouching local.wall4)
+			{
+				local.ent.origin = local.ent.origin + ( 15 0 0 )
+				if(isalive local.player && local.player.dmteam != "spectator") { local.player tele (local.player.origin + ( 15 0 0 )) }
+			}
+		}
+		else { local.ent stoploopsound } // don't stop the sound if the player is still touching local.ent
+		waitframe
+	}
+	local.ent remove
+	local.wall1 remove
+	local.wall2 remove
+	local.wall3 remove
+	local.wall4 remove
+	thread slidingobject local.model local.origin local.angles local.distance local.movetime local.fov
+
+end
+
+////////////////////////////////////////////////////////////////////////
+
+boiler_sounds local.origin1 local.origin2:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache boiler_fire sound/amb/Amb_FirePlace.wav soundparms 1.0 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
+
+	local.boiler1 = thread soundent local.origin1
+	local.boiler1 loopsound boiler_fire
+	local.boiler2 = thread soundent local.origin2
+	local.boiler2 loopsound boiler_fire
+end
+
+soundent local.origin:
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	local.ent.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+end local.ent
+
+////////////////////////////////////////////////////////////////////////
+
+clickitem_fail:
+end

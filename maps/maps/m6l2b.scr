@@ -1,0 +1,433 @@
+main:
+
+setcvar "g_obj_alliedtext1" "m6l2b" 
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" "Created by:"
+setcvar "g_obj_axistext2" "Searingwolfe"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "m6l2b"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "50"
+
+setcvar "cheats" "0"
+setcvar "thereisnomonkey" "0"
+setcvar "maxentities" "5000"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills" 
+
+//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+
+if((getcvar("g_gametype") == "2"))
+{
+	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
+	setcvar "g_gametypestring" "Team-Match UBER"
+	setcvar "g_gametype" "2"
+	thread tdm_spawns	
+	spawn info_player_deathmatch "origin" "1695 -5862 259" "angle" "73" // for spectators when joining game
+	spawn info_player_deathmatch "origin" "7455 -3836 85" "angle" "131"
+	spawn info_player_deathmatch "origin" "6906 6339 173" "angle" "-118"
+}
+else
+{
+	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
+	setcvar "g_gametypestring" "Free-For-All UBER"
+	setcvar "g_gametype" "1"
+	thread ffa_spawns
+}
+
+waitthread setup
+
+level waittill prespawn
+
+//allies
+exec alienx/basebuild.scr::basebuild ( -50.49 -6217.56 112.13 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -6117.56 112.13 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -6017.56 112.13 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5917.56 112.13 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5817.56 112.13 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5717.56 112.13 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5617.56 112.13 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5517.56 112.13 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5417.56 112.13 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5317.56 112.13 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5217.56 112.13 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5117.56 112.13 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( -50.49 -5017.56 112.13 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( -50.49 -4917.56 112.13 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+
+//both
+exec alienx/basebuild.scr::basebuild ( 6919.35 3083.83 -127.88 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2983.83 -127.88 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2883.83 -127.88 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2783.83 -127.88 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2683.83 -127.88 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2583.83 -127.88 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2483.83 -127.88 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2383.83 -127.88 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2283.83 -127.88 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2183.83 -127.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 2083.83 -127.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 1983.83 -127.88 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 6919.35 1883.83 -127.88 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( 6919.35 1783.83 -127.88 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+
+//axis
+exec alienx/basebuild.scr::basebuild ( 5590.87 6391.13 -31.88 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5490.87 6391.13 -31.88 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 5390.87 6391.13 -31.88 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5290.87 6391.13 -31.88 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5190.87 6391.13 -31.88 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
+exec alienx/basebuild.scr::basebuild ( 5090.87 6391.13 -31.88 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
+exec alienx/basebuild.scr::basebuild ( 4990.87 6391.13 -31.88 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4890.87 6391.13 -31.88 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4790.87 6391.13 -31.88 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4690.87 6391.13 -31.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4590.87 6391.13 -31.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4490.87 6391.13 -31.88 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4390.87 6391.13 -31.88 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
+exec alienx/basebuild.scr::basebuild ( 4290.87 6391.13 -31.88 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
+
+exec global/dog.scr ( 7313 -37 -127 ) ( 0 0 0 ) 15 10
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/m6l2b.scr
+	exec global/ambient.scr m6l2b
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	exec global/barrel.scr::explosive_barrel
+	exec global/bomber.scr
+
+	setcvar "r_fastsky" "0"
+	$world farplane 150000
+	$world farplane_color ( 0.04314 0.05882 0.16471 )
+
+exec map_triggers/grenade_ammo.scr ( 5655 5599 50 ) ( 5655 6112 0 ) ( 5322 5760 0 ) ( 5087 5343 29 ) ( 5032 5592 0 ) ( 4740 6103 0 ) ( 5327 5823 0 ) ( 4959 6071 0 ) ( 5424 6190 290 ) ( 5197 5869 265 )
+
+level waittill spawn
+
+	waitthread setup_game
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+
+	removeclass actor
+	removeclass ammoentity	
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1
+	level.panzer = 1 
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1
+
+	thread Stage_2
+end
+
+setup_game:
+
+	$obj3_front_door rotateYdown 130
+	$obj3_front_door move
+	$explodersmashed remove
+	$electric_fence_sound exec global/loopsound.scr m6l2b_electrical_hum
+	$generator_sound exec global/loopsound.scr m6l2b_generator_run
+	$obj3_radio exec global/loopsound.scr m6l2b_radio_loop
+
+end
+
+// initiate Stage 2
+Stage_2:
+
+	wait 5
+
+	local.messagetosay = "S T A G E  1   . . .   S N O W Y  P A R K"
+	thread scrollMsg local.messagetosay
+
+	 wait 355
+
+	$X1 disablespawn
+	$X2 disablespawn
+	$X3 disablespawn
+	$X4 disablespawn
+	$X5 disablespawn
+	$X6 disablespawn
+	$X7 disablespawn
+	$X8 disablespawn
+	$X9 disablespawn
+	$X10 disablespawn
+	$X11 disablespawn
+	$X12 disablespawn
+	$X13 disablespawn
+	$X14 disablespawn
+	$X15 disablespawn
+
+	$A1 disablespawn
+	$A2 disablespawn
+	$A3 disablespawn
+	$A4 disablespawn
+	$A5 disablespawn
+	$A6 disablespawn
+	$A7 disablespawn
+	$A8 disablespawn
+	$A9 disablespawn
+	$A10 disablespawn
+	$A11 disablespawn
+	$A12 disablespawn
+	$A13 disablespawn
+	$A14 disablespawn
+	$A15 disablespawn
+
+	$XX1 enablespawn
+	$XX2 enablespawn
+	$XX3 enablespawn
+	$XX4 enablespawn
+	$XX5 enablespawn
+	$XX6 enablespawn
+	$XX7 enablespawn
+	$XX8 enablespawn
+	$XX9 enablespawn
+	$XX10 enablespawn
+	$XX11 enablespawn
+	$XX12 enablespawn
+	$XX13 enablespawn
+	$XX14 enablespawn
+	$XX15 enablespawn
+
+	$AA1 enablespawn
+	$AA2 enablespawn
+	$AA3 enablespawn
+	$AA4 enablespawn
+	$AA5 enablespawn
+	$AA6 enablespawn
+	$AA7 enablespawn
+	$AA8 enablespawn
+	$AA9 enablespawn
+	$AA10 enablespawn
+	$AA11 enablespawn
+	$AA12 enablespawn
+	$AA13 enablespawn
+	$AA14 enablespawn
+	$AA15 enablespawn
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M6L2B" 
+	setcvar "g_obj_alliedtext2" "The Schmerzen Express"
+	setcvar "g_obj_alliedtext3"  "Snowy Rail Station" 
+
+	$player respawn
+
+	thread scene1
+
+	wait 3
+
+	local.messagetosay = "S T A G E  2   . . .   S N O W Y  R A I L  S T A T I O N"
+	thread scrollMsg local.messagetosay
+end
+
+// Quick FX for stage 2  - youll probably miss it lol :P
+scene1:
+	wait 3
+	$first_train_front bind $first_train
+	$first_train playsound M6L2b_first_train
+	$first_train time 2  
+	$first_train moveSouth 4700
+	$first_train waitmove
+	$first_train_front remove
+	$first_train remove
+end
+
+scrollMsg local.messagetosay:
+
+	huddraw_align 223 left center
+	huddraw_font 223 facfont-20
+	huddraw_alpha 223 1
+
+	huddraw_color 223 1 1 1
+
+	huddraw_rect 223 20 150 200 40
+	huddraw_string 223 local.messagetosay
+
+	for(local.i=1;local.i<=local.messagetosay.size;local.i++)
+	{
+	local.x = ""
+	for(local.z=1;local.z<=(local.messagetosay.size - local.i);local.z++)
+	{
+	local.x = (local.x + " ")
+	}
+	local.tmpstring4 = ""
+	for (local.o=0;local.o<local.i;local.o++) local.tmpstring4 = local.tmpstring4 + local.messagetosay[local.o]
+	huddraw_string 223 (local.x + local.tmpstring4)
+	wait .03
+	}
+	wait 3
+	for (local.o=1;local.o>0;local.o=local.o - 0.01)
+	{
+	huddraw_alpha 223 local.o
+	wait 0.05
+	}
+	huddraw_alpha 223 0 
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tdm_spawns:
+
+	// Stage 1 Axis
+	spawn info_player_axis "origin" "6031.91 -4373.96 112.13" "angle" "-152" "targetname" "X1"
+	spawn info_player_axis "origin" "5850.00 -4416.66 120.13" "angle" "-137" "targetname" "X2"
+	spawn info_player_axis "origin" "5875.82 -4694.00 120.13" "angle" "168" "targetname" "X3"
+	spawn info_player_axis "origin" "5582.31 -4754.09 120.13" "angle" "159" "targetname" "X4"
+	spawn info_player_axis "origin" "5400.71 -4539.85 120.13" "angle" "-161" "targetname" "X5"
+
+	spawn info_player_axis "origin" "5065.62 -4763.57 112.13" "angle" "164" "targetname" "X6" 
+	spawn info_player_axis "origin" "5072.86 -4941.87 156.13" "angle" "177" "targetname" "X7"
+	spawn info_player_axis "origin" "5072.87 -5053.88 156.13" "angle" "-131" "targetname" "X8"
+	spawn info_player_axis "origin" "5061.45 -5349.33 156.13" "angle" "-149" "targetname" "X9"
+	spawn info_player_axis "origin" "4938.19 -5237.98 156.13" "angle" "-174" "targetname" "X10"
+
+	spawn info_player_axis "origin" "5072.87 -4351.54 156.13" "angle" "-142" "targetname" "X11"
+	spawn info_player_axis "origin" "5031.82 -4194.32 156.13" "angle" "-149" "targetname" "X12"
+	spawn info_player_axis "origin" "5047.45 -3961.65 164.44" "angle" "-177" "targetname" "X13"
+	spawn info_player_axis "origin" "5001.76 -3791.37 173.19" "angle" "-145" "targetname" "X14"
+	spawn info_player_axis "origin" "4914.55 -3560.15 182.83" "angle" "-119" "targetname" "X15"
+
+	// Stage 1 Allies
+	spawn info_player_allied "origin" "-1319.24 -4979.90 112.13" "angle" "11" "targetname" "A1"
+	spawn info_player_allied "origin" "-1295.65 -4824.11 112.13" "angle" "-2" "targetname" "A2"
+	spawn info_player_allied "origin" "-1018.33 -4590.50 151.85" "angle" "4" "targetname" "A3"
+	spawn info_player_allied "origin" "-1003.08 -4862.20 112.13" "angle" "-11" "targetname" "A4"
+	spawn info_player_allied "origin" "-1005.29 -5096.09 143.98" "angle" "-37" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "-803.15 -5339.79 161.02" "angle" "-34" "targetname" "A6"
+	spawn info_player_allied "origin" "-707.39 -5210.59 147.50" "angle" "-9" "targetname" "A7"
+	spawn info_player_allied "origin" "-669.94 -4931.51 112.13" "angle" "0" "targetname" "A8"
+	spawn info_player_allied "origin" "-688.46 -4657.04 154.80" "angle" "36" "targetname" "A9"
+	spawn info_player_allied "origin" "-715.76 -4419.80 172.88" "angle" "14" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-655.38 -4202.46 174.19" "angle" "48" "targetname" "A11"
+	spawn info_player_allied "origin" "-628.85 -3983.14 205.61" "angle" "26" "targetname" "A12"
+	spawn info_player_allied "origin" "-672.88 -5815.08 282.04" "angle" "-45" "targetname" "A13"
+	spawn info_player_allied "origin" "-793.07 -6019.14 297.07" "angle" "14" "targetname" "A14"
+	spawn info_player_allied "origin" "-366.74 -5517.58 152.56" "angle" "28" "targetname" "A15"
+
+	// Stage 2 Axis
+	spawn info_player_axis "origin" "6494.79 7433.35 76.13" "angle" "-139" "targetname" "XX1"
+	spawn info_player_axis "origin" "6200.59 7471.13 76.13" "angle" "-108" "targetname" "XX2"
+	spawn info_player_axis "origin" "6472.44 7024.07 76.13" "angle" "174" "targetname" "XX3"
+	spawn info_player_axis "origin" "6297.57 7132.61 76.13" "angle" "-159" "targetname" "XX4"
+	spawn info_player_axis "origin" "6046.42 7554.34 64.13" "angle" "-157" "targetname" "XX5"
+
+	spawn info_player_axis "origin" "5266.07 7567.31 64.13" "angle" "-167" "targetname" "XX6" 
+	spawn info_player_axis "origin" "4978.04 7539.63 64.13" "angle" "-107" "targetname" "XX7"
+	spawn info_player_axis "origin" "4298.58 7532.19 64.13" "angle" "-54" "targetname" "XX8"
+	spawn info_player_axis "origin" "3415.13 7003.95 -31.88" "angle" "-11" "targetname" "XX9"
+	spawn info_player_axis "origin" "3415.13 6589.12 -31.88" "angle" "-26" "targetname" "XX10"
+
+	spawn info_player_axis "origin" "3418.33 5855.13 -31.88" "angle" "11" "targetname" "XX11"
+	spawn info_player_axis "origin" "3415.13 5784.87 -31.88" "angle" "-29" "targetname" "XX12"
+	spawn info_player_axis "origin" "5424.88 6094.15 240.13" "angle" "153" "targetname" "XX13"
+	spawn info_player_axis "origin" "4889.99 5639.14 240.13" "angle" "133" "targetname" "XX14"
+	spawn info_player_axis "origin" "5497.07 5807.13 0.13" "angle" "98" "targetname" "XX15"
+
+	// Stage 2 Allies
+	spawn info_player_allied "origin" "6703.80 1951.82 -127.88" "angle" "69" "targetname" "AA1"
+	spawn info_player_allied "origin" "7088.87 1742.87 -127.88" "angle" "97" "targetname" "AA2"
+	spawn info_player_allied "origin" "7120.87 1525.97 -127.88" "angle" "98" "targetname" "AA3"
+	spawn info_player_allied "origin" "7021.48 1415.04 -127.88" "angle" "90" "targetname" "AA4"
+	spawn info_player_allied "origin" "6890.41 1390.20 -111.88" "angle" "90" "targetname" "AA5" 
+
+	spawn info_player_allied "origin" "6746.08 1279.63 -127.88" "angle" "80" "targetname" "AA6"
+	spawn info_player_allied "origin" "6776.88 1084.64 -127.88" "angle" "84" "targetname" "AA7"
+	spawn info_player_allied "origin" "6915.87 964.07 -127.88" "angle" "89" "targetname" "AA8"
+	spawn info_player_allied "origin" "7162.26 919.23 -127.88" "angle" "101" "targetname" "AA9"
+	spawn info_player_allied "origin" "7094.07 737.13 -111.88" "angle" "96" "targetname" "AA10"
+
+	spawn info_player_allied "origin" "7073.59 387.63 -127.88" "angle" "96" "targetname" "AA11"
+	spawn info_player_allied "origin" "7169.40 212.94 -127.88" "angle" "94" "targetname" "AA12"
+	spawn info_player_allied "origin" "7136.06 -2688.30 -127.88" "angle" "87" "targetname" "AA13"
+	spawn info_player_allied "origin" "7087.13 -3206.07 -127.88" "angle" "79" "targetname" "AA14"
+	spawn info_player_allied "origin" "7137.96 -3522.62 -127.88" "angle" "76" "targetname" "AA15"
+
+	$XX1 disablespawn
+	$XX2 disablespawn
+	$XX3 disablespawn
+	$XX4 disablespawn
+	$XX5 disablespawn
+	$XX6 disablespawn
+	$XX7 disablespawn
+	$XX8 disablespawn
+	$XX9 disablespawn
+	$XX10 disablespawn
+	$XX11 disablespawn
+	$XX12 disablespawn
+	$XX13 disablespawn
+	$XX14 disablespawn
+	$XX15 disablespawn
+
+	$AA1 disablespawn
+	$AA2 disablespawn
+	$AA3 disablespawn
+	$AA4 disablespawn
+	$AA5 disablespawn
+	$AA6 disablespawn
+	$AA7 disablespawn
+	$AA8 disablespawn
+	$AA9 disablespawn
+	$AA10 disablespawn
+	$AA11 disablespawn
+	$AA12 disablespawn
+	$AA13 disablespawn
+	$AA14 disablespawn
+	$AA15 disablespawn
+end
+
+ffa_spawns:
+
+	spawn info_player_deathmatch "origin" "-1280.50 -6600.55 179.99" "angle" "74"
+	spawn info_player_deathmatch "origin" "-874.32 -2971.09 170.20" "angle" "-43"
+	spawn info_player_deathmatch "origin" "2315.67 -2335.13 161.16" "angle" "-72"
+	spawn info_player_deathmatch "origin" "5062.69 -4128.36 156.96" "angle" "-141"
+	spawn info_player_deathmatch "origin" "4450.89 -6877.53 192.16" "angle" "104"
+
+	spawn info_player_deathmatch "origin" "980.33 -6788.45 154.27" "angle" "135"
+	spawn info_player_deathmatch "origin" "-1229.96 -4139.45 177.80" "angle" "4"
+	spawn info_player_deathmatch "origin" "1987.17 -4714.89 -87.88" "angle" "70"
+	spawn info_player_deathmatch "origin" "6251.83 -3881.99 9.28" "angle" "24"
+	spawn info_player_deathmatch "origin" "7381.93 683.25 -127.88" "angle" "-114"
+
+	spawn info_player_deathmatch "origin" "6986.87 4098.88 252.13" "angle" "114"
+	spawn info_player_deathmatch "origin" "3430.73 5780.96 -31.88" "angle" "-43"
+	spawn info_player_deathmatch "origin" "4947.86 7576.88 64.13" "angle" "-97"
+	spawn info_player_deathmatch "origin" "6500.88 7464.88 76.13" "angle" "-134"
+	spawn info_player_deathmatch "origin" "5012.88 5707.41 240.13" "angle" "94"
+end
+
+enable_upstairs_guards:
+end
+enable_station_guards:
+end
+enable_power_guards:
+end
+enable_track_guards:
+end
+obj2_used_powerbox:
+end
+obj3_used_radio:
+end
+autosave_tracks:
+end
+enable_town_guards:
+end
+train_collision:
+end

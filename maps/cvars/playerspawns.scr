@@ -1,0 +1,121 @@
+main: // playerspawns.scr. Run "exec global/playerspawns.scr" in any map script to use the "playerspawns [0 or 1]" cvar.
+
+	while(getcvar("playerspawns") != "1") { waitframe }
+
+	local.end_early = 0
+	if(int(getcvar("g_gametype")) > 1)
+	{
+		for(local.i = 1; local.i <= $allied_spawn.size; local.i++)
+		{
+			local.s = spawn script_model targetname "allied_spawn_d"
+			local.s model player/american_ranger.tik
+			local.s.origin = $allied_spawn[local.i].origin
+			local.s.angle = $allied_spawn[local.i].angle
+			local.s notsolid
+			local.origin = "( " + int($allied_spawn[local.i].origin[0]) + " " + int($allied_spawn[local.i].origin[1]) + " " + int($allied_spawn[local.i].origin[2]) + " )"
+
+			println("$allied_spawn_d[" + local.i + "].origin = " + local.origin + ". angle = " + int($allied_spawn[local.i].angle))
+			waitframe
+		}
+
+		for(local.i = 1; local.i <= $axis_spawn.size; local.i++)
+		{
+			local.s2 = spawn script_model targetname "axis_spawn_d"
+			local.s2 model player/german_panzer_grenadier.tik
+			local.s2.origin = $axis_spawn[local.i].origin
+			local.s2.angle = $axis_spawn[local.i].angle
+			local.s2 notsolid
+			local.origin = "( " + int($axis_spawn[local.i].origin[0]) + " " + int($axis_spawn[local.i].origin[1]) + " " + int($axis_spawn[local.i].origin[2]) + " )"
+
+			println("$axis_spawn_d[" + local.i + "].origin = " + local.origin + ". angle = " + int($axis_spawn[local.i].angle))
+			waitframe
+		}
+
+		if($allied_spawn_d == NULL && local.s == NIL)
+		{
+			println("----- ERROR. There are no info_player_allied spawns with targetname 'allied_spawn'.")
+			if($player.size >= 1) { $player iprint ("----- ERROR. There are no info_player_allied spawns with targetname 'allied_spawn'.") }
+			local.end_early++
+		}
+		else
+		{
+			println("----- Spawned " + $allied_spawn.size + " entities at Allies spawns.")
+			if($player.size >= 1) { $player iprint ("----- Spawned " + $allied_spawn.size + " entities with targetname 'allied_spawn_d'.") }
+		}
+		if($axis_spawn_d == NULL && local.s2 == NIL)
+		{
+			println("----- ERROR. There are no info_player_axis spawns with the targetname 'axis_spawn'.")
+			if($player.size >= 1) { $player iprint ("----- ERROR. There are no info_player_axis spawns with targetname 'axis_spawn'.") }
+			local.end_early++
+		}
+		else
+		{
+			println("----- Spawned " + $axis_spawn.size + " entities at Axis spawns.")
+			if($player.size >= 1) { $player iprint ("----- Spawned " + $axis_spawn.size + " entities with targetname 'axis_spawn_d'.") }
+		}
+	}
+	else
+	{
+		for(local.i = 1; local.i <= $deathmatch_spawn.size; local.i++)
+		{
+			local.s = spawn script_model targetname "deathmatch_spawn_d"
+			local.s model player/american_ranger.tik
+			local.s.origin = $deathmatch_spawn[local.i].origin
+			local.s.angle = $deathmatch_spawn[local.i].angle
+			local.s notsolid
+			local.origin = "( " + int($deathmatch_spawn[local.i].origin[0]) + " " + int($deathmatch_spawn[local.i].origin[1]) + " " + int($deathmatch_spawn[local.i].origin[2]) + " )"
+
+			println("$deathmatch_spawn_d[" + local.i + "].origin = " + local.origin + ". angle = " + int($deathmatch_spawn[local.i].angle))
+			waitframe
+		}
+
+		if($deathmatch_spawn_d == NULL && local.s == NIL)
+		{
+			println("----- ERROR. There are no info_player_deathmatch spawns with targetname 'deathmatch_spawn'.")
+			if($player.size >= 1) { $player iprint ("----- ERROR. There are no info_player_deathmatch spawns with targetname 'deathmatch_spawn'.") }
+			local.end_early = 2
+		}
+		else
+		{
+			println("----- Spawned " + $deathmatch_spawn.size + " entities at Free-For-All spawns.")
+			if($player.size >= 1) { $player iprint ("----- Spawned " + $deathmatch_spawn.size + " entities with targetname 'deathmatch_spawn_d'.") }
+		}
+	}
+
+	if(local.end_early >= 2)
+	{
+		setcvar "playerspawns" "0"
+  		thread main
+		end
+	}
+
+	while(getcvar("playerspawns") == "1") { waitframe }
+
+	if(int(getcvar("g_gametype")) > 1)
+	{
+		if($allied_spawn_d != NULL)
+		{
+			println("----- Removing " + $allied_spawn_d.size + " entities at info_player_allied spawns.")
+			if($player.size >= 1) { $player iprint ("----- Removing " + $allied_spawn_d.size + " entities at info_player_allied spawns.") }
+			$allied_spawn_d remove
+		}
+		if($axis_spawn_d != NULL)
+		{
+			println("----- Removing " + $axis_spawn_d.size + " entities at info_player_axis spawns.")
+			if($player.size >= 1) { $player iprint ("----- Removing " + $axis_spawn_d.size + " entities at info_player_axis spawns.") }
+			$axis_spawn_d remove
+		}
+	}
+	else
+	{
+		if($deathmatch_spawn_d != NULL)
+		{
+			println("----- Removing " + $deathmatch_spawn_d.size + " entities at info_player_deathmatch spawns.")
+			if($player.size >= 1) { $player iprint ("----- Removing " + $deathmatch_spawn_d.size + " entities at info_player_deathmatch spawns.") }
+			$deathmatch_spawn_d remove
+		}
+	}
+
+	setcvar "playerspawns" "0"
+  	thread main
+end

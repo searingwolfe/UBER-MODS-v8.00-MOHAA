@@ -1,0 +1,57 @@
+main:
+
+	setcvar "cybsnd_debug" "0"
+	thread score
+	thread info
+	thread debug
+end
+
+score:
+
+	while(int(getcvar("cybsnd_score")) != 1) { waitframe }
+	if(int(getcvar("cybsnd_score")) != 0) { setcvar "cybsnd_score" "0" }
+	if(level.POINTS[allies] == NIL || level.POINTS[axis] == NIL) { println("----- Cyber Attack / Search & Destroy is not running."); end }
+
+	println("----- Rounds Won: Allies = " + level.POINTS[allies] + ". Axis = " + level.POINTS[axis])
+  	thread score
+end
+
+info:
+
+	while(int(getcvar("cybsnd_info")) != 1) { waitframe }
+	if(int(getcvar("cybsnd_info")) != 0) { setcvar "cybsnd_info" "0" }
+	if(level.round_starttime == NIL || level.rounds_towin == NIL) { println("----- Cyber Attack / Search & Destroy / Freeze Tag is not running."); end }
+
+	if(getcvar("g_ubergametype") == "cyb") { println("----- Running Cyber Attack game mode.") }
+	if(getcvar("g_ubergametype") == "snd") { println("----- Running Search & Destroy game mode.") }
+	if(getcvar("g_ubergametype") == "ft") { println("----- Running Freeze Tag game mode.") }
+	println("----- Round Start Time = " + level.round_starttime_init)
+	println("----- Rounds To Win = " + level.rounds_towin)
+	if(getcvar("g_ubergametype") != "ft") { println("----- Change Sides = " + level.changesides) }
+	println("----- Melt Time = " + level.melttime)
+	println("----- Melt Respawn = " + level.meltrespawn)
+	println("----- Spectators Auto Join Teams = " + level.spectators_jointeams)
+	if(getcvar("g_ubergametype") != "ft") { println("----- Bomb Camera = " + level.bombcamera); println("----- Bomb Camera Distance = " + level.cameradistance) }
+	if(getcvar("g_ubergametype") == "ft") { println("----- Melt Laser = " + level.meltlaser) }
+  	thread info
+end
+
+debug:
+
+	while(int(getcvar("cybsnd_debug")) != 1) { waitframe }
+	if(level.round_starttime == NIL || level.rounds_towin == NIL) { setcvar "cybsnd_info" "0"; println("----- Cyber Attack / Search & Destroy is not running."); end }
+
+	if($player.size < 1) { println("----- Waiting for a player to join the server.") }
+	while($player.size < 1 && int(getcvar("cybsnd_debug")) == 1) { waitframe }
+
+	while(int(getcvar("cybsnd_debug")) == 1)
+	{
+		if($player.size < 1) { println("----- All players have left the server."); break }
+
+		println("allies_count: " + level.allies_count.size + ". axis_count: " + level.axis_count.size + ". allies_total: " + level.allies_total.size + ". axis_total: " + level.axis_total.size)
+		wait 1
+	}
+	if(int(getcvar("cybsnd_debug")) != 0) { setcvar "cybsnd_debug" "0" }
+	println("----- Turning off CybSnd_Debug.")
+  	thread debug
+end

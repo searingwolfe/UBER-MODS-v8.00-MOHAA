@@ -367,14 +367,43 @@ train_initialize:
 	$choochootraindoor.origin += ( -128 0 0 ) // open train door initially
 	$choochootraindoor.closed = 0
 
+	local.spark1 = spawn script_model targetname "trainsparks"
+	local.spark1 model animate/fx_trainspark.tik
+	local.spark1.origin = $trainfront.origin + $trainfront.forwardvector * 345 + $trainfront.leftvector * 67 + ( 0 0 25 )
+	local.spark1.angles = ( 0 180 0 )
+	local.spark1 bind $trainfront
+	local.spark1 anim stop
+	local.spark2 = spawn script_model targetname "trainsparks"
+	local.spark2 model animate/fx_trainspark.tik
+	local.spark2.origin = $trainfront.origin + $trainfront.forwardvector * 345 + $trainfront.leftvector * -67 + ( 0 0 25 )
+	local.spark2.angles = ( 0 180 0 )
+	local.spark2 bind $trainfront
+	local.spark2 anim stop
+	local.spark3 = spawn script_model targetname "trainsparks"
+	local.spark3 model animate/fx_trainspark.tik
+	local.spark3.origin = $trainfront.origin + $trainfront.forwardvector * -225 + $trainfront.leftvector * 67 + ( 0 0 25 )
+	local.spark3.angles = ( 0 180 0 )
+	local.spark3 bind $trainfront
+	local.spark3 anim stop
+	local.spark4 = spawn script_model targetname "trainsparks"
+	local.spark4 model animate/fx_trainspark.tik
+	local.spark4.origin = $trainfront.origin + $trainfront.forwardvector * -225 + $trainfront.leftvector * -67 + ( 0 0 25 )
+	local.spark4.angles = ( 0 180 0 )
+	local.spark4 bind $trainfront
+	local.spark4 anim stop
+
+	local.trigent = spawn script_model targetname "trainfront_runover_trig"
+	local.trigent model "static/banquet_table.tik"
+	local.trigent.origin = $trainfront.origin + $trainfront.forwardvector * 420 + ( 0 0 30 )
+	local.trigent.angles = ( 0 90 90 )
+	local.trigent notsolid
+	local.trigent hide
+	local.trigent bind $trainfront
+	$trainfront.runovertrig = local.trigent
+
 	$choochootrain thread moving_train_check
 	$trainfront thread trainfront_trigger
 	$trainfront thread seatstuff_cab
-
-	local.trig = spawn trigger_multiple targetname "trainfront_runover_trig"
-	local.trig.origin = ( -600 -2276 -464 )
-	local.trig setsize ( 100 100 -100 ) ( 100 100 100 )
-	local.trig bind $trainfront
 end
 
 //-----------------------------------------------------------------------------
@@ -430,6 +459,17 @@ trainsound_leaving:
 
 	wait 1
 	if(self != NULL) { self playsound m2l3_trainapproach }
+	$trainsparks anim start
+
+	for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale = 0.001 }
+	while($trainsparks[1].scale < 1)
+	{
+		for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale += 0.01 }
+		waitframe
+	}
+
+	$trainsparks anim stop
+	for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale = 1 }
 end
 
 trainsound_arriving:
@@ -438,9 +478,20 @@ trainsound_arriving:
 
 	while(self != NULL && level.train_sequencing == 1 && self.origin[0] < -1350) { waitframe }
 	if(self != NULL) { self playsound train_stopping }
+	$trainsparks anim start
+
 	wait 1
 	if(self != NULL) { self stoploopsound }
 	$choochootrain stoploopsound
+
+	while($trainsparks[1].scale > 0)
+	{
+		for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale -= 0.005 }
+		waitframe
+	}
+
+	$trainsparks anim stop
+	for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale = 1 }
 end
 
 //-----------------------------------------------------------------------------
@@ -463,23 +514,30 @@ moving_train_check:
 
 			for(local.i = 1; local.i <= $player.size; local.i++)
 			{
-				if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1 && $player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i].passenger != 1)
+				if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1 && $player[local.i].flying != 1)
 				{
-					if(!($player[local.i] istouching local.traincab))
+					if($player[local.i].driving != 1 && $player[local.i].passenger != 1)
 					{
-						local.playerorigin = ( $player[local.i].origin[0] $player[local.i].origin[1] 0 )
-						local.trainorigin = ( self.origin[0] self.origin[1] 0 )
+						if(!($player[local.i] istouching local.traincab))
+						{
+							local.playerorigin = ( $player[local.i].origin[0] $player[local.i].origin[1] 0 )
+							local.trainorigin = ( self.origin[0] self.origin[1] 0 )
 
-						if($player[local.i] istouching self && $player[local.i].origin[2] < self.origin[2] + 100)
-						{
-							$player[local.i] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+							if($player[local.i] istouching self && $player[local.i].origin[2] < self.origin[2] + 100)
+							{
+								$player[local.i] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+							}
+							if($player[local.i] istouching $trainfront.runovertrig && $player[local.i].origin[2] < $trainfront.origin[2] + 240)
+							{
+								$player[local.i] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+							}
 						}
-						if($player[local.i] istouching $trainfront && $player[local.i].origin[2] < $trainfront.origin[2] + 240)
-						{
-							$player[local.i] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
-						}
+						else if($player[local.i].riding_traincab != 1 && local.speed < 100) { $player[local.i] thread attach_to_traincab }
 					}
-					else if($player[local.i].riding_traincab != 1 && local.speed < 100) { $player[local.i] thread attach_to_traincab }
+					if($player[local.i].driving == 1 && $player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && $player[local.i].drivingent istouching $trainfront.runovertrig)
+					{
+						$player[local.i].drivingent damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
 				}
 			}
 		}
@@ -833,8 +891,11 @@ seatstuff local.first_seat: // using attachmodels and gluing players to them mak
 		$train_driverslot_1.angle_offset = 90
 		$train_driverslot_2.angle_offset = -90
 	}
-	$train_driverslot_1 hide // giving the attachmodels different angles will cause players to not stand upright.
+	$train_driverslot_1 hide
 	$train_driverslot_2 hide
+	$train_driverslot_1.angles = ( 0 $train_driverslot_1.angle_offset 0 )
+	$train_driverslot_2.angles = ( 0 $train_driverslot_2.angle_offset 0 )
+	self thread seatstuff_angles
 
 	local.trig_shot1 = spawn trigger_multiple targetname "train_drivershot_1" spawnflags 128 // these triggers are required since the train is not a DrivableVehicle with health.
 	local.trig_shot1.origin = $train_driverslot_1.origin
@@ -851,6 +912,18 @@ seatstuff local.first_seat: // using attachmodels and gluing players to them mak
 	local.trig_shot2.health = 9999999
 	local.trig_shot2.train = self
 	local.trig_shot2 thread healthboost 2
+end
+
+seatstuff_angles:
+
+	while(self != NULL)
+	{
+		for(local.i = 1; local.i <= self.seats; local.i++)
+		{
+			$("train_driverslot_" + local.i).angles = self.angles + ( 0 $("train_driverslot_" + local.i).angle_offset 0 )
+		}
+		waitframe
+	}
 end
 
 //-----------------------------------------------------------------------------
@@ -1008,7 +1081,7 @@ vehicles_undermap:
 					$(level.drivable_entities[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
 				}
 
-				if($trainfront != NULL && $choochootrain != NULL && $trainfront.moving == 1 && ($(level.drivable_entities[local.a])[local.s] istouching $trainfront || $(level.drivable_entities[local.a])[local.s] istouching $choochootrain || $(level.drivable_entities[local.a])[local.s] istouching $trainfront_runover_trig))
+				if($trainfront != NULL && $choochootrain != NULL && $trainfront.moving == 1 && $(level.drivable_entities[local.a])[local.s] istouching $trainfront_runover_trig)
 				{
 					$(level.drivable_entities[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
 				}

@@ -1,0 +1,508 @@
+main local.origin:
+
+////////////////////////////////////////////////////////////////////////
+
+level.guidedmissile_health = 100		// missile health.
+level.guidedmissile_velocity = 700 		// missile speed.
+level.guidedmissile_damage = 500 		// explosion damage.
+level.guidedmissile_radius = 600 		// explosion radius.
+level.guidedmissile_inc_velocity_fired = 300	// increase missile speed by this amount 20x per second after clicking FIRE while flying.
+
+////////////////////////////////////////////////////////////////////////
+
+exec global/aliascache_triggersounds.scr guided_missile
+
+	if(local.origin == NIL) { println("----- ERROR guidedmissile/trigger.scr: 'origin' parameter is missing!"); end }
+	if(level.guidedmissile_health == NIL || (local.health != NIL && local.health < 0)) { local.health = 1 } // default
+	else { local.health = level.guidedmissile_health }
+
+	if(level.RocketSound != 1)
+	{
+		cache models/static/v2.tik
+		cache models/emitters/welding_spark.tik
+		cache models/animate/fx_explosion_flak88.tik
+		cache models/emitters/explosion_bombdirt.tik
+		cache models/emitters/explosion_mine_shockwave.tik
+		cache models/emitters/fx_oceanspray.tik
+		cache models/animate/fx_mortar_water.tik
+	}
+
+	local.trig = spawn trigger_multiple //targetname ("guidedmissile" + local.trig.entnum) // targetname added with "entnum" doesn't work until "level waittill spawn" is done first.
+	local.trig.origin = local.origin + ( 0 0 50 )
+	local.trig model static/corona_util.tik // static/v2.tik // fx/corona_red.tik and fx/dummy.tik somehow make the trigger nottriggerable (don't work).
+	local.trig scale 0.02 // 0.085
+	//local.trig light 1 0 1 125
+	local.trig.healthmax = local.health
+	local.trig setthread doit
+	local.trig show
+	local.trig setsize ( -16 -16 -0 ) ( 16 16 100 )
+
+	level waittill spawn
+
+	local.trig.targetname = ("guidedmissile" + local.trig.entnum)
+	exec global/flickerrotate.scr local.trig.targetname ( .9 0 .9 ) 125 10 5 10
+
+	local.trig attachmodel models/static/v2.tik "Box01" 1 (local.trig.targetname + "_1") 1 -1 -1 -1 -1 ( 30 0 30 ) //( +left -right, +up -down, +forward -backward )
+	$(local.trig.targetname + "_1").angles = ( -90 0 0 )
+	$(local.trig.targetname + "_1").scale = 90
+	$(local.trig.targetname + "_1") attachmodel models/projectiles/bazookashell_dm.tik "Box01" 1 (local.trig.targetname + "_2") 1 -1 -1 -1 -1 ( 0 0 3 ) //( +left -right, +up -down, +forward -backward )
+	$(local.trig.targetname + "_2").angles = ( -90 0 0 )
+	$(local.trig.targetname + "_1") attachmodel models/emitters/welding_spark.tik "Box01" 1 (local.trig.targetname + "_3") 1 -1 -1 -1 -1 ( 0 0 0 ) //( +left -right, +up -down, +forward -backward )
+	$(local.trig.targetname + "_3").angles = ( -90 0 0 )
+end
+
+doit:
+
+	local.player = parm.other
+	self nottriggerable
+	if(local.player.missile != NIL || local.player.dead == 1 || !isalive local.player || local.player.flying == 1 || local.player.driving == 1 || local.player.passenger == 1 || local.player.turreting == 1)
+	{
+		self triggerable
+		end
+	}	
+	if(local.player.isdog == 1)
+	{
+		local.player iprint ("Dogs cannot fly guided missiles.")
+		self triggerable
+		end
+	}
+
+	local.player safeholster 1
+	local.player.missile = self
+	local.player thread spawnmissile self self.healthmax
+	self hide
+
+	wait 5
+	self show
+	self triggerable
+end
+
+////////////////////////////////////////////////////////////////////////
+
+spawnmissile local.trig local.health:
+
+	self hide
+	self notsolid
+	self nodamage
+	self stufftext ("set ui_GuidedMissileHealth " + int(local.health))
+
+	local.missile = spawn script_object
+	local.missile model "static/v2.tik"
+	local.missile.origin = local.trig.origin // + ( 0 0 500 )
+	local.missile notsolid
+	local.missile.team = self.dmteam
+	local.missile scale .2
+	local.missile setsize ( -10 -10 -10 ) ( 10 10 10 )
+	if(self.dmteam == "allies") { local.missile light 0 0 1 450 }
+	else { local.missile light 1 0 0 450 }
+
+	local.missile.trig = spawn trigger_multiple spawnflags 128
+	local.missile.trig.origin = local.trig.origin + ( 0 0 500 )
+	local.missile.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+	local.missile.trig notsolid
+	local.missile.trig bind local.missile
+	local.missile.trig setthread shot
+	local.missile.trig.health = local.health
+
+	local.missile.cam = spawn script_model
+	local.missile.cam model "fx/dummy.tik"
+	local.missile.cam.origin = local.missile.origin + local.missile.upvector * -200 // local.origin
+	local.missile.cam bind local.missile
+	local.missile.cam notsolid
+
+	local.missile.jet = spawn script_model
+	local.missile.jet.origin = local.missile.origin
+	local.missile.jet model "projectiles/bazookashell_dm.tik"
+	local.missile.jet bind local.missile
+	local.missile.jet.scale = local.missile.scale * 5
+	local.missile.jet hide
+	local.missile.jet anim start
+	local.missile.jet notsolid
+
+	local.missile.jet2 = spawn script_model
+	local.missile.jet2.origin = local.missile.origin
+	local.missile.jet2 model "emitters/welding_spark.tik"
+	local.missile.jet2 bind local.missile
+	local.missile.jet2.scale = local.missile.scale
+	local.missile.jet2 anim start
+	local.missile.jet2 notsolid
+	local.missile.jet2 light 1 1 1 200
+
+	local.missile.angles = ( 90 self.viewangles[1] 0 )
+	local.missile playsound bazookasndfire
+	local.missile physics_on
+	local.missile gravity 0
+	local.missile thread waittouch self
+	local.missile.player_owner = self // for adding kills/scorepoints.
+
+	iprintlnbold ("*** Guided Missile Spotted On Radar!!! ***")
+	self.missile = local.missile
+	self.flying = 1
+	self glue local.missile.cam
+	self resetstate // self forcelegsstate STAND
+	self physics_off
+
+	self thread healthbar local.missile.trig.health
+	self thread fly local.missile
+
+	local.missile.jet loopsound missilesteam
+	local.missile.jet2 loopsound missilefire
+end
+
+////////////////////////////////////////////////////////////////////////
+
+fly local.missile:
+
+	local.team = self.dmteam
+	local.health = local.missile.trig.health
+	local.time = 0
+
+	local.c = 5.000		// missile speed divisor; Higher = starting speed is much slower (total change is larger), Lower = starting speed is closer to max speed (total change is smaller).
+	local.decel_rate = 15	// how many divisions of local.c for acceleration. Higher = more time to reach max speed, Lower = less time to reach max speed.
+	local.deceleration = local.c
+
+	self.viewangles = ( -90 self.viewangles[1] 0 ) // start the rocket's initial velocity by facing vertically upwards.
+	local.missile thread fly_thrust
+
+	while(local.missile != NULL && isalive self && self.dmteam == local.team && self.dead != 1 && local.missile.impact != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		if(local.missile.trig.health != local.health && local.missile.trig.health > 0)
+		{
+			if(self != NULL) { local.player stufftext ("set ui_GuidedMissileHealth " + int(local.missile.trig.health)) }
+			local.health = local.missile.trig.health
+		}
+		else if(local.missile.trig.health <= 0)
+		{
+			self thread DestroyMissile local.missile
+			end
+		}
+
+		if((self.fireheld == 1 && self.useheld != 1) || local.missile.fired == 1)
+		{
+			if(local.missile.fired != 1)
+			{
+				self iprint "Fire!"
+				local.viewangles = self.viewangles
+				local.velocity = level.guidedmissile_velocity
+
+				local.missile.angles = ( (self.viewangles[0] + 90) self.viewangles[1] self.viewangles[2] )
+				local.missile.cam unbind local.missile
+				local.missile.fired = 1
+				local.missile thread fly_thrust
+			}
+
+			local.missile.velocity = ((angles_toforward local.viewangles) * local.velocity)
+			if(local.velocity <= 6500) { local.velocity += level.guidedmissile_inc_velocity_fired } // if velocity goes above 6500, the missile may not fly straight anymore.
+			if(local.velocity > 6500) { local.velocity = 6500 }
+
+			local.time++
+			if(local.time > 300) // in case the rocket never touches something, force-remove it after 15 seconds (15 / 0.05 = 300, where "waitframe" = 0.05 seconds).
+			{
+				self thread DestroyMissile local.missile
+				end
+			}
+		}
+		else
+		{
+			local.missile.velocity = ((angles_toforward self.viewangles) * (level.guidedmissile_velocity / local.c))
+			local.missile.angles = ( ( 90 + self.viewangles[0]) self.viewangles[1] self.viewangles[2])
+
+			local.c -= local.deceleration / local.decel_rate
+			if(local.c < 1)
+			{
+				local.c = 1
+				local.missile.thrusting = 0
+			}
+		}
+		waitframe
+	}
+
+	if(local.missile != NULL && local.missile.impact != 1) // if the missile was not destroyed by "waittill touch" or by its health going to 0.
+	{
+		if(self != NULL)
+		{
+			self physics_on
+			self unglue
+			self respawn
+			self.missile = NIL
+			self.flying = 0
+
+			if(game.game == "AA")
+			{
+				self stufftext "hidemenu dday2"
+				self stufftext "hidemenu dday1"
+			}
+			else
+			{
+				self stufftext "hidemenu bastogne1"
+				self stufftext "hidemenu bastogne2"
+			}
+		}
+		local.missile.jet stoploopsound
+		local.missile.jet2 stoploopsound
+		local.missile.jet remove
+		local.missile.jet2 remove
+		local.missile.cam remove
+		local.missile.trig remove
+		local.missile remove
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+fly_thrust: // play the thrust sound rapidly. much faster than playing every 0.1 seconds, and sounds better.
+	
+	if(self.thrusting == 1) { end }		  	// need a temp script model to spam playsound, but stopsound does not immediately stop the sound.
+ 							// since all these playsounds will be combining together, you don't want this model to be around long enough for anyone to hear that loud noise.
+	local.temp = spawn script_model			// the model is deleted when thrusting is done, the only way to immediately stopsound. 
+	local.temp model "static/corona_util.tik"
+	local.temp.origin = self.origin
+	local.temp.scale = 0.001
+	local.temp notsolid
+	local.temp light 1 1 1 300
+	local.temp glue self
+
+	self.thrusting = 1
+	local.c = 0
+	
+	while(self != NULL && (self.thrusting == 1 || local.c <= 15 || self.fired == 1)) 
+	{
+		if(self.thrusting != 1) { local.c++ }
+		local.temp playsound missilesteam
+		waitframe
+	}
+
+	local.temp remove
+	if(self != NULL) { self.thrusting = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+waittouch local.player:
+
+	self waittill touch
+	if(self != NULL)
+	{
+		self.impact = 1
+		if(local.player != NIL && local.player != NULL) { local.player thread DestroyMissile self }
+	}
+end
+
+shot:
+
+	local.player = parm.other
+	if(local.player != NIL && local.player != NULL)
+	{
+		if(local.player.player_owner != NIL && local.player.player_owner != NULL) { self.shooter = local.player.player_owner }
+		else if(local.player.owner != NIL && local.player.owner != NULL) { self.shooter = local.player.owner }
+		else { self.shooter = local.player }
+	}
+	waitframe
+	if(self != NULL && self.impact != 1) { self.shooter = NIL }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+DestroyMissile local.missile local.hitwater:
+
+	if(self == NULL || local.missile == NIL || local.missile == NULL || (local.missile != NIL && local.missile != NULL && local.missile.dead == 1)) { end }
+
+	self iprint "Boom!"
+	self stufftext "set ui_GuidedMissileHealth 0"
+
+	if(game.game == "AA")
+	{
+		self stufftext "hidemenu dday2"
+		self stufftext "hidemenu dday1"
+	}
+	else
+	{
+		self stufftext "hidemenu bastogne1"
+		self stufftext "hidemenu bastogne2"
+	}
+
+	local.missile.dead = 1
+	local.missile.impact = 1
+	local.missile.cam unbind local.missile
+	local.missile.jet stoploopsound
+	local.missile.jet2 stoploopsound
+	local.missile.jet remove
+	local.missile.jet2 remove
+	local.missile hide
+	local.missile light 0 0 0 0
+
+	local.Exp = spawn models/animate/fx_explosion_flak88.tik // don't spawn as script_models, to avoid "Failed execution of command 'model' for class 'Script' Targetname 'VOID'" errors
+	local.Exp.origin = local.missile.origin + ( 0 0 50 )
+	local.Exp.scale = local.missile.scale * 5
+	local.Exp light 1 0 1 650
+	local.Exp anim idle // "anim aaaa" is the actual "idle" anim.
+	local.Exp notsolid
+	local.Exp playsound missileboom
+
+	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			local.origin = local.missile.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.missile.origin = ( local.missile.origin[0] local.missile.origin[1] local.Z_max[local.v] )
+				local.hitwater = 1
+				break
+			}
+		}
+	}
+
+	if(local.hitwater == 1)
+	{
+   		local.Exp2 = spawn models/animate/fx_mortar_water.tik
+   		local.Exp2.origin = local.missile.origin
+   		local.Exp2.scale = local.missile.scale * 6
+		local.Exp2 anim start
+		local.Exp2 notsolid
+		local.Exp2 playsound missileboomwater
+
+		local.Exp3 = spawn models/emitters/fx_oceanspray.tik
+		local.Exp3.origin = local.missile.origin + ( 0 0 50 )
+		local.Exp3.scale = local.missile.scale * 7.5
+		local.Exp3 anim start
+		local.Exp3 notsolid
+	}
+	else
+	{
+		local.Exp2 = spawn models/emitters/explosion_bombdirt.tik
+		local.Exp2.origin = local.missile.origin + ( 0 0 25 )
+		local.Exp2.scale = local.missile.scale * 5
+		local.Exp2 anim start
+		local.Exp2 notsolid
+		local.Exp2 playsound missileboomdirt
+
+		local.Exp3 = spawn models/emitters/explosion_mine_shockwave.tik
+		local.Exp3.origin = local.missile.origin
+		local.Exp3.scale = local.missile.scale * 10
+		local.Exp3 anim idle // this is the only anim.
+		local.Exp3 notsolid
+		//local.Exp3 playsound missileboommetal
+	}
+
+	local.blewup = 1
+	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.
+	{
+		if(vector_length(local.missile.origin - $player[local.i].origin) <= level.guidedmissile_radius) // "local.explode" emitters cannot be used with "cansee"
+		{
+			if(local.missile.trig.shooter == NIL || local.missile.trig.shooter == NULL)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.missile 360) // "cansee self" does not work.
+				{
+					$player[local.i] damage self level.guidedmissile_damage self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self level.guidedmissile_damage self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage self level.guidedmissile_damage self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else if($player[local.i] != local.missile.trig.shooter && $player[local.i].dmteam == local.missile.trig.shooter.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
+			else
+			{
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.missile 360)
+				{
+					$player[local.i] damage local.missile.trig.shooter level.guidedmissile_damage local.missile.trig.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
+				{
+					$player[local.i].drivingent.shooter = local.missile.trig.shooter
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage local.missile.trig.shooter level.guidedmissile_damage local.missile.trig.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage local.missile.trig.shooter level.guidedmissile_damage local.missile.trig.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	waitframe
+	if(local.blewup == 1) { radiusdamage local.missile.origin level.guidedmissile_damage level.guidedmissile_radius }
+	waitframe
+	local.Exp remove
+	local.Exp2 remove
+	local.Exp3 remove
+
+	local.c = 0
+	while(local.c < 20 && level.change_team_score != 1 && level.bbactive != 0) // wait 1 second
+	{
+		
+		local.c++
+		waitframe
+	}
+
+	if(self != NULL)
+	{
+		self physics_on
+		self unglue
+		self respawn
+		self.missile = NIL
+		self.flying = 0
+	}
+	local.missile.cam remove
+	local.missile.trig remove
+	local.missile remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+healthbar local.health:
+
+	if(game.game != "AA") { local.menu1 = "bastogne1"; local.menu2 = "bastogne2" }
+	else { local.menu1 = "dday1"; local.menu2 = "dday2" }
+
+	if(self.using_pack == 1)
+	{
+		self stufftext ("globalwidgetcommand june6 statbar vertical 0 " + local.health)
+		self stufftext "globalwidgetcommand june6 linkcvar ui_GuidedMissileHealth"
+		self stufftext "globalwidgetcommand charliesector linkcvar ui_GuidedMissileHealth"
+		end
+	}
+
+	self stufftext ("globalwidgetcommand " + local.menu1 + " shader townhallwindow")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " menu dday1 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand june6 borderstyle NONE"
+	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
+	self stufftext "globalwidgetcommand june6 rect 16 420 16 64"
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand june6 linkcvar ui_GuidedMissileHealth"
+	self stufftext ("globalwidgetcommand june6 statbar vertical 0 " + local.health)
+	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
+	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
+
+
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " menu dday2 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fullscreen 1")
+
+	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	self stufftext "globalwidgetcommand charliesector textalign left " 
+	self stufftext "globalwidgetcommand charliesector rect 40 470 150 20"
+	self stufftext "globalwidgetcommand charliesector fgcolor 0.70 0.60 0.05 1.00"
+	self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand charliesector linkcvar ui_GuidedMissileHealth"
+	self stufftext "globalwidgetcommand charliesector font facfont-20"
+	self stufftext "globalwidgetcommand charliesector shader townhallwindow"
+
+	self stufftext ("showmenu " + local.menu2)
+	self stufftext ("showmenu " + local.menu1)
+end

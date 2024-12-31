@@ -1,0 +1,372 @@
+main local.kills local.bulletstokill local.mapheight:
+
+////////////////////////////////////////////////////////////////////////
+
+level.airstrikes_scale = 1.00		// dummy model scale, held by player before calling airstrike.
+level.airstrikes_color = ( 0 1 0 )	// color of lasers
+level.airstrikes_thickness = 0.5	// thickness of lasers
+level.airstrikes_alpha = 0.4		// opacity of lasers
+
+level.airstrikes_planes = 2		// number of planes per airstrike.
+level.airstrikes_bombs = 25		// number of bombs that each plane drops.
+
+////////////////////////////////////////////////////////////////////////
+
+	if(local.kills == NIL || int(local.kills) <= 1) { wait 1; println("----- ERROR airstrikes.scr: 'kills' parameter must be > 1."); end }
+	if(local.bulletstokill == NIL || int(local.bulletstokill) <= 0) { wait 1; println("----- ERROR airstrikes.scr: 'bulletstokill' parameter must be > 0."); end }
+
+	if(local.mapheight == NIL) { local.mapheight = waitthread map_heights } // defaults for most MOHAA maps.
+	if(local.mapheight == NIL || (int(local.mapheight) == 0 && local.mapheight.size > 0)) { wait 1; println("----- ERROR airstrikes.scr: 'mapheight' parameter must have a numerical value."); end }
+
+	local.kills = int(local.kills)
+	local.bulletstokill = int(local.bulletstokill)
+	if(level.kill_streak[local.kills] != 1) { thread airstrikes local.kills local.bulletstokill local.mapheight }
+	else { wait 1; println("----- ERROR airstrikes.scr: another killstreak is already checking for " + local.kills + " player kills."); end }
+	level.kill_streak[local.kills] = 1
+
+	if(level.check_player_kills != 1)
+	{
+		thread killstreaks
+		local.result = registerev damage killstreaks/damagehandler.scr // this replaces the "health" parameter; only enemies can destroy killstreaks.
+	}
+	level.check_player_kills = 1
+
+	cache models/emitters/welding_spark.tik
+	thread scriptmaster
+end
+
+////////////////////////////////////////////////////////////////////////
+
+airstrikes local.kills local.bulletstokill local.mapheight:
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(isalive $player[local.i] && $player[local.i].kill_streak != NIL && $player[local.i].kill_streak >= local.kills && $player[local.i].killstreak_selected != 1 && $player[local.i].killstreak_airstrike != 1 && $player[local.i].dmteam == $player[local.i].teamm)
+			{
+				$player[local.i] thread holding_airstrike local.bulletstokill local.mapheight
+			}
+		}
+		waitframe
+	}
+	thread airstrikes local.kills local.bulletstokill local.mapheight
+end
+
+holding_airstrike local.bulletstokill local.mapheight:
+
+	ihuddraw_string self 150 "Hold USE(e) + Lean Left/Right to show."
+	self iprint "*** Killstreak Acquired: Airstrike ***" 1
+	self iprint "*** If you die or switch teams, you will lose the killstreak! ***" 1
+	self iprint "Hold USE(e) + Lean Left/Right to begin placing it."
+	self iprint "Hold USE(e) + Right Click to place it."
+
+	local.team = self.dmteam
+	self.placing_killstreak_old = 0		// only for ensuring that Light Bombs, Giant Bombs, & throwing knives don't shoot immediately after placing a killstreak
+	self.placing_killstreak = 0 		// toggle for showing/hiding killstreak
+	self.killstreak_selected = 1 		// only allows one killstreak to be held at a time, once placing_killstreak = 1
+	self.killstreak_airstrike = 1		// prevents the player from obtaining multiple airstrikes per "life";
+						// removing this and setting "local.kills" = 1 could crash the server due to airstrikes being spam-spawned.
+	local.dummy = spawn script_model
+	local.dummy model emitters/welding_spark.tik
+	local.dummy.origin = self.origin
+	local.dummy.angle = self.angle
+	local.dummy.scale = level.airstrikes_scale
+	local.dummy anim stop
+	local.dummy notsolid
+
+	local.laser1 = thread spawnlaser local.dummy.origin local.dummy.origin level.airstrikes_color level.airstrikes_thickness level.airstrikes_alpha
+	local.laser2 = thread spawnlaser local.dummy.origin local.dummy.origin level.airstrikes_color level.airstrikes_thickness level.airstrikes_alpha
+	local.laser3 = thread spawnlaser local.dummy.origin local.dummy.origin level.airstrikes_color level.airstrikes_thickness level.airstrikes_alpha
+	local.laser4 = thread spawnlaser local.dummy.origin local.dummy.origin level.airstrikes_color level.airstrikes_thickness level.airstrikes_alpha
+	local.laser1 hide
+	local.laser2 hide
+	local.laser3 hide
+	local.laser4 hide
+
+	local.PI = 3.14159265359
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator" && self.placing_killstreak_old2 == 1) { waitframe }
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator")
+	{
+		local.degrees = local.dummy.angle + 150
+		if(local.degrees >= 180) { local.degrees -= 360 }
+		local.radians = local.degrees * (local.PI / 180)
+		local.sin3 = (sin local.radians) * 50
+		local.cos3 = (cos local.radians) * 50
+
+		local.degrees = local.dummy.angle + 210
+		if(local.degrees >= 180) { local.degrees -= 360 }
+		local.radians = local.degrees * (local.PI / 180)
+		local.sin4 = (sin local.radians) * 50
+		local.cos4 = (cos local.radians) * 50
+
+		if(local.toggle != 1 && self.placing_killstreak != 1 && self.useheld == 1 && (self.leanleftheld == 1 || self.leanrightheld == 1) && self.driving != 1 && self.flying != 1 && self.passenger != 1)
+		{
+			ihuddraw_string self 150 "Hold USE(e) + Right Click to place."
+			local.toggle = 1
+			local.dummy anim start
+			local.laser1 show
+			local.laser2 show
+			local.laser3 show
+			local.laser4 show
+			self.placing_killstreak = 1
+		}
+		if((local.toggle != 1 && self.placing_killstreak == 1 && self.useheld == 1 && (self.leanleftheld == 1 || self.leanrightheld == 1)) || self.driving == 1 || self.flying == 1 || self.passenger == 1)
+		{
+			if(self.driving == 1 || self.flying == 1 || self.passenger == 1) { ihuddraw_string self 150 "" }
+			else { ihuddraw_string self 150 "Hold USE(e) + Lean Left/Right to show." }
+			local.toggle = 1
+			local.dummy anim stop
+			local.laser1 hide
+			local.laser2 hide
+			local.laser3 hide
+			local.laser4 hide
+			self.placing_killstreak = 0
+		}
+		if(self.leanleftheld != 1 && self.leanrightheld != 1) { local.toggle = 0 }
+
+		if(self.placing_killstreak == 1 && self.useheld == 1)
+		{
+			local.dummy.origin = trace (self gettagposition "eyes bone") (self gettagposition "eyes bone" + (angles_toforward self.viewangles) * 10248) 0
+			local.forward_vec = (angles_toforward local.dummy.angles) * 250
+			local.behind_vec = (angles_toforward (local.dummy.angles + ( 0 180 0 ))) * 250 
+
+			local.laser1.origin = local.dummy.origin + ( 0 0 5 )
+			local.laser1.destination = trace local.laser1.origin (local.laser1.origin + local.forward_vec) 0
+			local.laser1 endpoint local.laser1.destination
+
+			local.laser2.origin = local.dummy.origin + ( 0 0 5 )
+			local.laser2.destination = trace local.laser2.origin (local.laser2.origin + local.behind_vec) 0
+			local.laser2.destination = trace local.laser2.destination (local.laser2.destination + ( 0 0 -10240 )) 0 // simulate droptofloor
+			local.laser2 endpoint local.laser2.destination
+
+			local.laser3.origin = local.laser1.destination
+			local.laser3 endpoint (local.laser3.origin + ( local.cos3 local.sin3 0 ))
+			local.laser4.origin = local.laser1.destination
+			local.laser4 endpoint (local.laser4.origin + ( local.cos4 local.sin4 0 ))
+		}
+		else
+		{
+			local.dummy.origin = self.origin
+			local.dummy.angle = self.angle
+			local.laser1.origin = local.laser1.origin
+			local.laser1 endpoint local.laser1.origin
+			local.laser2.origin = local.laser2.origin
+			local.laser2 endpoint local.laser2.origin
+			local.laser3.origin = local.laser3.origin
+			local.laser3 endpoint local.laser3.origin
+			local.laser4.origin = local.laser4.origin
+			local.laser4 endpoint local.laser4.origin
+		}
+
+		if(self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1 && self.placing_killstreak == 1)
+		{		
+			local.degrees = local.dummy.angle + 180
+			if(local.degrees >= 180) { local.degrees -= 360 }
+			local.radians = local.degrees * (local.PI / 180)
+			local.sino = (sin local.radians) * 8200
+			local.coso = (cos local.radians) * 8200
+
+			local.degrees = local.dummy.angle
+			if(local.degrees >= 180) { local.degrees -= 360 }
+			local.radians = local.degrees * (local.PI / 180)
+			local.sind = (sin local.radians) * 8200
+			local.cosd = (cos local.radians) * 8200
+
+			local.origin = ( local.dummy.origin[0] local.dummy.origin[1] 0 ) + ( local.coso local.sino 0 ) + ( 0 0 local.mapheight )
+			local.angles = ( -5 local.dummy.angle 0 )
+			local.destination = ( local.dummy.origin[0] local.dummy.origin[1] 0 ) + ( local.cosd local.sind 0 ) + ( 0 0 local.mapheight )
+
+			exec global/bomberplane_nospline.scr self.dmteam level.airstrikes_planes 1 level.airstrikes_bombs 0.1 1 0 local.origin local.angles local.destination local.bulletstokill self
+
+			self playsound sendtransmission
+			self thread airspace_check
+
+			println("----- $player[" + (self.entnum + 1) + "] called an Airstrike.")
+			self.placing_killstreak = 0
+			ihuddraw_string self 150 ""
+			self thread useheld_fireheld
+			break
+		}
+		self.placing_killstreak_old = self.placing_killstreak
+		waitframe
+	}
+	local.dummy remove
+	local.laser1 remove
+	local.laser2 remove
+	local.laser3 remove
+	local.laser4 remove
+
+	if(self != NULL) { self.killstreak_selected = 0 }
+
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator") { waitframe }
+
+	if(self != NULL) { self.killstreak_airstrike = 0; ihuddraw_string self 150 "" }
+end
+
+airspace_check:
+
+	if($airstrike_bomberplane != NULL) { self iprint ("Waiting for another airstrike to finish first...") }
+	while(self != NULL && $airstrike_bomberplane != NULL) { waitframe }
+
+	if(self != NULL)
+	{
+		if(self.dmteam == "allies") { self playsound allied_airstrike }
+		else { self playsound axis_airstrike }
+	}
+end
+
+spawnlaser local.origin local.endpoint local.color local.scale local.alpha:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha local.alpha
+	local.laser alwaysdraw
+	local.laser activate	
+	local.laser scale local.scale
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
+
+////////////////////////////////////////////////////////////////////////
+
+killstreaks:
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].teamm == NIL) { $player[local.i].teamm = $player[local.i].dmteam } // .team is a read-only variable
+			if($player[local.i].kill_streak == NIL) { $player[local.i].kill_streak = 0 }
+			if($player[local.i].currentkills == NIL) { $player[local.i].currentkills = $player[local.i] getkills; $player[local.i] thread huddraw }
+
+			if(!isalive $player[local.i] || $player[local.i].dmteam != $player[local.i].teamm || $player[local.i].dmteam == "spectator")
+			{
+				$player[local.i].teamm = $player[local.i].dmteam
+				$player[local.i].kill_streak = 0
+				$player[local.i].currentkills = $player[local.i] getkills
+			}
+			else if($player[local.i] getkills > $player[local.i].currentkills) // if alive, same team, not spectator, and gets a kill
+			{
+				$player[local.i].kill_streak += ($player[local.i] getkills - $player[local.i].currentkills)
+				$player[local.i].currentkills = $player[local.i] getkills
+			}
+
+			if($player[local.i].dmteam == "spectator") { $player[local.i] thread spectator_choseteam_notyetspawned }
+		}
+		waitframe
+	}
+	thread killstreaks
+end
+
+spectator_choseteam_notyetspawned:
+
+	if(self.spectator_choseteam_notyetspawned == 1) { end }
+	self.spectator_choseteam_notyetspawned = 1
+
+	while(self != NULL && self.dmteam == "spectator") { waitframe }
+
+	while(self != NULL && self.dmteam != "spectator" && self.inventory.size < 1) { waitframe }
+
+	if(self != NULL && self.dmteam != "spectator") { self.spectator_choseteam_notyetspawned = 0 }
+end
+
+huddraw:
+
+	ihuddraw_alpha self 150 0
+	ihuddraw_virtualsize self 150 1
+	ihuddraw_alpha self 150 .8
+	ihuddraw_font self 150 "verdana-12"
+	ihuddraw_color self 150 .7 .7 0
+	ihuddraw_rect self 150 -200 212 200 14
+	ihuddraw_string self 150 ""
+end
+
+useheld_fireheld:
+
+	local.team = self.dmteam
+	self.placing_killstreak_old2 = 1
+
+	while(isalive self && self.dmteam == local.team == self.dmteam != "spectator" && self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1) { waitframe }
+
+	if(self != NULL)
+	{
+		self.placing_killstreak_old = 0
+		self.placing_killstreak_old2 = 0
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+
+	if(level.scriptmaster[airstrike_radiotrig] != 1)
+	{
+		local.master aliascache sendtransmission sound/mechanics/M4_SendTransmission.wav soundparms 1.0 0.0 1.0 0.0 300 2000 item loaded maps level.mapname
+
+		local.master aliascache allied_airstrike1 sound/dialogue/Multiplayer/a/AMdfr_o_08a.WAV soundparms 1.0 0.0 1.0 0.0 400 3000 auto streamed maps level.mapname
+		local.master aliascache allied_airstrike2 sound/dialogue/Multiplayer/a/AMdfr_o_08h.WAV soundparms 1.0 0.0 1.0 0.0 400 3000 auto streamed maps level.mapname
+		local.master aliascache allied_airstrike3 sound/dialogue/Multiplayer/a/AMdfr_o_08j.WAV soundparms 1.0 0.0 1.0 0.0 400 3000 auto streamed maps level.mapname
+
+		local.master aliascache axis_airstrike1 sound/dialogue/Multiplayer/g/GRden_o_08a.wav soundparms 1.0 0.0 1.0 0.0 160 3000 auto streamed maps level.mapname
+		local.master aliascache axis_airstrike2 sound/dialogue/Multiplayer/g/GRden_o_08b.wav soundparms 1.0 0.0 1.0 0.0 160 3000 auto streamed maps level.mapname
+		local.master aliascache axis_airstrike3 sound/dialogue/Multiplayer/g/GRden_o_08c.wav soundparms 1.0 0.0 1.0 0.0 160 3000 auto streamed maps level.mapname
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+map_heights:
+
+	while(getcvar("mapname") == "" || getcvar("mapname") == NIL || level.time == NIL) { waitframe }
+	wait 1
+
+	level.mapname = getcvar "mapname"
+	switch(level.mapname)
+	{
+		case "dm/mohdm1": local.mapheight = 1256; break // -40 below skybox ceiling (when standing on skybox above map.
+		case "dm/mohdm2": local.mapheight = 828; break
+		case "dm/mohdm3": local.mapheight = 1592; break
+		case "dm/mohdm4": local.mapheight = 1704; break
+		case "dm/mohdm5": local.mapheight = 1688; break
+		case "dm/mohdm6": local.mapheight = 1158; break // this skybox is thicker (should've been 1368 - 40 = 1328)
+		case "dm/mohdm7": local.mapheight = 600; break
+		case "obj/obj_team1": local.mapheight = 2072; break
+		case "obj/obj_team2": local.mapheight = 808; break
+		case "obj/obj_team3": local.mapheight = 1496; break
+		case "obj/obj_team4": local.mapheight = 1704; break
+		case "training": local.mapheight = 925; break // this skybox is thicker (should've been 1520 - 40 = 1480)
+		case "m1l1": local.mapheight = 3446; break // this skybox is thicker (should've been 3776 - 40 = 3736)
+		case "m1l2a": local.mapheight = 530; break
+		case "m1l2b": local.mapheight = 1384; break
+		case "m1l3a": local.mapheight = 2576; break
+		case "m1l3b": local.mapheight = 1736; break
+		case "m1l3c": local.mapheight = 2100; break // this skybox is thicker (should've been 2240 - 40 = 2200)
+		case "m2l1": local.mapheight = 2136; break
+		case "m2l2a": local.mapheight = 1240; break
+		case "m2l2b": local.mapheight = 1240; break
+		case "m2l2c": local.mapheight = 1240; break
+		case "m2l3": local.mapheight = 1880; break
+		case "m3l1a": local.mapheight = 1423; break
+		case "m3l1b": local.mapheight = 1423; break
+		case "m3l2": local.mapheight = 1118; break
+		case "m3l3": local.mapheight = 2016; break
+		case "m4l0": local.mapheight = 1720; break
+		case "m4l1": local.mapheight = 2056; break
+		case "m4l2": local.mapheight = 1383; break
+		case "dm/train_to_hell": local.mapheight = 3396; break
+		// more fully-modded maps coming soon.
+
+		default: local.mapheight = NIL; break
+	}
+end local.mapheight

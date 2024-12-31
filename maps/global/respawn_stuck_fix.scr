@@ -1,0 +1,50 @@
+// Auto-respawn players that get stuck inside walls/entities/other players when spawning. Run this from global/dmprecache.scr (not required).
+//
+// All players who recently spawned will have 2 timers counting before any respawns occur: alive-time & stuck-time.
+// If players are alive and stuck in a wall for 3+ seconds ("falling", but unable to move), they will auto-respawn.
+// If they do move within 3 seconds and are not "falling", respawn_stuck_fix.scr will turn off for that player until they've respawned after dying, switching teams, or spawning after the map changes.
+
+main:
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i] != NULL && (!isalive $player[local.i] || $player[local.i].fellundermap == 1 || $player[local.i].respawn_stuck_check != 1))
+			{
+				$player[local.i] thread respawn_stuck_check
+			}
+		}
+		waitframe
+	}
+	thread main
+end
+
+respawn_stuck_check:
+
+	self.respawn_stuck_check = 1
+	local.team = self.dmteam
+	local.c = 0
+	local.alivetime = 0
+
+	while(isalive self && self.dmteam != "spectator" && self.dmteam == local.team && (local.c < 30 || local.alivetime >= 30))
+	{
+		if(self getmovement == "falling" && local.c < 30 && local.alivetime < 30) { local.c++ }
+		else { local.c = 0; local.alivetime++ }
+
+		if(local.alivetime > 30) { local.alivetime = 30 }
+		wait 0.1
+	}
+
+	if(self != NULL)
+	{
+		if(isalive self && self.dmteam != "spectator" && self.dmteam == local.team && local.c >= 30 && self.flying != 1 && self.driving != 1 && self.passenger != 1 && self.turreting != 1 && self.missile != NIL)
+		{
+			self iprint "Stuck for 3+ seconds. Respawning..."
+			//if(self.admin_name_priority == 1 || self isadmin == 1) { self iprint "This can be disabled in global/dmprecache.scr." }
+			self respawn
+		}
+		self.respawn_stuck_check = 0
+	}
+end

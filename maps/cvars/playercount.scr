@@ -1,0 +1,33 @@
+main:
+
+	while(int(getcvar("players")) != 1 && int(getcvar("players")) != 2 && int(getcvar("players")) != 3) { waitframe }
+
+	local.maxclients = int(getcvar(sv_maxclients))
+	local.players = 0
+	local.j = 0
+	
+	for(local.i = 0; local.i <= local.maxclients - 1; local.i++) // getentity() only goes up to 868 entities.
+	{
+		//waitframe
+		local.entity = getentity(local.i)
+
+		if(int(getcvar("players")) == 1) { if(local.entity != NULL) { local.players++ } }
+		if(int(getcvar("players")) == 2 || int(getcvar("players")) == 3)
+		{
+			if(local.entity == NULL)
+			{
+				if(int(getcvar("players")) == 3) { println("$player[" + (local.i + 1) + "] = NULL") }
+				local.j++
+			}
+			if(local.entity != NULL)
+			{
+				println("$player[" + (local.i + 1) + "] = " + netname $player[local.i + 1 - local.j] + "   IP: " + getip $player[local.i + 1 - local.j])
+				local.players++
+			}
+		}
+	}
+	if(int(getcvar("players")) != 0) { setcvar "players" "0" }
+	println("----- Players in server: " + local.players + " / " + local.maxclients)
+	thread main
+end
+

@@ -1,0 +1,543 @@
+main local.kills local.timealive:
+
+////////////////////////////////////////////////////////////////////////
+
+level.sentry_bulletdamage = 5	// damage per bullet
+level.sentry_fov = 120		// field-of-view in degrees (facing forward) to lock-on to players
+level.sentry_maxdist = 6000	// maximum range of the turret
+level.sentry_lockon_delay = 10	// number of frames (not seconds) until locked-on turret begins firing
+level.sentry_deaddamage = 250	// only when turret gets destroyed
+level.sentry_deadradius = 200	// only when turret gets destroyed
+
+////////////////////////////////////////////////////////////////////////
+
+	if(local.kills == NIL || int(local.kills) <= 1) { wait 1; println("----- ERROR sentry_turret.scr: 'kills' parameter must be > 1."); end }
+	if(local.timealive == NIL || local.timealive <= 1) { wait 1; println("----- ERROR sentry_turret.scr: 'timealive' parameter must be > 1."); end }
+
+	local.kills = int(local.kills)
+	if(level.kill_streak[local.kills] != 1) { thread sentry_turret local.kills local.timealive }
+	else { wait 1; println("----- ERROR sentry_turret.scr: another killstreak is already checking for " + local.kills + " player kills."); end }
+	level.kill_streak[local.kills] = 1
+
+	if(level.check_player_kills != 1)
+	{
+		thread killstreaks
+		local.result = registerev damage killstreaks/damagehandler.scr // this replaces the "health" parameter; only enemies can destroy killstreaks.
+	}
+	level.check_player_kills = 1
+
+	cache models/vehicles/jeep_30cal.tik
+	cache models/static/exp_crate3.tik
+	cache models/items/item_mg_ammobox.tik
+	cache models/fx/fx_flak88_explosion.tik
+	cache models/emitters/mortar_dirt_nosound.tik
+	thread scriptmaster
+end
+
+////////////////////////////////////////////////////////////////////////
+
+sentry_turret local.kills local.timealive:
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(isalive $player[local.i] && $player[local.i].kill_streak != NIL && $player[local.i].kill_streak >= local.kills && $player[local.i].killstreak_selected != 1 && $player[local.i].killstreak_sentryturret != 1 && $player[local.i].dmteam == $player[local.i].teamm)
+			{
+				$player[local.i] thread holding_sentry_turret local.timealive
+			}
+		}
+		waitframe
+	}
+	thread sentry_turret local.kills local.timealive
+end
+
+holding_sentry_turret local.timealive:
+
+	ihuddraw_string self 150 "Hold USE(e) + Lean Left/Right to show."
+	self iprint "*** Killstreak Acquired: Sentry Turret ***" 1
+	self iprint "*** If you die or switch teams, you will lose the killstreak! ***" 1
+	self iprint "Hold USE(e) + Lean Left/Right to begin placing it."
+	self iprint "Hold USE(e) + Right Click to place it."
+
+	local.team = self.dmteam
+	self.placing_killstreak_old = 0		// only for ensuring that Light Bombs, Giant Bombs, & throwing knives don't shoot immediately after placing a killstreak
+	self.placing_killstreak = 0		// toggle for showing/hiding killstreak
+	self.killstreak_selected = 1		// only allows one killstreak to be held at a time, once placing_killstreak = 1
+	self.killstreak_sentryturret = 1	// prevents the player from obtaining multiple sentry turrets per "life";
+						// removing this and setting "local.kills" = 1 could crash the server due to turrets being spam-spawned.
+	local.dummy = spawn script_model
+	local.dummy model models/vehicles/jeep_30cal.tik
+	local.dummy.origin = self.origin
+	local.dummy.angle = self.angle
+	local.dummy notsolid
+	local.dummy hide
+
+	local.dummy attachmodel models/static/exp_crate3.tik "Box01" 1 ("dummyturretbox1_" + local.dummy.entnum) 1 -1 -1 -1 -1 ( -4.75 11 13 ) //( +right -left, +inwards -outwards, +up -down )
+	$("dummyturretbox1_" + local.dummy.entnum).angles = ( 0 0 90 )
+	$("dummyturretbox1_" + local.dummy.entnum) hide
+	local.dummy attachmodel models/items/item_mg_ammobox.tik "Box01" 1 ("dummyturretbox2_" + local.dummy.entnum) 1 -1 -1 -1 -1 ( 0 0 31.75 )
+	$("dummyturretbox2_" + local.dummy.entnum).angles = ( 0 90 0 )
+	$("dummyturretbox2_" + local.dummy.entnum) hide
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color ( 0 1 0 )
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	local.laser scale 0.5
+	local.laser notsolid
+	local.laser.origin = self gettagposition "eyes bone"
+	local.laser endpoint local.laser.origin
+
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator" && self.placing_killstreak_old2 == 1) { waitframe }
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator")
+	{
+		local.laser.origin = self gettagposition "eyes bone"
+		local.laservec = angles_toforward self.viewangles
+
+		if(local.toggle != 1 && self.placing_killstreak != 1 && self.useheld == 1 && (self.leanleftheld == 1 || self.leanrightheld == 1) && self.driving != 1 && self.flying != 1 && self.passenger != 1)
+		{
+			ihuddraw_string self 150 "Hold USE(e) + Right Click to place."
+			local.toggle = 1
+			local.dummy show
+			$("dummyturretbox1_" + local.dummy.entnum) show
+			$("dummyturretbox2_" + local.dummy.entnum) show
+			self.placing_killstreak = 1
+		}
+		if((local.toggle != 1 && self.placing_killstreak == 1 && self.useheld == 1 && (self.leanleftheld == 1 || self.leanrightheld == 1)) || self.driving == 1 || self.flying == 1 || self.passenger == 1)
+		{
+			if(self.driving == 1 || self.flying == 1 || self.passenger == 1) { ihuddraw_string self 150 "" }
+			else { ihuddraw_string self 150 "Hold USE(e) + Lean Left/Right to show." }
+			local.toggle = 1
+			local.dummy hide
+			$("dummyturretbox1_" + local.dummy.entnum) hide
+			$("dummyturretbox2_" + local.dummy.entnum) hide
+			self.placing_killstreak = 0
+		}
+		if(self.leanleftheld != 1 && self.leanrightheld != 1) { local.toggle = 0 }
+
+		if(self.placing_killstreak == 1 && self.useheld == 1)
+		{
+			local.dummy.origin = trace local.laser.origin (local.laser.origin + ( local.laservec * 350 )) 0
+			local.dummy.origin = trace local.dummy.origin (local.dummy.origin + ( 0 0 -10240 )) 0 // simulate droptofloor
+			local.laser endpoint local.dummy.origin
+		}
+		else
+		{
+			local.dummy.origin = self.origin
+			local.dummy.angle = self.angle
+			local.laser endpoint local.laser.origin
+		}
+
+		if(self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1 && self.placing_killstreak == 1)
+		{
+			self thread spawn local.dummy.origin local.dummy.angle local.timealive
+			self.placing_killstreak = 0
+			ihuddraw_string self 150 ""
+			self thread useheld_fireheld
+			break
+		}
+		self.placing_killstreak_old = self.placing_killstreak
+		waitframe
+	}
+	local.dummy remove
+	local.laser remove
+
+	if(self != NULL) { self.killstreak_selected = 0 }
+
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.dmteam != "spectator") { waitframe }
+
+	if(self != NULL) { self.killstreak_sentryturret = 0; ihuddraw_string self 150 "" }
+end
+
+spawn local.origin local.angle local.timealive:
+
+	local.sentryturret = spawn models/vehicles/jeep_30cal.tik
+	local.sentryturret.origin = local.origin
+	local.sentryturret.angle = local.angle
+	local.sentryturret.timealive = local.timealive
+	local.sentryturret notsolid
+	local.sentryturret dmbulletdamage 0
+	local.sentryturret playsound placedown_sentry
+	//local.sentryturret.owner = self
+
+	local.sentryturret attachmodel models/static/exp_crate3.tik "Box01" 1 ("sentryturretbox1_" + local.sentryturret.entnum) 1 -1 -1 -1 -1 ( -4.75 11 13 ) //( +right -left, +inwards -outwards, +up -down )
+	$("sentryturretbox1_" + local.sentryturret.entnum).angles = ( 0 0 90 )
+	local.sentryturret attachmodel models/items/item_mg_ammobox.tik "Box01" 1 ("sentryturretbox2_" + local.sentryturret.entnum) 1 -1 -1 -1 -1 ( 0 0 31.75 )
+	$("sentryturretbox2_" + local.sentryturret.entnum).angles = ( 0 90 0 )
+
+	local.damagetrig = spawn trigger_multiple spawnflags 128 targetname "sentry_turret"
+	local.damagetrig.origin = local.origin
+	local.damagetrig setsize ( -50 -50 0 ) ( 50 50 75 )
+	local.damagetrig.health = 9999999
+	local.damagetrig thread healthboost
+
+	local.barreltip = spawn models/vehicles/jeep_30cal.tik
+	local.barreltip.origin = local.sentryturret gettagposition "tag_barrel"
+	local.barreltip.angle = local.angle
+	local.barreltip.scale = 0.1
+	local.barreltip notsolid
+	local.barreltip hide
+
+	local.fwd_vec = angles_toforward ( 0 local.angle 0 )
+	local.init_angles = spawn script_origin		// need this entity to initially point the turret towards local.angle
+	local.init_angles.origin = trace (local.origin + local.fwd_vec * 56) (local.origin + local.fwd_vec * 10240) 0
+	local.sentryturret setaimtarget local.init_angles
+	local.barreltip setaimtarget local.init_angles
+
+	local.damagetrig.sentryturret = local.sentryturret
+	local.sentryturret.damagetrig = local.damagetrig
+	local.sentryturret.barreltip = local.barreltip
+	local.sentryturret.init_angles = local.init_angles
+
+	local.sentryturret thread targetplayers self
+	local.sentryturret thread rotate self
+	local.sentryturret thread timealive_expired self
+	local.damagetrig setthread dead	// only runs when trigger's health <= 0
+	local.damagetrig.player_owner = self
+	println("----- $player[" + (self.entnum + 1) + "] spawned a Sentry Turret.")
+end
+
+////////////////////////////////////////////////////////////////////////
+
+targetplayers local.player_owner: // cannot use "local.owner" since it is a read-only variable
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0g
+	local.laser color ( 1 0 0 )
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	local.laser scale 0.5
+	local.laser notsolid
+	local.laser.origin = self gettagposition "tag_barrel"
+	local.laser endpoint local.laser.origin
+
+	self.damagetrig.player_owner = local.player_owner
+	self.locked_on = 0
+	self thread avatar local.player_owner.dmteam
+	local.team = local.player_owner.dmteam
+
+	local.shortest_dist = 99999 // give this a really high number instead of 0, since we're looking for the shortest distance in an array of players, not the farthest one.
+
+	while(self != NULL && self.damagetrig.health > 1 && $player.size >= 1 && local.player_owner != NULL && local.player_owner.dmteam == local.team)
+	{
+		self.barreltip.origin = self gettagposition "tag_barrel"
+
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].locked_on_sentry == NIL) { $player[local.i].locked_on_sentry = 0 }
+			local.dist = vector_length(self.origin - $player[local.i].origin)
+
+			if(local.dist < level.sentry_maxdist && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && ($player[local.i].driving != 1 || $player[local.i].turreting == 1 || $player[local.i].passenger == 1) && (self.barreltip cansee $player[local.i] level.sentry_fov || ($player[local.i].ridingent != NIL && $player[local.i].ridingent != NULL && self.barreltip cansee $player[local.i].ridingent level.sentry_fov)) && local.dist < local.shortest_dist && $player[local.i].spectator_choseteam_notyetspawned != 1 && $player[local.i] != local.player_owner && ($player[local.i].dmteam != local.player_owner.dmteam || getcvar("g_gametype") == "1"))
+			{
+				local.shortest_dist = local.dist
+				local.d = local.i
+			}
+		}
+		if(local.d != NIL && local.d <= $player.size && isalive $player[local.d] && $player[local.d].dead != 1 && $player[local.d].dmteam != "spectator" && ($player[local.d].driving != 1 || $player[local.d].turreting == 1 || $player[local.d].passenger == 1) && (self.barreltip cansee $player[local.d] level.sentry_fov || ($player[local.d].ridingent != NIL && $player[local.d].ridingent != NULL && self.barreltip cansee $player[local.d].ridingent level.sentry_fov)) && $player[local.d].spectator_choseteam_notyetspawned != 1 && $player[local.d] != local.player_owner && ($player[local.d].dmteam != local.player_owner.dmteam || getcvar("g_gametype") == "1"))
+		{
+			if(self.locked_on != 1)
+			{
+				if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL)
+				{
+					self setaimtarget $player[local.d].plane
+					self.barreltip setaimtarget $player[local.d].plane // do not make "setaimtarget" = the "ridingent" of a vehicle passenger, otherwise BulletAttack Reborn Exceptions will crash the server.
+				}
+				else
+				{
+					self setaimtarget $player[local.d]
+					self.barreltip setaimtarget $player[local.d]
+				}
+			}
+			self.locked_on = 1
+
+			local.laser.origin = self gettagposition "tag_barrel"
+			if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL) { local.laser endpoint $player[local.d].plane.origin }
+			else { local.laser endpoint ($player[local.d] gettagposition "eyes bone") }
+
+			if($player[local.d].locked_on_sentry >= level.sentry_lockon_delay)
+			{
+				local.player_owner bindweap self // self.owner = local.player_owner. possible server crash fix for: "Reborn EXCEPTION: BulletAttack - PointersSet! EXCEPTION CODE: -1073741819"
+				self startfiring
+				local.player_owner bindweap self // self.owner = NULL, bindweap a 2nd time to unbind from self
+				self playsound sentry_30calfire
+				local.laser color ( 1 0 1 )
+
+				if(local.player_owner == NIL || local.player_owner == NULL)
+				{
+					if($player[local.d].flying != 1 || $player[local.d].turreting == 1)
+					{
+						$player[local.d] damage self level.sentry_bulletdamage self (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL)
+					{
+						$("planehit" + $player[local.d].entnum) damage self level.sentry_bulletdamage self (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].ridingent != NIL && $player[local.d].ridingent != NULL)
+					{
+						$player[local.d].ridingent damage self level.sentry_bulletdamage self (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+				}
+				else
+				{
+					if($player[local.d].flying != 1 || $player[local.d].turreting == 1)
+					{
+						$player[local.d] damage local.player_owner level.sentry_bulletdamage local.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].flying == 1 && $player[local.d].flying_init != 1 && $player[local.d].plane != NIL && $player[local.d].plane != NULL)
+					{
+						$("planehit" + $player[local.d].entnum) damage local.player_owner level.sentry_bulletdamage local.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.d].ridingent != NIL && $player[local.d].ridingent != NULL)
+					{
+						$player[local.d].ridingent.shooter = local.player_owner
+						$player[local.d].ridingent damage local.player_owner level.sentry_bulletdamage local.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+				}
+			}
+			$player[local.d].locked_on_sentry++
+		}
+		else
+		{
+			self.locked_on = 0
+			local.laser color ( 1 0 0 )
+			for(local.i = 1; local.i <= $player.size; local.i++) { $player[local.i].locked_on_sentry = 0 }
+			local.d = NIL
+			local.shortest_dist = 99999
+			local.laser endpoint local.laser.origin
+
+			self setaimtarget NULL
+			self stopfiring
+		}
+		waitframe
+	}
+	local.laser remove
+end
+
+dead:
+
+	local.explode = spawn script_model
+	local.explode model "fx/fx_flak88_explosion.tik"
+	local.explode.origin = self.origin + ( 0 0 40 )
+	local.explode.scale = 1.0
+	local.explode anim start
+	local.explode notsolid
+	
+	local.debris = spawn script_model
+	local.debris model "emitters/mortar_dirt_nosound.tik" 
+	local.debris.origin = self.origin
+	local.debris notsolid
+	local.debris.scale = 0.8
+	local.debris anim start
+
+	local.explode playsound explode_sentry
+	if(self.enemy_killer != NIL)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.dist = vector_length(self.origin - $player[local.i].origin)
+
+			if(local.dist < level.sentry_deadradius && isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && $player[local.i].spectator_choseteam_notyetspawned != 1 && ($player[local.i].dmteam != self.enemy_killer.dmteam || getcvar("g_gametype") == "1"))
+			{
+				if(self cansee $player[local.i] 360)
+				{
+					$player[local.i] damage self.enemy_killer level.sentry_deaddamage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+				}
+				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && self cansee $player[local.i].drivingent 360)
+				{
+					$player[local.i].drivingent.shooter = self.enemy_killer
+					if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self.enemy_killer level.sentry_deaddamage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { $player[local.i].drivingent damage self.enemy_killer level.sentry_deaddamage self.enemy_killer (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+		}
+	}
+	else { radiusdamage local.explode.origin level.sentry_deaddamage level.sentry_deadradius }
+
+	self waitthread killstreaks/damagehandler.scr::chain_reaction
+
+	waitframe
+	local.explode remove
+	local.debris remove
+	self.sentryturret.init_angles remove
+	self.sentryturret.barreltip remove
+	self.sentryturret remove
+	self remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+avatar local.team:
+
+	local.avatar = spawn func_beam
+	local.avatar.origin = self.origin + ( 0 0 80 )
+	local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+	local.avatar minoffset 0.0
+	local.avatar maxoffset 0.0
+	local.avatar color ( 1.0 1.0 1.0 )
+	local.avatar scale 7.0
+	local.avatar life 0
+	if(local.team == "allies") { local.avatar shader ("textures/hud/allies_headicon") }
+	if(local.team == "axis") { local.avatar shader ("textures/hud/axis_headicon") }
+	local.avatar numsegments 1
+	local.avatar alpha 0.80
+	local.avatar activate
+
+	while(self != NULL && self.health > 1)
+	{
+		local.avatar.origin = self.origin + ( 0 0 80 )
+		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
+		waitframe
+	}
+	local.avatar remove
+end
+
+healthboost:
+
+	local.health = self.health
+	while(self != NULL && self.health > 1)
+	{
+		self.health = local.health
+		waitframe
+	}
+end
+
+rotate local.player_owner:
+
+	local.team = local.player_owner.dmteam
+	while(self != NULL && self.health > 1 && local.player_owner != NULL && local.player_owner.dmteam == local.team)
+	{
+		if(self.locked_on != 1)
+		{
+			self.angle -= 7 // rotate clockwise
+			if(self.angle > 360 || self.angle < -360) { self.angle = 0 }
+
+			local.fwd_vec = angles_toforward ( 0 self.angle 0 )
+			self.init_angles.origin = trace (self.origin + local.fwd_vec * 56) (self.origin + local.fwd_vec * 10240) 0
+			self setaimtarget self.init_angles
+			self.barreltip setaimtarget self.init_angles
+		}
+		waitframe
+	}
+end
+
+timealive_expired local.player_owner:
+
+	local.c = 0
+	local.team = local.player_owner.dmteam
+	while(self != NULL && self.damagetrig.health > 1 && local.c < self.timealive && local.player_owner != NULL && local.player_owner.dmteam == local.team)
+	{
+		local.c += 0.1
+		wait 0.1
+	}
+	while(self != NULL && self.damagetrig.health > 1 && local.c < self.timealive && local.player_owner != NULL && local.player_owner.dmteam == local.team)
+	{
+		local.c += 0.1
+		wait 0.1
+	}
+	
+	if(self != NULL)
+	{
+		self.damagetrig remove
+		self.barreltip remove
+		self.init_angles remove
+		self remove
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+killstreaks:
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].teamm == NIL) { $player[local.i].teamm = $player[local.i].dmteam } // .team is a read-only variable
+			if($player[local.i].kill_streak == NIL) { $player[local.i].kill_streak = 0 }
+			if($player[local.i].currentkills == NIL) { $player[local.i].currentkills = $player[local.i] getkills; $player[local.i] thread huddraw }
+
+			if(!isalive $player[local.i] || $player[local.i].dmteam != $player[local.i].teamm || $player[local.i].dmteam == "spectator")
+			{
+				$player[local.i].teamm = $player[local.i].dmteam
+				$player[local.i].kill_streak = 0
+				$player[local.i].currentkills = $player[local.i] getkills
+			}
+			else if($player[local.i] getkills > $player[local.i].currentkills) // if alive, same team, not spectator, and gets a kill
+			{
+				$player[local.i].kill_streak += ($player[local.i] getkills - $player[local.i].currentkills)
+				$player[local.i].currentkills = $player[local.i] getkills
+			}
+
+			if($player[local.i].dmteam == "spectator") { $player[local.i] thread spectator_choseteam_notyetspawned }
+		}
+		waitframe
+	}
+	thread killstreaks
+end
+
+spectator_choseteam_notyetspawned:
+
+	if(self.spectator_choseteam_notyetspawned == 1) { end }
+	self.spectator_choseteam_notyetspawned = 1
+
+	while(self != NULL && self.dmteam == "spectator") { waitframe }
+
+	while(self != NULL && self.dmteam != "spectator" && self.inventory.size < 1) { waitframe }
+
+	if(self != NULL && self.dmteam != "spectator") { self.spectator_choseteam_notyetspawned = 0 }
+end
+
+huddraw:
+
+	ihuddraw_alpha self 150 0
+	ihuddraw_virtualsize self 150 1
+	ihuddraw_alpha self 150 .8
+	ihuddraw_font self 150 "verdana-12"
+	ihuddraw_color self 150 .7 .7 0
+	ihuddraw_rect self 150 -200 212 200 14
+	ihuddraw_string self 150 ""
+end
+
+useheld_fireheld:
+
+	local.team = self.dmteam
+	self.placing_killstreak_old2 = 1
+
+	while(isalive self && self.dmteam == local.team == self.dmteam != "spectator" && self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1) { waitframe }
+
+	if(self != NULL)
+	{
+		self.placing_killstreak_old = 0
+		self.placing_killstreak_old2 = 0
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+
+	local.master aliascache explode_sentry1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_sentry2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_sentry3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+	local.master aliascache explode_sentry4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1 .2 .9 .2 2000 9000 weapon loaded maps level.mapname
+
+	local.master aliascache sentry_30calfire sound/weapons/fire/50CalFire2.wav soundparms 1.05 0.2 0.95 0.1 800 4000 weapon loaded maps level.mapname
+
+	local.master aliascache placedown_sentry1 sound/items/Item_Bangaloredirt01.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps level.mapname
+	local.master aliascache placedown_sentry2 sound/items/Item_Bangaloredirt02.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps level.mapname
+end

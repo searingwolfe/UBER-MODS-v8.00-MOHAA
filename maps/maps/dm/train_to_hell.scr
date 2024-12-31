@@ -1,0 +1,978 @@
+// Train to Hell
+// ARCHITECTURE: AT0MIC
+// SCRIPTING: AT0MIC & TLTRUDE
+
+main:
+
+exec cvars/playercount.scr
+exec cvars/entitycount.scr
+exec cvars/track.scr
+exec cvars/check.scr
+exec cvars/find.scr
+exec cvars/findent.scr
+exec cvars/findclass.scr
+exec cvars/findmodel.scr
+exec cvars/drawpath.scr
+exec cvars/cybsnd.scr
+exec cvars/playerspawns.scr
+exec cvars/coord_pointer.scr
+exec cvars/ubergametype.scr
+exec cvars/adminstuff.scr
+
+// set scoreboard messages
+setcvar "g_obj_alliedtext1" "Train to Hell"
+setcvar "g_obj_alliedtext2" ""
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: At0miC & Tltrude"
+
+setcvar "g_scoreboardpic" "none"
+
+setcvar "fraglimit" "0"
+setcvar "timelimit" "20"
+setcvar "maxentities" "2000"
+
+setcvar "cheats" "1"
+setcvar "thereisnomonkey" "1"
+
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills"
+local.v = exec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1" }
+if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"
+						spawn info_player_deathmatch "origin"
+						spawn info_player_deathmatch "origin"
+						spawn info_player_deathmatch "origin"
+}
+//if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cyb }
+//if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread snd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 0 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+//level.basebuild_laserdist = 700
+}
+
+thread setup
+
+level waittill prespawn
+
+	exec global/DMprecache.scr
+	exec alienx/hud.scr
+	exec ui/fix.scr
+	level.dmrespawning = 1
+
+	level.script = maps/dm/train_to_hell.scr
+	exec global/ambient.scr m6l3a
+	exec global/door_locked.scr::lock
+	exec global/exploder.scr
+
+	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
+	$world farplane 9000 // was 18200
+	$world farplane_color ".433 .445 .433" // was .6 .6 .65
+	$world farplane_cull 0
+
+exec global/victory_podium.scr ( 0 0 0 ) 0 auto auto 5
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( 0 0 0 ) ( 0 0 0 ) 15 10
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+}
+ 
+level waittill spawn
+
+	thread consoleprint
+	thread ambience
+
+	thread test
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
+
+	exec global/throwingknife.scr k1 ( 0 0 0 ) ( 0 135 0 )
+	exec global/throwingknife.scr k2 ( 0 0 0 ) ( 0 90 0 )
+	exec global/throwingknife.scr k3 ( 0 0 0 ) ( 0 0 0 )
+	exec global/throwingknife.scr k4 ( 0 0 0 ) ( 0 90 0 )
+}
+end
+
+ambience: // make sure the spawnamb volumes are not overlapping!!!
+
+	level.spawnamb = makeArray
+		( -2804 -4392 -14 ) ( 0 -86 0 ) ( 600 86 202 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
+	endArray
+
+	exec global/ambience_mp.scr sound/amb/Amb_WindTrees3.wav 1 1 // 0 = no, 1 = keep players' music volume at max.
+end
+
+test:
+
+	local.test = 0.1
+
+	while(1)
+	{
+		local.value = waitthread global/math.scr::arctangent local.test
+		println("-----")
+		println(local.test)
+		println("test = " + local.value)
+		local.value2 = (atan local.test) * 180 / 3.14159265359
+		println("real = " + local.value2)
+		wait 1
+
+		local.test += 0.1
+		if(local.test > 1) { local.test = 0.1 }
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+setup:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn ScriptMaster
+	local.master aliascache train_eng2 sound/amb/Amb_MissileRoom.wav soundparms 2.0 0.0 1.0 0.0 900 2200 auto loaded maps level.mapname
+	local.master aliascache train_eng3 sound/amb/Amb_LightHum_03.wav soundparms 1.25 0.0 1.0 0.0 150 1000 auto loaded maps level.mapname
+	local.master aliascache train_eng sound/train/train1.wav soundparms 1.75 0.0 0.8 0.0 2000 6000 auto loaded maps level.mapname
+	local.master aliascache eng_loud sound/train/train1.wav soundparms 2.5 0.0 0.8 0.0 3000 6500 auto loaded maps level.mapname
+
+	local.master aliascache train_rolling sound/vehicle/veh_train_m6l3a_move.wav soundparms 1.6 0.0 1.0 0.0 380 2200 auto loaded maps level.mapname
+	local.master aliascache train_track2 sound/train/railclack2.wav soundparms 2.0 0.0 1.0 0.0 265 2200 auto loaded maps level.mapname
+	local.master aliascache track_loud sound/train/railclack2.wav soundparms 2.75 0.0 0.8 0.0 335 2500 auto loaded maps level.mapname
+
+	local.master aliascache train_steam sound/amb/Amb_FirePlace.wav soundparms 1.5 0.3 1.0 0.0 150 1000 auto loaded maps level.mapname
+	local.master aliascache train_fire sound/amb/Amb_FireLoop_03.wav soundparms 1.75 0.3 1.0 0.0 165 1000 auto loaded maps level.mapname
+	local.master aliascache train_bell sound/train/bells.wav soundparms 1.0 0.0 1.0 0.0 1024 6000 auto loaded maps level.mapname
+	local.master aliascache train_whistle sound/train/NorthernPacific.wav soundparms 1.0 0.0 1.0 0.0 1024 6000 auto loaded maps level.mapname
+	local.master aliascache railcar_open_snd sound/mechanics/m6l3a_SlidingDoors_Open.wav soundparms 1.0 0.0 1.0 0.0 160 1600 item loaded maps level.mapname
+	local.master aliascache railcar_close_snd sound/mechanics/m6l3a_SlidingDoors_Close.wav soundparms 1.0 0.0 1.0 0.0 160 1600 item loaded maps level.mapname
+	local.master aliascache train_creak1 sound/characters/fs_metalcreak_01.wav soundparms .8 0.4 0.7 0.6 160 800 auto loaded maps level.mapname
+	local.master aliascache train_creak2 sound/characters/fs_metalcreak_02.wav soundparms .8 0.4 0.7 0.6 160 800 auto loaded maps level.mapname
+	local.master aliascache train_creak3 sound/characters/fs_metalcreak_03.wav soundparms .8 0.4 0.7 0.6 160 800 auto loaded maps level.mapname
+	local.master aliascache train_creak4 sound/characters/fs_metalcreak_05.wav soundparms .8 0.4 0.7 0.6 160 800 auto loaded maps level.mapname
+	local.master aliascache train_creak5 sound/characters/fs_metalcreak_06.wav soundparms .8 0.4 0.7 0.6 160 800 auto loaded maps level.mapname
+	local.master aliascache crossing_bell sound/train/xing3.wav soundparms 1.0 0.0 1.0 0.0 1024 6000 auto loaded maps level.mapname
+	local.master aliascache smell_funny sound/dialogue/M6L3/A/dfr_M6L3_612h.wav soundparms 1.2 0.0 1.0 0.0 160 2200 auto loaded maps level.mapname
+	local.master aliascache car_move sound/vehicle/veh_truck_move.wav soundparms 1.5 0.0 1.0 0.0 800 4000 auto loaded maps level.mapname
+	local.master aliascache steamloop sound/mechanics/Mec_SteamLoop_01.wav soundparms 1.0 0.3 1.0 0.0 320 2200 item loaded maps level.mapname
+
+	local.master aliascache stonesmall01 sound/mechanics/Obj_BreakStoneSml_01.wav soundparms 0.6 0.4 1.0 0.4 1000 8000 auto loaded maps level.mapname
+	local.master aliascache stonesmall02 sound/mechanics/Obj_BreakStoneSml_02.wav soundparms 0.6 0.4 1.0 0.4 1000 8000 auto loaded maps level.mapname
+	local.master aliascache stonesmall03 sound/mechanics/Obj_BreakStoneSml_03.wav soundparms 0.6 0.4 1.0 0.4 1000 8000 auto loaded maps level.mapname
+	local.master aliascache stonesmall04 sound/mechanics/Obj_BreakStoneSml_04.wav soundparms 0.6 0.4 1.0 0.4 1000 8000 auto loaded maps level.mapname
+	local.master aliascache stonesmall05 sound/mechanics/Obj_BreakStoneSml_01.wav soundparms 0.6 0.4 1.0 0.4 1000 8000 auto loaded maps level.mapname
+
+	local.master aliascache explode_wood1 sound/weapons/explo/Explo_WoodLarge1.wav soundparms 1.2 0.2 0.8 0.4 1000 8000 auto loaded maps level.mapname
+	local.master aliascache explode_wood2 sound/weapons/explo/Explo_WoodLarge2.wav soundparms 1.2 0.2 0.8 0.4 1000 8000 auto loaded maps level.mapname
+
+	thread stack_smoke
+	thread pole_prep
+	thread start_sounds
+	thread steam_start
+	$track_ends time .001
+	$track_ends moveto $wayA
+	$track_ends move // moved for lighting
+
+level waittill prespawn
+
+	$dor1_win bind $dor1 // breakable windows
+	$dor2_win bind $dor2
+	$dor3_win bind $dor3
+	$dor4_win bind $dor4
+	$knob1 bind $dor1 // non-solid knobs
+	$knob2 bind $dor2
+	$knob3 bind $dor3
+	$knob4 bind $dor4
+
+	$tree hide
+	$tree2 hide
+	$tree3 hide
+	$sign hide
+	$station_speaker bind $station
+	$station hide
+	$tunnel_hit_trigger bind $tunnel
+	$tunnel_hit_trigger2 bind $tunnel
+	$bridge_hit_trigger1 bind $bridge
+	$bridge_hit_trigger2 bind $bridge
+	$bridge_hit_trigger3 bind $bridge
+	$bridge_hit_trigger4 bind $bridge
+	$tunnel hide
+	$crossing hide
+	$water_tower hide
+	$bridge hide
+	$new_tunnel hide
+	$new_tunnel bind $tunnel
+	$riverwalls bind $bridge
+	$riverwater bind $bridge	
+	$riverwalls hide
+	$riverwater hide
+	$tunnel_shadow bind $tunnel
+
+	local.car2 = spawn script_model model "vehicles/european_delivery_truck_green.tik" targetname "car_2"
+	local.car2.origin = $car_1.origin
+	local.car2.scale = 2.0
+
+	local.car3 = spawn script_model model "vehicles/european_delivery_truck_red3.tik" targetname "car_3"
+	local.car3.origin = ($car_1.origin + (0 800 0))
+	local.car3.scale = 2.0
+ 
+	$car_1 remove
+	$car_2 hide
+	$car_3 hide
+	level.stationinview = 0
+	level.tunnelinview = 0
+	level.crossinview = 0
+	level.towerinview = 0
+	level.bridgeinview = 0
+	level.pause_time = 1
+
+	spawn info_waypoint targetname "polewayB2"
+	$polewayB2.origin = ($polewayB.origin + ( -3800 0 0 ))
+	spawn info_waypoint targetname "polewayA2"
+	$polewayA2.origin = ($polewayA.origin + ( 3560 0 0 ))
+
+level waittill spawn
+
+	thread toot_whistle
+	thread tunnelloop
+	thread stationloop
+	thread bridgeloop
+	thread treeloop
+	thread treeloop2
+	thread treeloop3
+	thread death_thread
+	thread tunnel_death
+	thread tunnel_death2
+	thread bridge_death1
+	thread bridge_death2
+	thread bridge_death3
+	thread bridge_death4
+	thread signloop
+	thread crossingloop
+	thread towerloop
+	thread car2loop
+	thread car3loop
+	thread train_shake
+	thread servertext 
+	thread tunnel_fade
+
+	for(local.d = 1; local.d <= 8; local.d++) { thread train_sound $("track_speaker" + local.d).origin "train_rolling" }
+	thread train_sound $engine_speaker.origin "train_rolling"
+	thread train_sound $engine_speaker.origin "train_track2"
+	thread train_sound $engine_speaker.origin "train_eng2"
+	thread train_sound ( 3255 -4393 169 ) "train_eng3"
+	thread train_sound ( 3482 -4393 250 ) "train_steam"
+	thread train_sound ( 3661 -4393 293 ) "train_fire"
+end
+
+////////////////////////////////////////////////////////////////////////
+
+train_sound local.origin local.sound:
+
+	local.ent = spawn script_model targetname "train_extra_sound"
+	local.ent model fx/dummy.tik
+	local.ent.origin = local.origin
+	local.ent.scale = 0.001
+	local.ent loopsound local.sound
+end local.ent
+
+////////////////////////////////////////////////////////////////////////
+
+//------------------------------>
+// sound Threads
+//------------------------------>
+
+start_sounds:
+
+	while(level.pause_time == NIL) { waitframe }
+	wait (level.pause_time)
+
+	$track_speaker1 loopsound train_track2
+	$track_speaker2 loopsound train_track2
+	$track_speaker3 loopsound train_track2
+	$track_speaker4 loopsound train_track2
+	$track_speaker5 loopsound train_track2
+	$track_speaker6 loopsound train_track2
+	$track_speaker7 loopsound train_track2
+	$track_speaker8 loopsound train_track2
+	$engine_speaker loopsound train_eng
+
+	while (level.tunnelinview !=1)
+	waitframe
+	waitthread stop_loop_snd
+	$track_speaker1 loopsound track_loud
+	$track_speaker2 loopsound track_loud
+	$track_speaker3 loopsound track_loud
+	$track_speaker4 loopsound track_loud
+	$track_speaker5 loopsound track_loud
+	$track_speaker6 loopsound track_loud
+	$track_speaker7 loopsound track_loud
+	$track_speaker8 loopsound track_loud
+	$engine_speaker loopsound eng_loud
+	wait 6
+	waitthread stop_loop_snd
+	goto start_sounds
+
+end
+
+stop_loop_snd:
+
+	level.pause_time = 0
+	$track_speaker1 stoploopsound
+	$track_speaker2 stoploopsound 
+	$track_speaker3 stoploopsound
+	$track_speaker4 stoploopsound
+	$track_speaker5 stoploopsound
+	$track_speaker6 stoploopsound
+	$track_speaker7 stoploopsound
+	$track_speaker8 stoploopsound
+	$engine_speaker stoploopsound
+	exec global/earthquake.scr .8 .1 2 1 // extra shake for tunnel
+
+end
+
+toot_whistle:
+
+	$toot_trigger waittill trigger
+	$toot_trigger playsound train_whistle
+	$toot_rope movedown 8
+	$toot_rope move
+	wait 1
+	$toot_rope moveup 8
+	$toot_rope waitmove
+	thread toot_whistle
+
+end
+
+//------------------------------>
+// tree Threads
+//------------------------------> 
+
+treeloop: 
+
+	wait 1
+
+	if (level.crossinview == 1)  // if crossing is in view, wait 2
+	wait 2
+
+	$tree time .001 
+	$tree moveto $wayA  
+	$tree waitmove
+
+	$tree show
+	$tree time 9.8333  
+	$tree moveto $wayB 
+	$tree waitmove
+ 
+	$tree hide
+	$tree time .001
+	$tree moveto $wayC 
+	$tree waitmove
+ 
+	$tree time .001
+	$tree moveto $wayD  
+	$tree waitmove
+ 
+	goto treeloop 
+
+end
+
+treeloop2:
+
+	wait 3
+
+	if (level.crossinview == 1)  // if crossing is in view, wait 2
+	wait 2  
+
+	$tree2 time .001 
+	$tree2 moveto $wayA  
+	$tree2 waitmove
+
+	$tree2 show
+	$tree2 time 9.8333  
+	$tree2 moveto $wayB 
+	$tree2 waitmove
+ 
+	$tree2 hide
+	$tree2 time .001
+	$tree2 moveto $wayC 
+	$tree2 waitmove
+ 
+	$tree2 time .001
+	$tree2 moveto $wayD  
+	$tree2 waitmove
+
+	goto treeloop2 
+
+end
+
+treeloop3:
+
+	wait 2
+
+	if (level.crossinview == 1)  // if crossing is in view, wait 2
+	wait 2  
+
+	$tree3 time .001 
+	$tree3 moveto $wayA  
+	$tree3 waitmove
+
+	$tree3 show
+	$tree3 time 9.8333  
+	$tree3 moveto $wayB 
+	$tree3 waitmove
+ 
+	$tree3 hide
+	$tree3 time .001
+	$tree3 moveto $wayC 
+	$tree3 waitmove
+ 
+	$tree3 time .001
+	$tree3 moveto $wayD  
+	$tree3 waitmove
+
+	goto treeloop3 
+
+end
+
+//------------------------------>
+// Pole Thread
+//------------------------------>
+
+pole_prep:
+
+	while($polewayA2 == NULL) { waitframe }
+
+	local.poles = $pole1::$pole2::$pole3::$pole4::$pole5 
+
+	local.poles[1].origin = $polewayA2.origin
+	local.dist = 0.0
+
+	//poles movement loop 
+
+	while(1) 
+	{  
+	   for(local.i = 1; local.i <= local.poles.size; local.i++) 
+	   { 
+	      local.pole = local.poles[local.i] 
+	      local.dist_on_track = local.dist + 3680 * (local.i - 1) 
+	      if( local.dist_on_track > 18400 ) 
+	      { 
+	         local.dist_on_track = ( local.dist_on_track - 18400 ) 
+	      } 
+	      local.pole.origin = $polewayA2.origin + (local.dist_on_track * ( -1 0 0 ))
+	   } 
+	   waitframe 
+	   local.dist = ( local.dist + 76.8 ) 
+	   if( local.dist > 18400 ) 
+	      local.dist = ( local.dist - 18400 )
+	} 
+  
+end
+
+//------------------------------>
+// Station Thread
+//------------------------------>
+ 
+stationloop: 
+
+	wait 300 // (5 minutes)
+
+	while (level.tunnelinview == 1)  // while tunnel is in view, wait
+	waitframe
+	while (level.towerinview == 1)  // while tunnel is in view, wait
+	waitframe
+
+	$engine_speaker playsound train_whistle
+	$station time .001 
+	$station moveto $polewayA  
+	$station waitmove
+
+	$station show
+	level.stationinview = 1
+	$station_speaker loopsound train_bell
+	$station time 7.18  
+	$station moveto $polewayB 
+	$station waitmove
+
+	$station hide
+	level.stationinview = 0
+	$station_speaker stoploopsound
+	$station time .001
+	$station moveto $polewayC 
+	$station waitmove
+ 
+	$station time .001
+	$station moveto $polewayD  
+	$station waitmove
+ 
+	goto stationloop
+
+end
+
+//------------------------------>
+// Tunnel Threads
+//------------------------------>
+
+tunnelloop:
+
+	wait 150 // 2.5 minutes
+
+	while (level.stationinview == 1)  // while station is in view, wait
+	waitframe
+	while (level.towerinview == 1)  // while tower is in view, wait
+	waitframe
+
+	exec global/message_print.scr "               Tunnel!" NIL 6.9
+	$tunnel time .001 
+	$tunnel moveto $wayA  
+	$tunnel waitmove
+
+	$tunnel show
+	$new_tunnel show
+	$engine_speaker playsound train_whistle
+	level.tunnelinview = 1
+
+	$tunnel time 9.8333  
+	$tunnel moveto $wayB 
+	$tunnel waitmove
+ 
+	$tunnel hide
+	$new_tunnel hide
+	level.tunnelinview = 0
+	$tunnel time .001
+	$tunnel moveto $wayC 
+	$tunnel waitmove
+ 
+	$tunnel time .001
+	$tunnel moveto $wayD  
+	$tunnel waitmove
+
+	goto tunnelloop
+
+end
+
+tunnel_fade:
+
+	$tunnel_shadow waittill trigger
+	fadeout 2 0 0 0 1
+	wait 2
+	fadein 2 0 0 0 1
+
+	goto tunnel_fade
+
+end
+
+//------------------------------>
+// Bridge Thread
+//------------------------------>
+
+bridgeloop:
+
+	wait 270 // 4.5 minutes
+
+	while (level.stationinview == 1)  // while station is in view, wait
+	waitframe
+	while (level.towerinview == 1)  // while tower is in view, wait
+	waitframe
+	while (level.tunnelinview == 1)  // while tunnel is in view, wait
+	waitframe
+
+	exec global/message_print.scr "               Low bridge!" NIL 2
+	//setcvar cg_3rd_person 1
+	$bridge time .001 
+	$bridge moveto $polewayA  
+	$bridge waitmove
+
+	$bridge show
+	$riverwalls show
+	$riverwater show
+	$engine_speaker playsound train_whistle
+	$bridge loopsound river
+	level.bridgeinview = 1
+
+	$bridge time 7.18  
+	$bridge moveto $polewayB 
+	$bridge waitmove
+ 
+	//setcvar cg_3rd_person 0
+	$bridge hide
+	$riverwalls hide
+	$riverwater hide
+	$bridge stoploopsound
+	level.bridgeinview = 0
+	$bridge time .001
+	$bridge moveto $polewayC 
+	$bridge waitmove
+ 
+	$bridge time .001
+	$bridge moveto $polewayD  
+	$bridge waitmove
+
+	goto bridgeloop
+
+end
+
+//------------------------------>
+// Sign Thread
+//------------------------------>
+
+signloop: 
+
+	wait 90 // (1.5 minutes) 
+
+	$sign time .001 
+	$sign moveto $wayA  
+	$sign waitmove
+
+	$sign show
+	$sign loopsound wind_trees3 4
+	$sign time 9.8333  
+	$sign moveto $wayB 
+	$sign waitmove
+
+	$sign hide
+	$sign stoploopsound
+	$sign time .001
+	$sign moveto $wayC 
+	$sign waitmove
+ 
+	$sign time .001
+	$sign moveto $wayD  
+	$sign waitmove
+ 
+	goto signloop
+
+end
+
+//------------------------------>
+// Crossing Thread
+//------------------------------>
+
+crossingloop: 
+
+	wait 200 // 3 minutes 20 seconds
+
+	$engine_speaker playsound train_whistle
+	$crossing time .001 
+	$crossing moveto $wayA  
+	$crossing waitmove
+
+	$crossing show
+	level.crossinview = 1
+	$crossing loopsound crossing_bell
+	$crossing time 9.8333  
+	$crossing moveto $wayB 
+	$crossing waitmove
+
+	$crossing hide
+	level.crossinview = 0
+	$crossing stoploopsound
+	$crossing time .001
+	$crossing moveto $wayC 
+	$crossing waitmove
+ 
+	$crossing time .001
+	$crossing moveto $wayD  
+	$crossing waitmove
+ 
+	goto crossingloop
+
+end
+
+//------------------------------>
+// Water Tower Thread
+//------------------------------>
+
+towerloop: 
+
+	wait 120  // 2 minutes
+
+	while (level.tunnelinview == 1)  // while tunnel is in view, wait
+	waitframe
+	while (level.stationinview == 1)  // while station is in view, wait
+	waitframe
+	while (level.bridgeinview == 1)  // while bridge is in view, wait
+	waitframe
+
+	$water_tower time .001 
+	$water_tower moveto $polewayA  
+	$water_tower waitmove
+
+	$water_tower show
+	level.towerinview = 1
+	$water_tower loopsound wind_trees3 4
+	$water_tower time 7.18  
+	$water_tower moveto $polewayB 
+	$water_tower waitmove
+
+	$water_tower hide
+	level.towerinview = 0
+	$water_tower stoploopsound
+	$water_tower time .001
+	$water_tower moveto $polewayC 
+	$water_tower waitmove
+ 
+	$water_tower time .001
+	$water_tower moveto $polewayD  
+	$water_tower waitmove
+ 
+	goto towerloop
+
+end
+
+//------------------------------>
+// Vehicle Threads
+//------------------------------>
+
+car2loop:
+
+	wait (randomfloat 30 + 60) 
+
+	$car_2 time .001 
+	$car_2 moveto ($polewayA.origin  + ( 0 295 -248 ))
+	$car_2 waitmove
+
+	$car_2 show
+	$car_2 loopsound car_move
+	$car_2 time 18  
+	$car_2 moveto ($polewayB.origin  + ( 0 295 -248 ))
+	$car_2 waitmove
+
+	$car_2 hide
+	$car_2 stoploopsound
+	$car_2 time .001
+	$car_2 moveto $polewayC 
+	$car_2 waitmove
+ 
+	$car_2 time .001
+	$car_2 moveto $polewayD  
+	$car_2 waitmove
+ 
+	goto car2loop
+
+end
+
+car3loop:
+
+	wait (randomfloat 40 + 80) 
+
+	$car_3 time .001 
+	$car_3 moveto ($polewayA.origin  + ( 0 485 -240 ))
+	$car_3 waitmove
+
+	$car_3 show
+	$car_3 loopsound car_move
+	$car_3 time 20  
+	$car_3 moveto ($polewayB.origin  + ( 0 485 -240 ))
+	$car_3 waitmove
+
+	$car_3 hide
+	$car_3 stoploopsound
+	$car_3 time .001
+	$car_3 moveto $polewayC 
+	$car_3 waitmove
+ 
+	$car_3 time .001
+	$car_3 moveto $polewayD  
+	$car_3 waitmove
+ 
+	goto car3loop
+
+end
+
+//------------------------------>
+// Death Threads
+//------------------------------>
+
+death_thread:
+
+	$deathfall_trigger waittill trigger
+	local.player = parm.other
+	radiusdamage local.player 500 16
+	goto death_thread
+
+end
+
+tunnel_death:
+
+	$tunnel_hit_trigger waittill trigger
+	local.sucker = parm.other
+	if (local.sucker istouching $tunnel_hit_trigger)
+	{
+		local.sucker playsound snd_bodyfall_stone5
+		local.sucker damage local.sucker 1000 local.sucker (0 0 0) ( -300 0 128 ) (0 0 0) 300 0 rocket chest
+		spawn script_model model
+	}
+
+end
+
+tunnel_death2:
+
+	$tunnel_hit_trigger2 waittill trigger
+	local.sucker = parm.other
+	if (local.sucker istouching $tunnel_hit_trigger2)
+	{
+		local.sucker playsound snd_bodyfall_stone5
+		local.sucker damage local.sucker 1000 local.sucker (0 0 0) ( -300 0 128 ) (0 0 0) 300 0 rocket chest
+		spawn script_model model
+	}
+
+end
+
+bridge_death1:
+
+	$bridge_hit_trigger1 waittill trigger
+	local.player = parm.other
+	local.player damage local.player 1000 local.player (0 0 0) (0 0 128) (0 0 0) 300 0 rocket chest
+	$bridge playsound snd_bodyfall_metal3
+	thread bridge_death1
+
+end
+
+bridge_death2:
+
+	$bridge_hit_trigger2 waittill trigger
+	local.player = parm.other
+	local.player damage local.player 1000 local.player (0 0 0) (0 0 128) (0 0 0) 300 0 rocket chest
+	$bridge playsound snd_bodyfall_metal3
+	thread bridge_death2
+
+end
+
+bridge_death3:
+
+	$bridge_hit_trigger3 waittill trigger
+	local.player = parm.other
+	local.player damage local.player 1000 local.player (0 0 0) (0 0 128) (0 0 0) 300 0 rocket chest
+	$bridge playsound snd_bodyfall_metal3
+	thread bridge_death3
+
+end
+
+bridge_death4:
+
+	$bridge_hit_trigger4 waittill trigger
+	local.player = parm.other
+	local.player damage local.player 1000 local.player (0 0 0) (0 0 128) (0 0 0) 300 0 rocket chest
+	$bridge playsound snd_bodyfall_metal3
+	thread bridge_death4
+
+end
+
+//------------------------------>
+// misc Threads
+//------------------------------>
+
+servertext:
+  
+  	wait 1 // 1 our
+  	iprintlnbold_noloc " "
+	$track_speaker8 playsound smell_funny
+  
+end
+
+stack_smoke:
+
+	local.smoke = spawn script_model model "fx/smokegood.tik"
+	local.smoke.origin = $train_smoke_origin.origin + ( 0 0 16 )
+	local.smoke.angle = 180
+	local.smoke scale 1.5
+	local.smoke anim start
+
+end
+
+steam_start:
+
+	$steam_left anim start
+	$steam_right anim start
+	$steam_top anim start
+
+end
+
+train_shake:
+
+	wait 12
+	$track_speaker1 playsound train_creak
+	$track_speaker2 playsound train_creak
+	$track_speaker3 playsound train_creak
+	$track_speaker4 playsound train_creak
+	$track_speaker5 playsound train_creak
+	$track_speaker6 playsound train_creak
+	$track_speaker7 playsound train_creak
+	$track_speaker8 playsound train_creak
+	exec global/earthquake.scr .9 .1 2 1
+	goto train_shake
+
+end
+
+kaboom_crates:
+
+	exec global/exploder.scr::explode 1
+	self playsound explode_wood
+	exec global/earthquake.scr .35 2 0 0
+end
+
+kaboom_crates2:
+
+	exec global/exploder.scr::explode 2
+	self playsound explode_wood
+	exec global/earthquake.scr .35 2 0 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+consoleprint:
+
+	wait 1
+	if(level.objectlimit != NIL && level.build_number != NIL) { end }
+
+	local.maxclients = int(getcvar(sv_maxclients))
+	local.nullent = 0
+	local.e = 0
+	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
+	{
+		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
+
+		local.entity = getentity(local.i) // $player[1] = entity 0		
+		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 685) { local.warning = 1 }
+	}
+	if(local.entity == NULL) // if entity 868 = NULL
+	{
+		println("----- Entities in map: " + (1024 - local.nullent - 155) + " / 1024")
+		println("----- Entities remaining: " + (local.nullent + 155))
+	}
+	if(local.entity != NULL)
+	{
+		println("----- Entities in map: " + "more than 869" + " / 1024")
+		println("----- Entities remaining: less than 155 entities.")
+	}
+	if(local.warning == 1)
+	{
+		wait 1
+		println("----- WARNING: Keep below 685 entities on SP maps for Reborn servers!")
+		println("----- Players may soon be unable to join! (stuck connecting to sever)")
+	}
+end
+
+clickitem_fail:
+end
+
+// 2004 - July/October

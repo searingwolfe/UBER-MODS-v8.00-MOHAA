@@ -1,0 +1,76 @@
+main local.origin local.angles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset:
+
+exec global/aliascache_triggersounds.scr detonator_switch
+
+local.detonator = spawn script_model
+local.detonator model "miscobj/detonator.tik"
+local.detonator.origin = local.origin
+local.detonator.angles = local.angles 
+
+local.detonator anim idle
+local.detonator notsolid
+
+local.detonatortrig = spawn trigger_use
+local.detonatortrig.origin = local.detonator.origin
+local.detonatortrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.detonatortrig waittill trigger
+local.detonatortrig nottriggerable
+local.detonator anim fire
+local.detonator playsound plungersound
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+	if(local.name.size > 1 && local.name[1].size > 1)
+	{
+		local.player iprint ("*** Blowing up some bangalores. ***")
+
+		if(local.name[0] != NIL && local.name[0].size > 0) { local.sub = 1 } // works if the first local.name starts at either local.name[0] or local.name[1].
+		else { local.sub = 0 }
+
+		wait (randomint(50) / 50.00 + 0.25)
+		for(local.n = 0; local.n < local.name.size - local.sub; local.n++)
+		{
+			if(local.name[local.n].size > 0)
+			{
+				local.player thread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name[local.n] local.offtime local.damageradius local.pulsatingoff
+				wait (randomint(100) / 100.00 + 0.25)
+			}
+		}
+		local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name[local.name.size - local.sub] local.offtime local.damageradius local.pulsatingoff
+	}
+ 	else
+	{
+		local.player iprint ("*** Blowing up a bangalore. ***")
+		local.player waitthread maps/training_mapscripts/bangalore_wallbomb.scr::blowup local.name local.offtime local.damageradius local.pulsatingoff
+	}
+
+////////////////////////////////////////////////////////////////////////
+
+if(local.manualreset != 1)
+{
+ local.detonator anim idle
+ wait 1
+}
+if(local.manualreset == 1)
+{
+ local.detonatortrig triggerable
+ local.detonatortrig waittill trigger
+ local.detonator anim idle
+ local.detonator playsound light_switch
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Resetting the detonator. ***")
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+}
+
+local.detonator remove
+local.detonatortrig remove
+
+thread main local.origin local.angles local.name local.offtime local.damageradius local.pulsatingoff local.manualreset
+end

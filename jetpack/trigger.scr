@@ -15,7 +15,7 @@ level.fueltime_thrust =  0.1	// how long while player is thrusting (holding USE 
 	level.fueltime_float = level.fueltime_float * 10
 	level.fueltime_thrust = level.fueltime_thrust * 10
 
-	if(local.origin == NIL) { iprintlnbold ("----- ERROR jetpack/trigger.scr: 'origin' parameter is missing!"); end }
+	if(local.origin == NIL) { println("----- ERROR jetpack/trigger.scr: 'origin' parameter is missing!"); end }
 
 	local.airtank = spawn trigger_multiple
 	local.airtank model "static/static_airtank.tik" 
@@ -169,15 +169,18 @@ jetpack local.jetpackfuel:
 		end
 	}
 
-	if(game.game == "AA") 	//hide the hud
+	if(self.missile == NIL)
 	{
-		self stufftext "hidemenu dday1"
-		self stufftext "hidemenu dday2"
-	}
-	else
-	{
-		self stufftext "hidemenu bastogne2"
-		self stufftext "hidemenu bastogne1"
+		if(game.game == "AA") 	//hide the hud
+		{
+			self stufftext "hidemenu dday1"
+			self stufftext "hidemenu dday2"
+		}
+		else
+		{
+			self stufftext "hidemenu bastogne2"
+			self stufftext "hidemenu bastogne1"
+		}
 	}
 end
 
@@ -296,56 +299,16 @@ end
 
 display:
 
-	if(game.game != "AA") { thread display_sh; end }
+	if(game.game != "AA") { local.menu1 = "bastogne1"; local.menu2 = "bastogne2" }
+	else { local.menu1 = "dday1"; local.menu2 = "dday2" }
 
-	self stufftext "globalwidgetcommand dday1 shader townhallwindow"
-	self stufftext "globalwidgetcommand dday1 fgcolor 1.00 1.00 1.00 1.00"
-	self stufftext "globalwidgetcommand dday1 bgcolor 0.50 0.50 0.50 0.00"
-	self stufftext "globalwidgetcommand dday1 fadein 0"
-	self stufftext "globalwidgetcommand dday1 menu dday1 640 480 NONE 0"
-	self stufftext "globalwidgetcommand dday1 virtualres 1" 
-	self stufftext "globalwidgetcommand dday1 fullscreen 1" 
-
-	self stufftext "globalwidgetcommand june6 borderstyle NONE"
-	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
-	self stufftext "globalwidgetcommand june6 rect 16 420 16 64"
-	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
-	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
-	self stufftext "globalwidgetcommand june6 linkcvar fuel"
-	self stufftext ("globalwidgetcommand june6 statbar vertical 0 " + level.jetpack_max_fuel )
-	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
-	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
-
-	self stufftext "globalwidgetcommand dday2 fgcolor 1.00 1.00 1.00 1.00"
-	self stufftext "globalwidgetcommand dday2 bgcolor 0.50 0.50 0.50 0.00"
-	self stufftext "globalwidgetcommand dday2 fadein 0"
-	self stufftext "globalwidgetcommand dday2 menu dday2 640 480 NONE 0"
-	self stufftext "globalwidgetcommand dday2 virtualres 1" 
-	self stufftext "globalwidgetcommand dday2 fullscreen 1" 
-
-	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
-	self stufftext "globalwidgetcommand charliesector textalign left " 
-	self stufftext "globalwidgetcommand charliesector rect 40 470 150 20"
-	self stufftext "globalwidgetcommand charliesector fgcolor 0.70 0.60 0.05 1.00"
-	self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
-	self stufftext "globalwidgetcommand charliesector linkcvar fuel"
-	self stufftext "globalwidgetcommand charliesector font facfont-20"
-	self stufftext "globalwidgetcommand charliesector shader townhallwindow"
-
-	self stufftext "showmenu dday2"
-	self stufftext "showmenu dday1"
-	self stufftext ("set fuel " + level.jetpack_max_fuel )
-end
-
-display_sh:
-
-	self stufftext "globalwidgetcommand bastogne1 shader townhallwindow"
-	self stufftext "globalwidgetcommand bastogne1 fgcolor 1.00 1.00 1.00 1.00"
-	self stufftext "globalwidgetcommand bastogne1 bgcolor 0.50 0.50 0.50 0.00"
-	self stufftext "globalwidgetcommand bastogne1 fadein 0"
-	self stufftext "globalwidgetcommand bastogne1 menu bastogne1 640 480 NONE 0"
-	self stufftext "globalwidgetcommand bastogne1 virtualres 1" 
-	self stufftext "globalwidgetcommand bastogne1 fullscreen 1" 
+	self stufftext ("globalwidgetcommand " + local.menu1 + " shader townhallwindow")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " menu dday1 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu1 + " fullscreen 1")
 
 	self stufftext "globalwidgetcommand june6 borderstyle NONE"
 	self stufftext "globalwidgetcommand june6 shader textures/hud/healthback"
@@ -357,12 +320,12 @@ display_sh:
 	self stufftext "globalwidgetcommand june6 statbar_shader textures/hud/healthmeter"
 	self stufftext "globalwidgetcommand june6 statbar_shader_flash textures/hud/healthmeterflash"
 
-	self stufftext "globalwidgetcommand bastogne2 fgcolor 1.00 1.00 1.00 1.00"
-	self stufftext "globalwidgetcommand bastogne2 bgcolor 0.50 0.50 0.50 0.00"
-	self stufftext "globalwidgetcommand bastogne2 fadein 0"
-	self stufftext "globalwidgetcommand bastogne2 menu bastogne2 640 480 NONE 0"
-	self stufftext "globalwidgetcommand bastogne2 virtualres 1" 
-	self stufftext "globalwidgetcommand bastogne2 fullscreen 1" 
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fgcolor 1.00 1.00 1.00 1.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " bgcolor 0.50 0.50 0.50 0.00")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fadein 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " menu dday2 640 480 NONE 0")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " virtualres 1")
+	self stufftext ("globalwidgetcommand " + local.menu2 + " fullscreen 1")
 
 	self stufftext "globalwidgetcommand charliesector borderstyle NONE"
 	self stufftext "globalwidgetcommand charliesector textalign left " 
@@ -373,8 +336,8 @@ display_sh:
 	self stufftext "globalwidgetcommand charliesector font facfont-20"
 	self stufftext "globalwidgetcommand charliesector shader townhallwindow"
 
-	self stufftext "showmenu bastogne2"
-	self stufftext "showmenu bastogne1"
+	self stufftext ("showmenu " + local.menu2)
+	self stufftext ("showmenu " + local.menu1)
 	self stufftext ("set fuel " + level.jetpack_max_fuel )
 end
 

@@ -1,0 +1,66 @@
+main: // findent.scr. Run "exec global/findent.scr" in any map script to use the "findent [entity number]" cvar.
+
+	local.maxclients = int(getcvar(sv_maxclients))
+	while(string(getcvar("findent")) == "" || (int(getcvar("findent")) < local.maxclients && int(getcvar("findent")) > 1023)) { waitframe }
+
+	local.entnum = int(getcvar("findent"))
+	if(local.entnum < 0) { local.entnum = local.entnum * -1 }
+
+	if(local.entnum < local.maxclients)
+	{
+		println("----- ERROR. Cannot teleport to any $player entities.")
+		if($player.size >= 1) { $player iprint ("----- ERROR. Cannot teleport to any $player entities.") }
+	}
+	if(local.entnum > 868)
+	{
+		println("----- ERROR. Cannot find any entities beyond 0 - 868.")
+		if($player.size >= 1) { $player iprint ("----- ERROR. Cannot find any entities beyond 0 - 868.") }
+	}
+	if(local.entnum <= 868 && local.entnum >= local.maxclients)
+	{
+		local.entity = getentity(local.entnum) // $player[1] = entity 0
+		if(local.entity == NULL)
+		{
+			println("----- ERROR. Entity Number: " + local.entnum + " does not exist!")
+			if($player.size >= 1) { $player iprint ("----- ERROR. Entity Number: " + local.entnum + " does not exist!") }
+		}
+		if(local.entity != NULL)
+		{
+			println("----- Teleporting to entity number: " + local.entnum)
+			println("----- [" + local.entnum + "].origin = " + local.entity.origin)
+			println("----- [" + local.entnum + "].angles = " + local.entity.angles)
+			println("----- [" + local.entnum + "].classname = " + local.entity.classname)
+			if(local.entity.model != NIL) { println("----- [" + local.entnum + "].model = " + local.entity.model) }
+			if(local.entity.targetname != "") { println("----- [" + local.entnum + "].targetname = " + local.entity.targetname) }
+			if(local.entity.target != "") { println("----- [" + local.entnum + "].target = " + local.entity.target) }
+			if(local.entity.health != 0) { println("----- [" + local.entnum + "].health = " + local.entity.health) }
+
+			if(local.entity.gun != NIL && local.entity.gun != NULL && local.entity.gun.targetname == "") { println("----- [" + local.entnum + "].gun = entity " + local.entity.gun.entnum) }
+			if(local.entity.gun != NIL && local.entity.gun != NULL && local.entity.gun.targetname != "") { println("----- [" + local.entnum + "].gun = " + local.entity.gun) }
+			if(local.entity.gun2 != NIL && local.entity.gun2 != NULL && local.entity.gun2.targetname == "") { println("----- [" + local.entnum + "].gun2 = entity " + local.entity.gun2.entnum) }
+			if(local.entity.gun2 != NIL && local.entity.gun2 != NULL && local.entity.gun2.targetname != "") { println("----- [" + local.entnum + "].gun2 = " + local.entity.gun2) }
+
+			if($player.size >= 1)
+			{
+				$player iprint ("----- Teleporting to entity number: " + local.entnum)
+				$player iprint ("----- [" + local.entnum + "].origin = " + local.entity.origin)
+				$player iprint ("----- [" + local.entnum + "].angles = " + local.entity.angles)
+				$player iprint ("----- [" + local.entnum + "].classname = " + local.entity.classname)
+				if(local.entity.model != NIL) { $player iprint ("----- [" + local.entnum + "].model = " + local.entity.model) }
+				if(local.entity.targetname != "") { $player iprint ("----- [" + local.entnum + "].targetname = " + local.entity.targetname) }
+				if(local.entity.target != "") { $player iprint ("----- [" + local.entnum + "].target = " + local.entity.target) }
+				if(local.entity.health != 0) { $player iprint ("----- [" + local.entnum + "].health = " + local.entity.health) }
+			}
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if(isalive $player[local.i]) 
+				{
+					$player[local.i] tele local.entity.origin
+					$player[local.i] face ( local.entity.angles[0] local.entity.angles[1] 0 )
+				}
+			}
+		}
+	}
+	if(string(getcvar("findent")) != "" || (int(getcvar("findent")) < 0 && int(getcvar("findent")) > 1023)) { setcvar "findent" "" }
+  	thread main
+end

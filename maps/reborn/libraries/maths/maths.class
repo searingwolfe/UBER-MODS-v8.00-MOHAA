@@ -1,0 +1,1378 @@
+/**
+ Medal of Honor: Allied Assault v1.12 REBORN
+ ================================================================
+ GAME.SYSTEM.MATHS CLASS;
+ ================================================================
+ BY Sor
+ VERSION 1.4.0
+ =-------------------------------------------------------------=		
+ Copyright (c) 2008-2014  Lenny Knockx
+ All rights reserved.
+ =-------------------------------------------------------------=
+ Permission to use, copy, modify, and/or distribute this software 
+ for any purpose with or without fee is hereby granted, provided 
+ that the above copyright notice and this permission notice appear
+ in all copies.
+ ---------------
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL 
+ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED 
+ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL 
+ THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR 
+ CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM 
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR 
+ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ =-------------------------------------------------------------=
+ CONTACT: 	http://www.x-null.net/forums/member.php?185-Sor
+ WEBSITE: 	http://www.x-null.net
+ ================================================================
+*/
+__init:
+	if !(self && self.objectType == game.System.Object.CLASS) {
+		end;
+	}
+	
+	//<constants>
+	self.PI = 3.141592654; 			/**PI*/
+	self.PI_2 = 1.570796327;		/**PI/2*/
+	self.EU = 0.577215664;			/**Euler's number*/
+	self.E = 2.718281828;			/**e natural log*/
+	self.PHI = 1.618033988;			/**Golden ratio Phi*/
+	self.SQ2 = 1.414213562;			/**Square root of two*/
+	//</constants>
+	
+	//<functions>
+	self.IsNaN = 				self.path::IsNotANumber;
+	self.IsInfinite = 			self.path::IsInfinite;
+	self.IsNumber = 			self.path::IsNumber;
+	self.IsPowerOfTwo = 		self.path::IsPowerOfTwo;
+	self.IsPrime =				self.path::IsPrime;
+	self.IsEven =				self.path::IsEven;
+	self.IsIntegral = 			self.path::IsIntegral;
+	self.IsDivisibleBy =		self.path::IsDivisibleBy;
+	self.IsMultipleOf = 		self.path::IsMultipleOf;
+	self.HaveOppositeSigns = 	self.path::HaveOppositeSigns;
+
+	self.GetPrimes = 			self.path::GetPrimes;
+	self.GetFraction = 			self.path::Fraction;
+	self.Compare = 				self.path::Compare;
+	self.NRoot = 				self.path::NRoot;
+	self.Average = 				self.path::Average;
+	self.Median = 				self.path::Median;
+	self.Round = 				self.path::Round;
+	self.RoundToMultiple = 		self.path::RoundToMultiple;
+	self.CeilToMultiple = 		self.path::CeilToMultiple;
+	self.FloorToMultiple = 		self.path::FloorToMultiple;
+	self.Min = 					self.path::Minimum;
+	self.Max = 					self.path::Maximum;
+	self.Pow2 = 				self.path::Pow2;
+	
+	self.Gcd = 					self.path::GreatestCommonDivisor;
+	self.Lcm = 					self.path::LeastCommonMultiple;
+	self.Exp =					self.path::Exp;
+	self.Frexp =				self.path::Frexp;
+	self.Ldexp =				self.path::Ldexp;
+	self.Ln = 					self.path::Ln;
+	self.Lb = 					self.path::Lb;
+	self.Lg = 					self.path::Lg;
+	self.Log = 					self.path::Log;
+	self.Modf =					self.path::Modf;
+	self.Pow =					self.path::Pow;
+	self.Floor =				self.path::Floor;
+	self.Ceil =					self.path::Ceil;
+	self.Fmod =					self.path::Fmod;
+	self.Sqrt =					self.path::Sqrt;
+	
+	self.ToDegrees = 			self.path::ToDegrees;
+	self.ToRadians = 			self.path::ToRadians;
+	self.NormalizeDegrees =		self.path::NormalizeDegrees;
+	self.StringifyDegrees =		self.path::StringifyDegrees;
+	self.FormatDegrees = 		self.path::FormatDegrees;
+	self.Cos = 					self.path::Cosine;
+	self.Sin = 					self.path::Sine;
+	self.Tan =					self.path::Tangent;
+	self.Acos =					self.path::ArcCosine;
+	self.Asin =					self.path::ArcSine;
+	self.Atan =					self.path::ArcTangent;
+	self.Atan2 =				self.path::ArcTangent2;
+	self.Csc =					self.path::Cosecant;
+	self.Sec =					self.path::Secant;
+	self.Cot =					self.path::Cotangent;
+	self.Acsc =					self.path::ArcCosecant;
+	self.Asec =					self.path::ArcSecant;
+	self.Acot =					self.path::ArcCotangent;
+	self.Cosh =					self.path::HyperbolicCosine;
+	self.Sinh = 				self.path::HyperbolicSine;
+	self.Tanh = 				self.path::HyperbolicTangent;
+	self.Coth = 				self.path::HyperbolicCotangent;
+	self.Sech = 				self.path::HyperbolicSecant;
+	self.Csch = 				self.path::HyperbolicCosecant;
+	//</functions>
+	
+	self.initialized = 1; // init complete!
+end;
+
+__meta:
+	self.author = "Sor";
+	self.version = 1.4;
+end;
+
+/**
+ bool IsIntegral(<int;float> x)
+ =================================================================
+ OVERVIEW|: Determines whether the specified floating point value represents 
+			an integral value (i.e. whether its fraction equals 0.0).
+ RETURN	 |: <bool>;
+*/
+IsIntegral local.float:
+	local.type = (typeof local.float)[0];
+	if (local.type == "f") {
+		end (ceil(local.float) == local.float);
+	} else if (local.type == "i") {
+		end 1;
+	}
+end 0;
+
+/**
+ bool IsNotaNumber(<int;float> x)
+ =================================================================
+ OVERVIEW|: Determines whether X is Not a Number, i.e. whether X is $Math.NaN.
+ RETURN	 |: <bool>
+*/
+IsNotaNumber local.x:
+	if ((typeof local.x)[0] == "f") {
+		end (waitthread __IsNaN local.x);
+	}
+end 0;
+
+__IsNaN local.float:
+	if (local.float == local.float) {
+		local.chk = 1;
+	} else if (local.float < 0.0) {
+		local.chk = 1;
+	} else if (local.float > 0.0) {
+		local.chk = 1;
+	}
+end !local.chk;
+
+/**
+ int IsInfinite(<int;float> x)
+ =================================================================
+ OVERVIEW|: Determines whether X is positive or negative infinity.
+ RETURN	 |: <int> => 	1 = +INF; 
+						0 = FALSE; 
+						-1 = -INF;
+*/
+IsInfinite local.x:
+	if ((typeof local.x)[0] != "f") {
+		end 0;
+	}
+	if (local.x < 0) {
+		// If X is not larger than negative infinity, then it is negative infinity.
+		if !(game.System.Maths.Float.MIN_INFINITY < local.x) {
+			end -1;
+		}
+	} else if (0 < local.x) {
+		// If X is not smaller than positive infinity, then it is positive infinity.
+		if !(local.x < game.System.Maths.Float.MAX_INFINITY) {
+			end 1;
+		}
+	}
+end 0;
+
+/**
+ bool IsNumber(<int;float> var)
+ =================================================================
+ OVERVIEW|: Determines whether X is a valid number.
+ RETURN	 |: <bool>
+*/
+IsNumber local.var:
+	switch((typeof local.var)[0]) {
+		case "i":
+			end 1;
+		case "f":
+			if !(waitthread __IsNaN local.x) {
+				end 1;
+			}
+		break;
+		default:
+		break;
+	}
+end 0;
+
+/**
+ bool IsPowerOfTwo(<int;float> x)
+ =================================================================
+ OVERVIEW|: Determines whether the specified value is a power of 2 or not.
+ RETURN	 |: <bool>;
+			or NIL upon failure.
+*/
+IsPowerOfTwo local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "IsPowerOfTwo" local.x; end;}
+	}
+	
+	// Make x an integer. We need the signed bit to be 0.
+	local.x = int(local.x);
+	if (local.x < 0) {
+		end 0;
+	}
+	// This will convert bits so it returns 0 if x is 1,2,4,8,16,32,64,128,256,512,1024,2048,4096...
+end (local.x && !(local.x & (local.x - 1)));
+
+/**
+ bool HaveOppositeSigns(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Determines whether X has a different sign bit than Y.
+			Also useful for detecting signed integer overflow.
+ RETURN	 |: <bool>; 
+			or NIL upon failure.
+*/
+HaveOppositeSigns local.x local.y:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "HaveOppositeSigns" local.x; end;}
+		if !(waitthread IsNumber local.x) {waitthread __Error "HaveOppositeSigns" local.y "y <arg2>"; end;}
+	}
+end ((local.x ^ local.y) < 0);
+
+/**
+ bool IsPrime(<int;float> x)
+ =================================================================
+ OVERVIEW|: Determines whether x is a prime number or not.
+ RETURN	 |: <bool>; 
+			or NIL upon failure.
+*/
+IsPrime local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "IsPrime" local.x; end;}
+	}
+	
+	if ((typeof local.x)[0] != "i" && ceil(local.x) != local.x) {
+		end 0;
+	}
+	
+	local.x = int(local.x);
+	
+	if (local.x <= 1) {
+		end 0
+	} else if (local.x == 2) {
+		end 1;
+	}
+	
+	local.sqrt = int(ceil(sqrt(local.x)));
+	// If we are past the sqrt of x, then there won't need to search for more divisors.
+	for (local.i = 2; local.i <= local.sqrt; local.i++) {
+		// Divisible by a number other than 1 and itself?
+		if !(local.x % local.i) {
+			end 0;
+		}
+	}
+end 1;
+
+/**
+ bool IsDivisibleBy(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Determines whether X can be divided by Y with no remainder.
+ RETURN	 |: <bool>; 
+			or NIL upon failure.
+*/
+IsDivisibleBy local.x local.y:
+end (waitthread IsMultipleOf local.x local.y);
+
+/**
+ bool IsMultipleOf(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Determines whether X is a multiple of Y.
+ RETURN	 |: <bool>; 
+			or NIL upon failure.
+*/
+IsMultipleOf local.x local.y:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "IsMultipleOf" local.x; end;}
+		if !(waitthread IsNumber local.y) {waitthread __Error "IsMultipleOf" local.y "y <arg2>"; end;}
+	}
+
+	if (local.y != 0) {
+		end ((fmod local.x local.y) == 0);
+	} 
+end 0;
+
+/**
+ bool IsEven(<int;float> x)
+ =================================================================
+ OVERVIEW|: Determines whether X is an (integrally) even number.
+ RETURN	 |: <bool>; 
+			or NIL upon failure.
+*/
+IsEven local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "IsEven" local.x; end;}
+	}
+end ((fmod local.x 2.0) == 0);
+
+/**
+ int Pow2(<int> n)
+ =================================================================
+ OVERVIEW|: Returns the Nth power of 2.
+ RETURN	 |: <int>;
+			or NIL upon failure.
+*/
+Pow2 local.n:
+	local.v = 1;
+	while(0 < local.n) {
+		local.v = local.v * 2
+		local.n--;
+	}
+end local.v;
+
+/**
+ float Fraction(<float> x)
+ =================================================================
+ OVERVIEW|: Returns the fractional part of the specified floating point value.
+ RETURN	 |: <float> => (-1.0, 1.0);
+			or NIL upon failure.
+*/
+Fraction local.float:
+	local.type = (typeof local.float)[0];
+	if (local.type == "f") {
+		end (modf(local.float))["fractional"];
+	} else if (local.type == "i") {
+		end 0.0;
+	}
+end;
+
+/**
+ array[1] GetPrimes(<int;float> maximum)
+ =================================================================
+ OVERVIEW|: Returns array with all prime numbers smaller than or equal to 
+			the maximum.
+ RETURN	 |: one-based integer array of <int>; 
+			or NIL upon failure.
+*/
+GetPrimes local.max:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.max) {waitthread __Error "ListPrimes" local.max "max <arg1>"; end;}
+	}
+	
+	local.max = int(local.max);
+	local.result[1] = NIL;
+	
+	if (local.max <= 1) {
+		end local.result;
+	}
+	
+	// Using the sieve of Eratosthenes method.
+	local.sieve[1] = NIL;
+	// Two is the smallest prime number and the only prime number that is an even number.
+	local.result[1] = 2;
+	
+	// By starting from the second smallest prime number (3) and incrementing by 2, all
+	// other even numbers are hereby automatically omitted.
+	for (local.i = 3; local.i <= local.max; local.i += 2) {
+		// Check if i has already been filtered out
+		if (local.sieve[local.i]) {
+			continue;
+		}
+
+		local.sqrt = int(ceil(sqrt(local.i)));
+		// i/0=lol; i/1=pointless; i/2=redundant, therefore start checking for divisors at j=3.
+		for (local.j = 3; local.j <= local.sqrt; local.j++) {
+			// Divisible by a number other than 1 and itself?
+			if !(local.i % local.j) {
+				// All multiples of this non-prime number are automatically omitted from the search.
+				// It'd be pointless to include even multiples, so we add i twice to ensure that all 
+				// multiples will be uneven (knowing that i itself is uneven).
+				for (local.mult = local.i; local.mult <= local.max; local.mult = (local.mult + (local.i * 2))) {
+					local.sieve[local.mult] = 1;
+				}
+				// Immediately break and check next i.
+				goto Continue;
+			}
+		}
+		local.result[(local.result.size + 1)] = local.i;
+		Continue:
+	}
+end local.result;
+
+/**
+ int Median(<array> numArray)
+ =================================================================
+ OVERVIEW|: Returns the median of the given set of numbers in the
+			specified, unsorted array.
+ RETURN	 |: <float>; 
+			or NIL upon failure.
+*/
+Median local.array:
+	local.bounds = waitthread game.System.Array.GetBounds local.array;
+	if (!local.bounds) {
+		if (level.DEBUG) {
+			conprintf "\n ~^~^~^~ ERROR[System.Maths.Median()]: array (arg1) is invalid! ~^~^~^~ \n\n";
+		}
+		end;
+	}
+
+	// In-place insertion sort
+	for (local.i = local.bounds[1]; local.i < local.bounds[2]; local.i++) {
+		local.value = local.array[local.i];
+		local.j = local.i - 1;
+		while (local.j >= local.bounds[1] && local.array[local.j] > local.value) {
+			local.array[(local.j + 1)] = local.array[local.j];
+			local.j--;
+		}
+		local.array[(local.j + 1)] = local.value;
+	}
+	
+	// Note: using integral division on array indexes. 
+	// Note: in case of two middle values, the avg() calculation will always divide fractionally.
+	if !(local.array.size % 2) {
+		// Align middle element with array indexing 
+		local.i = (local.bounds[1] + ((local.array.size / 2) - 1));
+		// Take average of middle element and the next
+		local.result = (local.array[local.i] + local.array[(local.i + 1)]) / 2.0;
+	} else {
+		local.result = local.array[(local.bounds[1] + (local.array.size / 2))];
+	}
+end local.result;
+ 
+/**
+ int Average(<array> numArray)
+ =================================================================
+ OVERVIEW|: Returns the average of the given set of numbers in the
+			specified array.
+ RETURN	 |: <float>; 
+			or NIL upon failure.
+*/
+Average local.array:
+	local.bounds = waitthread game.System.Array.GetBounds local.array;
+	if (!local.bounds) {
+		if (level.DEBUG) {
+			conprintf "\n ~^~^~^~ ERROR[System.Maths.Average()]: array (arg1) is invalid! ~^~^~^~ \n\n";
+		}
+		end;
+	}
+
+	local.sum = 0;
+	local.total = float(local.array.size);
+	for (local.i = local.bounds[1]; local.i <= local.bounds[2]; local.i++) {
+		if (local.array[local.i] == NIL) {
+			continue;
+		}
+		local.sum += local.array[local.i];
+	}
+end (local.sum / local.total);
+
+/**
+ int GreatestCommonDivisor(<int> x, <int> y)
+ =================================================================
+ OVERVIEW|: Returns the GCD() (Greatest Common Divisor) of specified x and y.
+ RETURN	 |: <int>; 
+			or NIL upon failure.
+*/
+_GreatestCommonDivisor local.x local.y: goto __GreatestCommonDivisor;
+GreatestCommonDivisor local.x local.y:
+	if (level.DEBUG) {
+		if ((typeof local.x)[0] != "i") {waitthread __Error "GreatestCommonDivisor" local.x; end;}
+		if ((typeof local.y)[0] != "i") {waitthread __Error "GreatestCommonDivisor" local.y "y <arg2>"; end;}
+	}
+	
+	__GreatestCommonDivisor:
+	
+	local.r = local.x % local.y
+	while (local.r) {
+		local.x = local.y;
+		local.y = local.r;
+		local.r = local.x % local.y;
+	}
+end abs(local.y);
+
+/**
+ int LeastCommonMultiple(<int> x, <int> y)
+ =================================================================
+ OVERVIEW|: Returns the LCM() (Least Common Multiple) of specified x and y.
+ RETURN	 |: <int>; 
+			or NIL upon failure.
+*/
+LeastCommonMultiple local.x local.y:
+	if (level.DEBUG) {
+		if ((typeof local.x)[0] != "i") {waitthread __Error "LeastCommonMultiple" local.x; end;}
+		if ((typeof local.y)[0] != "i") {waitthread __Error "LeastCommonMultiple" local.y "y <arg2>"; end;}
+	}
+end ((abs(local.x * local.y)) / (waitthread _GreatestCommonDivisor local.x local.y));
+
+
+/**
+ int Compare(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Compares X to Y and returns the whether X is smaller than,
+			greater than or equal to Y.
+ RETURN	 |: <int> =>	1 = greater than; 
+						0 = equal to; 
+						-1 = smaller than; 
+			or NIL upon failure.
+ NOTE	 |: For some reason the scripting language can only compare
+			up to 4 of the 6 decimals a float can represent while a 
+			cast to string only displays 3 decimals. 
+			Example: if(0.0001 == 0.00001) will evaluate to true!
+			This will allow comparisons to consider all 6 decimals.
+*/
+Compare local.x local.y:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Compare" local.x; end;}
+		if !(waitthread IsNumber local.y) {waitthread __Error "Compare" local.y "y <arg2>"; end;}
+	}
+
+	if ((typeof local.x)[0] == "f" && (typeof local.y)[0] == "f") {
+		/** First we need split the floats into their integral and fractional parts. */
+		local.X = modf local.x;
+		local.Y = modf local.y;
+		
+		/** Next, compare both integral parts */
+		if (local.X["intpart"] < local.Y["intpart"]) {
+			end -1;
+		} 
+		else if (local.Y["intpart"] < local.X["intpart"]) {
+			end 1;
+		} 
+		
+		/** In case the integral values are equal, we have to check the 
+			fractional values.
+			Before we can cast to int, all 6 decimals must be within the
+			[999999.0, 1.0] domain.
+		*/
+		local.X["fractional"] = int(local.X["fractional"] * 1000000);
+		local.Y["fractional"] = int(local.Y["fractional"] * 1000000);
+			
+		/** Decisive comparison */
+		if (local.X["fractional"] < local.Y["fractional"]) {
+			end -1;
+		} 
+		else if (local.Y["fractional"] < local.X["fractional"]) {
+			end 1;
+		}
+		end 0; /*if (local.Y["fractional"] == local.X["fractional"])*/ 
+	}
+	if (local.x < local.y) {
+		end -1;
+	} 
+	else if (local.y < local.x) {
+		end 1;
+	} 
+end 0; /*if (local.x == local.y)*/
+
+/**
+ float NRoot(<int;float> x, <int> n)
+ =================================================================
+ OVERVIEW|: Returns the N'th of specified X (up to 4th decimal precision). 
+ RETURN	 |: <float> =>	N'th root of x;
+						NaN (if x is negative and n is an even number)
+						+INF (if n is 0 and x is not 1 (divide by zero))
+			or NIL upon failure.
+*/
+NRoot local.x local.n:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "NRoot" local.x; end;}
+		if ((typeof local.n)[0] != "i" || local.n < 0) {waitthread __Error "NRoot" local.n "n <arg2>"; end;}
+	}
+
+	if (local.n == 0) {
+		if (local.x == 1.0) {
+			end local.x;
+		} 
+		// Division by zero...
+		end game.System.Maths.Float.MAX_INFINITY;
+	} 
+
+	if (local.x < 0.0 && !(local.n % 2)) {
+		// In R, a negative number cannot have an even root
+		end game.System.Maths.Float.NaN;
+	}
+	
+	local.sav = local.x
+	local.result = local.x / local.n
+	while (abs(local.result - local.sav) > game.System.Maths.Float.EPSILON) {
+		local.sav = local.result;
+		local.result = ((local.n - 1) * local.result + (local.x / (pow local.result (local.n - 1)))) / local.n;
+	}
+end local.result;
+
+/**
+ int;float Minimum(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Returns the smallest value among specified x and y.
+ RETURN	 |: <int> or <float>;
+			or NIL upon failure.
+*/
+Minimum local.x local.y:
+	if (local.x <= local.y) {
+		end local.x;
+	}
+end local.y;
+
+/**
+ int;float Maximum(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Returns the greatest value among specified x and y.
+ RETURN	 |: <int> or <float>;
+			or NIL upon failure.
+*/
+Maximum local.x local.y:
+	if (local.x < local.y) {
+		end local.y;
+	}
+end local.x;
+
+/**
+ float Round(<float> x)
+ =================================================================
+ OVERVIEW|: Rounds floating point X to nearest integral value.
+ RETURN	 |: <float>;
+			or NIL upon failure.
+*/
+_Round local.x: goto __Round;
+Round local.x:
+	if (level.DEBUG) {
+		if ((typeof local.x)[0] == "i") { 
+			end local.x; 
+		}
+		if ((typeof local.x)[0] != "f") {waitthread __Error "Round" local.x; end;}
+	}
+	
+	__Round:
+	
+	if (abs((modf local.x)["fractional"]) >= 0.5) {
+		if (local.x >= 0) {
+			local.x = ceil(local.x);
+		} else {
+			local.x = floor(local.x);
+		}
+	} else {
+		if (local.x < 0) {
+			local.x = ceil(local.x);
+		} else {
+			local.x = floor(local.x);
+		}
+	}
+end local.x;
+
+/**
+ int;float RoundToMultiple(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Rounds X to nearest multiple of y.
+ RETURN	 |: <int> or <float>;
+			or NIL upon failure.
+*/
+RoundToMultiple local.x local.y:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "RoundToMultipleOf" local.x; end;}
+		if !(waitthread IsNumber local.y) {waitthread __Error "RoundToMultipleOf" local.y "y <arg2>"; end;}
+	}
+end ((waitthread _Round (local.x / local.y)) * local.y);
+
+/**
+ int;float CeilToMultiple(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Rounds X to nearest multiple of y that is more than X.
+ INPUT	 |: <int;float> x, <int;float> y
+ RETURN	 |: <int> or <float>;
+			or NIL upon failure.
+*/
+CeilToMultiple local.x local.y:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "CeilToMultipleOf" local.x; end;}
+		if !(waitthread IsNumber local.y) {waitthread __Error "CeilToMultipleOf" local.y "y <arg2>"; end;}
+	}
+end (ceil(local.x / local.y) * local.y);
+
+/**
+ int;float FloorToMultiple(<int;float> x, <int;float> y)
+ =================================================================
+ OVERVIEW|: Rounds X to nearest multiple of Y that is less than X.
+ RETURN	 |: <int> or <float>;
+			or NIL upon failure.
+*/
+FloorToMultiple local.x local.y:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "FloorToMultipleOf" local.x; end;}
+		if !(waitthread IsNumber local.y) {waitthread __Error "FloorToMultipleOf" local.y "y <arg2>"; end;}
+	}
+end (floor(local.x / local.y) * local.y);
+
+/**
+ float ToRadians(<int;float> x)
+ =================================================================
+ OVERVIEW|: Converts degrees to radians.
+ RETURN	 |: <float>;
+			or NIL upon failure.
+*/
+ToRadians local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ToRadians" local.x; end;}
+	}
+end (local.x * ( game.System.Maths.PI / 180.0 ));
+
+/**
+ float ToDegrees(<int;float> x)
+ =================================================================
+ OVERVIEW|: Converts radians to degrees.
+ RETURN	 |: <float>;
+			or NIL upon failure.
+*/
+ToDegrees local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ToDegrees" local.x; end;}
+	}
+end (local.x * ( 180.0 / game.System.Maths.PI ));
+
+/**
+ float NormalizeDegrees(<int;float> x)
+ =================================================================
+ OVERVIEW|: Normalizes specified degrees back to the positive [0, 360] domain.
+ RETURN	 |: <float>;
+			or NIL upon failure.
+*/
+NormalizeDegrees local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "NormalizeDegrees" local.x; end;}
+	}
+	// This normalizes any multiplications back to the base degrees in the [-360.0, 360.0] domain.
+	local.x = fmod local.x 360;
+	// This normalizes any negative degrees to a positive [0.0, 360.0] domain.
+	if (local.x < 0) {
+		local.x += 360;
+	}
+end local.x;
+
+/**
+ array[1] FormatDegrees(<int;float> x)
+ =================================================================
+ OVERVIEW|: Formats the specified decimals degrees to [degrees, minutes, seconds].
+ RETURN	 |: one-based number array => 	[1]=<int> degrees
+										[2]=<int> minutes
+										[3]=<float> seconds
+			or NIL upon failure.
+*/
+FormatDegrees local.degrees:
+	/*Error & Exception handling*/
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.degrees) {waitthread __Error "FormatDegrees" local.degrees "degrees <arg1>"; end;}
+	}
+	
+	// Normalize degrees to [-360, 360] while casting any integer to a float at the same time ;)
+	local.degrees = fmod local.degrees 360.0;
+
+	// Seperate degrees.
+	local.result[1] = int(local.degrees);
+	// Only need sign in degrees.
+	local.degrees = abs(local.degrees);
+	
+	// Get minutes.
+	local.result[2] = (modf(local.degrees))["fractional"] * 60;
+	
+	// Get Seconds
+	local.result[3] = (modf(local.result[2]))["fractional"] * 60;
+	
+	// Now we can integralize minutes
+	local.result[2] = int(local.result[2]);
+	// If there are no seconds, we integralize it:
+	if !(local.result[3]) {
+		local.result[3] = int(local.result[3]);
+	}
+end local.result;
+
+/**
+ string StringifyDegrees(<int;float> x)
+ =================================================================
+ OVERVIEW|: Stringifies specified degrees in standard D°M'S" notation.
+ RETURN	 |: <string>
+			or NIL upon failure.
+*/
+StringifyDegrees local.degrees:
+	local.arr = waitthread FormatDegrees local.degrees;
+	if (local.arr == NIL) {
+		end;
+	}
+end (local.arr[1] + "° " + local.arr[2] + "' " + local.arr[3] + "\"");
+
+/** =======================================================================================================================================
+*** 				S c r i p t i n g		C m d s 		W r i t t e n			b y 		R a z o [R] a p i d						***
+======================================================================================================================================== */
+/// 		These are for reference, really.. except for the variations I wrote based on the trigonometric scripting cmds. 				///
+
+/**
+ float Cosine(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the cosine of x.
+			DOMAIN/INPUT|: 	R or (-INF, +INF);
+			RANGE/OUTPUT|:	[-1.0, 1.0]
+ RETURN	 |: <float> => cos();
+			or NIL upon failure.
+*/
+Cosine local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Cosine" local.x; end;}
+	}
+end (cos(local.x));
+
+/**
+ float Sine(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the sine of x.
+			DOMAIN/INPUT|: 	R or (-INF, +INF);
+			RANGE/OUTPUT|:	[-1.0, 1.0]
+ RETURN	 |: <float> => sin();
+			or NIL upon failure.
+*/
+Sine local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Sine" local.x; end;}
+	}
+end (sin(local.x));
+
+/**
+ float Tangent(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the tangent of x.
+			DOMAIN/INPUT|: 	R except for PI/2 + k*PI where k is any integer (incl. 0)
+			RANGE/OUTPUT|:	R or (-INF, +INF);
+ RETURN	 |: <float>	=> tan();
+					=> +INF (if x is out of range);
+			or NIL upon failure.
+*/
+Tangent local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Tangent" local.x; end;}
+	}
+	
+	// Blasphemy, I know. But the inaccuracy inherent to
+	// float comparison comes in really handy here. All 
+	// values that are closer to PI/2 than 0.0001 will be 
+	// detected.
+	if ((fmod local.x game.System.Maths.PI) == game.System.Maths.PI_2) {
+		local.result = game.System.Maths.Float.MAX_INFINITY;	//error
+	} else {
+		local.result = tan(local.x);
+	}
+end local.result;
+
+/**
+ float ArcCosine(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the inverse cosine (also known as the arc cosine) of x.
+			DOMAIN/INPUT|: 	[-1.0, +1.0]
+			RANGE/OUTPUT|:	[0.0, PI]
+ RETURN	 |: <float>	=> acos();
+					=> NaN (if x is out of range);
+			or NIL upon failure.
+*/
+ArcCosine local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ArcCosine" local.x; end;}
+	}
+end (acos(local.x));
+
+/**
+ float ArcSine(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the inverse sine (also known as the arc sine) of x.
+			DOMAIN/INPUT|: 	[-1.0, +1.0]
+			RANGE/OUTPUT|:	[-(PI/2), PI/2]
+ RETURN	 |: <float>	=> asin();
+					=> NaN (if x is out of range);
+			or NIL upon failure.
+*/
+ArcSine local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ArcSine" local.x; end;}
+	}
+end (asin(local.x));
+
+/**
+ float ArcTangent(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the inverse tangent (also known as the arc tangent) of x.
+			DOMAIN/INPUT|: 	R or (-INF, +INF)
+			RANGE/OUTPUT|:	[-(PI/2), PI/2]
+ RETURN	 |: <float>	=> atan();
+					=> NaN (if x is out of range);
+			or NIL upon failure.
+*/
+ArcTangent local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ArcTangent" local.x; end;}
+	}
+end (atan(local.x));
+
+/**
+ float ArcTangent2(<int;float> y, <int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the inverse tangent (also known as the arc tangent) of x and y.
+			DOMAIN/INPUT|: 	R or (-INF, +INF) where x and y aren't both zero.
+			RANGE/OUTPUT|:	[-(PI/2), PI/2]
+ RETURN	 |: <float>	=> atan2();
+			or NIL upon failure.
+*/
+ArcTangent2 local.y local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ArcTangent2" local.x "x <arg2>"; end;}
+		if !(waitthread IsNumber local.y) {waitthread __Error "ArcTangent2" local.y "y <arg1>"; end;}
+	}
+end (atan2 local.y local.x);
+
+/**
+ float Cotangent(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the cotangent of x.
+			DOMAIN/INPUT|: 	R except for k*PI where k is any integer (incl. 0)
+			RANGE/OUTPUT|:	R or (-INF, +INF)
+ RETURN	 |: <float>	=> cot();
+					=> +INF (if x is out of range);
+			or NIL upon failure.
+*/
+Cotangent local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Cotangent" local.x; end;}
+	}
+	
+	if !(fmod local.x game.System.Maths.PI) {
+		local.result = game.System.Maths.Float.MAX_INFINITY;	//error
+	} else {
+		local.result = 1.0 / (tan(local.x));
+	}
+end local.result;
+
+/**
+ float ArcCotangent(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the inverse cotangent (also known as the arc cotangent) of x. 
+			DOMAIN/INPUT|: 	R or (-INF, +INF)
+			RANGE/OUTPUT|:	(0.0, PI)
+ RETURN	 |: <float>	=> acot();
+			or NIL upon failure.
+*/
+ArcCotangent local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ArcCotangent" local.x; end;}
+	}
+end (game.System.Maths.PI_2 - (atan(local.x)));
+
+/**
+ float Cosecant(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the cosecant of x. 
+			DOMAIN/INPUT|: 	R except for k*PI where k is any integer (incl. 0)
+			RANGE/OUTPUT|:	(-INF, -1.0]U[1.0, +INF)
+ RETURN	 |: <float>	=> csc();
+					=> +INF (if x is out of range);
+			or NIL upon failure.
+*/
+Cosecant local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Cosecant" local.x; end;}
+	}
+	
+	if (local.x == 0.0) {
+		local.result = game.System.Maths.Float.MAX_INFINITY;	//error
+	} else {
+		local.result = 1.0 / (sin(local.x));
+	}
+end local.result;
+
+/**
+ float Secant(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the secant of x. 
+			DOMAIN/INPUT|: 	R except for PI/2 + k*PI where k is any integer (incl. 0)
+			RANGE/OUTPUT|:	(-INF, -1.0]U[1.0, +INF)
+ RETURN	 |: <float>	=> sec();
+					=> +INF (if x is out of range);
+			or NIL upon failure.
+*/
+Secant local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Secant" local.x; end;}
+	}
+	
+	if ((fmod local.x game.System.Maths.PI) == game.System.Maths.PI_2) {
+		local.result = game.System.Maths.Float.MAX_INFINITY;	//error
+	} else {
+		local.result = 1.0 / (cos(local.x));
+	}
+end local.result;
+
+/**
+ float ArcCosecant(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the inverse cosecant (also known as the arc cosecant) of x. 
+			DOMAIN/INPUT|: 	(-INF, -1.0]U[1.0, +INF)
+			RANGE/OUTPUT|:	[-PI/2, +PI/2]
+ RETURN	 |: <float>	=> acsc();
+					=> NaN (if x is out of range);
+			or NIL upon failure.
+*/
+ArcCosecant local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ArcCosecant" local.x; end;}
+	}
+	
+	if ( -1 < local.x && local.x < 1) {
+		local.result = game.System.Maths.Float.NaN; //NaN
+	} else {
+		local.result = asin(1.0 / local.x);
+	}
+end local.result;
+
+/**
+ float ArcSecant(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the inverse secant (also known as the arc secant) of x. 
+			DOMAIN/INPUT|: 	(-INF, -1.0]U[1.0, +INF)
+			RANGE/OUTPUT|:	[0.0, PI]
+ RETURN	 |: <float>	=> asec();
+					=> NaN (if x is out of range);
+			or NIL upon failure.
+*/
+ArcSecant local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "ArcSecant" local.x; end;}
+	}
+	
+	if ( -1 < local.x && local.x < 1) {
+		local.result = game.System.Maths.Float.NaN; //NaN
+	} else {
+		local.result = acos(1.0 / local.x);
+	}
+end local.result;
+
+/**
+ float HyperbolicCosine(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the hyperbolic cosine of x. 
+			DOMAIN/INPUT|: 	R or (-INF, +INF)
+			RANGE/OUTPUT|:	[1.0, +INF)
+ RETURN	 |: <float>	=> cosh();
+			or NIL upon failure.
+*/
+HyperbolicCosine local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "HyperbolicCosine" local.x; end;}
+	}
+end (cosh(local.x));
+
+/**
+ float HyperbolicSine(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the hyperbolic sine of x. 
+			DOMAIN/INPUT|: 	R or (-INF, +INF)
+			RANGE/OUTPUT|:	R or (-INF, +INF)
+ RETURN	 |: <float>	=> sinh();
+			or NIL upon failure.
+*/
+HyperbolicSine local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "HyperbolicSine" local.x; end;}
+	}
+end (sinh(local.x));
+
+/**
+ float HyperbolicTangent(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the hyperbolic tangent of x. 
+			DOMAIN/INPUT|: 	R or (-INF, +INF)
+			RANGE/OUTPUT|:	(-1.0, +1.0)
+ RETURN	 |: <float>	=> tanh();
+			or NIL upon failure.
+*/
+HyperbolicTangent local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "HyperbolicTangent" local.x; end;}
+	}
+end (tanh(local.x));
+
+/**
+ float HyperbolicCotangent(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the hyperbolic cotangent of x. 
+			DOMAIN/INPUT|: 	R/{0} or (-INF, 0.0)U(0.0, +INF)
+			RANGE/OUTPUT|:	(-INF, -1.0)U(1.0, +INF)
+ RETURN	 |: <float>	=> coth();
+					=> +INF (if x is out of range);
+			or NIL upon failure.
+*/
+HyperbolicCotangent local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "HyperbolicCotangent" local.x; end;}
+	}
+	
+	if (local.x == 0.0) {
+		local.result = game.System.Maths.Float.MAX_INFINITY; 	//infinity
+	} else {
+		local.result = 1.0 / (tanh(local.x));
+	}
+end local.result;
+
+/**
+ float HyperbolicSecant(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the hyperbolic secant of x. 
+			DOMAIN/INPUT|: 	R or (-INF, +INF)
+			RANGE/OUTPUT|:  (0.0, 1.0)
+ RETURN	 |: <float>	=> sech();
+			or NIL upon failure.
+*/
+HyperbolicSecant local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "HyperbolicSecant" local.x; end;}
+	}
+end (1.0 / (cosh(local.x)));
+
+/**
+ float HyperbolicCosecant(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the hyperbolic cosecant of x. 
+			DOMAIN/INPUT|: 	R/{0} or (-INF, 0.0)U(0.0, +INF)
+			RANGE/OUTPUT|:	R/{0} or (-INF, 0.0)U(0.0, +INF)
+ RETURN	 |: <float>	=> csch();
+					=> +INF (if x is out of range);
+			or NIL upon failure.
+*/
+HyperbolicCosecant local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "HyperbolicCosecant" local.x; end;}
+	}
+	
+	if (local.x == 0.0) {
+		local.result = game.System.Maths.Float.MAX_INFINITY; 	//infinity
+	} else {
+		local.result = 1.0 / (sinh(local.x));
+	}
+end local.result;
+
+/**
+ float Exp(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the base-e exponential function of x, which is 
+			the e-number (cf. $Math.E) raised to the power x. 
+ OUTPUT	 |: <float>	=> exp();
+			or NIL upon failure.
+*/
+Exp local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Exp" local.x; end;}
+	}
+end (exp(local.x));
+
+/**
+ array["] Frexp(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the specified floating point's binary significand 
+			(24-bit precision value) in domain [0.5, 1.0) and an integral 
+			exponent of 2, such that: x = significand * 2^exponent
+ RETURN	 |: associative array 	=> ["significand"] = <float> 
+								=> ["exponent"] = <int>
+			or NIL upon failure.
+*/
+Frexp local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Frexp" local.x; end;}
+	}
+end (frexp(float(local.x)));
+
+/**
+ float Ldexp(<float> x, <int> exp)
+ =================================================================
+ OVERVIEW|: Returns the resulting floating point value from multiplying x 
+			(the significand) by 2 raised to the power of exp (the exponent).
+			exponent of 2, such that: x = <significand> * 2^<exponent>
+ RETURN	 |: <float>;
+			or NIL upon failure.
+*/
+Ldexp local.x local.exp:
+	if (level.DEBUG) {
+		if ((typeof local.exp)[0] != "f") {waitthread __Error "Ldexp" local.x; end;}
+		if ((typeof local.exp)[0] != "i") {waitthread __Error "Ldexp" local.exp "exp <arg2>"; end;}
+	}
+end (ldexp local.x local.exp);
+
+/**
+ float Ln(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the natural logarithm (to base e (cf. $Math.E)) of x.
+ RETURN	 |: <float>	=> 	ln();
+					=> 	-INF (if x == 0);
+					=> 	NaN (if x < 0);
+			or NIL upon failure.
+*/
+Ln local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Ln" local.x; end;}
+	}
+end (log local.x);
+
+/**
+ float Lg(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the common logarithm (to base 10) of x.
+ RETURN	 |: <float>	=> 	lg();
+					=> 	-INF (if x == 0);
+					=> 	NaN (if < 0);
+			or NIL upon failure.
+*/
+Lg local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Lg" local.x; end;}
+	}
+end (log10 local.x);
+
+/**
+ float Lb(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the binary logarithm (to base 2) of x.
+ RETURN	 |: <float>	=> 	lb();
+					=> 	-INF (if x == 0);
+					=> 	NaN (if x < 0);
+			or NIL upon failure.
+*/
+Lb local.x:
+end (waitthread Log local.x 2);
+
+/**
+ float Log(<int;float> x, <int;float> base)
+ =================================================================
+ OVERVIEW|: Returns the custom logarithm (to base b) of x.
+ RETURN	 |: <float>	=> 	log();
+					=> 	-INF (if x == 0 || b == 0);
+					=> 	NaN (if x < 0 || b < 0);
+			or NIL upon failure.
+*/
+Log local.x local.b:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Log" local.x; end;}
+		if !(waitthread IsNumber local.b) {waitthread __Error "Log" local.b "b <arg2>"; end;}
+	}
+	
+	if (local.x == 0.0 || local.b == 0.0) {
+		local.result = game.System.Maths.Float.MIN_INFINITY; 	// -infinity
+	} else {
+		/// Negative cases for x and b will be handled by the respective log10() commands.
+		/// In such an event, NaN will be produced and any operation involving NaN will
+		/// automatically result in NaN. Therefore it won't matter which variable is 
+		/// negative, the correct result will always be returned.
+		local.result = ((log10 local.x) / (log10 local.b));
+	}
+end local.result;
+
+/**
+ array["] Modf(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the integral part and fractional part of the specified float.
+ RETURN	 |: associative array 	=> 	["intpart"] = <int>;
+								=> 	["fractional"] = <float>;
+			or NIL upon failure.
+*/
+Modf local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Modf" local.x; end;}
+	}
+end (modf(float(local.x)));
+
+/**
+ float Pow(<int;float> x, <int;float> exp)
+ =================================================================
+ OVERVIEW|: Returns x raised to the power of the specified exponent.
+ RETURN	 |: <float>	=> 	pow();
+					=> 	+INF (if x == 0 and exp < 0);
+					=> 	NaN (if x < 0 and exp is not an integral value);
+			or NIL upon failure.
+*/
+Pow local.x local.exp:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Pow" local.x; end;}
+		if !(waitthread IsNumber local.exp) {waitthread __Error "Pow" local.exp "exp <arg2>"; end;}
+	}
+	
+	/// If X is negative and the exponent is not an integral value, return NaN.
+	if (local.x < 0.0 && ceil(local.exp) != local.exp) {
+		local.result = game.System.Maths.Float.NaN;
+	} else {
+		/// If X is zero and the exponent is negative, the pow() command will return +inf
+		local.result = (pow local.x local.exp);
+	}
+end local.result;
+
+/**
+ float Ceil(<float> x)
+ =================================================================
+ OVERVIEW|: Returns the smallest integral value that is not less than x.
+ RETURN	 |: <float>	=> 	ceil();
+			or NIL upon failure.
+*/
+Ceil local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Ceil" local.x; end;}
+	}
+	
+	if ((typeof local.x)[0] == "f") {
+		local.result = ceil(local.x);
+	} else {
+		local.result = local.x;
+	}
+end local.result;
+
+/**
+ float Floor(<float> x)
+ =================================================================
+ OVERVIEW|: Returns the largest integral value that is not greater than x.
+ RETURN	 |: <float>	=> 	floor();
+			or NIL upon failure.
+*/
+Floor local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Floor" local.x; end;}
+	}
+	
+	if ((typeof local.x)[0] == "f") {
+		local.result = floor(local.x);
+	} else {
+		local.result = local.x;
+	}
+end local.result;
+
+/**
+ float Fmod(<int;float> numerator, <int;float> denominator)
+ =================================================================
+ OVERVIEW|: Returns the remainder of a Euclidian division (or integral division)
+			Unlike the built-in %-operator, this also takes floats as arguments.
+ RETURN	 |: <float>	=> 	fmod();
+			or NIL upon failure.
+*/
+Fmod local.numerator local.denominator:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.numerator) {waitthread __Error "Fmod" local.numerator; end;}
+		if !(waitthread IsNumber local.denominator) {waitthread __Error "Fmod" local.denominator "denominator <arg2>"; end;}
+	}
+end (fmod local.numerator local.denominator);
+
+/**
+ float Sqrt(<int;float> x)
+ =================================================================
+ OVERVIEW|: Returns the square root of x.
+ RETURN	 |: <float>	=> 	sqrt();
+					=>	NaN (if x < 0)
+			or NIL upon failure.
+*/
+Sqrt local.x:
+	if (level.DEBUG) {
+		if !(waitthread IsNumber local.x) {waitthread __Error "Sqrt" local.x; end;}
+	}
+	/// If X is negative, sqrt() will return NaN.
+end (sqrt(local.x));
+
+/** ===========================================================================================================
+*** 										S	t	u	f	f	...											***
+============================================================================================================ */
+__Error local.func local.var local.arg:
+	if !(local.arg) {
+		local.arg = "x <arg1>";
+	}
+	println ("~^~^~^~ ERROR[System.Maths." + local.func + "()]: variable '" + local.arg + "' of type '" + typeof(local.var) + "' is invalid! ~^~^~^~ \n");
+end;

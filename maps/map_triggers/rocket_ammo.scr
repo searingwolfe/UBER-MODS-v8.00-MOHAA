@@ -1,0 +1,156 @@
+main local.origin0 local.origin1 local.origin2 local.origin3 local.origin4 local.origin5 local.origin6 local.origin7 local.origin8 local.origin9:
+
+exec global/aliascache_triggersounds.scr rocket_ammo 
+
+level.spot_rocket[0] = ( local.origin0 ) + ( 0 0 15 )
+if(local.origin1 != NIL) { level.spot_rocket[1] = ( local.origin1 ) + ( 0 0 15 ) }
+if(local.origin2 != NIL) { level.spot_rocket[2] = ( local.origin2 ) + ( 0 0 15 ) }
+if(local.origin3 != NIL) { level.spot_rocket[3] = ( local.origin3 ) + ( 0 0 15 ) }
+if(local.origin4 != NIL) { level.spot_rocket[4] = ( local.origin4 ) + ( 0 0 15 ) }
+if(local.origin5 != NIL) { level.spot_rocket[5] = ( local.origin5 ) + ( 0 0 15 ) }
+if(local.origin6 != NIL) { level.spot_rocket[6] = ( local.origin6 ) + ( 0 0 15 ) }
+if(local.origin7 != NIL) { level.spot_rocket[7] = ( local.origin7 ) + ( 0 0 15 ) }
+if(local.origin8 != NIL) { level.spot_rocket[8] = ( local.origin8 ) + ( 0 0 15 ) }
+if(local.origin9 != NIL) { level.spot_rocket[9] = ( local.origin9 ) + ( 0 0 15 ) }
+
+local.random = randomint(level.spot_rocket.size)
+local.randomold = local.random
+
+local.marker5 = spawn script_model targetname "rocket_ammotrig"
+local.marker5 model "weapons/bazooka.tik"
+local.marker5.origin = level.spot_rocket[local.random] + ( 0 0 10 )
+local.marker5.angles = ( 0 0 0 )
+local.marker5 scale 0.9
+//local.marker5 light .5 0 1 100
+local.marker5 notsolid
+//local.marker5 time 15
+//local.marker5 thread Rotatex
+
+local.marker6 = spawn script_model targetname "rocket_ammotrig_2"
+local.marker6 model "weapons/panzerschreck.tik"
+local.marker6.origin = level.spot_rocket[local.random]
+local.marker6.angles = ( 0 0 0 )
+local.marker6 scale 0.9
+//local.marker6 light 0 0 1 40
+local.marker6 notsolid
+//local.marker6 time 15
+//local.marker6 thread Rotatexx
+
+local.trig2 = spawn trigger_use
+local.trig2.origin = level.spot_rocket[local.random]
+local.trig2 setsize ( -30 -30 -20 ) ( 30 30 50 )
+//local.trig2 message "*** Given some rocket ammo. ****"
+local.trig2 setthread rocket_ammo
+local.trig2.pickedup = 0
+
+exec global/flickerrotate.scr rocket_ammotrig ( .35 0 .85 ) 100 15 5 15
+wait 1
+exec global/flickerrotate.scr rocket_ammotrig_2 ( 0 0 .85 ) 50 5 5 15 1
+thread glue local.trig2 local.marker5 local.marker6 local.random
+
+while(1)
+{
+	local.trig2 waittill trigger
+	local.marker5 hide
+	local.marker6 hide
+	local.trig2 nottriggerable
+
+	waitframe // allows local.trig.pickedup to update first
+	local.randomold = local.random
+	local.random = randomint(level.spot_rocket.size) 
+
+	if(local.randomold == local.random) { local.random = randomint(level.spot_rocket.size)
+	if(local.randomold == local.random) { local.random = randomint(level.spot_rocket.size) 
+	if(local.randomold == local.random) { local.random = randomint(level.spot_rocket.size) 
+	if(local.randomold == local.random) { local.random = randomint(level.spot_rocket.size) 
+	if(local.randomold == local.random) { local.random = randomint(level.spot_rocket.size) 
+	} } } } }
+
+	if(local.trig2.pickedup != 0)
+	{
+		local.marker5.origin = level.spot_rocket[local.random] + ( 0 0 10 )
+		local.marker6.origin = level.spot_rocket[local.random]
+		local.trig2.origin = level.spot_rocket[local.random]
+		local.trig2.int = local.random
+	}
+
+	wait 0.1
+	local.marker5 show
+	local.marker6 show
+	local.trig2 triggerable
+}
+end
+
+glue local.trig local.model1 local.model2 local.r:
+
+	local.trig.int = local.r
+	while(1)
+	{
+		local.trig.origin = level.spot_rocket[local.trig.int]
+		local.model1.origin = level.spot_rocket[local.trig.int]
+		local.model2.origin = level.spot_rocket[local.trig.int]
+		waitframe
+	}
+end
+
+rocket_ammo:
+
+	local.player = parm.other
+	if(local.player.dead == 1)
+	{
+		self.pickedup = 0
+		self message ""
+		end
+	}
+	self.pickedup = 1
+	//local.player stufftext "say *** Rocket Ammo Spot is on the move!!! ***"
+
+	local.random2 = randomint(2)
+	if(local.random2 == 0)
+	{
+		local.player take "weapons/bazooka.tik"
+		local.player take "weapons/panzerschreck.tik"
+		self message "*** Given +6 Bazooka ammo. ****"
+		waitframe
+		local.player give weapons/bazooka.tik
+		local.ammo = spawn "items/item_heavy_ammobox.tik"
+		local.ammo.origin = local.player.origin
+	}
+	if(local.random2 == 1)
+	{	
+		local.player take "weapons/bazooka.tik"
+		local.player take "weapons/panzerschreck.tik"
+		self message "*** Given +6 Panzerschreck ammo. ****"
+		waitframe
+		local.player give weapons/panzerschreck.tik
+		local.ammo = spawn "items/item_heavy_ammobox.tik"
+		local.ammo.origin = local.player.origin
+	}
+
+	waitframe
+	local.player playsound bazookapickup
+	local.player playsound panzerschreckpickup
+	local.ammo remove
+	self triggerable
+end
+
+Rotatex:
+
+	while(self)
+	{
+		self.angles = (self.angles + ( 05 -03 07 ))
+		waitframe
+	}
+
+end
+
+Rotatexx:
+
+	while(self)
+	{
+		self.angles = (self.angles + ( -05 03 -07 ))
+		waitframe
+	}
+
+end
+ 

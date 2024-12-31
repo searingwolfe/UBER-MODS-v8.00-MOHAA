@@ -1,0 +1,153 @@
+main local.origin:
+
+local.master = spawn ScriptMaster
+local.master aliascache noise sound/amb/Amb_Cricket.wav soundparms 1.0 0.0 1.0 0.0 1000 1000 local streamed maps "m dm obj train "
+
+local.portlight2 = spawn script_model
+local.portlight2 model "static/indycrate.tik"
+local.portlight2.origin = local.origin + ( 0 0 30 )// starting point
+local.portlight2 light 1 .5 0 100
+local.portlight2.scale = 0.5
+local.portlight2 notsolid
+
+
+local.trig = spawn trigger_multiple
+local.trig.origin = local.origin
+local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+local.trig setthread camo_trig
+local.trig message "*** You have found the Camoflague trigger. ***"
+local.trig wait 1
+
+level waittill spawn 
+
+	local.i[0] = 0
+	local.i[1] = 0
+	local.i[2] = 0
+
+	local.v[0] = 3
+	local.v[1] = 4
+	local.v[2] = 5
+
+	while(1)
+	{
+		if(local.minues!=1)
+		{
+			local.v[0] ++ 
+			local.v[1] ++
+			local.v[2] ++
+		}
+
+		if(local.v[2]==10)
+		{
+			local.minues=1
+		}
+
+		if(local.v[2]==3)
+		{
+			local.minues=0
+		}
+
+		if(local.minues==1)
+		{
+			local.v[0] -- 
+			local.v[1] --
+			local.v[2] --
+		}
+
+
+		for(local.p=0;local.p<=10;local.p++)
+		{
+
+			waitframe
+
+			local.i[0] += local.v[0]
+			local.i[1] += local.v[1]
+			local.i[2] += local.v[2]
+
+			if(local.portlight2.shot==1)
+			{
+				local.i[0] += local.v[0]
+				local.i[1] += local.v[1]
+				local.i[2] += local.v[2]
+				local.i[0] += local.v[0]
+				local.i[1] += local.v[1]
+				local.i[2] += local.v[2]
+				local.portlight2 light 0 1 0 100
+			}
+
+			local.portlight2.angles = ( local.i[0] local.i[1] local.i[2] )
+		}
+	}
+end
+
+camo_trig:
+local.player=parm.other
+if (local.player.packon == 1)
+{
+end
+}
+local.player.packon = 1
+
+local.static = spawn script_model
+local.static model "static/indycrate.tik"
+local.static notsolid
+local.static.scale= 1
+local.static.origin = (local.player.origin + ( 0 0 0 ))
+
+local.static glue local.player
+local.player hide
+//local.player stufftext "say *** I am now camoflagued!!! ***"
+local.player iprint "You are now disguised as a crate!"
+local.player iprint "All weapons were taken from you, but you can still pick them up."
+local.player take models/weapons/bar.tik
+local.player take models/weapons/colt45.tik
+local.player take models/weapons/kar98.tik
+local.player take models/weapons/KAR98sniper.tik
+local.player take models/weapons/m1_garand.tik
+local.player take models/weapons/mp40.tik
+local.player take models/weapons/mp44.tik
+local.player take models/weapons/p38.tik
+local.player take models/weapons/shotgun.tik
+local.player take models/weapons/springfield.tik
+local.player take models/weapons/static_KAR98.tik
+local.player take models/weapons/bazooka.tik
+local.player take models/weapons/panzerschreck.tik
+local.player take models/weapons/m2frag_grenade.tik
+local.player take models/weapons/steilhandgranate.tik
+local.player take models/weapons/silencedpistol.tik
+local.player playsound noise
+
+local.team = local.player.dmteam
+while(1)
+{
+if (local.team != local.player.dmteam)
+{
+local.player_exists = 1
+break
+}
+
+if !(isAlive local.player)
+{
+local.player_exists = 1
+break
+}
+
+if !(local.player)
+{
+local.player_exists = 0
+break
+}
+
+wait 0.4
+}
+
+if (local.player_exists == 1)
+{
+local.static unglue
+// local.player show
+local.player.packon = 0
+}
+
+local.static remove
+
+end

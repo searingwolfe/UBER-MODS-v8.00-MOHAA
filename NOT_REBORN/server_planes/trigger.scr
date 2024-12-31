@@ -1,0 +1,171 @@
+main local.origin local.team local.scale local.modelpair local.start_pos:
+
+	if(level.planes == NIL) { exec server_planes/setup.scr }
+	if(local.origin == NIL) { wait 1; println("----- ERROR server_planes/trigger.scr: 'origin' parameter is missing!"); end }
+	if(local.start_pos == NIL) { local.start_pos = local.origin + ( 0 0 500 ) }
+	if(local.team == NIL)
+	{
+		local.team = randomint(2)
+		if(local.team == 1) { local.team = "axis" }
+		else { local.team = "allies" }
+	}
+
+	if($("plane_trigger" + local.team + local.modelpair) != NULL) { wait 1; println("----- ERROR server_planes/trigger.scr: Only one 'allies' or 'axis' plane allowed per modelpair."); end }
+	local.plane = spawn script_model "targetname" ("plane_trigger" + local.team + local.modelpair)
+	
+	if(local.modelpair != 1 && local.modelpair != 2) // default
+	{
+		cache models/vehicles/fockwulffly.tik
+		cache models/vehicles/p47fly.tik
+		if(local.team == "axis") { local.plane model "vehicles/fockwulffly.tik" }
+		else { local.plane model "vehicles/p47fly.tik" }
+		local.plane.scale = .2
+		if(local.scale == NIL) { local.scale = .2 }
+	}
+	if(local.modelpair == 1)
+	{
+		cache models/vehicles/stuka_fly.tik
+		cache models/vehicles/stuka_dsrt_fly.tik
+		if(local.team == "axis") { local.plane model "vehicles/stuka_fly.tik" }
+		else { local.plane model "vehicles/stuka_dsrt_fly.tik" }
+		local.plane.scale = .2
+		if(local.scale == NIL) { local.scale = .2 }
+	}
+	if(local.modelpair == 2)
+	{
+		cache models/vehicles/c47fly.tik
+		local.plane model "vehicles/c47fly.tik"
+		local.plane.scale = .1
+		if(local.scale == NIL) { local.scale = .1 }
+	}
+
+	//local.plane light 0 1 1 150
+	//local.plane.scale = local.scale
+	local.plane notsolid
+	local.plane ghost
+	local.plane.origin = local.origin + ( 0 0 50 ) 
+
+	local.plane.shot = 0
+
+	local.plane_trig = spawn trigger_multiple "targetname" ("plane_trigger_fly" + local.team + local.modelpair)
+	local.plane_trig.origin = local.origin 
+	local.plane_trig setthread fly
+	local.plane_trig setsize ( -40 -40 -40 ) ( 40 40 40 ) 
+	local.plane_trig.plane_scale = local.scale
+	local.plane_trig.start_pos = local.start_pos
+	local.plane_trig.team = local.team
+	local.plane_trig.modelpair = local.modelpair
+	
+	local.plane_trig_shot = spawn trigger_multiple "spawnflags" "128" "targetname" ("plane_shottrigger" + local.team + local.modelpair)
+	local.plane_trig_shot.origin = local.origin 
+	local.plane_trig_shot setthread shot
+	local.plane_trig_shot setsize ( -40 -40 -40 ) ( 40 40 40 ) 
+	local.plane_trig_shot.team = local.team
+	local.plane_trig_shot.modelpair = local.modelpair
+	local.plane_trig_shot.name = local.plane.targetname
+	
+	exec global/flickerrotate.scr local.plane.targetname ( 0 .9 .9 ) 150 5 10 10 1
+end
+
+fly:
+	local.player = parm.other
+	if(local.player.isdog == 1) { local.player iprint ("Dogs cannot fly planes."); end }
+	
+	if(local.player.flying != 1 && local.player.ejecting != 1 && local.player.isdog != 1 && local.player.driving != 1 && local.player.passenger != 1)
+	{
+		local.team = parm.other.dmteam
+
+		local.use_teams = waitexec global/settings.scr::getcmd "use-teams"
+
+		if (local.use_teams  == "1")
+		{	
+			if(self.team != local.player.dmteam && getcvar("g_gametype") != "1")
+			{
+				local.player iprint "You cannot fly enemy team's aircraft."
+				local.plane = waitthread find_trig self.team self self.modelpair
+
+				local.plane light 1 0 0 150
+				waitframe
+				
+				local.plane light 0 1 1 150
+				end
+			}
+		}
+
+		local.player.plane_start = self.start_pos
+		local.player scale self.plane_scale
+		local.player exec server_planes/server_fly.scr self.modelpair
+
+		local.trigdelay = waitexec global/settings.scr::getcmd "trig-delay"
+		local.trigdelay = int local.trigdelay
+
+		self nottriggerable
+		local.trig = waitthread find_trig self.team self self.modelpair
+		local.trig hide
+
+		wait local.trigdelay
+
+		local.trig show
+		self triggerable
+	}
+end
+
+shot:	
+	self nottriggerable
+	local.trig = waitthread find_trig self.team self self.modelpair
+
+	$(self.name).shot = 1
+	$(self.name).shot2 = 1
+
+	wait 0.1
+	$(self.name).shot2 = 0 // make the light return to normal sooner than angle rotations slowing back down.
+	self triggerable
+
+	wait 0.4
+	$(self.name).shot = 0
+	end
+end
+
+find_trig local.team local.trig local.modelpair:
+
+	for(local.i = 1; local.i <= $("plane_trigger" + local.team + local.modelpair).size; local.i++)
+	{
+		if(local.trig.origin[0] == $("plane_trigger" + local.team + local.modelpair)[local.i].origin[0] && local.trig.origin[1] == $("plane_trigger" + local.team + local.modelpair)[local.i].origin[1])
+		{
+			end  $("plane_trigger" + local.team + local.modelpair)[local.i]
+		}
+	}
+end
+
+switch__all local.team local.dissable local.modelpair:
+	
+	for(local.i = 1; local.i <= $("plane_trigger_fly" + local.team + local.modelpair).size; local.i++)
+	{
+		if(local.dissable == 1)
+		{
+			$("plane_trigger_fly" + local.team + local.modelpair)[local.i] nottriggerable
+			$("plane_shottrigger" + local.team + local.modelpair)[local.i] nottriggerable
+			$("plane_trigger" + local.team + local.modelpair)[local.i] hide
+		}
+		else
+		{
+			$("plane_trigger_fly" + local.team + local.modelpair)[local.i] triggerable
+			$("plane_shottrigger" + local.team + local.modelpair)[local.i] triggerable
+			$("plane_trigger" + local.team + local.modelpair)[local.i] show
+		}
+	}
+end
+
+from_fly local.team local.modelpair:
+
+	thread switch__all local.team 1 local.modelpair
+
+	while(level.planes[local.team] == level.planes_max[local.team])
+	{
+		wait 1
+	}
+			
+	thread switch__all local.team 0 local.modelpair
+end
+
+

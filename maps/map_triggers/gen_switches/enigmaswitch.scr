@@ -1,0 +1,43 @@
+main local.origin local.angles local.modeltype:
+
+local.enigma = spawn script_model
+if(local.modeltype != 1) { local.enigma model "static/static_enigmaclosed.tik" }
+if(local.modeltype == 1) { local.enigma model "animate/enigmaclosed.tik" }
+local.enigma.origin = local.origin
+local.enigma.angles = local.angles
+local.enigma solid
+
+local.enigmaswitch = spawn trigger_use
+local.enigmaswitch.origin = local.origin
+local.enigmaswitch setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+local.enigmaswitch waittill trigger
+local.enigmaswitch nottriggerable
+if(local.modeltype != 1) { local.enigma model "static/static_enigmaopen.tik" }
+if(local.modeltype == 1) { local.enigma model "animate/enigmaopen.tik" }
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	//local.player = parm.other
+ 	//local.player iprint ("*** Opening the enigma. ***")
+	//wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.enigmaswitch triggerable
+local.enigmaswitch waittill trigger
+if(local.modeltype != 1) { local.enigma model "static/static_enigmaclosed.tik" }
+if(local.modeltype == 1) { local.enigma model "animate/enigmaclosed.tik" }
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	//local.player = parm.other
+ 	//local.player iprint ("*** Closing the enigma. ***")
+	//wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.enigma remove
+local.enigmaswitch remove
+thread main local.origin local.angles local.modeltype
+end

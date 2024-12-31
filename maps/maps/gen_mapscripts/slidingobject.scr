@@ -1,0 +1,78 @@
+// Sliding Object script: When a player is facing towards and touching this object, push it in the direction of the player's angle.
+//
+// Set a targetname (local.name) and make trigger_use or trigger_multiple invisible walls with "setsize". Run a simple while-loop script in the map .scr file,
+// and wait until the sliding object touches/triggers these walls; then stop sliding. Make sure these walls are a few hundred units away from actual walls, otherwise
+// the object will get stuck on a wall, since a player cannot squeeze in to push the object back away from the wall.
+//
+// Example code: exec maps/training_mapscripts/slidingbox.scr static/indycrate.tik ( 770 -262 0 ) ( 0 0 0 ) 10 0.8 0 30 0
+//
+// Parameters: object model; targetname; origin; angles; distance the object will travel per push; movetime taken to push the distance (keep this low, otherwise the object
+// will be moving after a player touches it and walks away.
+//
+// Extra parameters: if local.gridlock = 1, then the object will only move along the x-y-axis. keep local.fov lower than 60, otherwise a player can face directly
+// away from the object, touch it, and the object will move towards the person, not away. local.debug_print only works when gridlock = 1.
+// Setting local.debug_print = 1 is used to verify whether the sliding object is moving the full local.distance (deviates mostly when player angles approaches 180/-180 degrees)
+
+
+main local.model local.name local.origin local.angles local.distance local.movetime local.gridlock local.fov local.debug_print:
+
+exec global/aliascache_triggersounds.scr sliding_object
+
+	local.ent = spawn script_model targetname (local.name) 
+	local.ent model local.model
+	local.ent.origin = local.origin
+	local.ent.angles = local.angles
+	local.ent solid
+
+	if(local.gridlock == NIL) { local.gridlock = 0 } // by default, entity will not slide along the x-y-axis.
+	if(local.fov == NIL) { local.fov = 30 } // for whenever a player "cansee" the entity within an FOV of local.fov units, default = 30.
+	
+	while($player.size <= 0) { waitframe }
+	while($player.size >= 1)
+	{
+		local.player = parm.other
+		if(local.player istouching local.ent && local.player cansee local.ent local.fov)
+		{
+			local.ent time local.movetime
+			local.ent loopsound slidingobject
+
+			if(local.gridlock == 1)
+			{
+				if(local.player.angles[1] < 135 && local.player.angles[1] >= 45) { local.ent moveto (local.ent.origin + ( 0 local.distance 0 )) }
+				if(local.player.angles[1] >= 135 && local.player.angles[1] < 225) { local.ent moveto (local.ent.origin + ( -local.distance 0 0 )) }
+				if(local.player.angles[1] < 315 && local.player.angles[1] >= 225) { local.ent moveto (local.ent.origin + ( 0 -local.distance 0 )) }
+				if(local.player.angles[1] >= 315 || local.player.angles[1] < 45 ) { local.ent moveto (local.ent.origin + ( local.distance 0 0 )) }
+				local.ent waitmove
+			}
+			if(local.gridlock != 1)
+			{
+				local.sin = (waitthread global/math.scr::sine local.player.angles[1]) * local.distance
+				local.cos = (waitthread global/math.scr::cosine local.player.angles[1]) * local.distance
+
+				if(local.debug_print == 1) { waitthread debug_print local.player.angles[1] local.sin local.cos local.distance }
+
+				local.ent moveto (local.ent.origin + ( local.cos local.sin 0 ))
+				local.ent waitmove
+			}
+		}
+		else { local.ent stoploopsound } // don't stop the sound if the player is still touching local.ent
+		waitframe
+	}
+	local.ent remove
+	thread main local.model local.name local.origin local.angles local.distance local.movetime local.gridlock local.fov local.debug_print
+end
+
+debug_print local.playerangle local.sin local.cos local.distance:
+
+	local.degrees = local.playerangle
+	if(local.playerangle >= 180) { local.degrees = local.playerangle - 360 }
+
+	iprintlnbold("player angle = " + local.playerangle + " ... degrees = " + local.degrees)
+	iprintlnbold("sin = " + local.sin + " ... cos = " + local.cos)
+
+	local.mathtest = waitthread global/math.scr::tangent local.sin local.cos
+	iprintlnbold("local.tan = " + local.mathtest) // checks if local.tan = 1 when local.player.angles[1] = 45, 135, 225, 315 degrees
+
+	local.mathtest2 = waitthread global/math.scr::pythagorean local.sin local.cos local.distance
+	iprintlnbold("local.hypotenusedist = " + local.mathtest2) // checks if local.hypotenusedist = local.distance
+end

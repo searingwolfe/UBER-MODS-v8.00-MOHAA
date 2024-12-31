@@ -1,0 +1,49 @@
+main local.origin local.angles local.modeltype local.scale:
+
+exec global/aliascache_triggersounds.scr cabinet_switch
+
+local.cabinet = spawn script_model
+if(local.modeltype != 1 && local.modeltype != 2) { local.cabinet model "animate/hidden_cabinet_a.tik" }
+if(local.modeltype == 1) { local.cabinet model "animate/hidden_cabinet_b.tik" }
+if(local.modeltype == 2) { local.cabinet model "animate/hidden_cabinet_c.tik" }
+local.cabinet.origin = local.origin
+local.cabinet.angles = local.angles
+if(local.scale < 0 || local.scale == NIL) { local.cabinet.scale = 1 }
+if(local.scale > 0) { local.cabinet.scale = local.scale }
+local.cabinet anim idle
+local.cabinet solid
+
+local.cabinetswitch = spawn trigger_use
+local.cabinetswitch.origin = local.origin
+local.cabinetswitch setsize ( -30 -30 -30 ) ( 30 30 100 )
+
+local.cabinetswitch waittill trigger
+local.cabinetswitch nottriggerable
+local.cabinet anim open
+local.cabinet playsound cabinet_open
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	//local.player = parm.other
+ 	//local.player iprint ("*** Opening the cabinet. ***")
+	//wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.cabinetswitch triggerable
+local.cabinetswitch waittill trigger
+local.cabinet anim idle
+local.cabinet playsound cabinet_close
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	//local.player = parm.other
+ 	//local.player iprint ("*** Closing the cabinet. ***")
+	//wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.cabinet remove
+local.cabinetswitch remove
+thread main local.origin local.angles local.modeltype local.scale
+end

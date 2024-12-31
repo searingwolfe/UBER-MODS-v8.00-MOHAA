@@ -1,0 +1,255 @@
+// the original m3 halftrack is first destroyed and replayed with an indestructible one. if local.type = "drive", then the old tank is destroyed too.
+// define local.r local.g local.b, only if local.laserprism = 1 (laserprism marks where the invisible tank wall is (cannot be removed by training map script).
+
+main local.type local.laserprism local.r local.g local.b:	
+
+	if(local.type == "static") 
+	{  
+		$tank.health = 9999999
+		$tank.gun = $tank QueryTurretSlotEntity 0
+		if($tank.gun == NIL || $tank.gun == NULL) { $tank spawnturret 0 "vehicles/tigercannon.tik" }
+		$tank.gun = $tank QueryTurretSlotEntity 0
+		$tank.gun.scale = 1
+		
+		thread tank_keepatorigin $tank.origin // whenever tank moves away from its origin (i.e. explosion knockback), reset the origin back to where the tank belongs.
+		
+		//$tank remove
+		//local.tank = spawn "vehicles/kingtank.tik" targetname "tank" // don't use "spawn script_model", otherwise tank's treads will always be moving and tank's turret will be missing.
+		//local.tank.origin = ( 724 -2684 -396 ) 			     // uncomment these 5 lines if you want to change the tank's model. make sure $tank and $tank_turret are removed first.
+		//local.tank.angles = ( 0 270 0 )
+		//local.tank.health = 9999999
+		//local.tank.scale = 1	
+
+		wait 1 // makes sure the m3 spawns in 1st, before radiusdamage destroys it. also keep this long enough so dog trigger isn't destroyed (it never is, but still causes erorrs somehow).
+		radiusdamage ( 701 -3360 -380 ) 9999 200 // m3 origin
+	}
+
+	if(local.type == "drive") 
+	{
+		//$explosives_on remove // already NULL
+		$explosive_off remove
+		$tank remove
+		//$tank_turret remove // already NULL
+					   // local.targetname, local.model, local.turretmodel, local.desmodel, local.origin, local.angles, local.health, local.tankspeed
+
+		if(getcvar("g_ubergametype") != ft && getcvar("g_ubergametype") != cyb && getcvar("g_ubergametype") != snd && getcvar("g_ubergametype") != bb) { exec global/playertank.scr tank1 vehicles/panzer_tank.tik ( 724 -2684 -396 ) ( 0 270 0 ) 1000 } // resettime parameter = NIL or 0, so never reset the tank
+		else { exec global/playertank.scr tank1 vehicles/panzer_tank.tik ( 724 -2684 -396 ) ( 0 270 0 ) 1000 30 }
+
+		if(local.laserprism == 1) 
+		{ 
+			thread tank_laserprism local.r local.g local.b // initialize laser prism, turned off at first.
+			
+			thread tank_waittill_leftorigin $tank1.origin 
+		}
+
+		thread tank_waittill_death
+
+		wait 0.2 // makes sure that the m3 spawns in first, before radiusdamage destroys it.
+		radiusdamage ( 701 -3360 -380 ) 9999 200 // m3 origin
+		radiusdamage ( 88 -3334 -380 ) 9999 600 // oil barrels. destroy them when map loads, otherwise driveable tank will blow up if it drives over them.
+
+		radiusdamage ( 326 -2385 -380 ) 9999 100 // oil barrels near truck
+		wait 1
+		radiusdamage ( 924 -3240 -380 ) 9999 100 // oil barrels near m3
+	}
+
+	local.m3 = spawn script_model targetname "m3replace" // replace the m3 halftrack destroyed by radiusdamage. original one doesn't have a targetname.
+	local.m3 model "vehicles/m3.tik"		     // when map loads it must be destroyed, replaced, and given 9999999 health so it isn't destroyed again.
+	local.m3.origin = ( 701 -3360 -390 )
+	local.m3.angles = ( 0 87 0 )
+	local.m3.health = 9999999
+	local.m3.scale = 1 
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tank_keepatorigin local.origin: // static tank only
+	
+	while($tank != NULL && $tank.origin[0] == local.origin[0] && $tank.origin[1] == local.origin[1]) { wait 1 } // just in case the z-height "[2]" is slightly different.
+
+	if($tank != NULL) { $tank.origin = ( 724 -2684 -396 ) } // cannot use "local.origin" here, otherwise tank will occasionally and very briefly float in the air.
+	wait 1
+	
+	if($tank != NULL) { thread tank_keepatorigin local.origin }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tank_waittill_death: // when driveable tank dies, run "obj6b" thread.
+
+	while($tank1 != NULL) 
+	{
+		if($tank1.origin[2] <= -600) { killent $tank1; break }
+		wait 0.1
+	}
+	waitframe
+
+	if($tank1 == NULL || $tank1.origin[2] <= -600) // if the tank mysteriously falls below the level, blow it up.
+	{
+	   if($tank1 != NULL) { killent $tank1 }
+
+	   exec maps/training_mapscripts/obj6b_explosive_tanktrig.scr::obj6b 1 // run all the obj6b explosions, normally occuring after the "static" tank is destroyed by explosives.
+	}								       // the "1" turns off the explosive, ticker timer, and destroyed tank spawn. blow up the other stuff instantly.
+	if($tank1 != NULL) { thread tank_waittill_death } // just in case the while-loop ends suddenly, check again if $tank1 is not dead yet.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tank_waittill_leftorigin local.origin: // wait until tank first leaves its spawn origin, then turn on laser prism.
+
+	while($tank1 != NULL && $tank1.origin[0] == local.origin[0] && $tank1.origin[1] == local.origin[1]) { wait 1 }
+	
+	for(local.i = 0; local.i <= 20; local.i++) // for-loop runs for 10 seconds: 20 / (wait 0.5) = 10.
+	{ 
+		thread laserson // for-loop laser prism fix, just in case the driveable tank quickly runs through a laser edge, turning off the lower half.
+		wait 0.5
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+tank_laserprism local.r local.g local.b: // for driveable tanks only, wait until $tank moves from its origin, from ( 724 -2684 -396 )
+// then turn on a prism of lasers, marking where the tank used to be (invisible wall there never goes away, even after tank moves away).
+
+local.laser1 = spawn func_beam targetname "tanklaser1"
+local.laser1 minoffset 0.0
+local.laser1 maxoffset 0.0
+local.laser1 numsegments 1
+local.laser1 life 0
+local.laser1 color ( local.r local.g local.b )
+local.laser1 alpha 0.4
+local.laser1 alwaysdraw
+local.laser1 deactivate
+local.laser1 scale .5
+local.laser1.origin = ( 620 -2528 -231 )
+local.laser1 endpoint ( 620 -2528 -400 )
+local.laser1 notsolid
+
+local.laser2 = spawn func_beam targetname "tanklaser2"
+local.laser2 minoffset 0.0
+local.laser2 maxoffset 0.0
+local.laser2 numsegments 1
+local.laser2 life 0
+local.laser2 color ( local.r local.g local.b )
+local.laser2 alpha 0.4
+local.laser2 alwaysdraw
+local.laser2 deactivate
+local.laser2 scale .5
+local.laser2.origin = ( 831 -2871 -231 )
+local.laser2 endpoint ( 831 -2871 -400 )
+local.laser2 notsolid
+
+local.laser3 = spawn func_beam targetname "tanklaser3"
+local.laser3 minoffset 0.0
+local.laser3 maxoffset 0.0
+local.laser3 numsegments 1
+local.laser3 life 0
+local.laser3 color ( local.r local.g local.b )
+local.laser3 alpha 0.4
+local.laser3 alwaysdraw
+local.laser3 deactivate
+local.laser3 scale .5
+local.laser3.origin = ( 620 -2871 -231 )
+local.laser3 endpoint ( 620 -2871 -400 )
+local.laser3 notsolid
+
+local.laser4 = spawn func_beam targetname "tanklaser4"
+local.laser4 minoffset 0.0
+local.laser4 maxoffset 0.0
+local.laser4 numsegments 1
+local.laser4 life 0
+local.laser4 color ( local.r local.g local.b )
+local.laser4 alpha 0.4
+local.laser4 alwaysdraw
+local.laser4 deactivate
+local.laser4 scale .5
+local.laser4.origin = ( 831 -2528 -231 )
+local.laser4 endpoint ( 831 -2528 -400 )
+local.laser4 notsolid
+
+local.laser5 = spawn func_beam targetname "tanklaser5"
+local.laser5 minoffset 0.0
+local.laser5 maxoffset 0.0
+local.laser5 numsegments 1
+local.laser5 life 0
+local.laser5 color ( local.r local.g local.b )
+local.laser5 alpha 0.4
+local.laser5 alwaysdraw
+local.laser5 deactivate
+local.laser5 scale .5
+local.laser5.origin = ( 620 -2528 -231 )
+local.laser5 endpoint ( 620 -2871 -231 )
+local.laser5 notsolid
+
+local.laser6 = spawn func_beam targetname "tanklaser6"
+local.laser6 minoffset 0.0
+local.laser6 maxoffset 0.0
+local.laser6 numsegments 1
+local.laser6 life 0
+local.laser6 color ( local.r local.g local.b )
+local.laser6 alpha 0.4
+local.laser6 alwaysdraw
+local.laser6 deactivate
+local.laser6 scale .5
+local.laser6.origin = ( 831 -2528 -231 )
+local.laser6 endpoint ( 831 -2871 -231 )
+local.laser6 notsolid
+
+local.laser7 = spawn func_beam targetname "tanklaser7"
+local.laser7 minoffset 0.0
+local.laser7 maxoffset 0.0
+local.laser7 numsegments 1
+local.laser7 life 0
+local.laser7 color ( local.r local.g local.b )
+local.laser7 alpha 0.4
+local.laser7 alwaysdraw
+local.laser7 deactivate
+local.laser7 scale .5
+local.laser7.origin = ( 620 -2528 -231 )
+local.laser7 endpoint ( 831 -2528 -231 )
+local.laser7 notsolid
+
+local.laser8 = spawn func_beam targetname "tanklaser8"
+local.laser8 minoffset 0.0
+local.laser8 maxoffset 0.0
+local.laser8 numsegments 1
+local.laser8 life 0
+local.laser8 color ( local.r local.g local.b )
+local.laser8 alpha 0.4
+local.laser8 alwaysdraw
+local.laser8 deactivate
+local.laser8 scale .5
+local.laser8.origin = ( 620 -2871 -231 )
+local.laser8 endpoint ( 831 -2871 -231 )
+local.laser8 notsolid
+end
+
+////////////////////////////////////////////////////////////////////////
+
+laserson:
+
+$tanklaser1 activate
+$tanklaser2 activate
+$tanklaser3 activate
+$tanklaser4 activate
+$tanklaser5 activate
+$tanklaser6 activate
+$tanklaser7 activate
+$tanklaser8 activate
+end
+
+////////////////////////////////////////////////////////////////////////
+
+lasersoff:
+
+$tanklaser1 deactivate
+$tanklaser2 deactivate
+$tanklaser3 deactivate
+$tanklaser4 deactivate
+$tanklaser5 deactivate
+$tanklaser6 deactivate
+$tanklaser7 deactivate
+$tanklaser8 deactivate
+end

@@ -1,0 +1,51 @@
+main local.origin local.angles:
+
+exec global/aliascache_triggersounds.scr light_switch
+
+local.eswitch = spawn script_model
+local.eswitch model "animate/electrical_switch_nopulse.tik"
+local.eswitch.origin = local.origin
+local.eswitch.angles = local.angles + ( 0 180 0 )
+local.eswitch notsolid
+
+local.eswitchtrig = spawn trigger_use
+local.eswitchtrig.origin = local.eswitch.origin
+local.eswitchtrig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+local.eswitch anim off
+local.eswitchtrig waittill trigger
+local.eswitchtrig nottriggerable
+
+local.eswitch playsound light_switch
+local.eswitch anim turn
+local.eswitch anim waittill animdone
+local.eswitch anim on
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning on the electrical switch. ***")
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.eswitchtrig triggerable
+local.eswitchtrig waittill trigger
+local.eswitchtrig nottriggerable
+
+local.eswitch playsound light_switch
+local.eswitch anim off
+
+/////////////////////////////////////////////*** add code here ***//////
+
+ 	local.player = parm.other
+ 	local.player iprint ("*** Turning off the electrical switch. ***")
+	wait 1
+
+////////////////////////////////////////////////////////////////////////
+
+local.eswitch remove
+local.eswitchtrig remove
+
+thread main local.origin local.angles
+end

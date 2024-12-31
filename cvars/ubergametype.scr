@@ -4,6 +4,7 @@ main:
 	if(getcvar("g_throwingknives") == "") { setcvar "g_throwingknives" "1" }
 
 	thread ubergametype
+	thread uberhardcode
 
 	waitframe
 	thread ubermods
@@ -15,15 +16,17 @@ main:
 	thread teams
 end
 
+////////////////////////////////////////////////////////////////////////
+
 ubergametype:
 
 	local.cvar = getcvar("g_ubergametype")
 	while(getcvar("g_ubergametype") == local.cvar) { waitframe }
 
-	if(level.global_uberversion_hardcode == 1 && level.time != NIL && level.time > 1)
+	if(getcvar("g_uberhardcode") == "1" && level.time != NIL && level.time > 1)
 	{
 		println("----- ERROR. Unable to change g_ubergametype.")
-		println("Please go to 'global/uberversion.scr' and comment out the switch-statement of ubergametypes.")
+		println("----- Type 'g_uberhardcode 0' to re-enable g_ubergametype CVAR.")
 		thread ubergametype
 		end
 	}
@@ -57,6 +60,29 @@ ubergametype:
 	thread ubergametype
 end
 
+////////////////////////////////////////////////////////////////////////
+
+uberhardcode:
+
+	local.cvar = getcvar("g_uberhardcode")
+	while(getcvar("g_uberhardcode") == local.cvar) { waitframe }
+
+	if(getcvar("g_uberhardcode") == "1")
+	{
+		println("----- UBER hard-code: g_ubergametype CVAR disabled.")
+		println("----- UBER hard-code: g_ubergametype is now hard-coded to the list in global/uberversion.scr.")
+		println("g_ubergametype will be changed upon restarting.")
+	}
+	if(getcvar("g_uberhardcode") == "0")
+	{
+		println("----- UBER hard-code: g_ubergametype CVAR enabled.")
+		println("g_ubergametype will be changed upon restarting.")
+	}
+	thread uberhardcode
+end
+
+////////////////////////////////////////////////////////////////////////
+
 ubermods:
 
 	local.cvar = getcvar("g_ubermods")
@@ -86,6 +112,8 @@ ubermods:
 	}
 	thread ubermods
 end
+
+////////////////////////////////////////////////////////////////////////
 
 throwingknives:
 
