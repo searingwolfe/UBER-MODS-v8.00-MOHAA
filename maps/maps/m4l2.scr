@@ -234,11 +234,11 @@ setup:
 	local.master aliascache train_stopping sound/vehicle/veh_train_m6l3a_stop.wav soundparms 1.2 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname
 	local.master aliascache train_crashing sound/vehicle/veh_train_m2l3_approach.wav soundparms 1.3 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname
 	local.master aliascache missile_room sound/amb/Amb_MissileRoom.wav soundparms 0.8 0.0 1.0 0.0 3000 6000 auto loaded maps level.mapname
-	local.master aliascache train_crash1 sound/mechanics/damage_vehicle_1.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
+	//local.master aliascache train_crash1 sound/mechanics/damage_vehicle_1.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
 	local.master aliascache train_crash2 sound/mechanics/damage_vehicle_2.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
-	local.master aliascache train_crash3 sound/mechanics/damage_vehicle_3.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
+	//local.master aliascache train_crash3 sound/mechanics/damage_vehicle_3.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
 	local.master aliascache train_crash4 sound/mechanics/damage_vehicle_4.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
-	local.master aliascache train_fire sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
+	local.master aliascache train_fire sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 300 3000 auto loaded maps level.mapname
 
 	local.master aliascache explode_building2_large1 sound/weapons/explo/Explo_StoneLarge1.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
 	local.master aliascache explode_building2_large2 sound/weapons/explo/Explo_StoneLarge2.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
@@ -1569,11 +1569,11 @@ trainsequence:
 	{
 		thread gatecrash
 		$trainfront waitmove
+		$trainfront stoploopsound
+		$trainfront2 stoploopsound
 	}
 
 	$trainfront.moving = 0
-	$trainfront stoploopsound
-	$trainfront2 stoploopsound
 	level.train_sequencing = 0
 end
 
@@ -1688,10 +1688,10 @@ traincrash:
 	
 	$trainfront endpath // prematurely end "move"
 	local.r = randomint(2)
-	if(local.r == 0) { $trainfront thread train_blowup_rotate_right 128 25; $trainsparks[1] playsound train_crash1 }
-	else { $trainfront thread train_blowup_rotate_left 128 25; $trainsparks[2] playsound train_crash3 }
+	if(local.r == 0) { $trainfront thread train_blowup_rotate_right 128 25 } // ; $trainsparks[1] playsound train_crash1
+	else { $trainfront thread train_blowup_rotate_left 128 25 } // ; $trainsparks[2] playsound train_crash3
 	thread train_rotate local.r
-	$trainfront2 playsound train_crash1
+	//$trainfront2 playsound train_crash1
 	level.traincrashed = 1
 	
 	//wait 0.15
