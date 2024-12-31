@@ -28,7 +28,7 @@
 - Uninstall by deleting the .pk3 mod file from the "main" folder.
 
 - For MOHAA Reborn 1.12: keep all files within the .pk3 as is.
-- For MOH Allied Assault 1.11, Spearhead, or Breakthrough: copy-paste all files within the "Not_Reborn" folder outside of this folder (replacing other files).
+- For MOH Allied Assault 1.11, Spearhead, or Breakthrough: copy-paste all files within the "NOT_REBORN" folder outside of this folder (replacing other files).
 
 #
 
