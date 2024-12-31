@@ -1,4 +1,4 @@
-*Current Version: 7.978 - Updated: 11/14/2024*
+*Current Version: 7.979 - Updated: 12/31/2024*
 
 ### Table of Contents
 
@@ -207,6 +207,8 @@ BASEBUILDER CONSOLE COMMANDS:
 |       | "g_ubermods 0" | all UBER mods disabled. |
 |       | "g_throwingknives 1" | all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map. |
 |       | "g_throwingknives 0" | no throwing knives. |
+|       | "g_uberhardcode 1" | force all maps to use the g_ubergametypes found in "global/uberversion.scr", and disable "g_ubergametype" cvar. |
+|       | "g_uberhardcode 0" | re-enable the "g_ubergametype" cvar. |
 |       | "time 1" | print the map's time remaining (in minutes:seconds format). |
 |       | "score 1" | print each player's kills and deaths, along with their $player[client num] and netname. |
 |       | "teams 1" | print each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num] and netname, and then print the total number of players on each team. |
@@ -449,6 +451,9 @@ This example thread below for "snd" moves both bombsites to new origins each tim
 - Modders can assign UBER gametypes for different maps in a single map rotation in "global/uberversion.scr", but this will disable the "g_ubergametype" cvar since they will be hard-coded in the list.
 - Modders can change default player running speed for all maps in "global/uberversion.scr".
 
+- Type "g_uberhardcode 1" into console to force all maps to use the g_ubergametypes assigned in "global/uberversion.scr".
+- Type "g_uberhardcode 0" into console to re-enable the "g_ubergametype" cvar.
+
 #
 
 # Killstreak Rewards
@@ -576,7 +581,7 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1, M4L2.
 
 ---------------
 
@@ -946,81 +951,66 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 	- Some walls can still be driven through, but all areas that players can exit vehicles to walk around/shoot from behind walls are blocked off.
 - Solid ground added in 3 areas for players to walk on: behind green hedges and the cliff near the destroyed plane, cliff side near the middle skinny road, behind sandbags near church.
 
+---------------
+
+- M4L2 fully modded. 2 vehicles, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
+
+- A train travels across the train tracks from the Allies-side spawn towards the Axis-side spawn.
+	- Any player or vehicle that gets in front of the train will die/explode.
+	- Up to 2 players can ride inside the train by pressing USE(e) near the train's cabin, and exit by holding USE(e) to tele on top of the train.
+	- Once the train enters the Axis-side train tunnel, players that exit will instead be respawned.
+	- Inside the train tunnel, the train moves away from the map for 0.5x the "level.train_off_time" (default = 60 seconds), before returning towards the map for the other 0.5x.
+
+- There are 3 different tracks that the train can follow: into the train tunnel (default track), fully stopping, or blowing up.
+	- A train switch near the middle of the map switches the tracks to the path where the train comes to a full stop and parks.
+	- A train switch in the Axis house overlooking 2 train tracks switches to the path where the train blows up.
+	- These train switches cannot be triggered while the train is moving across the map (not blown up, not stopped, not in the tunnel).
+
+- While stopping or blowing up, sparks from the train's brakes appear underneath it.
+	- If the train comes to a complete stop, players riding inside them will tele next to the train.
+	- If the train blows up, loud explosions and train crashing sounds occur before the train flips over onto its side.
+	- The "level.train_off_time" variable also controls how long to reset the train if it is parked or blown up.
+
+- 2 pairs of metal gates can slide open/closed by pressing USE(e) near the middle of each pair. This also allows vehicles to travel through them.
+	- If metal gates on the train tracks are closed or are currently opening/closing, the train will smash through them, making them swing quickly away.
+	- The smashed metal gates will respawn when the train respawns at the beginning of the tracks.
+	- If the gates were open or sliding open, they will respawn opened. If the gates were closed or sliding closed, they will respawn closed.
+
+- The elevator and its gate moves faster. Teles are placed above/below the elevator for players to escape in case they get stuck in the elevator shaft.
+
+- 2 bangalore wall-bombs: 1 in the small bunker near the left train tracks (the path where the train comes to a full stop), and 1 at the double-doors near the left train tracks.
+- 3 radios can be turned on/off to play music or static sounds.
+- 12 transformer humming sounds, 1 water spigot sound, 1 air vent sound added.
+
+---------------
+
 - All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
 
 # Updates & Bug Fixes
 
-v7.977 (10-25-2024):
-- Improved driving physics for vehicles/boats:
-	- Acceleration and deceleration added, allowing vehicles to roll a few feet after stopping, or slowing to a full stop before reversing (from driving forward) or driving forward (from reversing).
-	- Vehicles/boats will now reverse at half its maximum speed. Turning speed will also increase/decrease with acceleration/deceleration.
+v7.979 (12-31-2024):
+- Added "g_uberhardcode 1" CVAR to force set all maps' "g_ubergametype" CVARs to the list found in global/uberversion.scr, and disable the "g_ubergametype" CVAR.
+	- Set "g_uberhardcode 0" to re-enable the "g_ubergametype" CVAR for changing UBER gametypes (0 = regular TDM/FFA as set by "g_gametype", cyb, snd, ft, bb).
 
-- Players can now reload nebelwerfers without waiting for "Rockets: 0" by right-clicking (or weapon-zoom button).
-	- Nebelwerfers will now display "Rockets: Reloading" on the screen when currently reloading rockets (must fully reload before it can shoot again).
+- Cleaned up alienx/basebuilder.scr script. Bugs fixed, such as teleporters not counting towards object limit. MG42s & Flak88s now add 2 to the object limit, since they also spawn a bipod.
+	- Players can now switch between lifts, teleporters, objects by touching a new build trigger when holding any of them (before, you would get stuck with a lift/tele until placing them).
 
-- alienx/basebuilder.scr script improved and new building features added: Hold right-click to change build-laser from green to blue; this activates "Trimming Mode" for the object being held.
-	- In trimming mode, players can lean left/right to slowly adjust roll-angles (x,y,z angles = pitch,yaw,roll).
-	- In trimming mode, players can crouch to rotate the object's yaw-angle by 90 degrees, flipping the lean left/right angles to adjust pitch-angles (but still looks like adjusting roll-angles from player's point of view).
-	- In trimming mode, players can walk (not run) forward/backward to increase/decrease their build-laser's distance between them and their object being held.
-	- When a new object is picked up, their build-laser's distance is automatically reset back to "level.basebuild_laserdist" (default = 350).
+- global/respawn_stuck_fix.scr script will end prematurely if the player enters a drivable tank/vehicle/airplane/guided missile or gets a jetpack.
+- Added water impact sounds for throwing knives.
+- Medics in OBJ maps will look at players when healing them. Medic dialogue sounds also fixed (saying, "here you go, lieutenant!").
 
-- In base-builder, placing down MG42s or mini-flak88 (flame-throwing MG42s) will now spawn an MG42 bipod beneath them.
-	- The build-laser now briefly flashes red when placing an object.
+- Velocity/speed for Giant Bomb, Light Bomb, and Guided Missile projectiles will max out around at around 7500, to keep them from flying off-course from the player's crosshairs.
 
-- global/legs_movement.scr: New script for indicating whether players are running or walking forward/backward/left/right.
-	- This script runs from entry commands in the 8 respective mike_legs.st running/walking states, and are saved as "local.player.legs_state_runforward = 1", "local.player.legs_state_walkbackward = 1", etc.
-
-- Revamped global/respawn_stuck_fix.scr: All players who recently spawned will have 2 timers counting before any respawns occur (runs from global/dmprecache.scr).
-	- If players are alive and stuck in a wall for 3+ seconds ("falling", but unable to move), they will auto-respawn.
-	- If they do move within 3 seconds and are not "falling", respawn_stuck_fix.scr will turn off for that player until they've respawned after dying, switching teams, or spawning after the map changes.
-
-- global/doorlocked.scr: New simple script for adding simulated $door_locked triggers, but without spawning any entities.
-	- Parameters: trigger origin (standing on ground in front of a door), door type (wood, metal, gateiron, gatelarge, gatemetal, garagedoor), extra sounds (0 = no, 1 = yes for "wood", "metal", "gatelarge" only).
-	- Example: exec global/doorlocked.scr ( 234 -2453 129 ) wood
-	- Example: exec global/doorlocked.scr ( 234 -2453 129 ) gatelarge 1
-
-- Players will now respawn after building ends in base-builder, when they're driving/riding in tanks/vehicles/planes/boats/flak88s/nebelwerfers.
-- Fixed some telecrouch.scr triggers in M1L3C.
-- Added fire loopsounds at 2 fireplaces in M3L2.
-- Added a level.water_volume to M1L3C.
-- Added a ladder to M2l2B and M2L2C for the wide green ladder (behind fences in sub area).
-- Fixed some undermap.scr triggers in M1l2B.
-- Fixed some ambience volumes in M1L2A, M2L2A, M2L2B, and M2L2C.
-- Moved some player spawns in M4L0 to prevent players being spawned inside walls.
-- Fixed some bugs and missing code lines in global/playerboat.scr for higgins boats.
-- Simplified water volumes in M2L2A, M2L2B, M2L2C so other scripts properly respond to them.
-- Fixed Giant Bomb explosion sounds that are also audible at origin = ( 0 0 0 ), when they should only be audible at the destination target.
-
-- Sounds added for opening/closing cabinet switches (cabinetswitch.scr).
-- Sounds added for throwing knives when they impact the ground/wall or when they hit and kill players.
-
----------------
-
-v7.978 (11-14-2024):
-- UBER MODS is now compatible with MOHAA 1.11 (non-Reborn), Spearhead, and Breakthrough. However, some mods may still cause bugs in SH or BT.
-- To use these mods in AA, SH, or BT, use the provided zzzzzzzzzzzzzzz_UBER_V7.978_AA-SH-BT.pk3.
-
-- Increased initial vehicle's turnspeed acceleration when players begin driving and turning at the same time.
-
-- Throwing knives can now kill drivers (not in sdkfz, sdkfz_afrika, shermantank), randomly kill a passenger or the driver if 1+ passengers are riding in the vehicle.
-
-- New feature added in basebuilder: when placing down objects, the player can hold the FIRE button to hold still the nonsolid object, and let go of FIRE to place down the object.
-- If holding FIRE for 3+ seconds while placing down an object, placement will be cancelled (laser will turn green). Press FIRE again to uncancel (place down now).
-
-- Added team avatars for flyable planes, and ensured they always remain below the plane's hull so they don't obstruct the player's view.
-
-- Added a "gates_slide" thread in maps/gen_mapscripts/doorsgates.scr for sliding opening/closing gates along a straight horizontal line.
-- Parameters: targetname left gate, targetname right gate, move angle (move left gate towards this angle, right gate moves opposite direction), distance to move gates, time duration
-
-- Fixed rare bug where tank loopsounds would keep playing endlessly for a player that exited a tank.
-- Added "sqrt", "arcsine", "arccosine", and "arctangent" functions in global/math.scr to recreate some MOHAA Reborn functions for regular MOHAA.
-- Removed some unnecessary teles in M2L2C.
-- Fixed more ambience volumes in M2L2B and M2L2C.
+- Guided Missile script revamped and bugs fixed (GuidedMissile/trigger.scr): Flying speed increased to 700 (level variables at top of script to easily mod this script).
+	- Missiles (and player's angles) launch vertically from the ground, resembling cruise missiles.
+	- When the player presses FIRE, the missile shoots horizontally down player's crosshairs trajectory, rapidly increasing in velocity.
+	- Improved flying and explosion sounds. Missile kills count as scorepoints, and don't damage teammates or the vehicles they're in. Explosions deal radiusdamage to also destroy map objects.
+	- Missile health bar appears when flying them, and it switches between jetpack fuel and missile health when flying/not flying a guided missile (instead of disappearing the health bar).
 
 More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
 
 ---------------
 
-- M4L1 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
+- M4L2 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
