@@ -1062,9 +1062,9 @@ v7.980 (1-29-2025):
 	- Type into the server's console "g_deathcams 0" to disable this mod, or "g_deathcams 1" to re-enable it.
 
 	- If "level.deathcam_respawn = 1", dead players will auto-respawn after "level.deathcam_respawn_time" seconds.
-	- level.deathcam_respawn_time = time in seconds until dead players spectating their killers get auto-respawned.
 	- level.deathcam_time_until_spectate = time delay in seconds until killed players begin spectating their killers (ideally set to "0" or "1.6").
 	- If level.deathcam_time_until_spectate < 1.6, dead bodies will disappear instead, and this variable will revert to "waitframe", or "0.05" seconds.
+	- If level.deathcam_time_until_spectate >= 1.6, players can respawn much sooner by pressing/holding FIRE.
 
 ---------------
 
