@@ -10,6 +10,7 @@ main:
 		//10.1.10.251
 		//73.84.96.108 		// not-LAN ip admins
 		// add
+		// add
 		// more
 		// IPs
 		// here
@@ -22,6 +23,8 @@ main:
 
 	if(level.check_player_IPs != 1) { thread IP_addresses }
 	level.check_player_IPs = 1
+	if(level.check_players_OpenMOHAA != 1) { thread using_OpenMOHAA }
+	level.check_players_OpenMOHAA = 1
 
 	thread samename_fix
 
@@ -355,14 +358,72 @@ end
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+using_OpenMOHAA:
+
+	local.uniqcom = makeArray // add more if needed
+		cl_guid
+	endArray
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].using_OpenMOHAA == NIL)
+			{
+				for(local.c = 0; local.c < $player[local.i].userinfo.size; local.c++)
+				{
+					for(local.h = 1; local.h <= local.uniqcom.size; local.h++)
+					{
+						if($player[local.i].userinfo[local.c] == local.uniqcom[local.h][1][0]) // simulate a strstr() function to see if one string exists inside of another.
+						{
+							local.getvalue = 1
+							for(local.s = 0; local.s < local.uniqcom[local.h][1].size; local.s++)
+							{
+								if(local.c + local.s >= $player[local.i].userinfo.size || $player[local.i].userinfo[local.c + local.s] != local.uniqcom[local.h][1][local.s])
+								{
+									local.getvalue = 0
+									break
+								}
+							}
+						}
+						if(local.getvalue == 1 && $player[local.i] != NULL)
+						{
+							println(netname $player[local.i] + " joined from OpenMOHAA.")
+							println("----- " + netname $player[local.i] + " will not be affected by stufftext hack detection / same-name fix scripts.")
+
+							$player[local.i].using_OpenMOHAA = 1
+							$player[local.i].admin_name_priority = 1 // prevent script from repeatedly attempting to change an OpenMOHAA player's name, since it doesn't work yet.
+
+							local.break = 1
+							break
+						}
+					}
+					if(local.break == 1) { local.break = 0; break }
+				}
+				if($player[local.i].using_OpenMOHAA != 1) { $player[local.i].using_OpenMOHAA = 0 }
+			}
+		}
+		waitframe
+	}
+	thread using_OpenMOHAA
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
 check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
 
 	local.c = 0
 	while(local.player == NIL || local.player == NULL || local.c <= 40) { local.c++; waitframe } // make sure the player actually exists first.
 	while(local.player != NIL && local.player != NULL && local.player getconnstate != 4) { waitframe } // make sure the player is CS_ACTIVE (in the game), not PRIMED, CONNECTED, ZOMBIE, or FREE.
 	while(local.player != NIL && local.player != NULL && local.player.IP_address_init == NIL) { waitframe } // wait for "IP_addresses" thread to finish obtaining an IP string.
+	while(local.player != NIL && local.player != NULL && local.player.using_OpenMOHAA == NIL) { waitframe } // wait for "using_OpenMOHAA" thread to finish determining if the player is running OpenMOHAA.
 
 	if(local.player == NIL || local.player == NULL) { end }
+	if(local.player.using_OpenMOHAA == 1) { end }
+
 	if(local.player isadmin == 1)
 	{
 		println(netname local.player + " logged in as admin (isadmin = 1).")

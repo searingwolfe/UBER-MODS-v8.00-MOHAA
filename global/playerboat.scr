@@ -288,9 +288,9 @@ playergetin:
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
+		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] + 90) self.angles[2] ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] - 90) self.angles[2] ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
 		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
 		{
 			self thread driverreset
@@ -299,6 +299,7 @@ playergetin:
 			self.driver = NIL
 			break
 		}
+		if(self.driver.viewangles[0] < 0 || self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 - (360 - self.angles[0])) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(self.passengers.size != local.passengers_hud)
 		{
@@ -522,6 +523,7 @@ end
 vehicledeath:
 
 	self waittill death // when waiting until "death", vehicle is not NULL yet
+	self stoploopsound
 	self playsound explode_truck
 
 	if(self.desmodel == NIL) { self.desmodel = self.model }
@@ -529,6 +531,7 @@ vehicledeath:
 	local.desvehicle.origin = self.origin + ( 0 0 -25 )
 	local.desvehicle.scale = self.scale
 	local.desvehicle model self.desmodel
+	local.desvehicle loopsound vehicledeathfire
 
 	if(self.model != "models/vehicles/uboat.tik") { local.distance = -100 }
 	else { local.distance = 355; local.distance2 = 675 }
@@ -1431,6 +1434,15 @@ if(level.vehiclescriptmaster2 != 1 && level.mapname != "m5l1a" && level.mapname 
 	local.master aliascache damage_vehicle1 sound/null.wav soundparms .7 .4 .9 .2 160 1600 auto loaded maps level.mapname
 }
 
+if(level.vehiclescriptmaster3 != 1)
+{
+	local.master aliascache sndfire30cal sound/weapons/fire/50CalFire2.wav soundparms 1.05 .2 .95 .1 800 4000 weapon loaded maps level.mapname
+
+	local.master aliascache vehicledeathfire sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
+	local.master aliascache vehicledeathwater sound/mechanics/Mec_WaterLoop_03.wav soundparms 1.2 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
+}
+
 level.boatscriptmaster = 1
 level.vehiclescriptmaster2 = 1
+level.vehiclescriptmaster3 = 1
 end

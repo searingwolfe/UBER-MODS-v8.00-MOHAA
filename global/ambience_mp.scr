@@ -6,9 +6,9 @@
 // Music volume must be greater than 0% to hear these ambient sounds.
 //
 // If debug iprint = 1 (local.debug = 1), players will iprint music filepath each time a new ambient sound plays, and music will change faster (once per frame).
-// If a player walks into an area where 2+ volumes are still overlapping (should never happen, but runs if the script failed to see the overlap), the player's origin is printed and the script ends.
+// If a player walks into an area where 2+ volumes with different music files are still overlapping (script failed to initially detect the overlap), the music will constantly flip between the 2+ volumes (must adjust volume setsizes, check using debug = 1).
 // Ambience volumes are like triggers, but triggers aren't actually spawned. They should fill the whole interior of a building, or whatever 3D region that players will hear interior ambience within it (or other special ambiences).
-// Circular volumes (light houses), curved or diagonal walls (not along X-Y axis) will require several small rectangular volumes stacked like pancakes to fill in these interior areas.
+// Circular volumes (light houses), curved or diagonal walls (not along X-Y axis) will require several small rectangular volumes to fill in these rounded interior areas (volume edges can go slightly outside of horizontal walls, up to 30 units, without players touching them).
 //
 //
 //
@@ -17,6 +17,7 @@
 // First, create a "level.spawnambs = makeArray" and add various ambience volumes, starting with origin and both -/+ setsizes, then the music to be played inside it.
 // Then, run "exec global/ambience_mp.scr local.music" where "local.music" = ambience music filepath for outdoors music to be played (the default ambience to play when players are outside all other volumes).
 // If any 2 volumes are overlapping and/or touching in all 3 axes (x,y,z), then the 2nd volume is removed and replaced with 0s in the makeArray.
+// Volumes can only overlap if their music files are the same.
 // Errors print suggestions for fixing a volume's setsizes or origin if any volume is deleted.
 // If level.spawnamb does not exist or doesn't have any volumes, the map's ambience will default to "local.music".
 //
@@ -36,6 +37,9 @@
 //	end
 
 main local.music local.forcemaxvolume local.debug:
+
+	if(level.ambience_mp_script_run == 1) { end }
+	level.ambience_mp_script_run = 1
 
 	local.z = 0
 	while(level.ambient_script_run != 1 && local.z < 20) { local.z++; waitframe } // wait for global/ambient.scr to run first, or wait 20 frames.
@@ -90,7 +94,7 @@ spawnamb_initial_check:
 
 			for(local.b = 1; local.b <= level.spawnamb.size; local.b++) // compare amb[a + 1] with amb[a].
 			{
-				if(level.spawnamb[local.b][1] != 0 && level.spawnamb[local.b][2] != 0 && level.spawnamb[local.b][3] != 0 && level.spawnamb[local.b][4] != 0)
+				if(level.spawnamb[local.b][1] != 0 && level.spawnamb[local.b][2] != 0 && level.spawnamb[local.b][3] != 0 && level.spawnamb[local.b][4] != 0 && level.spawnamb[local.a][4] != level.spawnamb[local.b][4])
 				{
 					local.X_min2 = level.spawnamb[local.b][1][0] + level.spawnamb[local.b][2][0]
 					local.X_max2 = level.spawnamb[local.b][1][0] + level.spawnamb[local.b][3][0]
@@ -184,7 +188,6 @@ playamb local.music local.forcemaxvolume local.debug:
 						$player[local.i].ambience_outside_count++
 					}
 				}
-
 				else
 				{
 					if($player[local.i].ambience_outside_count == NIL) { $player[local.i].ambience_outside_count = 0 }
@@ -210,15 +213,6 @@ playamb local.music local.forcemaxvolume local.debug:
 					$player[local.i].ambience_playing_count = 0
 
 					if(local.debug == 1) { $player[local.i] iprint ("Playing ambience: " + $player[local.i].ambience_playing) }
-				}
-
-				if($player[local.i].ambience_outside_count < level.spawnamb.size - 1) // this should never happen, but this runs if somehow overlaps fail to get detected.
-				{
-					iprintlnbold("----- ERROR Ambience: 2+ overlapping volumes detected at $player[" + local.i + "].origin = ( " + int($player[local.i].origin[0]) + " " + int($player[local.i].origin[1]) + " " + int($player[local.i].origin[2]) + " )")
-					iprintlnbold("----- Stopping ambience_mp.scr.")
-					println("----- ERROR Ambience: 2+ overlapping volumes detected at $player[" + local.i + "].origin = ( " + int($player[local.i].origin[0]) + " " + int($player[local.i].origin[1]) + " " + int($player[local.i].origin[2]) + " )")
-					println("----- Stopping ambience_mp.scr.")
-					end
 				}
 			}
 			$player[local.i].ambience_outside_count = 0

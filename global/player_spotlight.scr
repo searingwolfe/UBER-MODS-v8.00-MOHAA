@@ -148,7 +148,7 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 
   	thread aimspot local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.indestructible
 
-	local.spottrigger thread replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path
+	local.spottrigger thread replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path local.mountwall local.orient
 
 	local.spotlight thread spotpath local.name local.path local.spot local.flare
  
@@ -179,43 +179,89 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 
 		if(local.orient != 1) 
 		{
-			if(local.mountwall == 1 && ((local.player.angles[1] >= 90 && local.player.angles[1] < 180) || (local.player.angles[1] >= 180 && local.player.angles[1] < 270)) ) 
-			{ 
-				local.spotlight.angles = ( local.s_ang[0] 0 90 )
+			if(local.player != NIL && local.player != NULL)
+			{
+				if(local.mountwall == 1 && ((local.player.angles[1] >= 90 && local.player.angles[1] < 180) || (local.player.angles[1] >= 180 && local.player.angles[1] < 270)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 90 )
+				}
+				if(local.mountwall == 1 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 90 )					
+				}
+		
+				if(local.mountwall == 3 && ((local.player.angles[1] >= 90 && local.player.angles[1] < 180) || (local.player.angles[1] >= 180 && local.player.angles[1] < 270)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 -90 )
+				}
+				if(local.mountwall == 3 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 -90 )
+				}
 			}
-			if(local.mountwall == 1 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
-			{ 
-				local.spotlight.angles = ( -local.s_ang[0] 0 90 )					
-			}
-	
-			if(local.mountwall == 3 && ((local.player.angles[1] >= 90 && local.player.angles[1] < 180) || (local.player.angles[1] >= 180 && local.player.angles[1] < 270)) ) 
-			{ 
-				local.spotlight.angles = ( local.s_ang[0] 0 -90 )
-			}
-			if(local.mountwall == 3 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
-			{ 
-				local.spotlight.angles = ( -local.s_ang[0] 0 -90 )
+			else
+			{
+				if(local.mountwall == 1 && ((local.spot.angles[1] >= 90 && local.spot.angles[1] < 180) || (local.spot.angles[1] >= 180 && local.spot.angles[1] < 270)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 90 )
+				}
+				if(local.mountwall == 1 && ((local.spot.angles[1] < 90 && local.spot.angles[1] >= 0) || (local.spot.angles[1] < 360 && local.spot.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 90 )					
+				}
+		
+				if(local.mountwall == 3 && ((local.spot.angles[1] >= 90 && local.spot.angles[1] < 180) || (local.spot.angles[1] >= 180 && local.spot.angles[1] < 270)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 -90 )
+				}
+				if(local.mountwall == 3 && ((local.spot.angles[1] < 90 && local.spot.angles[1] >= 0) || (local.spot.angles[1] < 360 && local.spot.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 -90 )
+				}
 			}
 		}
 
 		if(local.orient == 1) 
-		{ 
-			if(local.mountwall == 1 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] >= 90 && local.player.angles[1] < 180)) ) 
-			{ 
-				local.spotlight.angles = ( local.s_ang[0] 0 90 ) + ( 0 -90 0 )
+		{
+			if(local.player != NIL && local.player != NULL)
+			{
+				if(local.mountwall == 1 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] >= 90 && local.player.angles[1] < 180)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 90 ) + ( 0 -90 0 )
+				}
+				if(local.mountwall == 1 && ((local.player.angles[1] >= 180 && local.player.angles[1] < 270) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 90 ) + ( 0 -90 0 )
+				}
+		
+				if(local.mountwall == 3 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] >= 90 && local.player.angles[1] < 180)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
+				}
+				if(local.mountwall == 3 && ((local.player.angles[1] >= 180 && local.player.angles[1] < 270) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
+				}
 			}
-			if(local.mountwall == 1 && ((local.player.angles[1] >= 180 && local.player.angles[1] < 270) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
-			{ 
-				local.spotlight.angles = ( -local.s_ang[0] 0 90 ) + ( 0 -90 0 )
-			}
-	
-			if(local.mountwall == 3 && ((local.player.angles[1] < 90 && local.player.angles[1] >= 0) || (local.player.angles[1] >= 90 && local.player.angles[1] < 180)) ) 
-			{ 
-				local.spotlight.angles = ( local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
-			}
-			if(local.mountwall == 3 && ((local.player.angles[1] >= 180 && local.player.angles[1] < 270) || (local.player.angles[1] < 360 && local.player.angles[1] >= 270)) )
-			{ 
-				local.spotlight.angles = ( -local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
+			else
+			{
+				if(local.mountwall == 1 && ((local.spot.angles[1] < 90 && local.spot.angles[1] >= 0) || (local.spot.angles[1] >= 90 && local.spot.angles[1] < 180)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 90 ) + ( 0 -90 0 )
+				}
+				if(local.mountwall == 1 && ((local.spot.angles[1] >= 180 && local.spot.angles[1] < 270) || (local.spot.angles[1] < 360 && local.spot.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 90 ) + ( 0 -90 0 )
+				}
+		
+				if(local.mountwall == 3 && ((local.spot.angles[1] < 90 && local.spot.angles[1] >= 0) || (local.spot.angles[1] >= 90 && local.spot.angles[1] < 180)) ) 
+				{ 
+					local.spotlight.angles = ( local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
+				}
+				if(local.mountwall == 3 && ((local.spot.angles[1] >= 180 && local.spot.angles[1] < 270) || (local.spot.angles[1] < 360 && local.spot.angles[1] >= 270)) )
+				{ 
+					local.spotlight.angles = ( -local.s_ang[0] 0 -90 ) + ( 0 -90 0 )
+				}
 			}
 		}
 
@@ -246,8 +292,7 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 		if(level.spotlight_rainbow[local.name] == 3 || level.flags[allspotlights_rainbow] == 3)
 		{
 			if(local.c == NIL) { local.c = 0 }
-			local.c++
-			local.r = randomint(100) / 100.0000
+			local.r = randomint(100)
 			if(local.c > local.r)
 			{
 				if(local.flare != NULL) { local.flare light ( local.random1 local.random2 local.random3 ) }
@@ -255,6 +300,7 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 				$("s_colorchange_" + local.name).s_newcolor = ( local.random1 local.random2 local.random3 )
 				local.c = 0
 			}
+			local.c++
 		}
 		else { local.c = 0 }
 
@@ -289,7 +335,7 @@ aimspot local.groundspot_target local.name local.beam local.spot local.light loc
 			local.dist_xy = vector_length(( local.p[0] local.p[1] 0 ) - ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ))
 			if(local.dist_xy < 50 && local.p[2] >= $player[local.i].origin[2] && ((local.p[2] <= $player[local.i].origin[2] + 95 && $player[local.i] getposition == "standing") || (local.p[2] <= $player[local.i].origin[2] + 55 && $player[local.i] getposition == "crouching")))
 			{
- 				if($player[local.i].packon != 1) { $player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2] }
+ 				$player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2]
 			}
 
 			if(local.spotlight.followplayer != NIL && local.spotlight.followplayer != NULL && vector_length(local.p - local.spotlight.followplayer.origin) >= level.autospot_trigdist) { local.spotlight.followplayer = NIL }
@@ -336,7 +382,7 @@ end
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight:
+replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path local.mountwall local.orient:
 
 	self waittill trigger
 	self nottriggerable
@@ -367,7 +413,7 @@ replace_spotlight local.groundspot_target local.name local.beam local.spot local
 	local.spotdamage remove
 	self remove
 
-	exec map_triggers/player_spotlight.scr local.origin local.color local.name local.health local.anglestart 0 0 local.removeafterdeath 1 local.spotangles_init level.spotauto_pathnode[local.name]
+	exec map_triggers/player_spotlight.scr local.origin local.color local.name local.health local.anglestart local.mountwall local.orient local.removeafterdeath 1 local.spotangles_init level.spotauto_pathnode[local.name]
 end
 
 ////////////////////////////////////////////////////////////////////////

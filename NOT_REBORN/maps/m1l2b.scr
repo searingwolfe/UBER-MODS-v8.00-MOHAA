@@ -189,7 +189,8 @@ exec maps/gen_mapscripts/radios_musictrig.scr ( 1602.86 -2911.17 -143 ) ( 0 97 0
 	thread ammoboxes_explode 100 500 600
 	thread tank04_explode 1000 500 750
 	thread opelhoodopen_wires_horns
-	thread vehicle_tele ( 1 0 0 ) ( 0 1 0 ) 300 
+	thread vehicle_tele ( 1 0 0 ) ( 0 1 0 ) 300  
+	thread vehicles_undermap
 
 	thread splinepath
 	thread bomberplane 150 1 7 2.5 // wait time, bombs (1 = yes, 0 = no), bullets to kill a plane, plane dying time; allies/axis strikes are randomized
@@ -242,6 +243,7 @@ setup:
 	
 	local.master = spawn scriptmaster
 	local.master aliascache opelhoodopen_idle sound/vehicle/veh_truck_idle.wav soundparms 1.2 0.0 1.0 0.0 300 7000 auto loaded maps level.mapname
+	local.master aliascache m1l2b_disabletruck sound/mechanics/m1l2b_disabletruck01.wav soundparms 1.5 0.0 0.8 0.2 160 1600 item loaded maps level.mapname
 	if(getcvar("g_ubergametype") != "cyb" && getcvar("g_ubergametype") != "snd" && getcvar("g_ubergametype") != "ft")
 	{
 		local.master aliascache explode_building_large2 sound/weapons/explo/Explo_StoneLarge2.wav soundparms 1.2 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
@@ -1510,6 +1512,72 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+vehicles_undermap:
+
+	local.undermap_volumes = makeArray
+		( 0 0 -335 ) ( -22222 -3325 0 ) ( 2285 22222 1 )
+		( -4319 2374 -255 ) ( -22222 0 0 ) ( 0 1104 1 )
+		( -3215 4639 -255 ) ( -22222 0 0 ) ( 0 22222 1 )
+		( -2088 4007 -255 ) ( 0 0 0 ) ( 1096 22222 1 )
+		( -992 3247 -255 ) ( 0 0 0 ) ( 22222 22222 1 )
+		( 470 2567 -255 ) ( 0 0 0 ) ( 22222 680 1 )
+		( 2627 2567 -255 ) ( 0 -5821 0 ) ( 22222 0 1 )
+		( 2215 1856 -255 ) ( 0 -1968 0 ) ( 386 0 1 )
+		( 2527 -637 -255 ) ( 0 -2603 0 ) ( 74 0 1 )
+		( 2071 -2767 -255 ) ( 0 -505 0 ) ( 456 0 1 )
+		( 3927 -3233 -327 ) ( 0 -22222 0 ) ( 22222 0 1 )
+		( 3359 -3743 -327 ) ( 0 -22222 0 ) ( 568 0 1 )
+		( 2035 -4645 -255 ) ( 0 -22222 0 ) ( 22222 0 1 )
+		( 3359 -4655 -327 ) ( -22222 -22222 0 ) ( 0 0 1 )
+		( 1136 -2680 -191 ) ( -22222 -22222 -64 ) ( 0 633 1 )
+		( -55 -2047 -255 ) ( -22222 0 0 ) ( 0 2815 1 )
+		( 792 -104 -255 ) ( -847 0 0 ) ( 0 872 1 )
+		( 1015 927 -167 ) ( -552 0 -88 ) ( 0 657 1 )
+		( -975 1776 -255 ) ( -5162 -22222 -128 ) ( 0 0 1 )
+		( -175 1776 -255 ) ( -800 -849 -128 ) ( 0 0 1 )
+
+		( -2995 1921 0 ) ( 0 -121 0 ) ( 1003 0 1 )
+		( -1992 1855 -23 ) ( 0 -523 0 ) ( 328 0 1 )
+		( -175 1776 -255 ) ( 0 0 0 ) ( 0 0 1 )
+		( -175 1776 -255 ) ( 0 0 0 ) ( 0 0 1 )
+		( 287 2508 0 ) ( 0 0 0 ) ( 2461 732 81 )
+		( 458 1848 0 ) ( 0 -513 0 ) ( 552 52 1 )
+
+		( 0 0 1384 ) ( 0 0 -200 ) ( 10000 10000 300 ) // map ceiling
+	endArray
+
+	while(1)
+	{
+		for(local.a = 0; local.a <= level.drivable_entities.size; local.a++)
+		{
+			for(local.s = 1; $(level.drivable_entities[local.a]) != NULL && local.s <= $(level.drivable_entities[local.a]).size; local.s++)
+			{
+				if(local.undermap_volumes != NIL && local.undermap_volumes != 0) // if vehicles are inside a volume, blow them up.
+				{
+					for(local.v = 1; local.v <= local.undermap_volumes.size; local.v++)
+					{
+						local.X_min[local.v] = local.undermap_volumes[local.v][1][0] + local.undermap_volumes[local.v][2][0]
+						local.X_max[local.v] = local.undermap_volumes[local.v][1][0] + local.undermap_volumes[local.v][3][0]
+						local.Y_min[local.v] = local.undermap_volumes[local.v][1][1] + local.undermap_volumes[local.v][2][1]
+						local.Y_max[local.v] = local.undermap_volumes[local.v][1][1] + local.undermap_volumes[local.v][3][1]
+						local.Z_min[local.v] = local.undermap_volumes[local.v][1][2] + local.undermap_volumes[local.v][2][2]
+						local.Z_max[local.v] = local.undermap_volumes[local.v][1][2] + local.undermap_volumes[local.v][3][2]
+						local.origin = $(level.drivable_entities[local.a])[local.s].origin
+	
+						if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+						{
+							$(level.drivable_entities[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+						}
+					}
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
 tdm_spawns:
 
 	spawn info_player_axis "origin" "1172.30 -17.30 -255.88" "angle" "24" "targetname" "axis_spawn"
@@ -1551,23 +1619,41 @@ end
 
 ffa_spawns:
 
-	spawn info_player_deathmatch "origin" "-3136.82 4743.65 -255.88" "angle" "-65" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4272.87 3655.13 -255.88" "angle" "20" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3652.74 2465.17 -255.88" "angle" "43" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3495.53 2311.75 -255.88" "angle" "-4" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-1108.63 3865.90 -255.88" "angle" "-154" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1172.30 -17.30 -255.88" "angle" "24" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "865.45 -349.43 -255.88" "angle" "45" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1791.91 -97.31 -255.88" "angle" "-178" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1960.68 -572.83 -255.88" "angle" "162" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "928.55 -476.59 -255.88" "angle" "14" "targetname" "deathmatch_spawn"
 
-	spawn info_player_deathmatch "origin" "-979.43 3129.17 -255.88" "angle" "-91" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "112.16 2916.67 -255.88" "angle" "-131" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1053.43 1553.56 -255.88" "angle" "80" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1370.53 1408.87 -255.88" "angle" "-29" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1174.53 -24.10 -255.88" "angle" "32" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "629.62 -760.87 -255.88" "angle" "17" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "741.97 -1105.29 -255.88" "angle" "42" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1072.36 -1271.22 -255.88" "angle" "68" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1442.66 -1453.56 -255.88" "angle" "94" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2007.28 -1269.84 -255.88" "angle" "128" "targetname" "deathmatch_spawn"
 
-	spawn info_player_deathmatch "origin" "1673.07 -95.13 -255.88" "angle" "178" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "616.45 -293.81 -255.88" "angle" "-46" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "294.79 -1917.40 -255.88" "angle" "47" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2224.87 1896.34 -255.88" "angle" "153" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-1905.67 1871.13 -255.88" "angle" "27" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2338.52 -830.18 -255.88" "angle" "166" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2096.90 -1883.64 -255.88" "angle" "116" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1855.23 -587.62 -255.88" "angle" "161" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "851.69 -529.24 -255.88" "angle" "15" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "884.99 -3.35 -255.88" "angle" "61" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "-3066.07 1861.97 -255.88" "angle" "43" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3571.20 2315.61 -255.88" "angle" "-5" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3817.19 1887.51 -255.88" "angle" "9" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3552.67 2519.13 -255.88" "angle" "20" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-4081.86 2720.45 -255.88" "angle" "1" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "-4174.65 2994.94 -255.88" "angle" "28" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-4160.58 3445.80 -255.88" "angle" "32" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-4244.94 3892.93 -255.88" "angle" "16" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-4093.44 4417.86 -255.88" "angle" "-14" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3623.25 3844.27 -255.88" "angle" "38" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "-2718.76 4793.78 -255.88" "angle" "-83" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3099.58 4068.28 -255.88" "angle" "-42" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3090.31 3632.04 -255.88" "angle" "-9" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-3128.12 3122.16 -255.88" "angle" "-39" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "-2670.05 2341.77 -255.88" "angle" "65" "targetname" "deathmatch_spawn"
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1892,7 +1978,7 @@ exec alienx/basebuild.scr::basebuild ( -2220.87 2887.43 -255.88 ) "static/indycr
 exec alienx/basebuild.scr::basebuild ( -2218.74 3013.21 -255.88 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
 exec alienx/basebuild.scr::basebuild ( -2211.18 3149.61 -255.88 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( -2209.63 3460.42 -255.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -2208.01 3564.90 -255.88 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .1 0 0 1
+exec alienx/basebuild.scr::basebuild ( -2208.01 3564.90 -255.88 ) "static/cabinet_large.tik" 1 0 0 1 90 .1 0 0 1
 exec alienx/basebuild.scr::basebuild ( -2217.20 4000.72 -255.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( -2216.00 2524.00 -255.88 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( -2216.00 2424.00 -255.88 ) "static/banquet_table.tik" 1 0 1 1 90 .2 0 0 1
@@ -1906,7 +1992,7 @@ exec alienx/basebuild.scr::basebuild ( 1423.29 2450.53 -255.88 ) "static/indycra
 exec alienx/basebuild.scr::basebuild ( 1557.57 2468.60 -255.88 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
 exec alienx/basebuild.scr::basebuild ( 1687.69 2454.79 -255.88 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 1811.71 2455.26 -255.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 1964.21 2459.78 -255.88 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .1 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1964.21 2459.78 -255.88 ) "static/cabinet_large.tik" 1 0 0 1 90 .1 0 0 1
 exec alienx/basebuild.scr::basebuild ( 2110.60 2457.22 -255.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 1292.02 2443.02 -255.88 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 2240.60 2457.22 -255.88 ) "static/banquet_table.tik" 1 0 1 1 90 .2 0 0 1
@@ -1919,7 +2005,7 @@ exec alienx/basebuild.scr::basebuild ( 1099.18 -1887.66 -255.88 ) "static/indycr
 exec alienx/basebuild.scr::basebuild ( 1241.05 -1926.04 -255.88 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
 exec alienx/basebuild.scr::basebuild ( 1335.73 -1993.48 -255.88 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 1452.87 -2025.56 -255.88 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 1572.26 -2045.31 -255.88 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .1 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1572.26 -2045.31 -255.88 ) "static/cabinet_large.tik" 1 0 0 1 90 .1 0 0 1
 exec alienx/basebuild.scr::basebuild ( 1928.58 -2047.42 -255.88 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 2070.00 -2058.00 -255.88 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 2156.87 -2061.20 -255.88 ) "static/banquet_table.tik" 1 0 1 1 90 .2 0 0 1

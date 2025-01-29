@@ -121,10 +121,10 @@ shot_reset:
 
 	local.angles = $(self.name).angles
 	self.runonce = 1
-	for(local.c = 0; local.c <= 40; local.c++) // after 4 seconds and if self.shot < self.bulletsanger, then make self.shot = 0.
+	for(local.c = 0; local.c <= 80; local.c++) // after 4 seconds and if self.shot < self.bulletsanger, then make self.shot = 0.
 	{
 		if(self.shot >= self.bulletsanger || self.angrydog == 1) { break }
-		wait 0.1
+		waitframe
 	}
 	if(local.c >= 40 && self.shot < self.bulletsanger) // if the 4-second counter ended before the dog was shot "bulletsanger" times, then make "shot = 0" again.
 	{ 
@@ -142,7 +142,7 @@ shot_reset:
 	{ 
 		self light 1 .75 0 50
 		$(self.name) light 1 0 0 150
-		if(local.a < 1 || (local.c >= 50 && local.a < (self.angertime - 4))) 
+		if(local.a < 1 || (local.c >= 100 && local.a < (self.angertime - 4))) 
 		{
 			$(self.name) anim dog_stand_curious; $(self.name).animsave = 3; self thread trigsounds; local.c = 0
 		}
@@ -150,7 +150,7 @@ shot_reset:
 		$(self.name) nottriggerable	// nobody can become a dog when the dog is angry.
 
 		self thread biteplayers
-		wait 0.1
+		waitframe
 
 		local.c++ // loop dog_stand_curious animations every 4 seconds.
 		if(self.takingpain == 1) { local.c = 0 }
@@ -211,7 +211,7 @@ biteplayers:
 	{
 		local.dog_vec = ( $player[local.d].origin - self.origin )
 		local.dog_ang = vector_toangles(local.dog_vec)
-		$(self.name).angles = ( 0 local.dog_ang[1] 0 ) // self = invisible trigger, $(self.name) = dog model trigger
+		if($(self.name).bitingplayer != 1) { $(self.name).angles = ( 0 local.dog_ang[1] 0 ) } // self = invisible trigger, $(self.name) = dog model trigger
 	}
 end
 
@@ -375,9 +375,9 @@ run_counter:
 
 		while(isalive self && self.dmteam == local.team && level.change_team_score != 1 && self.fellundermap != 1 && self.dog_anim == dog_run && local.position == standing && level.bbactive != 0) 
 		{
-			wait 0.1
-			if(local.c < 50) { local.c++ } 		 // count to 5 seconds when dog begins running, only if player is standing (not crouching).
-			if(local.c >= 50) { self.runningstop = 1 } // when the player runs for 5+ seconds and stops running afterwards, do the "dog_leash_stop" animation.
+			waitframe
+			if(local.c < 100) { local.c++ } 		 // count to 5 seconds when dog begins running, only if player is standing (not crouching).
+			if(local.c >= 100) { self.runningstop = 1 } // when the player runs for 5+ seconds and stops running afterwards, do the "dog_leash_stop" animation.
 		}
 		if(self != NULL && self.dog_anim != dog_run) { self.runningstop = 0; local.c = 0 } 
 		waitframe

@@ -133,6 +133,8 @@ tankreset local.groundtarget: // tank turret must be reset each time a new tank 
 	if(self.gun == NIL || self.gun == NULL) { self spawnturret 0 self.turretmodel }
 	self.gun = self queryturretslotentity 0
 	self.gun solid
+	self.gun.tank = self
+
 	self.gun2 = self queryturretslotentity 1
 	if(self.gun2 != NIL && self.gun2 != NULL)
 	{
@@ -262,7 +264,7 @@ playergetin:
 		local.start = self.gun gettagposition "tag_barrel"		// aim the groundtarget from where turret currently is, since turret rotation is slower than player's aim.
 		local.groundtarget.origin = trace (local.start + local.fwd_vec * 56) (local.start + local.fwd_vec * 10240) 0
 
-		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
+		if(self.driver.driving_state_jump == 1 || self.flooded == 1) // Press JUMP to exit, or force-exit if tank gets flooded by a Light Bomb exploding on it.
 		{
 			self thread driverreset
 			self thread tankreset local.groundtarget
@@ -571,6 +573,7 @@ tankdeath:
 	local.destank.origin = self.origin
 	local.destank.angles = self.angles
 	local.destank.scale = self.scale
+	if(self.desmodel != "models/vehicles/panzer_iv_d.tik" && self.desmodel != "models/vehicles/panzer_iv_eud.tik" && self.desmodel != "models/vehicles/tigertank_d.tik") { local.destank loopsound tankdeathfire }
 
 	self thread driverreset 1 		// local.death = 1
 	self thread mainreset local.destank	// waiting self.resettime seconds until a new tank is spawned in
@@ -703,6 +706,60 @@ mainreset local.destank:
 
 	local.destank remove
 	thread main local.name local.model level.tank_initorigin[local.name] level.tank_initangles[local.name] local.health local.resettime
+end
+
+////////////////////////////////////////////////////////////////////////
+
+floodedreset:
+
+	local.name = self.name
+	local.model = self.model
+	local.turretmodel = self.turretmodel
+	local.desmodel = self.desmodel
+	local.origin = self.originold  // respawns the tank where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
+	local.angles = self.angles
+	local.health = level.tank_inithealth[self.name]
+	local.vehiclespeed = self.vehiclespeed
+	local.resettime = self.resettime
+
+	self anim stop_wheels // turn off any headlights, and remove light beams from opeltrucks.
+	self.corona = 0
+	$(self.name + "_trig") setthread flooded
+	$(self.name + "_trig") message ("*** This tank has been flooded. ***")
+
+	local.smoke = spawn script_model
+	local.smoke model "models/emitters/shermansmoke.tik"
+	local.smoke.origin = self gettagposition "turret0"
+	local.smoke.angles = ( 270 0 0 )
+	local.smoke anim start
+	local.smoke notsolid
+	local.smoke loopsound tankdeathwater
+
+	local.c = 0
+	while(self != NULL && self.dead != 1 && local.c <= self.resettime * 20)
+	{
+		local.smoke.origin = self gettagposition "turret0"
+		local.c++
+		waitframe
+	}
+	local.smoke remove
+
+	if(self == NULL || (self != NULL && self.dead != 1))
+	{
+		if($(local.name) != NULL) { $(local.name) thread floodedreset }
+		end
+	}
+
+	if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 remove }
+	if(self.gun != NIL && self.gun != NULL) { self.gun2 remove }
+	self remove
+	thread main local.name local.model level.tank_initorigin[local.name] level.tank_initangles[local.name] local.health local.resettime
+end
+
+flooded:
+
+	local.player = parm.other
+	local.player iprint ("Wait until the tank resets again.")
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1106,6 +1163,9 @@ if(level.tankscriptmaster2 != 1 && level.mapname[2] == "/" || level.mapname[3] =
 if(level.tankscriptmaster2 != 1)
 {
 	local.master aliascache tankfire30cal sound/weapons/fire/50CalFire2.wav soundparms 1.05 .2 .95 .1 800 4000 weapon loaded maps level.mapname
+
+	local.master aliascache tankdeathfire sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 250 2000 auto loaded maps level.mapname
+	local.master aliascache tankdeathwater sound/mechanics/Mec_WaterLoop_03.wav soundparms 1.2 0.0 1.0 0.0 250 2000 auto loaded maps level.mapname
 }
 if(level.scriptmaster_sndmove != 1)
 {

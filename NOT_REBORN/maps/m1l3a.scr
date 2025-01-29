@@ -221,6 +221,10 @@ end
 
 setup:
 
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache m1l3a_tower_falls sound/mechanics/M1_TowerFall.wav soundparms 1.5 0.0 1.0 0.0 800 5000 item loaded maps level.mapname
+
 	removeclass actor
 	removeclass ScriptOrigin
 	//removeclass Trigger // also removes $radio_tower
@@ -315,9 +319,14 @@ vehicles_undermap:
 		{
 			for(local.s = 1; $(level.drivable_entities[local.a]) != NULL && local.s <= $(level.drivable_entities[local.a]).size; local.s++)
 			{
-				if($(level.drivable_entities[local.a])[local.s].origin[2] >= 1000 || $(level.drivable_entities[local.a])[local.s].origin[2] <= -182 || $(level.drivable_entities[local.a])[local.s].origin[1] >= 8242 || $(level.drivable_entities[local.a])[local.s].origin[0] <= -4506)
+				if($(level.drivable_entities[local.a])[local.s].origin[2] <= -182 || $(level.drivable_entities[local.a])[local.s].origin[1] >= 8242 || $(level.drivable_entities[local.a])[local.s].origin[0] <= -4506)
 				{
 					$(level.drivable_entities[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+				if($(level.drivable_entities[local.a])[local.s].origin[2] >= 1000) // prevent tanks from blowing up if they somehow fly upwards while climbing steep hills by bringing them back down.
+				{
+					$(level.drivable_entities[local.a])[local.s].origin += $(level.drivable_entities[local.a])[local.s].forwardvector * 250 + ( 0 0 -500 )
+					$(level.drivable_entities[local.a])[local.s].angles = ( 0 $(level.drivable_entities[local.a])[local.s].angles[1] 0 )
 				}
 			}
 		}
@@ -603,23 +612,41 @@ end
 
 ffa_spawns:
 	
-	spawn info_player_deathmatch "origin" "2503.47 -5949.41 -111.88" "angle" "111" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "530.38 -5531.19 223.38" "angle" "158" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "58.22 -4371.52 297.71" "angle" "129" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1854.33 -3730.58 341.37" "angle" "-151" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2400.88 -2903.28 100.43" "angle" "167" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3466.023 -7050.972 -47.824" "angle" "118" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2687.697 -7021.714 238.125" "angle" "98" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2969.622 -6527.844 -103.179" "angle" "112" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3931.409 -6872.579 236.125" "angle" "134" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3895.114 -6041.217 177.203" "angle" "142" "targetname" "deathmatch_spawn"
 
-	spawn info_player_deathmatch "origin" "2124.74 -1534.44 -31.88" "angle" "-136" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "680.99 -2159.98 136.57" "angle" "-156" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-1361.49 -1496.67 18.15" "angle" "-145" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-2896.44 -1875.06 18.13" "angle" "-109" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3450.70 -2277.46 22.56" "angle" "10" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3601.579 -5120.840 99.668" "angle" "152" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3860.182 -4344.173 236.125" "angle" "155" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3711.085 -3845.177 236.097" "angle" "155" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3101.157 -4841.879 -39.639" "angle" "-177" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2432.005 -4749.438 -51.893" "angle" "-161" "targetname" "deathmatch_spawn"
 
-	spawn info_player_deathmatch "origin" "-3120.51 -3527.11 23.20" "angle" "19" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-1928.07 -3692.56 20.13" "angle" "62" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-2158.33 -3626.28 192.13" "angle" "21" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-850.16 -4485.34 -21.82" "angle" "74" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1324.68 564.46 48.77" "angle" "-109" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2671.265 -5990.196 -123.599" "angle" "108" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2263.126 -5886.600 -111.875" "angle" "58" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1642.281 -6383.354 238.209" "angle" "65" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1323.430 -5956.675 239.785" "angle" "83" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "712.062 -5625.256 238.125" "angle" "91" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "4734.567 -1278.724 260.125" "angle" "132" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "4050.402 -1341.369 307.011" "angle" "78" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3660.304 -1115.452 254.144" "angle" "107" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3850.405 -463.770 249.240" "angle" "174" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3489.712 60.600 275.728" "angle" "-153" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "3028.409 281.288 282.136" "angle" "-144" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2112.891 623.420 210.566" "angle" "-141" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1583.821 652.532 143.663" "angle" "-110" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "975.786 724.045 168.282" "angle" "-97" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "418.905 807.013 179.100" "angle" "-105" "targetname" "deathmatch_spawn"
+
+	spawn info_player_deathmatch "origin" "2746.590 -1063.182 217.871" "angle" "-165" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2786.389 -1442.627 272.511" "angle" "167" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "1954.664 -1328.410 38.327" "angle" "-142" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "2714.666 -25.110 274.247" "angle" "-136" "targetname" "deathmatch_spawn"
+	spawn info_player_deathmatch "origin" "3920.038 -225.673 297.975" "angle" "10" "targetname" "deathmatch_spawn"
 end
 
 ////////////////////////////////////////////////////////////////////////

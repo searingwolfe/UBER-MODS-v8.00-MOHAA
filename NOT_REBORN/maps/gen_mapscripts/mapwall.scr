@@ -1,0 +1,35 @@
+// parameters:
+// origin1 = start, origin2 = endpoint, depth = distance vertically downward, width = width on both sides from center, ...
+// ... width_neg = -negative side width (towards left), width_pos = +positive side width (towards right).
+// if using "width_neg" & "width_pos", "width" parameter is ignored (can be 0 or NIL).
+//
+// examples:
+// exec global/mapwall.scr ( 435 270 -46 ) ( 100 270 -46 ) 5000 5 // vertical wall of width 5, extending 5000 units down into the ground.
+// exec global/mapwall.scr ( 435 270 -46 ) ( 100 270 100 ) 10 200 // sloped ramp/rooftop of width 200, extending 10 units down towards the ground.
+// exec global/mapwall.scr ( 435 270 -46 ) ( 100 270 100 ) 10 0 0 400 // sloped ramp/rooftop of +width 400 (origins started on -edge of ramp/rooftop), extending 10 units down.
+// exec global/mapwall.scr ( 435 270 -46 ) ( 100 270 100 ) 10 0 400 0 // sloped ramp/rooftop of -width 400 (origins started on +edge of ramp/rooftop), extending 10 units down.
+
+mapwall local.origin1 local.origin2 local.depth local.width local.width_neg local.width_pos:
+
+	if(local.origin1 == NIL) { wait 1; println("ERROR mapwall.scr: missing 'origin1' parameter."); end }
+	if(local.origin2 == NIL) { wait 1; println("ERROR mapwall.scr: missing 'origin2' parameter."); end }
+	if(local.width_neg != NIL && local.width_pos == NIL) { wait 1; println("ERROR mapwall.scr: missing 'width_pos' parameter."); end }
+	if(local.depth == NIL) { local.depth = 1 }
+	if(local.width == NIL) { local.width = 1 }
+	if(int(local.depth) < 0) { local.depth = local.depth * -1 }
+	if(int(local.width) < 0) { local.width = local.width * -1 }
+	if(local.width_neg != NIL && int(local.width_neg) < 0) { local.width_neg = local.width_neg * -1 }
+	if(local.width_pos != NIL && int(local.width_pos) < 0) { local.width_pos = local.width_pos * -1 }
+
+	local.wall = spawn script_object
+	local.wall.origin = local.origin1
+	local.fwd_vector = ( (local.origin2[0] - local.origin1[0]) (local.origin2[1] - local.origin1[1]) (local.origin2[2] - local.origin1[2]) ) // make a vector from origin1 to origin2.
+	local.wall.angles = vector_toangles(local.fwd_vector)
+	local.wall solid
+	local.wall nodamage
+
+	local.dist = waitthread global/math.scr::sqrt ((local.origin2[0] - local.origin1[0]) * (local.origin2[0] - local.origin1[0]) + (local.origin2[1] - local.origin1[1]) * (local.origin2[1] - local.origin1[1]) + (local.origin2[2] - local.origin1[2]) * (local.origin2[2] - local.origin1[2]))
+
+	local.wall setsize ( 0 (local.width * -1) (local.depth * -1) ) ( local.dist local.width 0 )
+	if(local.width_pos != NIL) { local.wall setsize ( 0 (local.width_neg * -1) (local.depth * -1) ) ( local.dist local.width_pos 0 ) }
+end

@@ -360,10 +360,10 @@ playergetin:
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 (self.angles[1] + 90) 0 ) }
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( 10 (self.angles[1] - 90) 0 ) }
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( 10 self.angles[1] 0 ) }
-		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
+		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] + 90) self.angles[2] ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] - 90) self.angles[2] ) }
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
+		if(self.driver.driving_state_jump == 1 || self.flooded == 1) // Press JUMP to exit, or force-exit if vehicle gets flooded by a Light Bomb exploding on it.
 		{
 			self thread driverreset
 			self thread vehiclereset
@@ -371,6 +371,7 @@ playergetin:
 			self.driver = NIL
 			break
 		}
+		if(self.driver.viewangles[0] < 0 || self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 - (360 - self.angles[0])) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(self.driver.useheld != 1)
 		{
@@ -448,11 +449,11 @@ playergetin:
 		{
 			if(local.c == 1)
 			{
-				if(local.model == "models/vehicles/opeltruck.tik" || local.model == "models/vehicles/opeltruckgreen.tik" || local.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.model == "models/vehicles/gmctruck.tik")
+				if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik" || self.model == "models/vehicles/gmctruck.tik")
 				{
 					self playsound opeltruck_snd_shift2
 				}
-				else if(local.model == "models/vehicles/sdkfz.tik" || local.model == "models/vehicles/sdkfz_afrika.tik" || local.model == "models/vehicles/m3.tik" || local.model == "models/vehicles/shermantank.tik")
+				else if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik" || self.model == "models/vehicles/m3.tik" || self.model == "models/vehicles/shermantank.tik")
 				{
 					self playsound sdkfz_snd_shift2
 				}
@@ -609,11 +610,14 @@ end
 vehicledeath:
 
 	self waittill death // when waiting until "death", vehicle is not NULL yet
+	self stoploopsound
 	self playsound explode_truck
 
 	local.desvehicle = spawn script_model
 	local.desvehicle.origin = self.origin
 	local.desvehicle.scale = self.scale
+	if(self.desmodel != "models/vehicles/opeltruck_d.tik" && self.desmodel != "models/vehicles/sdkfz_green_d.tik" && self.desmodel != "models/vehicles/sdkfz_desert_d.tik") { local.desvehicle loopsound vehicledeathfire }
+
 	if(self.desmodel != NIL || self.desmodel == models/vehicles/bmwbike_d.tik)
 	{
 		local.desvehicle model self.desmodel
@@ -794,6 +798,66 @@ mainreset local.desvehicle local.fire local.smoke:
 	if(local.smoke != NIL && local.smoke != NULL) { local.smoke remove }
 	local.desvehicle remove
 	thread main local.name local.model level.vehicle_initorigin[local.name] level.vehicle_initangles[local.name] local.health local.vehiclespeed local.resettime local.headlights local.noheadlights
+end
+
+////////////////////////////////////////////////////////////////////////
+
+floodedreset:
+
+	local.name = self.name
+	local.model = self.model
+	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
+	local.angles = self.angles
+	local.health = level.vehicle_inithealth[self.name]
+	local.vehiclespeed = self.vehiclespeed_max
+	local.resettime = self.resettime
+	local.headlights = self.headlights
+	local.noheadlights = self.noheadlights
+
+	self anim stop_wheels // turn off any headlights, and remove light beams from opeltrucks.
+	self.corona = 0
+	$(self.name + "_trig") setthread flooded
+	$(self.name + "_trig") message ("*** This vehicle has been flooded. ***")
+
+	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.distance = 70 }
+	if(self.model == "models/vehicles/mercedes.tik") { local.distance = 80 }
+	if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
+	if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
+	else { local.distance = 25 } // bmwbikes
+
+	local.smoke = spawn script_model
+	local.smoke model "models/emitters/linger_smoke.tik"
+	local.smoke.origin = self.origin + self.forwardvector * local.distance + self.upvector * 42
+	local.smoke.angles = ( 270 0 0 )
+	local.smoke.scale = 0.7
+	local.smoke anim start
+	local.smoke notsolid
+	local.smoke loopsound vehicledeathwater
+
+	local.c = 0
+	while(self != NULL && self.dead != 1 && local.c <= self.resettime * 20)
+	{
+		local.smoke.origin = self.origin + self.forwardvector * local.distance + self.upvector * 42
+		local.c++
+		waitframe
+	}
+	local.smoke remove
+
+	if(self == NULL || (self != NULL && self.dead != 1))
+	{
+		if($(local.name) != NULL) { $(local.name) thread floodedreset }
+		end
+	}
+
+	if(self.gun != NIL && self.gun != NULL) { self.gun remove }
+	self remove
+	thread main local.name local.model level.vehicle_initorigin[local.name] level.vehicle_initangles[local.name] local.health local.vehiclespeed local.resettime local.headlights local.noheadlights
+end
+
+flooded:
+
+	local.player = parm.other
+	local.player iprint ("Wait until the vehicle resets again.")
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1692,6 +1756,9 @@ if(level.vehiclescriptmaster2 != 1 && level.scriptmaster[truck_sounds] != 1 && l
 if(level.vehiclescriptmaster3 != 1)
 {
 	local.master aliascache sndfire30cal sound/weapons/fire/50CalFire2.wav soundparms 1.05 .2 .95 .1 800 4000 weapon loaded maps level.mapname
+
+	local.master aliascache vehicledeathfire sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
+	local.master aliascache vehicledeathwater sound/mechanics/Mec_WaterLoop_03.wav soundparms 1.2 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
 }
 
 level.vehiclescriptmaster2 = 1

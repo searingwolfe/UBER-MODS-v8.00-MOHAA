@@ -5,7 +5,11 @@
 spotted local.r local.g local.b:
 
 	if(self == NULL || !isalive self || self.dead == 1 || self.dmteam == "spectator") { end }
-	if(self.packon == 1) { self iprint ("You have already been spotted!"); end }
+	if(self.packon == 1 && self.led_spotlight != NIL && self.led_spotlight != NULL)
+	{
+		self.led_spotlight light local.r local.g local.b 200
+		end
+	}
 
 	self.packon = 1
 	self iprint ("*** Avoid spotlight beams on the ground! ***")
@@ -17,7 +21,8 @@ spotted local.r local.g local.b:
 	local.static.origin = self.origin
 	local.static notsolid
 	local.static light local.r local.g local.b 200
-	local.static glue self 
+	local.static glue self
+	self.led_spotlight = local.static
 
 	local.random2 = randomint(3)
 	if(local.random2 == 0) { self playsound spotlighttrap1 }
@@ -31,5 +36,6 @@ spotted local.r local.g local.b:
 	local.static remove
 	if(self == NULL) { end }
 	self iprint ("The spotlight LED has been removed.")
+	self.led_spotlight = NIL
 	self.packon = 0
 end

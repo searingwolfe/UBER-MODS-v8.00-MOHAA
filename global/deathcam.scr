@@ -1,0 +1,167 @@
+// This script auto-respawns dead players to spectate their killers, creating "kill cams" or "death cams".
+// While spectating your killer, press FIRE to fully respawn as normal.
+// Type into the server's console "g_deathcam 0" to disable this mod, or "g_deathcam 1" to re-enable it.
+// This mod only works for MOHAA Reborn 1.12.
+
+main:
+
+////////////////////////////////////////////////////////////////////////
+
+level.deathcam_respawn = 1			// if set to "1", dead players will auto-respawn after a few seconds.
+level.deathcam_time_until_spectate = 0.0	// time delay in seconds until killed players begin spectating their killers (ideally set to "0" or "1.6").
+						// if < 1.6, dead bodies will disappear instead, and this variable will revert to "waitframe", or 0.05.
+						// if >= 1.6, players can respawn much sooner by pressing/holding FIRE.
+
+////////////////////////////////////////////////////////////////////////
+
+	if(level.deathcam_init == 1) { end }
+	level.deathcam_init = 1
+	if(getcvar("g_ubergametype") == "cyb" || getcvar("g_ubergametype") == "snd" || getcvar("g_ubergametype") == "ft")
+	{
+		setcvar "g_deathcam" "0"
+		thread deathcam_cvar
+		end
+	}
+
+	if(getcvar("g_deathcam") == "") { setcvar "g_deathcam" "1" }
+	thread deathcam_cvar
+
+	local.result = registerev kill global/deathcam.scr::assign_killer
+	if(level.deathcam_time_until_spectate < 1.6) { thread remove_deadbodies }
+
+	while(1)
+	{
+		if(level.deathcam != 0 && $player.size >= 1)
+		{
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].deathcam_killer != NIL && $player[local.i].deathcam_killer != NULL && $player[local.i].deathcam_killer.dmteam != "spectator")
+				{
+					$player[local.i] thread spectate_killer
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+assign_killer local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.player:
+
+	if(local.player != local.attacker && local.attacker != $world) { local.player.deathcam_killer = local.attacker } // if players did not kill themselves, and if $world did not kill the player.
+end
+
+//-----------------------------------------------------------------------------
+
+spectate_killer:
+
+	if(self.spectating_killer == 1) { end }
+	self.spectating_killer = 1
+
+	self.dead = 1
+	local.team = self.dmteam
+	local.killer_team = self.deathcam_killer.dmteam
+	local.auto_respawn_time = 0
+
+	if(level.deathcam_time_until_spectate < 1.6) { waitframe } // "waitframe" allows the dead player's weapon and health pack to drop at their own dead body.
+	else
+	{
+		wait level.deathcam_time_until_spectate
+		local.respawnable = 1
+	}
+
+	if(self == NULL || self.dmteam != local.team || self.deathcam_killer == NIL || self.deathcam_killer == NULL || !isalive self.deathcam_killer || self.deathcam_killer.dmteam != local.killer_team || level.change_team_score == 1 || level.bbactive == 0) { end }
+
+	self respawn
+	self notsolid
+	self nodamage
+	self hide
+	self noclip
+	self physics_off
+
+	while(self != NULL && self.dmteam == local.team && self.deathcam_killer != NIL && self.deathcam_killer != NULL && isalive self.deathcam_killer && self.deathcam_killer.dmteam == local.killer_team && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		if(self.health <= 0 && local.auto_respawn_time > 0.05) // if minimum "wait 1.6" does not run before the "self respawn" line above, the dead player's health will eventually return to 0 and respawn a new dead body behind the killer, since their death animation technically didn't finish yet.
+		{
+			self.origin = ( 99999 99999 99999 ) // hide the secondary dead body far off-map, only if "remove_deadbodies" thread wasn't loaded.
+			self.dead = 1
+			self respawn
+			self notsolid
+			self nodamage
+			self hide
+			self noclip
+			self physics_off
+			local.respawnable = 1
+		}
+
+		if((self getposition) == "crouching") { self forcelegsstate STAND } // if the spectating player crouches, he cannot stand back up. force him to stand again (sometimes it takes a few seconds to work)
+
+		if((self.deathcam_killer getposition) == NIL) { local.hoffset = -5; local.specorg = self.deathcam_killer.origin + ( 0 0 85 ) }
+		if((self.deathcam_killer getposition) == "crouching") { local.hoffset = 0; local.specorg = self.deathcam_killer.origin + ( 0 0 65 ) }
+		if((self.deathcam_killer getposition) != "crouching" && (self.deathcam_killer getposition) != NIL) { local.hoffset = 15; local.specorg = self.deathcam_killer.origin + ( 0 0 85 ) }
+
+		local.fwd_vec = angles_toforward self.deathcam_killer.viewangles
+		self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.deathcam_killer.viewangles) * -50)) 1) - ( 0 0 82.125 )
+		self face self.deathcam_killer.viewangles // does not work for players that are currently dead
+
+		if(local.respawnable == 1 && (self.fireheld == 1 || level.deathcam_respawn == 1)) { break }
+
+		local.auto_respawn_time += 0.05 // each waitframe = 0.05 seconds.
+		waitframe
+	}
+	if(self != NULL)
+	{
+		self.dead = 0
+		self respawn
+		self takedamage
+		self solid
+		self physics_on
+		self.spectating_killer = 0
+		self.deathcam_killer = NIL
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+deathcam_cvar:
+
+	local.cvar = getcvar("g_deathcam")
+	while(getcvar("g_deathcam") == local.cvar) { waitframe }
+
+	if(getcvar("g_ubergametype") != "cyb" && getcvar("g_ubergametype") != "snd" && getcvar("g_ubergametype") != "ft")
+	{
+		if(getcvar("g_deathcam") == "1")
+		{
+			println("Deathcams ENABLED. Players will spectate their killers for a few seconds.")
+			level.deathcam = 1
+		}
+	}
+	else { println("----- ERROR: Cannot use Deathcams mod in Freeze Tag, Cyber Attack, or Search & Destroy gametypes.") }
+
+	if(getcvar("g_deathcam") == "0")
+	{
+		println("Deathcams DISABLED. Players will stay at their dead bodies as normal.")
+		for(local.i = 1; local.i <= $player.size; local.i++) { $player[local.i].deathcam_killer = NIL }
+		level.deathcam = 0
+	}
+	thread deathcam_cvar
+end
+
+//-----------------------------------------------------------------------------
+
+remove_deadbodies:
+
+	while(1)
+	{
+		for(local.e = 0; local.e <= 868; local.e++)
+		{
+			local.entity = getentity(local.e)
+			if(local.entity != NULL && local.entity.classname == Body)
+			{
+				local.entity remove
+			}
+		}
+		waitframe
+	}
+end

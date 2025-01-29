@@ -159,7 +159,7 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 	local.spottrigger nottriggerable
 	local.player = parm.other
 
-	if(local.path != NIL && local.player != NULL) { local.player thread replace_spotlight local.groundspot_target local.name local.beam local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.spot local.path }
+	if(local.path != NIL && local.player != NULL) { local.player thread replace_spotlight local.groundspot_target local.name local.beam local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.spot local.path local.orient local.mountwall }
 	
 	while(local.spotlight != NULL && local.spot != NULL && local.spottrigger != NULL && local.player != NULL && (local.player istouching local.spottrigger || local.player istouching local.spotlight))
 	{
@@ -316,7 +316,7 @@ aimspot local.groundspot_target local.name local.beam local.spot local.light loc
 			local.dist_xy = vector_length(( local.p[0] local.p[1] 0 ) - ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ))
 			if(local.dist_xy < 50 && local.p[2] >= $player[local.i].origin[2] && ((local.p[2] <= $player[local.i].origin[2] + 95 && $player[local.i] getposition == "standing") || (local.p[2] <= $player[local.i].origin[2] + 55 && $player[local.i] getposition == "crouching")))
 			{
- 				if($player[local.i].packon != 1) { $player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2] }
+ 				$player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2]
 			}
 		}
 	}
@@ -360,7 +360,7 @@ end
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-replace_spotlight local.groundspot_target local.name local.beam local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.spot local.path:
+replace_spotlight local.groundspot_target local.name local.beam local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.spot local.path local.orient local.mountwall:
 
 	local.c = 0
 	while(local.spotlight != NULL && local.spot != NULL && local.c < 3)
@@ -395,6 +395,6 @@ replace_spotlight local.groundspot_target local.name local.beam local.light loca
 		local.spotdamage remove
  		local.spottrigger remove
 
-		exec global/player_spotlight.scr local.origin local.color local.name local.health local.anglestart 0 0 local.removeafterdeath local.s_ang local.path
+		exec global/player_spotlight.scr local.origin local.color local.name local.health local.anglestart local.mountwall local.orient local.removeafterdeath local.s_ang local.path
 	}
 end

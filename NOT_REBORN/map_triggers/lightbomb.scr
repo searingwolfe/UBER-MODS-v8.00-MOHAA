@@ -251,16 +251,36 @@ while(local.hitthing == local.player || (local.player.drivingent != NIL && local
 }
 local.laser21.velocity = ( 0 0 0 )
 
+if(local.hitthing.model != "models/vehicles/higginsxtrahull.tik" && local.hitthing.model != "models/vehicles/uboat.tik")
+{
+	local.hitthing.flooded = 1
+	if(local.hitthing.classname == VehicleTank) { local.hitthing thread global/playertank.scr::floodedreset }
+	if(local.hitthing.classname == VehicleTurretGun && local.hitthing.tank != NIL && local.hitthing.tank != NULL) { local.hitthing.tank thread global/playertank.scr::floodedreset }
+	if(local.hitthing.classname == DrivableVehicle) { local.hitthing thread global/playervehicle.scr::floodedreset }
+}
+
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
 	{									 // if $player[local.i] cansee local.laser21 360 was removed, since sometimes bomb can be partially inside a wall,
 		if(local.laser21 != NULL && (vector_length(local.laser21.origin - $player[local.i].origin) <= level.lightbomb_radius || $player[local.i].flying == 1)) // which now allows giant bombs to kill people through walls
 		{
+			$player[local.i].originxy = ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ) 	// check if laser21's XY origin vector length is < 42.5 units from an enemy player's XY origin.
+			local.laser21.originxy = ( local.laser21.origin[0] local.laser21.origin[1] 0 )			// players' origins start at their feet. players' physical size = 30 x 30 x 95. Maximum length is hypotenuse of 30 x 30
+															// 30^2 + 30^2 = (squareroot(1800))^2 = (42.4254)^2, so 42.5 = max possible distance for laser21 to touch a player.
+			local.position = $player[local.i] getposition
+			local.playerheight = 95
+			if(local.position == crouching) { local.playerheight = 55 } // lower players' "hitboxes" if they're crouching.
+
 			if(local.player == NIL || local.player == NULL)
 			{
 				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
 				{
 					$player[local.i] damage $world level.lightbomb_damage $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+
+					if(vector_length(local.laser21.originxy - $player[local.i].originxy) < 42.5 && local.laser21.origin[2] - $player[local.i].origin[2] > 0 && local.laser21.origin[2] - $player[local.i].origin[2] <= local.playerheight)
+					{
+						$player[local.i] damage $world 999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+					}
 				}
 				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 				{
@@ -274,6 +294,11 @@ local.laser21.velocity = ( 0 0 0 )
 				if($player[local.i].driving != 1 && $player[local.i].flying != 1)
 				{
 					$player[local.i] damage local.player level.lightbomb_damage local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+
+					if(vector_length(local.laser21.originxy - $player[local.i].originxy) < 42.5 && local.laser21.origin[2] - $player[local.i].origin[2] > 0 && local.laser21.origin[2] - $player[local.i].origin[2] <= local.playerheight)
+					{
+						$player[local.i] damage local.player 999999 local.player (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+					}
 				}
 				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 				{

@@ -596,6 +596,17 @@ setup:
 	exec global/doorlocked.scr ( 4351 2704 -255 ) wood 1
 	exec global/doorlocked.scr ( 4110 3183 -261 ) wood 1
 
+	if($minefield != NULL)
+	{
+		level.mapname = getcvar "mapname"
+		local.master = spawn scriptmaster
+		local.master aliascache explode_mine1 sound/weapons/explo/Explo_Grenade1.wav soundparms 1.0 0.2 0.8 0.4 1000 9000 weapon loaded maps level.mapname
+		local.master aliascache explode_mine2 sound/weapons/explo/Explo_Grenade2.wav soundparms 1.0 0.2 0.8 0.4 1000 9000 weapon loaded maps level.mapname
+		local.master aliascache explode_mine3 sound/weapons/explo/Explo_Grenade3.wav soundparms 1.0 0.2 0.8 0.4 1000 9000 weapon loaded maps level.mapname
+		local.master aliascache explode_mine4 sound/weapons/explo/Explo_Grenade4.wav soundparms 1.0 0.2 0.8 0.4 1000 9000 weapon loaded maps level.mapname
+		local.master aliascache mine_trigger sound/weapons/foley/MineTrigger1.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps level.mapname
+	}
+
 	level.springfield = 1
 	level.bar = 1
 	level.bazooka = 1
@@ -782,9 +793,14 @@ vehicles_undermap:
 		{
 			for(local.s = 1; $(level.drivable_entities[local.a]) != NULL && local.s <= $(level.drivable_entities[local.a]).size; local.s++)
 			{
-				if($(level.drivable_entities[local.a])[local.s].origin[2] >= 1000 || $(level.drivable_entities[local.a])[local.s].origin[2] <= -500)
+				if($(level.drivable_entities[local.a])[local.s].origin[2] <= -500)
 				{
 					$(level.drivable_entities[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+				if($(level.drivable_entities[local.a])[local.s].origin[2] >= 1000) // prevent tanks from blowing up if they somehow fly upwards while climbing steep hills by bringing them back down.
+				{
+					$(level.drivable_entities[local.a])[local.s].origin += $(level.drivable_entities[local.a])[local.s].forwardvector * 250 + ( 0 0 -500 )
+					$(level.drivable_entities[local.a])[local.s].angles = ( 0 $(level.drivable_entities[local.a])[local.s].angles[1] 0 )
 				}
 			}
 		}

@@ -29,6 +29,16 @@ players_water_sounds local.bigsplash:
 		{
 			for(local.i = 1; local.i <= $player.size; local.i++)
 			{
+				if($player[local.i] getposition == "offground")
+				{
+					if($player[local.i].offground_height_init == NIL) { $player[local.i].offground_height_init = $player[local.i].origin[2] }
+				}
+				else
+				{
+					$player[local.i].offground_height_init = NIL
+					$player[local.i].water_wade_bigsplash = 0
+				}
+
 				if(level.water_volumes != NIL && level.water_volumes != 0)
 				{
 					for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
@@ -40,6 +50,12 @@ players_water_sounds local.bigsplash:
 						local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
 						local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
 						local.origin = $player[local.i].origin
+
+						if($player[local.i].offground_height_init != NIL && $player[local.i].offground_height_init - local.Z_max[local.v] > 125)
+						{
+							$player[local.i].water_wade_bigsplash = 1 // if player is > 150 units above the water volume, make a bigsplash sound only if local.bigsplash = 1.
+						}
+						else { $player[local.i].water_wade_bigsplash = 0 }
 	
 						if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
 						{
@@ -107,7 +123,7 @@ water_volumes_falling local.bigsplash:
 	{
 		if(self.water_temp_ent2 != NIL && self.water_temp_ent2 != NULL) // prevents splashing again if player goes in/out of noclip while inside water.
 		{
-			if(local.bigsplash == 1) { self.water_temp_ent2 playsound snd_bodyfall_wade }
+			if(local.bigsplash == 1 && self.water_wade_bigsplash == 1) { self.water_temp_ent2 playsound snd_bodyfall_wade }
 			else { self.water_temp_ent2 playsound snd_landing_wade }
 			self.water_temp_ent2 remove
 		}
