@@ -1017,7 +1017,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.979 (12-31-2024):
+v7.980 (1-29-2025):
 - Players running OpenMOHAA will no longer get auto-kicked by cvars/adminstuff.scr's "check_player_stufftexts" thread, since OpenMOHAA players cannot have their names changed via "stufftext ("name " + local.name)".
 	- The "using_OpenMOHAA" thread checks if there is a "cl_guid" cvar present in their ".userinfo" string. This only serves as a temporary fix for OpenMOHAA players until a better one is made.
 
