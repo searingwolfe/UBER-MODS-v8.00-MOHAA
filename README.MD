@@ -1,4 +1,4 @@
-*Current Version: 7.979 - Updated: 12/31/2024*
+*Current Version: 7.980 - Updated: 12/31/2024*
 
 ### Table of Contents
 
@@ -209,6 +209,8 @@ BASEBUILDER CONSOLE COMMANDS:
 |       | "g_throwingknives 0" | no throwing knives. |
 |       | "g_uberhardcode 1" | force all maps to use the g_ubergametypes found in "global/uberversion.scr", and disable "g_ubergametype" cvar. |
 |       | "g_uberhardcode 0" | re-enable the "g_ubergametype" cvar. |
+|       | "g_deathcam 1" | enable deathcams; players will spectate their killers for a few seconds. |
+|       | "g_deathcam 0" | disable deathcams; players will stay at their dead bodies as normal. |
 |       | "time 1" | print the map's time remaining (in minutes:seconds format). |
 |       | "score 1" | print each player's kills and deaths, along with their $player[client num] and netname. |
 |       | "teams 1" | print each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num] and netname, and then print the total number of players on each team. |
@@ -581,7 +583,7 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1, M4L2.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1, M4L2, M4L3.
 
 ---------------
 
@@ -953,7 +955,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M4L2 fully modded. 2 vehicles, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
+- M4L2 fully modded. 4 vehicles, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
 
 - A train travels across the train tracks from the Allies-side spawn towards the Axis-side spawn.
 	- Any player or vehicle that gets in front of the train will die/explode.
@@ -984,6 +986,31 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+- M4L3 fully modded. 4 vehicles, 1 flak88, 2 nebelwerfers, 8 extra throwing knives added to the map. Only drivable opeltrucks are included (speed increased to 400, only for this map).
+
+- NOTE: adding too many different vehicles/tanks, or adding vehicles with non-truck sounds (original map included truck sounds) while other mods are enabled, will cause players' game to disconnect with "ERROR: MAX_GAMESTATE_CHARS exceeed".
+
+- Airstrikes occur at random times, and along any X-Y-axis direction on the map.
+- 13 bangalore wall-bombs (only the indoor ones are included by default, due to high total entity count): 6 indoor sets spread out within the 3 central buildings, 7 outdoor sets in each of the small red alarm huts.
+
+- The large metal gate near the Allies-side tents can slide open/closed with a nearby pulsating electrical switch.
+- The wooden gates near the Allies and Axis spawns can be opened/closed by pressing USE(e) near the center of them.
+- 1 blue-laser ladder added to climb up/down the watchtower with the auto-spotlight.
+
+- Players walking through the river will play water-moving sounds, small splashing sounds if falling from < 125 units above the water, or a large splashing sound if > 125 units (from global/water_wade_sounds.scr).
+
+- 2 explosives (originally for blowing up tanks) can be blown up with grenades, similar to minen (entmint) bombs in obj/obj_team3 map.
+- 3 sets of paper documents can be blown up with grenades.
+- The cardgame table can be kicked over by blowing it up with grenades.
+- 5 fireplaces in the central buildings have a valve switch for closing/opening the chimney valve, which causes black smoke to emit/stop emitting (respectively) out of the fireplace.
+- 2 black 20mm flak cannons can be moved up/down or blown up.
+- 3 radios can play music or static sounds.
+- 2 toilets can be flushed, and 4 sink/tub faucets can be turned on/off to loop water dripping sounds.
+- The static green opeltruck near the Allies tents can be turned on/off near the driver-side door, and the horn can be honked by holding USE(e) for 1 second while the truck is on.
+- 19 cabinet switches can open/close cabinets (none are included by default, due to high total entity count).
+
+---------------
+
 - All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
@@ -991,26 +1018,54 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 # Updates & Bug Fixes
 
 v7.979 (12-31-2024):
-- Added "g_uberhardcode 1" CVAR to force set all maps' "g_ubergametype" CVARs to the list found in global/uberversion.scr, and disable the "g_ubergametype" CVAR.
-	- Set "g_uberhardcode 0" to re-enable the "g_ubergametype" CVAR for changing UBER gametypes (0 = regular TDM/FFA as set by "g_gametype", cyb, snd, ft, bb).
+- Players running OpenMOHAA will no longer get auto-kicked by cvars/adminstuff.scr's "check_player_stufftexts" thread, since OpenMOHAA players cannot have their names changed via "stufftext ("name " + local.name)".
+	- The "using_OpenMOHAA" thread checks if there is a "cl_guid" cvar present in their ".userinfo" string. This only serves as a temporary fix for OpenMOHAA players until a better one is made.
 
-- Cleaned up alienx/basebuilder.scr script. Bugs fixed, such as teleporters not counting towards object limit. MG42s & Flak88s now add 2 to the object limit, since they also spawn a bipod.
-	- Players can now switch between lifts, teleporters, objects by touching a new build trigger when holding any of them (before, you would get stuck with a lift/tele until placing them).
+- Readjusted global/ambience_mp.scr, allowing ambience volumes with the same music file to overlap each other, making it much easier to script indoor volumes for complex building structures.
 
-- global/respawn_stuck_fix.scr script will end prematurely if the player enters a drivable tank/vehicle/airplane/guided missile or gets a jetpack.
-- Added water impact sounds for throwing knives.
-- Medics in OBJ maps will look at players when healing them. Medic dialogue sounds also fixed (saying, "here you go, lieutenant!").
+- Fixed Cyber Attack, Search & Destroy, Freeze Tag UBER gametypes that weren't removing "revivetrig" entities for frozen bodies when they disappear or get melted (entity count would slowly increase by 1 per frozen body).
 
-- Velocity/speed for Giant Bomb, Light Bomb, and Guided Missile projectiles will max out around at around 7500, to keep them from flying off-course from the player's crosshairs.
+- Players' viewangles in drivable vehicles/boats will now match the vehicle's/boat's angles, including when driving up/downhill and driving on sideways-sloped terrain.
+	- Fixed drivable vehicles' "shift_down" sound not matching the correct vehicle type (truck, halftrack, other) when decelerating.
+	- Destroyed vehicles will now loop fire sounds.
 
-- Guided Missile script revamped and bugs fixed (GuidedMissile/trigger.scr): Flying speed increased to 700 (level variables at top of script to easily mod this script).
-	- Missiles (and player's angles) launch vertically from the ground, resembling cruise missiles.
-	- When the player presses FIRE, the missile shoots horizontally down player's crosshairs trajectory, rapidly increasing in velocity.
-	- Improved flying and explosion sounds. Missile kills count as scorepoints, and don't damage teammates or the vehicles they're in. Explosions deal radiusdamage to also destroy map objects.
-	- Missile health bar appears when flying them, and it switches between jetpack fuel and missile health when flying/not flying a guided missile (instead of disappearing the health bar).
+- Light Bombs will now kill players if they directly impact them (not including the players that launched them).
+	- Light Bombs can now disable vehicles/tanks if they directly impact them, causing them to get flooded (audible water drip sounds and smoke visible, headlights turn off). Flooded vehicles will reset after the vehicle/tank's "reset time".
+	- Slowed down Giant Bombs' explosion/travel time from 1.50 seconds to 2.15 seconds.
 
-More updates are in older README files. If I find any more errors before the next round of SP maps are fully modded, I'll update a new version here again.
+- Fixed global/player_spotlight.scr parameters, allowing auto spotlights to be mounted on more than just the floor (left wall, right wall, or ceiling).
+	- Spotlights can change players' illumination color even if they've already been spotted.
+
+- The global/water_wade_sounds.scr script now makes players play a small water impact sound if they were < 125 units above the corresponding water volume, and a big water splash sound if > 125 units (if parameter "bigsplash" = 1).
+
+- Drivable tanks that suddenly fly up to some maps' ceilings before exploding will now be auto-moved back to the ground, which already occurs in M4L0's "vehicles_undermap" thread (excluding M1L2A, M1L2B, M2L3, M4L1, M4L2).
+- Fixed 20mm cannons' explosion radiusdamage height by adding +100 units to them, for all maps with 20mm cannons.
+- Added all TDM spawn locations to the list of FFA spawns, for all fully modded singleplayer maps.
+- Fixed "consoleprint" threads not having accurate entity counts, by accounting for sv_maxclients.
+- Fixed some of M1L2A and other maps' basebuilder objects.
+- Fixed some ambience volumes in M2l2B.
+- Fixed global/player_spotlight.scr (auto-spotlights) not doing the "slowrainbow" effect when a map_triggers/spotlight_colorswitch.scr with "slowrainbow" parameter gets triggered.
+
+- Added 2 more vehicles in M4L2 after removing more unused entities, but replaced them all with opeltrucks.
+	- Fixed M4L2 train crash script (when train is about to crash) by crashing/exploding early if a vehicle blocking its path won't explode.
+
+- Added maps/gen_mapscripts/mapwall.scr for simplifying the spawning of invisible walls for buildings, barriers, rooftops, cliffs, etc.
+
+- Removed more unused sounds from ubersound/ubersound.scr for all singleplayer maps.
+	- Replaced all custom player "pain" and "death" sounds from ubersound/uberdialog.scr with German AI pain/death sounds in singleplayer maps, to help prevent players disconnecting with "ERROR: MAX_GAMESTATE_CHARS exceeed".
 
 ---------------
 
-- M4L2 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
+- global/deathcam.scr: New mod added that auto-respawns dead players to spectate their killers, creating "kill cams" or "death cams". Only works for MOHAA Reborn 1.12.
+	- Add exec global/deathcam.scr to any map .scr, or in global/dmprecache.scr to run.
+	- While spectating your killer, press FIRE to fully respawn as normal.
+	- Type into the server's console "g_deathcams 0" to disable this mod, or "g_deathcams 1" to re-enable it.
+
+	- If "level.deathcam_respawn = 1", dead players will auto-respawn after "level.deathcam_respawn_time" seconds.
+	- level.deathcam_respawn_time = time in seconds until dead players spectating their killers get auto-respawned.
+	- level.deathcam_time_until_spectate = time delay in seconds until killed players begin spectating their killers (ideally set to "0" or "1.6").
+	- If level.deathcam_time_until_spectate < 1.6, dead bodies will disappear instead, and this variable will revert to "waitframe", or "0.05" seconds.
+
+---------------
+
+- M4L3 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
