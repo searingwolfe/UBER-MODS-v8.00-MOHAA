@@ -1,4 +1,4 @@
-*Current Version: 7.980 - Updated: 1/29/2025*
+*Current Version: 7.981 - Updated: 2/9/2025*
 
 ### Table of Contents
 
@@ -1017,55 +1017,33 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.980 (1-29-2025):
-- Players running OpenMOHAA will no longer get auto-kicked by cvars/adminstuff.scr's "check_player_stufftexts" thread, since OpenMOHAA players cannot have their names changed via "stufftext ("name " + local.name)".
-	- The "using_OpenMOHAA" thread checks if there is a "cl_guid" cvar present in their ".userinfo" string. This only serves as a temporary fix for OpenMOHAA players until a better one is made.
+v7.981 (2-9-2025):
+- Drivers' viewangles while driving vehicles/boats now fully matches the vehicle/boat's angles when looking forward, backwards (rear-view mirror), left (A key while not moving), or right (D key while not moving).
+	- Fixed vehicles/tanks not resetting when they get flooded by Light Bombs.
+	- Changed smoke emitters for destroyed/flooded vehicles to a slower, more billowing smoke. Added smoke for opeltruckgreen_d destroyed vehicle models.
 
-- Readjusted global/ambience_mp.scr, allowing ambience volumes with the same music file to overlap each other, making it much easier to script indoor volumes for complex building structures.
+- Improved ladders (spawnladder.scr) to more-closely resemble func_ladders: Fixed some ladder angles that prevented players from climbing down from the top (should work for any ladder angle now).
+	- Players can now re-grab the ladder much faster after climbing/jumping off ("istouching ladder" condition replaced with "self.legs_state_using_ladder" which = 0 as soon as players get off any ladder).
+	- Players can now grab nearby ladders by pressing USE(e) while falling.
+	- Fixed players being unable to grab ladders while walking forward silently (possible game bug, where self getmovement = "standing" only if walking forward, when it should = "walking"), by using "self.legs_state_walkforward" from nangle_aa_legs.st.
+	- Players can no longer grab ladders unless they're specifically running/walking forward (not strafing left/right).
+	- Players can also press USE(e) to attach if facing the ladder, regardless how the player is looking up/down (ignores self.viewangles[0]).
 
-- Fixed Cyber Attack, Search & Destroy, Freeze Tag UBER gametypes that weren't removing "revivetrig" entities for frozen bodies when they disappear or get melted (entity count would slowly increase by 1 per frozen body).
+- Dogs now look better when climbing ladders: dogs' angles become vertical when climbing, and perform walking anims only while moving up/down the ladder.
+	- Dogs' angles gradually rotate from vertical to horizontal When climbing off the ladder from the very top or bottom.
+	- Dogs can also bite players while climbing ladders.
 
-- Players' viewangles in drivable vehicles/boats will now match the vehicle's/boat's angles, including when driving up/downhill and driving on sideways-sloped terrain.
-	- Fixed drivable vehicles' "shift_down" sound not matching the correct vehicle type (truck, halftrack, other) when decelerating.
-	- Destroyed vehicles will now loop fire sounds.
+- global/respawn_stuck_fix.scr reworked again: now checks if players' "getposition = offground" instead of "getmovement = falling" (players weren't always falling) when spawning inside of a wall/object.
+	- If newly spawned players are stuck falling for 3+ seconds but their origins remain the same, they will get auto-respawned (the spawn point's origin likely needs to be moved).
+	- If somehow the player respawned at the same stuck-in-wall spawn point, then the player's origin will be moved 25 units forward times the number of attempts, after getting respawned again (this works even if there's only 1 spawn point).
 
-- Light Bombs will now kill players if they directly impact them (not including the players that launched them).
-	- Light Bombs can now disable vehicles/tanks if they directly impact them, causing them to get flooded (audible water drip sounds and smoke visible, headlights turn off). Flooded vehicles will reset after the vehicle/tank's "reset time".
-	- Slowed down Giant Bombs' explosion/travel time from 1.50 seconds to 2.15 seconds.
+- Fixed deathcams ("g_deathcam" cvar) by preventing them from viewing killers that are dead, and forcing players to respawn if they're somehow viewing their killer for longer than 8 seconds.
 
-- Fixed global/player_spotlight.scr parameters, allowing auto spotlights to be mounted on more than just the floor (left wall, right wall, or ceiling).
-	- Spotlights can change players' illumination color even if they've already been spotted.
+- Guided Missiles can now be shot down with bullets (damage trigger was not aligned with missile's origin), and will no longer deal damage to teammates. Explosion damage reduced from 600 to 500.
 
-- The global/water_wade_sounds.scr script now makes players play a small water impact sound if they were < 125 units above the corresponding water volume, and a big water splash sound if > 125 units (if parameter "bigsplash" = 1).
+- Potentially fixed false positives in cvars/adminstuff.scr's "check_player_stufftexts" thread that kicked players for hacking, even though their names were able to be stufftexted (only occurs if repeatedly changing maps too quickly).
 
-- Drivable tanks that suddenly fly up to some maps' ceilings before exploding will now be auto-moved back to the ground, which already occurs in M4L0's "vehicles_undermap" thread (excluding M1L2A, M1L2B, M2L3, M4L1, M4L2).
-- Fixed 20mm cannons' explosion radiusdamage height by adding +100 units to them, for all maps with 20mm cannons.
-- Added all TDM spawn locations to the list of FFA spawns, for all fully modded singleplayer maps.
-- Fixed "consoleprint" threads not having accurate entity counts, by accounting for sv_maxclients.
-- Fixed some of M1L2A and other maps' basebuilder objects.
-- Fixed some ambience volumes in M2l2B.
-- Fixed global/player_spotlight.scr (auto-spotlights) not doing the "slowrainbow" effect when a map_triggers/spotlight_colorswitch.scr with "slowrainbow" parameter gets triggered.
-
-- Added 2 more vehicles in M4L2 after removing more unused entities, but replaced them all with opeltrucks.
-	- Fixed M4L2 train crash script (when train is about to crash) by crashing/exploding early if a vehicle blocking its path won't explode.
-
-- Added maps/gen_mapscripts/mapwall.scr for simplifying the spawning of invisible walls for buildings, barriers, rooftops, cliffs, etc.
-
-- Removed more unused sounds from ubersound/ubersound.scr for all singleplayer maps.
-	- Replaced all custom player "pain" and "death" sounds from ubersound/uberdialog.scr with German AI pain/death sounds in singleplayer maps, to help prevent players disconnecting with "ERROR: MAX_GAMESTATE_CHARS exceeed".
-
----------------
-
-- global/deathcam.scr: New mod added that auto-respawns dead players to spectate their killers, creating "kill cams" or "death cams". Only works for MOHAA Reborn 1.12.
-	- Add exec global/deathcam.scr to any map .scr, or in global/dmprecache.scr to run.
-	- While spectating your killer, press FIRE to fully respawn as normal.
-	- Type into the server's console "g_deathcams 0" to disable this mod, or "g_deathcams 1" to re-enable it.
-
-	- If "level.deathcam_respawn = 1", dead players will auto-respawn after "level.deathcam_respawn_time" seconds.
-	- level.deathcam_time_until_spectate = time delay in seconds until killed players begin spectating their killers (ideally set to "0" or "1.6").
-	- If level.deathcam_time_until_spectate < 1.6, dead bodies will disappear instead, and this variable will revert to "waitframe", or "0.05" seconds.
-	- If level.deathcam_time_until_spectate >= 1.6, players can respawn much sooner by pressing/holding FIRE.
-
----------------
-
-- M4L3 fully modded (see [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods))<br>
+- Giant Bombs' time until impact reduced from 2.15 seconds to 1.95 seconds.
+- Victory podium's intermission camera lowered by 40 units (camera was too high and wasn't showing some podium crates).
+- Fixed missing sound aliases in M1L2A and M1L3C.
+- Added more ambience volumes in obj/obj_team1 (The Hunt) and M3L3 for the central small buildings that are tilted 30 degrees (not along X-Y axis).
