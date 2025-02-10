@@ -49,7 +49,7 @@ end
 
 assign_killer local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.player:
 
-	if(local.player != local.attacker && local.attacker != $world) { local.player.deathcam_killer = local.attacker } // if players did not kill themselves, and if $world did not kill the player.
+	if(local.player != local.attacker && local.attacker != $world && isalive local.attacker) { local.player.deathcam_killer = local.attacker } // if players did not kill themselves, and if $world did not kill the player.
 end
 
 //-----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ spectate_killer:
 		self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.deathcam_killer.viewangles) * -50)) 1) - ( 0 0 82.125 )
 		self face self.deathcam_killer.viewangles // does not work for players that are currently dead
 
-		if(local.respawnable == 1 && (self.fireheld == 1 || level.deathcam_respawn == 1)) { break }
+		if((local.respawnable == 1 || local.auto_respawn_time > 8) && (self.fireheld == 1 || level.deathcam_respawn == 1)) { break } // force respawn if dead player somehow waited longer than 8 seconds.
 
 		local.auto_respawn_time += 0.05 // each waitframe = 0.05 seconds.
 		waitframe

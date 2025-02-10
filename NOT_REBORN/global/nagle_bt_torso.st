@@ -3160,7 +3160,8 @@ state USE_LADDER
 	{
 		safeholster 1 // put our weapon away
 		attachtoladder // gets the ladder we're going to be climbing
-		exec global/check_team_swap.scr 
+		exec global/check_team_swap.scr
+
 	}
 	
 	states 
@@ -3197,6 +3198,7 @@ state GET_ON_LADDER
 		modheight "stand"
 		movementstealth "1.0"
 		moveposflags "standing"
+		exec global/legs_movement.scr "LADDER_MOVING"
 	}
 
 	action
@@ -3227,6 +3229,7 @@ state LATCH_ONTO_LADDER
 		movementstealth "1.0"
 		moveposflags "standing"
 		tweakladderpos // make sure we're positioned properly on the ladder
+		exec global/legs_movement.scr "ON_LADDER"
 	}
 	
 	states
@@ -3275,9 +3278,10 @@ state FINISHED_GET_OFF_LADDER
 	
 	entrycommands
 	{
+		exec global/check_team_swap.scr "end"
 		unattachfromladder
 		safeholster 0 // pull weapon back out if we put it away to get on the ladder
-		exec global/check_team_swap.scr "end"
+		exec global/legs_movement.scr "LADDER_MOVING"
 	}
 
 	states
@@ -3293,10 +3297,11 @@ state JUMP_OFF_LADDER
 	
 	entrycommands
 	{
+		exec global/check_team_swap.scr "end"
 		unattachfromladder
 		safeholster 0 // pull weapon back out if we put it away to get on the ladder
 		jumpxy -70 0 150
-		exec global/check_team_swap.scr "end"	
+		exec global/legs_movement.scr "OFF_LADDER"
 	}
 
 	states
@@ -3313,6 +3318,7 @@ state LADDER_IDLE_LEFT
 	entrycommands
 	{
 		tweakladderpos // make sure we're positioned properly on the ladder
+		exec global/legs_movement.scr "ON_LADDER"
 	}
 	
 	action
@@ -3353,6 +3359,7 @@ state LADDER_IDLE_RIGHT
 	entrycommands
 	{
 		tweakladderpos // make sure we're positioned properly on the ladder
+		exec global/legs_movement.scr "ON_LADDER"
 	}
 	
 	action
@@ -3392,6 +3399,7 @@ state LADDER_UP_LEFT
 	entrycommands
 	{
 //		tweakladderpos // make sure we're positioned properly on the ladder
+		exec global/legs_movement.scr "LADDER_MOVING"
 	}
 	
 	action
@@ -3417,6 +3425,7 @@ state LADDER_UP_RIGHT
 	entrycommands
 	{
 //		tweakladderpos // make sure we're positioned properly on the ladder
+		exec global/legs_movement.scr "LADDER_MOVING"
 	}
 	
 	action
@@ -3442,6 +3451,7 @@ state LADDER_DOWN_LEFT
 	entrycommands
 	{
 //		tweakladderpos // make sure we're positioned properly on the ladder
+		exec global/legs_movement.scr "LADDER_MOVING"
 	}
 	
 	action
@@ -3467,6 +3477,7 @@ state LADDER_DOWN_RIGHT
 	entrycommands
 	{
 //		tweakladderpos // make sure we're positioned properly on the ladder
+		exec global/legs_movement.scr "LADDER_MOVING"
 	}
 	
 	action
@@ -3565,6 +3576,11 @@ state TURRET_START
 state TURRET_IDLE
 {
 	movetype anim
+
+	entrycommands
+	{
+		exec global/legs_movement.scr "USING_TURRET"
+	}
 	
 	action
 	{

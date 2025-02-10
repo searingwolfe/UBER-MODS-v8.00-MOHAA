@@ -316,7 +316,10 @@ aimspot local.groundspot_target local.name local.beam local.spot local.light loc
 			local.dist_xy = vector_length(( local.p[0] local.p[1] 0 ) - ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ))
 			if(local.dist_xy < 50 && local.p[2] >= $player[local.i].origin[2] && ((local.p[2] <= $player[local.i].origin[2] + 95 && $player[local.i] getposition == "standing") || (local.p[2] <= $player[local.i].origin[2] + 55 && $player[local.i] getposition == "crouching")))
 			{
- 				$player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2]
+				if($("s_colorchange_" + local.name).size <= 1)
+				{
+ 					$player[local.i] thread map_triggers/led_spotlight.scr::spotted $("s_colorchange_" + local.name).s_newcolor[0] $("s_colorchange_" + local.name).s_newcolor[1] $("s_colorchange_" + local.name).s_newcolor[2]
+				}
 			}
 		}
 	}

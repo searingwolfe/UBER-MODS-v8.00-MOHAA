@@ -591,6 +591,7 @@ state CROUCH_IDLE
 		movementstealth "1.25"
 		moveposflags "crouching"
 		exec global/anti_camper.scr
+		exec global/legs_movement.scr "STAND"
 	}
 	legs
 	{
@@ -1132,6 +1133,7 @@ state FALL
 		modheight "stand"
 		movementstealth "0.5"
 		moveposflags "offground" "falling"
+		exec global/legs_movement.scr "STAND"
 	}
 	legs
 	{
@@ -1173,6 +1175,7 @@ state LAND
 		movementstealth "0.5"
 		moveposflags "standing"
 		exec server_planes/parachute.scr
+		exec global/legs_movement.scr "STAND"
 	}
 	states
 	{
@@ -1265,6 +1268,7 @@ state FALL_DUCKED
 		modheight "duck"
 		movementstealth "0.75"
 		moveposflags "offground" "falling"
+		exec global/legs_movement.scr "STAND"
 	}
 	legs
 	{
@@ -1301,6 +1305,7 @@ state FALL_DUCKED_WANT_STAND
 	{
 		movementstealth "0.75"
 		moveposflags "offground" "falling"
+		exec global/legs_movement.scr "STAND"
 	}
 	legs
 	{
@@ -1341,6 +1346,7 @@ state LAND_DUCKED
 	{
 		movementstealth "0.5"
 		moveposflags "crouching"
+		exec global/legs_movement.scr "STAND"
 	}
 	states
 	{
@@ -1364,6 +1370,7 @@ state JUMP_STANDING
 		moveposflags "crouching"
 		modheight "jumpstart"
 		exec global/ac/jump.scr
+		exec global/legs_movement.scr "STAND"
 
 	}
 	legs
@@ -1418,6 +1425,7 @@ state JUMP_FORWARD_RUN
 		moveposflags "running"
 		modheight "jumpstart"
 		exec global/ac/jump.scr
+		exec global/legs_movement.scr "STAND"
 	}
 	legs
 	{

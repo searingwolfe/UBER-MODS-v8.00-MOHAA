@@ -84,7 +84,7 @@ main local.name local.model local.origin local.angles local.health local.resetti
 		cache models/emitters/mortar_dirt_nosound.tik
 		cache models/projectiles/tigercannonshell.tik
 		cache models/fx/fx_cannonsmoke.tik
-		cache models/emitters/shermansmoke.tik
+		cache models/emitters/thin_black_short.tik
 		thread scriptmaster local.tank.model
 		level.tankscriptmaster[local.tank.model] = 1
 		level.tankscriptmaster[local.model] = 1
@@ -545,9 +545,9 @@ end
 tankdamagesmoke:
 
 	local.smoke = spawn script_model
-	local.smoke model "models/emitters/shermansmoke.tik"
+	local.smoke model "models/emitters/thin_black_short.tik"
 	local.smoke.origin = self gettagposition "turret0"
-	local.smoke.angles = ( 270 0 0 )
+	local.smoke.angles = ( 0 0 0 )
 	local.smoke hide
 	local.smoke notsolid
 
@@ -728,9 +728,9 @@ floodedreset:
 	$(self.name + "_trig") message ("*** This tank has been flooded. ***")
 
 	local.smoke = spawn script_model
-	local.smoke model "models/emitters/shermansmoke.tik"
+	local.smoke model "models/emitters/thin_black_short.tik"
 	local.smoke.origin = self gettagposition "turret0"
-	local.smoke.angles = ( 270 0 0 )
+	local.smoke.angles = ( 0 0 0 )
 	local.smoke anim start
 	local.smoke notsolid
 	local.smoke loopsound tankdeathwater
@@ -742,14 +742,8 @@ floodedreset:
 		local.c++
 		waitframe
 	}
+
 	local.smoke remove
-
-	if(self == NULL || (self != NULL && self.dead != 1))
-	{
-		if($(local.name) != NULL) { $(local.name) thread floodedreset }
-		end
-	}
-
 	if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 remove }
 	if(self.gun != NIL && self.gun != NULL) { self.gun2 remove }
 	self remove

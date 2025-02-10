@@ -5,7 +5,7 @@ main local.origin:
 level.guidedmissile_health = 100		// missile health.
 level.guidedmissile_velocity = 700 		// missile speed.
 level.guidedmissile_damage = 500 		// explosion damage.
-level.guidedmissile_radius = 600 		// explosion radius.
+level.guidedmissile_radius = 500 		// explosion radius.
 level.guidedmissile_inc_velocity_fired = 300	// increase missile speed by this amount 20x per second after clicking FIRE while flying.
 
 ////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,7 @@ spawnmissile local.trig local.health:
 
 	local.missile = spawn script_object
 	local.missile model "static/v2.tik"
-	local.missile.origin = local.trig.origin // + ( 0 0 500 )
+	local.missile.origin = local.trig.origin
 	local.missile notsolid
 	local.missile.team = self.dmteam
 	local.missile scale .2
@@ -97,10 +97,9 @@ spawnmissile local.trig local.health:
 	else { local.missile light 1 0 0 450 }
 
 	local.missile.trig = spawn trigger_multiple spawnflags 128
-	local.missile.trig.origin = local.trig.origin + ( 0 0 500 )
-	local.missile.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
-	local.missile.trig notsolid
-	local.missile.trig bind local.missile
+	local.missile.trig.origin = local.trig.origin
+	local.missile.trig setsize ( -25 -25 -25 ) ( 25 25 25 )
+	local.missile.trig glue local.missile
 	local.missile.trig setthread shot
 	local.missile.trig.health = local.health
 
@@ -168,7 +167,7 @@ fly local.missile:
 	{
 		if(local.missile.trig.health != local.health && local.missile.trig.health > 0)
 		{
-			if(self != NULL) { local.player stufftext ("set ui_GuidedMissileHealth " + int(local.missile.trig.health)) }
+			if(self != NULL) { self stufftext ("set ui_GuidedMissileHealth " + int(local.missile.trig.health)) }
 			local.health = local.missile.trig.health
 		}
 		else if(local.missile.trig.health <= 0)
@@ -391,6 +390,8 @@ DestroyMissile local.missile local.hitwater:
 		local.Exp3 notsolid
 		//local.Exp3 playsound missileboommetal
 	}
+
+	if(local.missile.trig.shooter == NIL || local.missile.trig.shooter == NULL) { local.missile.trig.shooter = self }
 
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.

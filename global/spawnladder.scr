@@ -10,21 +10,6 @@
 // Example2: local.ladder = thread global/spawnladder.scr::main ( -200 300 0 ) 180 500 13.5 1 1 3 ( 0 0 1 )
 //
 //-----------------------------------------------------------------------------
-//
-// Spawned ladders will not work outside of this mod unless nangla_aa_torso.st is also included, or unless another mike_torso.st file is modified.
-// In another mod's mike_torso.st (or similar torso.st), remove all 8 CAN_CLIMB_DOWN_LADDER, CAN_CLIMB_UP_LADDER conditions from these 2 states: LADDER_IDLE_LEFT, LADDER_IDLE_RIGHT.
-//
-// Turn these...
-//        LADDER_UP_RIGHT             : FORWARD LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
-//        LADDER_UP_RIGHT             : BACKWARD !LOOKING_UP "-30" CAN_CLIMB_UP_LADDER
-//        LADDER_DOWN_LEFT            : FORWARD !LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
-//        LADDER_DOWN_LEFT            : BACKWARD LOOKING_UP "-30" CAN_CLIMB_DOWN_LADDER
-//
-// into these...
-//        LADDER_UP_RIGHT             : FORWARD LOOKING_UP "-30"
-//        LADDER_UP_RIGHT             : BACKWARD !LOOKING_UP "-30"
-//        LADDER_DOWN_LEFT            : FORWARD !LOOKING_UP "-30"
-//        LADDER_DOWN_LEFT            : BACKWARD LOOKING_UP "-30"
 
 main local.origin local.angle local.height local.width local.thickness local.spawn_solidclip local.spawn_laser local.laser_color:
 
@@ -50,6 +35,7 @@ main local.origin local.angle local.height local.width local.thickness local.spa
 	local.ladder setsize local.setsize1 local.setsize2
 	local.ladder.height = local.height
 	local.ladder setthread ladder
+	local.ladder thread trigger_use
 
 	local.ladder.offset = 14 // optional offset distance away from ladder (lower = players hands closer to ladder, higher = further away, default = 14). If > 18, players cannot climb the ladder.
 
@@ -91,26 +77,42 @@ end local.ladder
 
 ladder:
 
-	local.player = parm.other
-	local.pangle = local.player.angle
-	local.langle = self.angle
+	if(self.player_trigger_use != NIL && self.player_trigger_use != NULL) { local.player = self.player_trigger_use; local.usedtrigger = 1 }
+	else { local.player = parm.other }
+	self.player_trigger_use = NIL
 	local.vangle = local.player.viewangles[0]
-	if(local.pangle < 0) { local.pangle += 360 } // keep player angle & ladder angle in 0 - 360 format.
-	if(local.langle < 0) { local.langle += 360 }
-	local.lower = local.langle - 70
-	local.upper = local.langle + 70
-	if(local.lower < 0) { local.lower += 360; local.fliplow = 1 }
-	if(local.upper > 360) { local.upper -= 360; local.flipup = 1 }
 
-	if(local.player == NULL || local.player.climbing_ladder == 1 || local.player.dead == 1 || !isalive local.player || local.player.dmteam == "spectator" || local.player getmovement == "standing") { end }
-	if((local.vangle > -30 && local.vangle < 30) || local.player.origin[2] > self.origin[2] + self.height + 18 || (local.player.origin[2] > self.origin[2] + self.height - 50 && local.vangle < 40)) { end }
+	if(local.player == NIL || local.player == NULL || local.player.climbing_ladder == 1 || local.player.dead == 1 || !isalive local.player || local.player.dmteam == "spectator") { end }
+	if(local.player.origin[2] > self.origin[2] + self.height + 18 || (local.player.origin[2] > self.origin[2] + self.height - 50 && local.vangle < 40)) { end } // player must be > height - 50 and < height + 18, and must be looking downward.
+	if(local.player.useheld != 1 && local.usedtrigger != 1)
+	{
+		if(local.player.velocity == ( 0 0 0 ) || (local.vangle > -30 && local.vangle < 30)) { end } // player must have velocity and must be looking upward or downward at the ladder.
+		if(local.player getposition == "offground") { end } // only latch onto ladder while falling if player is holding USE(e).
+		if(local.player.legs_state_runforward == 0 && local.player.legs_state_walkforward == 0) { end } // from nangle_legs.st, not required but this prevents strafing players from grabbing the ladder.
+	}
 
+	local.langle = self.angle
+	if(local.langle < 0) { local.langle += 360 } // keep langle & pangle in 0-360 range.
+	else if(local.langle > 360) { local.langle -= 360 }
+
+	local.pangle = local.player.viewangles[1]
 	if(local.player.origin[2] > self.origin[2] + self.height - 50 && local.vangle >= 40) { local.pangle -= 180 } // flip pangle by 180 degrees if player is at the top of the ladder.
 	if(local.pangle < 0) { local.pangle += 360 }
-	if(local.fliplow == 1 && local.pangle > local.lower) { end }
-	if(local.fliplow != 1 && local.pangle < local.lower) { end }
-	if(local.flipup == 1 && local.pangle < local.upper) { end }
-	if(local.flipup != 1 && local.pangle > local.upper) { end }
+	else if(local.pangle > 360) { local.pangle -= 360 }
+
+	local.lower = local.langle - 70
+	local.upper = local.langle + 70
+	if(local.lower < 0) { local.add360 = 1 }
+	if(local.upper > 360) { local.sub360 = 1 }
+	if(local.add360 == 1)
+	{
+		if(local.pangle < local.lower + 360 && local.pangle > local.upper) { end } // if upper = 385 degrees for example, pangle must also be < 25 degrees.
+	}
+	else if(local.sub360 == 1)
+	{
+		if(local.pangle < local.lower && local.pangle > local.upper - 360) { end } // if lower = -25 degrees for example, pangle must also be > 335 degrees.
+	}
+	else if(local.pangle < local.lower || local.pangle > local.upper) { end } // if upper & lower are within 0-360 degrees range, check if pangle is between them as normal.
 
 	local.player.angle = self.angle
 	local.player face ( local.player.viewangles[0] self.angle local.player.viewangles[2] )
@@ -131,7 +133,7 @@ end
 status_check local.ladder:
 
 	local.team = self.dmteam
-	while(isalive self && self.dmteam == local.team && self.dead != 1 && self istouching local.ladder)
+	while(isalive self && self.dmteam == local.team && self.dead != 1 && self.legs_state_using_ladder == 1) // "ladder_on" comes from entrycommands in nangle_aa_torso.st & legs_movement.scr.
 	{
 		self.angle = local.ladder.angle
 		waitframe
@@ -141,6 +143,24 @@ status_check local.ladder:
 		self.climbing_ladder = 0
 		self.origin += ( 0 0 10 ) // gives them an extra height boost when getting off the ladder, to keep them from auto-grabbing back onto it.
 		if(isalive self && self.dmteam != "spectator" && self.dead != 1) { self forcetorsostate STAND } // in case they get pushed off the ladder
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+trigger_use:
+
+	while(self != NULL)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1 && $player[local.i].climbing_ladder != 1 && $player[local.i] istouching self && $player[local.i].useheld == 1)
+			{
+				self.player_trigger_use = $player[local.i]
+				self thread ladder
+			}
+		}
+		waitframe
 	}
 end
 

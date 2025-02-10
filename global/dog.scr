@@ -361,7 +361,7 @@ run_counter:
 
 	while(1)
 	{
-		if(self == NULL || !isalive self || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1 || level.bbactive == 0) 
+		if(self == NULL || !isalive self || self.dead == 1 || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1 || level.bbactive == 0) 
 		{
 			if(isalive self) 
 			{ 
@@ -389,10 +389,13 @@ move local.player:
 	local.anim = dog_stand_idle
 	local.team = local.player.dmteam
 	local.player.dog_anim = dog_stand_idle
+	local.scaleold = local.player.scale
+	local.c = 18
+	local.d = 50
 
 	while(1)
 	{
-		if(local.player == NULL || local.player.dmteam != local.team || level.change_team_score == 1 || local.player.fellundermap == 1 || level.bbactive == 0)
+		if(local.player == NULL || local.player.dead == 1 || local.player.dmteam != local.team || level.change_team_score == 1 || local.player.fellundermap == 1 || level.bbactive == 0)
 		{
 			if(local.player != NULL)
 			{
@@ -411,8 +414,48 @@ move local.player:
 		local.specang = (angles_toforward local.player.viewangles)
 		local.specorg = local.player.origin
 		self.velocity = local.player.velocity
-		self.origin = (local.specorg + ((local.specang[0]) (local.specang[1]) (0)) * 50) // keep dog 50 units in front of player
-		self.angles = local.player.angles
+
+		if(local.player.dog_onladder == 1)
+		{
+			local.player hide
+			local.player.scale = local.scaleold
+			if((local.player.legs_state_ladder_getofftop == 1 || local.player.legs_state_ladder_getoffbottom == 1) && self.angles[0] <= 360)
+			{
+				if(local.player.legs_state_ladder_getofftop == 1)
+				{
+					if(local.c > 0) { local.c -= 0.8 }
+					self.angles += ( 6 0 0 )
+				}
+				if(local.player.legs_state_ladder_getoffbottom == 1)
+				{
+					if(local.c > 0) { local.c -= 1.5 }
+					self.angles += ( 7.5 0 0 )
+				}
+				if(local.d > 0) { local.d -= 4 }
+				self.origin = local.player.origin + local.player.forwardvector * local.c + local.player.upvector * local.d
+			}
+			else
+			{
+				local.c = 18
+				local.d = 50
+				self.origin = local.player.origin + local.player.forwardvector * 18 + local.player.upvector * 50
+				self.angles = ( 270 local.player.angles[1] 0 )
+			}
+		}
+		else if(local.player.legs_state_using_turret == 1)
+		{
+			local.player show
+			local.player.scale = 0.001 // player must not be hidden for mg42 turret sounds to loop while shooting.
+			self.origin = local.player.origin
+			self.angles = local.player.angles
+		}
+		else
+		{
+			local.player hide
+			self.origin = (local.specorg + ((local.specang[0]) (local.specang[1]) (0)) * 50) // keep dog 50 units in front of player
+			self.angles = local.player.angles
+			local.player.scale = local.scaleold
+		}
 
 		if(local.anim != local.player.dog_anim)
 		{
@@ -440,7 +483,7 @@ get_movement:
 
 	while(1)
 	{
-		if(self == NULL || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1 || level.bbactive == 0)
+		if(self == NULL || self.dead == 1 || self.dmteam != local.team || level.change_team_score == 1 || self.fellundermap == 1 || level.bbactive == 0)
 		{
 			if(self != NULL) 
 			{
@@ -519,15 +562,17 @@ get_movement:
 				end
 			}
 
-			if(self != NULL && self.dog != NULL && self.fireheld == 1 && self.useheld == 0 && self.held != 1)
+			if(self != NULL && self.dog != NULL && self.fireheld == 1 && self.useheld == 0 && self.held != 1 && self.legs_state_using_turret != 1 && self.legs_state_ladder_getofftop != 1 && self.legs_state_ladder_getoffbottom != 1)
 			{
+				if(local.onladder == 1) { self.dog.angles += ( -90 0 0 ) }
 				local.dog_anim = self.dog_anim
 				self.held = 1
 				self.dog.trigger triggerable
 				self.dog.trigger.biting = 1
 				if(self.viewangles[0] < 0 || self.viewangles[0] >= 180) // if player is looking horizontally to straight up, bite face
 				{							// if player is looking horizontally to straight down, bite leg
-					self.dog_anim = dog_bite_face; self thread sounds
+					if(self.legs_state_using_ladder != 1) { self.dog_anim = dog_bite_face; self thread sounds }
+					else { self.dog_anim = dog_bite_leg; self thread sounds }
 				}
 				else { self.dog_anim = dog_bite_leg; self thread sounds }
 				wait .75
@@ -550,6 +595,20 @@ get_movement:
 			}
 			if(self != NULL && self.fireheld != 1) { self.held = 0; self.held2 = 0 }
 			if(self != NULL && self.passenger == 1) { self.dog_anim = dog_stand_idle } // if dog is a passenger of a vehicle, don't run
+
+			if(self.legs_state_using_ladder == 1)
+			{
+				self.dog_onladder = 1
+				if(self.legs_state_ladder_moving == 1) { self.dog_anim = dog_walk_leash }
+				else { self.dog_anim = dog_stand_idle }
+			}
+			else { self.dog_onladder = 0 }
+
+			if(self.legs_state_using_turret == 1)
+			{
+				if(self.fireheld == 1) { self.dog_anim = dog_bark }
+				else { self.dog_anim = dog_stand_idle }
+			}
 		}
 		waitframe
 		if(self != NULL && self.inventory.size > 0) { self takeall } // in case they pick up some weapons	
@@ -690,6 +749,19 @@ sounds_loop: // recreating the german_shepherd.tik anim sounds for server-side p
 			if(self != NULL && self.dog != NULL) { self.dog playsound dogfs }
 		}
 		if(self != NULL && self.dog != NULL) { local.dog_anim = self.dog_anim }
+/*
+		if(self != NULL && self.dog != NULL && self.dog_onladder == 1 && self.legs_state_ladder_moving == 1)
+		{
+			self.dog.animating = 0
+			self.dog playsound dogfs
+			waitframe
+			if(self != NULL && self.dog != NULL && self.dog_anim == dog_run) { self.dog playsound dogfs }
+			waitframe
+			waitframe
+			waitframe
+			if(self != NULL) { self.dogbarking = 0; self.dogjumping = 0; self.dogjumpcount = 0 }
+		}
+*/
 		waitframe
 	}
 end

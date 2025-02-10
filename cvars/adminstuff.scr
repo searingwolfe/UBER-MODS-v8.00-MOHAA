@@ -323,7 +323,7 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-IP_addresses: // removing the port extension from players' IP addresses. also updating players' netname_time any time they change their name.
+IP_addresses: // saving players' IP addresses (including port extension). also updating players' netname_time any time they change their name.
 
 	while($player.size < 1) { waitframe }
 	while($player.size >= 1)
@@ -334,12 +334,12 @@ IP_addresses: // removing the port extension from players' IP addresses. also up
 			{ 
 				local.userinfo = string(getip $player[local.i]) // string characters start at [0]
 				local.ip = ""
-				for(local.u = 0; local.u < local.userinfo.size; local.u++) // save only the IP address into local.ip
+				for(local.u = 0; local.u < local.userinfo.size; local.u++) // save the IP address into local.ip
 				{
-					if(local.userinfo[local.u] == ":") { local.host = 0; break }
+					//if(local.userinfo[local.u] == ":") { break } // uncomment this to remove the port extension
 					local.ip += local.userinfo[local.u]
 				}
-				if(local.host != 0) { local.ip = "localhost" }
+				if(local.ip == getcvar("net_ip")) { local.ip = "localhost" }
 				$player[local.i].IP_address_init = local.ip
 			}
 
@@ -449,16 +449,17 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 
 	local.name = netname local.player
 	local.n = 0
-	local.a = 1
-	for(local.s = 0; local.s < local.name.size; local.s++)
-	{
-		if(local.name[local.s] == " ") { local.a++; local.s++ }
-		if(local.namearray[local.a] == NIL) { local.namearray[local.a] = "" }
-		local.namearray[local.a] += local.name[local.s]
-	}
-
 	while(local.player != NULL && netname local.player == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
 	{
+		local.name = netname local.player // putting this inside the while-loop too, in case the player's name somehow changes before the stufftext name-change below, causing false-positives.
+		local.a = 1
+		for(local.s = 0; local.s < local.name.size; local.s++)
+		{
+			if(local.name[local.s] == " ") { local.a++; local.s++ }
+			if(local.namearray[local.a] == NIL) { local.namearray[local.a] = "" }
+			local.namearray[local.a] += local.name[local.s]
+		}
+
 		if(local.namearray[2] != NIL)
 		{
 			local.textstring = "name " + local.namearray[1]

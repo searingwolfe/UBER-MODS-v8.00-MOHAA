@@ -5,7 +5,7 @@ main local.origin:
 level.guidedmissile_health = 100		// missile health.
 level.guidedmissile_velocity = 700 		// missile speed.
 level.guidedmissile_damage = 500 		// explosion damage.
-level.guidedmissile_radius = 600 		// explosion radius.
+level.guidedmissile_radius = 500 		// explosion radius.
 level.guidedmissile_inc_velocity_fired = 300	// increase missile speed by this amount 20x per second after clicking FIRE while flying.
 
 ////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,8 @@ exec global/aliascache_triggersounds.scr guided_missile
 		cache models/animate/fx_explosion_flak88.tik
 		cache models/emitters/explosion_bombdirt.tik
 		cache models/emitters/explosion_mine_shockwave.tik
-		level.RocketSound = 1
+		cache models/emitters/fx_oceanspray.tik
+		cache models/animate/fx_mortar_water.tik
 	}
 
 	local.trig = spawn trigger_multiple //targetname ("guidedmissile" + local.trig.entnum) // targetname added with "entnum" doesn't work until "level waittill spawn" is done first.
@@ -87,7 +88,7 @@ spawnmissile local.trig local.health:
 
 	local.missile = spawn script_object
 	local.missile model "static/v2.tik"
-	local.missile.origin = local.trig.origin // + ( 0 0 500 )
+	local.missile.origin = local.trig.origin
 	local.missile notsolid
 	local.missile.team = self.dmteam
 	local.missile scale .2
@@ -96,10 +97,9 @@ spawnmissile local.trig local.health:
 	else { local.missile light 1 0 0 450 }
 
 	local.missile.trig = spawn trigger_multiple spawnflags 128
-	local.missile.trig.origin = local.trig.origin + ( 0 0 500 )
-	local.missile.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
-	local.missile.trig notsolid
-	local.missile.trig bind local.missile
+	local.missile.trig.origin = local.trig.origin
+	local.missile.trig setsize ( -25 -25 -25 ) ( 25 25 25 )
+	local.missile.trig glue local.missile
 	local.missile.trig setthread shot
 	local.missile.trig.health = local.health
 
@@ -132,6 +132,7 @@ spawnmissile local.trig local.health:
 	local.missile physics_on
 	local.missile gravity 0
 	local.missile thread waittouch self
+	local.missile.player_owner = self // for adding kills/scorepoints.
 
 	iprintlnbold ("*** Guided Missile Spotted On Radar!!! ***")
 	self.missile = local.missile
@@ -166,7 +167,7 @@ fly local.missile:
 	{
 		if(local.missile.trig.health != local.health && local.missile.trig.health > 0)
 		{
-			if(self != NULL) { local.player stufftext ("set ui_GuidedMissileHealth " + int(local.missile.trig.health)) }
+			if(self != NULL) { self stufftext ("set ui_GuidedMissileHealth " + int(local.missile.trig.health)) }
 			local.health = local.missile.trig.health
 		}
 		else if(local.missile.trig.health <= 0)
@@ -301,7 +302,9 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-DestroyMissile local.missile:
+DestroyMissile local.missile local.hitwater:
+
+	if(self == NULL || local.missile == NIL || local.missile == NULL || (local.missile != NIL && local.missile != NULL && local.missile.dead == 1)) { end }
 
 	self iprint "Boom!"
 	self stufftext "set ui_GuidedMissileHealth 0"
@@ -317,6 +320,7 @@ DestroyMissile local.missile:
 		self stufftext "hidemenu bastogne2"
 	}
 
+	local.missile.dead = 1
 	local.missile.impact = 1
 	local.missile.cam unbind local.missile
 	local.missile.jet stoploopsound
@@ -326,24 +330,68 @@ DestroyMissile local.missile:
 	local.missile hide
 	local.missile light 0 0 0 0
 
-	local.Exp = spawn models/animate/fx_explosion_flak88.tik
+	local.Exp = spawn models/animate/fx_explosion_flak88.tik // don't spawn as script_models, to avoid "Failed execution of command 'model' for class 'Script' Targetname 'VOID'" errors
 	local.Exp.origin = local.missile.origin + ( 0 0 50 )
 	local.Exp.scale = local.missile.scale * 5
 	local.Exp light 1 0 1 650
-	local.Exp anim start
+	local.Exp anim idle // "anim aaaa" is the actual "idle" anim.
+	local.Exp notsolid
 	local.Exp playsound missileboom
 
-	local.Exp2 = spawn models/emitters/explosion_bombdirt.tik
-	local.Exp2.origin = local.missile.origin + ( 0 0 25 )
-	local.Exp2.scale = local.missile.scale * 5
-	local.Exp2 anim start
-	local.Exp2 playsound missileboomdirt
+	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			local.origin = local.missile.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.missile.origin = ( local.missile.origin[0] local.missile.origin[1] local.Z_max[local.v] )
+				local.hitwater = 1
+				break
+			}
+		}
+	}
 
-	local.Exp3 = spawn models/emitters/explosion_mine_shockwave.tik
-	local.Exp3.origin = local.missile.origin
-	local.Exp3.scale = local.missile.scale * 10
-	local.Exp3 anim start
-	//local.Exp2 playsound missileboommetal
+	if(local.hitwater == 1)
+	{
+   		local.Exp2 = spawn models/animate/fx_mortar_water.tik
+   		local.Exp2.origin = local.missile.origin
+   		local.Exp2.scale = local.missile.scale * 6
+		local.Exp2 anim start
+		local.Exp2 notsolid
+		local.Exp2 playsound missileboomwater
+
+		local.Exp3 = spawn models/emitters/fx_oceanspray.tik
+		local.Exp3.origin = local.missile.origin + ( 0 0 50 )
+		local.Exp3.scale = local.missile.scale * 7.5
+		local.Exp3 anim start
+		local.Exp3 notsolid
+	}
+	else
+	{
+		local.Exp2 = spawn models/emitters/explosion_bombdirt.tik
+		local.Exp2.origin = local.missile.origin + ( 0 0 25 )
+		local.Exp2.scale = local.missile.scale * 5
+		local.Exp2 anim start
+		local.Exp2 notsolid
+		local.Exp2 playsound missileboomdirt
+
+		local.Exp3 = spawn models/emitters/explosion_mine_shockwave.tik
+		local.Exp3.origin = local.missile.origin
+		local.Exp3.scale = local.missile.scale * 10
+		local.Exp3 anim idle // this is the only anim.
+		local.Exp3 notsolid
+		//local.Exp3 playsound missileboommetal
+	}
+
+	if(local.missile.trig.shooter == NIL || local.missile.trig.shooter == NULL) { local.missile.trig.shooter = self }
 
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.

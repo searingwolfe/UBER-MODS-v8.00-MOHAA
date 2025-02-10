@@ -96,7 +96,7 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	{
 		cache local.vehicle.model
 		if(local.desmodel != NIL) { cache local.desmodel }
-		if(local.desmodel == NIL || local.vehicle.model == "models/vehicles/bmwbike.tik") { cache models/emitters/fancyfire.tik; cache models/emitters/linger_smoke.tik }
+		if(local.desmodel == NIL || local.vehicle.model == "models/vehicles/bmwbike.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen_canopy.tik") { cache models/emitters/fancyfire.tik; cache models/emitters/thin_black_short.tik }
 		cache models/emitters/mortar_higgins.tik
 		cache models/emitters/mortar_dirt_nosound.tik
 		cache models/fx/searchlight.tik
@@ -357,9 +357,21 @@ playergetin:
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] + 90) self.angles[2] ) }
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] - 90) self.angles[2] ) }
+		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1)
+		{
+			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] * -1 + 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
+			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] * -1 - 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
+			else { self.driver.viewangles = ( (self.angles[2] * -1 + 10) (self.angles[1] + 90) (self.angles[0]) ) }
+		}
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1)
+		{
+			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] - 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
+			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] + 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
+			else { self.driver.viewangles = ( (self.angles[2] + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
+			
+		}
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
+
 		if(self.driver.driving_state_jump == 1 || self.flooded == 1) // Press JUMP to exit, or force-exit if vehicle gets flooded by a Light Bomb exploding on it.
 		{
 			self thread driverreset
@@ -368,7 +380,6 @@ playergetin:
 			self.driver = NIL
 			break
 		}
-		if(self.driver.viewangles[0] < 0 || self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 - (360 - self.angles[0])) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(self.turretplayer != NIL && self.turretplayer != NULL) { local.turretuser_count = 1 }
 		else { local.turretuser_count = 0 }
@@ -387,7 +398,7 @@ playergetin:
 
 		if(self.driver.useheld != 1)
 		{
-			if(self.driver.fireheld == 1) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) } // hold FIRE for rear-view mirror (look backwards)
+			if(self.driver.fireheld == 1) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) } // hold FIRE for rear-view mirror (look backwards)
 	
 			if(self.driver.leanleftheld == 1 && local.toggle != 1 && self.nohorn != 1) // lean left to honk horn
 			{
@@ -403,6 +414,9 @@ playergetin:
 			}
 			if(self.driver.leanleftheld != 1 && self.driver.leanrightheld != 1) { local.toggle = 0; local.toggle2 = 0 }
 		}
+
+		if(self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 + (self.angles[0] - 360)) self.driver.viewangles[1] self.driver.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
+		if(self.driver.viewangles[0] < -180) { self.driver.viewangles = ( (self.driver.viewangles[0] + 360) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind).
 		{
@@ -583,8 +597,6 @@ headlights:
 			self thread deadcorona "light right"
 		}
 		else { self thread deadcorona }
-		waitframe
-		waitframe
 		self thread illuminate "left"
 		self thread illuminate "right"
 		self.headlights_inuse = 0
@@ -632,39 +644,40 @@ vehicledeath:
 	local.desvehicle.scale = self.scale
 	if(self.desmodel != "models/vehicles/opeltruck_d.tik" && self.desmodel != "models/vehicles/sdkfz_green_d.tik" && self.desmodel != "models/vehicles/sdkfz_desert_d.tik") { local.desvehicle loopsound vehicledeathfire }
 
-	if(self.desmodel != NIL || self.desmodel == models/vehicles/bmwbike_d.tik)
+	if(self.desmodel != NIL)
 	{
 		local.desvehicle model self.desmodel
 		local.desvehicle.angles = self.angles
 	}
-	if(self.desmodel == NIL || self.desmodel == models/vehicles/bmwbike_d.tik)
+	if(self.desmodel == NIL || self.desmodel == models/vehicles/bmwbike_d.tik || self.desmodel == models/vehicles/opeltruckgreen_d.tik)
 	{
 		local.r = randomint(2)
 		if(local.r == 0) { local.one = 1 }
 		if(local.r == 1) { local.one = -1 }
-		if(self.desmodel != models/vehicles/bmwbike_d.tik)
+		if(self.desmodel != models/vehicles/bmwbike_d.tik && self.desmodel != models/vehicles/opeltruckgreen_d.tik)
 		{
 			local.desvehicle model self.model
 			local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
 		}
 
 		if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.distance = 70 }
-		if(self.model == "models/vehicles/mercedes.tik") { local.distance = 80 }
-		if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
-		if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
+		else if(self.model == "models/vehicles/mercedes.tik") { local.distance = 80 }
+		else if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
+		else if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
+		else if(self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.distance = 120 }
 		else { local.distance = 25 } // bmwbikes
 
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
 		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + local.desvehicle.upvector * 42
-		local.fire.angles = ( 270 0 0 )
+		local.fire.angles = ( 0 0 0 )
 		local.fire.scale = 1
 		local.fire anim start
 		local.fire notsolid
 		local.smoke = spawn script_model
-		local.smoke model "models/emitters/linger_smoke.tik"
+		local.smoke model "models/emitters/thin_black_short.tik"
 		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + local.desvehicle.upvector * 42
-		local.smoke.angles = ( 270 0 0 )
+		local.smoke.angles = ( 0 0 0 )
 		local.smoke.scale = 0.7
 		local.smoke anim start
 		local.smoke notsolid
@@ -834,15 +847,16 @@ floodedreset:
 	$(self.name + "_trig") message ("*** This vehicle has been flooded. ***")
 
 	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.distance = 70 }
-	if(self.model == "models/vehicles/mercedes.tik") { local.distance = 80 }
-	if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
-	if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
+	else if(self.model == "models/vehicles/mercedes.tik") { local.distance = 80 }
+	else if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
+	else if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
+	else if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.distance = 120 }
 	else { local.distance = 25 } // bmwbikes
 
 	local.smoke = spawn script_model
-	local.smoke model "models/emitters/linger_smoke.tik"
+	local.smoke model "models/emitters/thin_black_short.tik"
 	local.smoke.origin = self.origin + self.forwardvector * local.distance + self.upvector * 42
-	local.smoke.angles = ( 270 0 0 )
+	local.smoke.angles = ( 0 0 0 )
 	local.smoke.scale = 0.7
 	local.smoke anim start
 	local.smoke notsolid
@@ -855,14 +869,8 @@ floodedreset:
 		local.c++
 		waitframe
 	}
+
 	local.smoke remove
-
-	if(self == NULL || (self != NULL && self.dead != 1))
-	{
-		if($(local.name) != NULL) { $(local.name) thread floodedreset }
-		end
-	}
-
 	if(self.gun != NIL && self.gun != NULL) { self.gun remove }
 	self remove
 	thread main local.name local.model level.vehicle_initorigin[local.name] level.vehicle_initangles[local.name] local.health local.vehiclespeed local.resettime local.headlights local.noheadlights

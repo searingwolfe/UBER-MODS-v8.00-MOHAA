@@ -67,7 +67,7 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 	{
 		cache local.vehicle.model
 		cache local.desmodel
-		cache models/emitters/fancyfire.tik; cache models/emitters/linger_smoke.tik
+		cache models/emitters/fancyfire.tik; cache models/emitters/thin_black_short.tik
 		cache models/emitters/mortar_higgins.tik
 		cache models/emitters/mortar_dirt_nosound.tik
 		thread scriptmaster local.vehicle.model
@@ -302,9 +302,21 @@ playergetin:
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] + 90) self.angles[2] ) }
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1) { self.driver.viewangles = ( (self.angles[0] + 10) (self.angles[1] - 90) self.angles[2] ) }
+		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1)
+		{
+			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] * -1 + 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
+			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] * -1 - 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
+			else { self.driver.viewangles = ( (self.angles[2] * -1 + 10) (self.angles[1] + 90) (self.angles[0]) ) }
+		}
+		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1)
+		{
+			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] - 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
+			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] + 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
+			else { self.driver.viewangles = ( (self.angles[2] + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
+			
+		}
 		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
+
 		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
 		{
 			self thread driverreset
@@ -313,7 +325,6 @@ playergetin:
 			self.driver = NIL
 			break
 		}
-		if(self.driver.viewangles[0] < 0 || self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 - (360 - self.angles[0])) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(self.model == "models/vehicles/uboat.tik")
 		{
@@ -335,7 +346,7 @@ playergetin:
 
 			if(self.driver.fireheld != 1 && (self.driver getcontrollerangles 0)[2] > 15 || (self.driver getcontrollerangles 0)[2] < -15)
 			{
-				if(self.velocity == ( 0 0 0 )) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
+				if(self.velocity == ( 0 0 0 )) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) }
 				else if(self.turretlaser != NIL && self.turretlaser != NULL)
 				{
 					if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] < -15)
@@ -354,7 +365,10 @@ playergetin:
 			}
 			else { self.turretlaser deactivate }
 		}
-		else if(self.driver.fireheld == 1) { self.driver.viewangles = ( 10 (self.angles[1] + 180) 0 ) }
+		else if(self.driver.fireheld == 1) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) }
+
+		if(self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 + (self.angles[0] - 360)) self.driver.viewangles[1] self.driver.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
+		if(self.driver.viewangles[0] < -180) { self.driver.viewangles = ( (self.driver.viewangles[0] + 360) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(self.velocity != ( 0 0 0 )) // make boats drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind).
 		{
@@ -559,28 +573,28 @@ vehicledeath:
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
 		local.fire.origin = local.desvehicle.origin + ( local.cos local.sin (local.height - local.offset) )
-		local.fire.angles = ( 270 0 0 )
+		local.fire.angles = ( 0 0 0 )
 		local.fire.scale = 5 * local.desvehicle.scale
 		local.fire anim start
 		local.fire notsolid
 		local.smoke = spawn script_model
-		local.smoke model "models/emitters/linger_smoke.tik"
+		local.smoke model "models/emitters/thin_black_short.tik"
 		local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin (local.height - local.offset) )
-		local.smoke.angles = ( 270 0 0 )
+		local.smoke.angles = ( 0 0 0 )
 		local.smoke.scale = 3.5 * local.desvehicle.scale
 		local.smoke anim start
 		local.smoke notsolid
 		local.fire2 = spawn script_model
 		local.fire2 model "models/emitters/fancyfire.tik"
 		local.fire2.origin = local.desvehicle.origin + ( local.cos2 local.sin2 (local.height - local.offset2) )
-		local.fire2.angles = ( 270 0 0 )
+		local.fire2.angles = ( 0 0 0 )
 		local.fire2.scale = 5 * local.desvehicle.scale
 		local.fire2 anim start
 		local.fire2 notsolid
 		local.smoke2 = spawn script_model
-		local.smoke2 model "models/emitters/linger_smoke.tik"
+		local.smoke2 model "models/emitters/thin_black_short.tik"
 		local.smoke2.origin = local.desvehicle.origin + ( local.cos2 local.sin2 (local.height - local.offset2) )
-		local.smoke2.angles = ( 270 0 0 )
+		local.smoke2.angles = ( 0 0 0 )
 		local.smoke2.scale = 3.5 * local.desvehicle.scale
 		local.smoke2 anim start
 		local.smoke2 notsolid
@@ -592,14 +606,14 @@ vehicledeath:
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
 		local.fire.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
-		local.fire.angles = ( 270 0 0 )
+		local.fire.angles = ( 0 0 0 )
 		local.fire.scale = 1
 		local.fire anim start
 		local.fire notsolid
 		local.smoke = spawn script_model
-		local.smoke model "models/emitters/linger_smoke.tik"
+		local.smoke model "models/emitters/thin_black_short.tik"
 		local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
-		local.smoke.angles = ( 270 0 0 )
+		local.smoke.angles = ( 0 0 0 )
 		local.smoke.scale = .7
 		local.smoke anim start
 		local.smoke notsolid
