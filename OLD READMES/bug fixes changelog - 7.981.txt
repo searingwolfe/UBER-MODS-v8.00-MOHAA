@@ -1,0 +1,29 @@
+v7.981 (2-9-2025): - Drivers' viewangles while driving vehicles/boats now fully matches the vehicle/boat's angles when looking forward, backwards (rear-view mirror), left (A key while not moving), or right (D key while not moving).
+- Fixed vehicles/tanks not resetting when they get flooded by Light Bombs.
+- Changed smoke emitters for destroyed/flooded vehicles to a slower, more billowing smoke. Added smoke for opeltruckgreen_d destroyed vehicle models.
+
+- Improved ladders (spawnladder.scr) to more-closely resemble func_ladders: Fixed some ladder angles that prevented players from climbing down from the top (should work for any ladder angle now).
+- Players can now re-grab the ladder much faster after climbing/jumping off ("istouching ladder" condition replaced with "self.legs_state_using_ladder" which = 0 as soon as players get off any ladder).
+- Players can now grab nearby ladders by pressing USE(e) while falling.
+- Fixed players being unable to grab ladders while walking forward silently (possible game bug, where self getmovement = "standing" only if walking forward, when it should = "walking"), by using "self.legs_state_walkforward" from nangle_aa_legs.st.
+- Players can no longer grab ladders unless they're specifically running/walking forward (not strafing left/right).
+- Players can also press USE(e) to attach if facing the ladder, regardless how the player is looking up/down (ignores self.viewangles[0]).
+
+- Dogs now look better when climbing ladders: dogs' angles become vertical when climbing, and perform walking anims only while moving up/down the ladder.
+- Dogs' angles gradually rotate from vertical to horizontal When climbing off the ladder from the very top or bottom.
+- Dogs can also bite players while climbing ladders.
+
+- global/respawn_stuck_fix.scr reworked again: now checks if players' "getposition = offground" instead of "getmovement = falling" (players weren't always falling) when spawning inside of a wall/object.
+- If newly spawned players are stuck falling for 3+ seconds but their origins remain the same, they will get auto-respawned (the spawn point's origin likely needs to be moved).
+- If somehow the player respawned at the same stuck-in-wall spawn point, then the player's origin will be moved 25 units forward times the number of attempts, after getting respawned again (this works even if there's only 1 spawn point).
+
+- Fixed deathcams ("g_deathcam" cvar) by preventing them from viewing killers that are dead, and forcing players to respawn if they're somehow viewing their killer for longer than 8 seconds.
+
+- Guided Missiles can now be shot down with bullets (damage trigger was not aligned with missile's origin), and will no longer deal damage to teammates. Explosion damage reduced from 600 to 500.
+
+- Potentially fixed false positives in cvars/adminstuff.scr's "check_player_stufftexts" thread that kicked players for hacking, even though their names were able to be stufftexted (only occurs if repeatedly changing maps too quickly).
+
+- Giant Bombs' time until impact reduced from 2.15 seconds to 1.95 seconds.
+- Victory podium's intermission camera lowered by 40 units (camera was too high and wasn't showing some podium crates).
+- Fixed missing sound aliases in M1L2A and M1L3C.
+- Added more ambience volumes in obj/obj_team1 (The Hunt) and M3L3 for the central small buildings that are tilted 30 degrees (not along X-Y axis).

@@ -18,13 +18,15 @@ level.deathcam_time_until_spectate = 0.0	// time delay in seconds until killed p
 	level.deathcam_init = 1
 	if(getcvar("g_ubergametype") == "cyb" || getcvar("g_ubergametype") == "snd" || getcvar("g_ubergametype") == "ft")
 	{
-		setcvar "g_deathcam" "0"
+		if(getcvar("g_deathcam") != "0") { setcvar "g_deathcam" "2" }
 		thread deathcam_cvar
 		end
 	}
 
-	if(getcvar("g_deathcam") == "") { setcvar "g_deathcam" "1" }
+	if(getcvar("g_deathcam") == "" || getcvar("g_deathcam") == "2") { setcvar "g_deathcam" "1" }
+	if(getcvar("g_deathcam") == "0") { level.deathcam = 0 }
 	thread deathcam_cvar
+	thread deathcams_cvar
 
 	local.result = registerev kill global/deathcam.scr::assign_killer
 	if(level.deathcam_time_until_spectate < 1.6) { thread remove_deadbodies }
@@ -80,7 +82,7 @@ spectate_killer:
 	self noclip
 	self physics_off
 
-	while(self != NULL && self.dmteam == local.team && self.deathcam_killer != NIL && self.deathcam_killer != NULL && isalive self.deathcam_killer && self.deathcam_killer.dmteam == local.killer_team && level.change_team_score != 1 && level.bbactive != 0)
+	while(self != NULL && self.dmteam == local.team && self.deathcam_killer != NIL && self.deathcam_killer != NULL)
 	{
 		if(self.health <= 0 && local.auto_respawn_time > 0.05) // if minimum "wait 1.6" does not run before the "self respawn" line above, the dead player's health will eventually return to 0 and respawn a new dead body behind the killer, since their death animation technically didn't finish yet.
 		{
@@ -95,17 +97,28 @@ spectate_killer:
 			local.respawnable = 1
 		}
 
-		if((self getposition) == "crouching") { self forcelegsstate STAND } // if the spectating player crouches, he cannot stand back up. force him to stand again (sometimes it takes a few seconds to work)
+		if(!isalive self.deathcam_killer || self.deathcam_killer.dmteam != local.killer_team || local.stayhere == 1)
+		{
+			self physics_on
+			if(local.specorg == NIL) { local.specorg = self.deathcam_killer.origin + ( 0 0 100 ) }
+			self.origin = (trace local.specorg (local.specorg + ( 0 0 0 ) + ((angles_toforward self.viewangles) * -50)) 1) - ( 0 0 82.125 )
+			local.stayhere = 1
+		}
+		else if(local.stayhere != 1)
+		{
+			self physics_off
+			if((self getposition) == "crouching") { self forcelegsstate STAND } // if the spectating player crouches, he cannot stand back up. force him to stand again (sometimes it takes a few seconds to work)
 
-		if((self.deathcam_killer getposition) == NIL) { local.hoffset = -5; local.specorg = self.deathcam_killer.origin + ( 0 0 85 ) }
-		if((self.deathcam_killer getposition) == "crouching") { local.hoffset = 0; local.specorg = self.deathcam_killer.origin + ( 0 0 65 ) }
-		if((self.deathcam_killer getposition) != "crouching" && (self.deathcam_killer getposition) != NIL) { local.hoffset = 15; local.specorg = self.deathcam_killer.origin + ( 0 0 85 ) }
+			if((self.deathcam_killer getposition) == NIL) { local.hoffset = -5; local.specorg = self.deathcam_killer.origin + ( 0 0 85 ) }
+			if((self.deathcam_killer getposition) == "crouching") { local.hoffset = 0; local.specorg = self.deathcam_killer.origin + ( 0 0 65 ) }
+			if((self.deathcam_killer getposition) != "crouching" && (self.deathcam_killer getposition) != NIL) { local.hoffset = 15; local.specorg = self.deathcam_killer.origin + ( 0 0 85 ) }
 
-		local.fwd_vec = angles_toforward self.deathcam_killer.viewangles
-		self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.deathcam_killer.viewangles) * -50)) 1) - ( 0 0 82.125 )
-		self face self.deathcam_killer.viewangles // does not work for players that are currently dead
+			local.fwd_vec = angles_toforward self.deathcam_killer.viewangles
+			self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.deathcam_killer.viewangles) * -50)) 1) - ( 0 0 82.125 )
+			self face self.deathcam_killer.viewangles // does not work for players that are currently dead
+		}
 
-		if((local.respawnable == 1 || local.auto_respawn_time > 8) && (self.fireheld == 1 || level.deathcam_respawn == 1)) { break } // force respawn if dead player somehow waited longer than 8 seconds.
+		if((local.respawnable == 1 || local.auto_respawn_time > 5) && (self.fireheld == 1 || level.deathcam_respawn == 1)) { break } // force respawn if dead player somehow waited longer than 5 seconds.
 
 		local.auto_respawn_time += 0.05 // each waitframe = 0.05 seconds.
 		waitframe
@@ -146,6 +159,17 @@ deathcam_cvar:
 		level.deathcam = 0
 	}
 	thread deathcam_cvar
+end
+
+//-----------------------------------------------------------------------------
+
+deathcams_cvar:
+
+	local.cvar = getcvar("g_deathcams")
+	while(getcvar("g_deathcams") == local.cvar) { waitframe }
+
+	println("----- NOTE: The cvar for deathcams mod is: g_deathcam")
+	thread deathcams_cvar
 end
 
 //-----------------------------------------------------------------------------

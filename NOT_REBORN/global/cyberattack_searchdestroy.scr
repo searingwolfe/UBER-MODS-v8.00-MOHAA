@@ -33,6 +33,7 @@ main:
 
 	level.mef_weaponclasses = waitthread global/get_player_weaponclass.scr::setup_weapon_classes
 	level.round_starttime_init = level.round_starttime
+	level.maxplayers = int(getcvar "sv_maxclients")
 
 	thread scores
 	thread initialize
@@ -54,10 +55,14 @@ end
 
 players_alive_status:
 
-  level.allies_count = 0
-  level.axis_count = 0
-  level.axis_total = 0
-  level.allies_total = 0
+  level.allies_count = NIL
+  level.axis_count = NIL
+  level.axis_total = NIL
+  level.allies_total = NIL
+  level.allies_count[0] = NIL // initialize [0] as NIL, that way .size = 0 instead of -1. $player[1] will be [0] in these arrays
+  level.axis_count[0] = NIL
+  level.allies_total[0] = NIL // allies/axis_total arrays are only used to make sure at least one player is on a team, before awarding a score point
+  level.axis_total[0] = NIL
 
   level.spectate_enemyteam = 0
   level.bomb_set = 0
@@ -82,41 +87,31 @@ players_alive_status:
 
   while(level.round_starttime > 0) // waiting until the round begins
   {
-	level.allies_count = 0; level.axis_count = 0
-	level.allies_total = 0; level.axis_total = 0
-
-	for(local.i = 1; local.i <= $player.size; local.i++)
+	for(local.i = 0; local.i < level.maxplayers; local.i++)
 	{
-		if($player[local.i] != NULL)
+		local.entity = getentity(local.i)
+		if(local.entity != NULL)
 		{
-			$player[local.i] thread player_mef_weaponclass
+			local.entity thread player_mef_weaponclass
 
-			if($player[local.i].dmteam == "spectator") // lost connection mid-round, CS_ZOMBIE
+			if(local.entity.dmteam == "spectator" || local.entity getconnstate == 1) // lost connection mid-round, CS_ZOMBIE
 			{
-				$player[local.i] thread player_fromspectator
-			}
-			else
-			{
-				if($player[local.i].dmteam == "allies")
-				{
-					level.allies_total++
-					if(isalive $player[local.i] && $player[local.i].dead != 1) { level.allies_count++ }
-				}
-				else
-				{
-					level.axis_total++
-					if(isalive $player[local.i] && $player[local.i].dead != 1) { level.axis_count++ }
-				}
+				level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL
+				level.allies_total[local.i] = NIL; level.axis_total[local.i] = NIL
+
+				local.entity thread player_fromspectator
+				if(local.entity getconnstate == 1 && local.entity.dmteam != "spectator") { local.entity stufftext "spectator" } // force zombie players into spectator.
 			}
 		}
 	}
 	waitframe
   }
-  for(local.i = 1; local.i <= $player.size; local.i++) // make spectators auto join teams once round starts, off by default.
+  for(local.i = 0; local.i < level.maxplayers; local.i++) // make spectators auto join teams once round starts, off by default.
   {
-	if($player[local.i] != NULL && $player[local.i].dmteam == "spectator" && level.spectators_jointeams == 1)
+	local.entity = getentity(local.i)
+	if(local.entity != NULL && local.entity.dmteam == "spectator" && level.spectators_jointeams == 1)
 	{
-		$player[local.i] primarydmweapon mg; $player[local.i] auto_join_team // could also be primarydmweapon rifle
+		local.entity primarydmweapon mg; local.entity auto_join_team // could also be primarydmweapon rifle
 	}
   }
 
@@ -127,34 +122,50 @@ players_alive_status:
 
   while(level.change_team_score != 1)  // round has now started
   {
-	level.allies_count = 0; level.axis_count = 0
-	level.allies_total = 0; level.axis_total = 0
+	for(local.i = 0; local.i < level.maxplayers; local.i++) // must use players' entnums, not their $player[clientnums].
+	{							// players that leave can cause other players' clientnums to change, causing the arrays to become inaccurate.
+		local.entity = getentity(local.i)		// getentity must be used to obtain entnums for NULL players (simpler than doing $player[local.i].entnum with mismatching local.i & entnum).
+		if(local.entity == NULL)
+		{										// if any variable in an array becomes NIL, the size is decreased by 1. for example:
+			level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL	// test[1] = 1, test[2] = 0, test[3] = 1, test[4] = 0 test.size = 4;
+			level.allies_total[local.i] = NIL; level.axis_total[local.i] = NIL	// test[1] = 1, test[2] = 0, test[3] = NIL, test[4] = 0 test.size = 3.
+		}
 
-	for(local.i = 1; local.i <= $player.size; local.i++)
-	{
-		if($player[local.i] != NULL && $player[local.i].fromspecthread != 1) // spectators are often assigned to a team before their weapons are chosen. wait until they're fully alive and carrying weapons first.
+		if(local.entity != NULL && local.entity.fromspecthread != 1) // spectators are often assigned to a team before their weapons are chosen. wait until they're fully alive and carrying weapons first.
 		{
-			$player[local.i] thread player_mef_weaponclass
+			local.entity thread player_mef_weaponclass
 
-			if($player[local.i].dmteam == "spectator") // lost connection mid-round, CS_ZOMBIE
+			if(local.entity.dmteam == "allies")
 			{
-				$player[local.i] thread player_fromspectator
+				level.allies_total[local.i] = 1; level.axis_total[local.i] = NIL
+			}	
+			if(local.entity.dmteam == "axis")
+			{
+				level.allies_total[local.i] = NIL; level.axis_total[local.i] = 1
 			}
-			if($player[local.i].dead != 1 && $player[local.i].dmteam != "spectator") // fully alive, not in team-spectating mode.
-			{
-				if($player[local.i].dmteam == "allies") { level.allies_total++ }
-				else { level.axis_total++ }
 
-				if(isalive $player[local.i])
+			if(local.entity.dmteam == "spectator" || local.entity getconnstate == 1) // lost connection mid-round, CS_ZOMBIE
+			{
+				level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL
+				level.allies_total[local.i] = NIL; level.axis_total[local.i] = NIL
+
+				local.entity thread player_fromspectator
+				if(local.entity getconnstate == 1 && local.entity.dmteam != "spectator") { local.entity stufftext "spectator" } // force zombie players into spectator.
+			}
+			if(local.entity.dead != 1 && local.entity.dmteam != "spectator" && local.entity getconnstate != 1) // fully alive, not in team-spectating mode.
+			{
+				if(isalive local.entity)
 				{
-					if($player[local.i].dmteam == "allies") { level.allies_count++ }
-					else { level.axis_count++ }
+					if(local.entity.dmteam == "allies") { level.allies_count[local.i] = 1; level.axis_count[local.i] = NIL }
+					if(local.entity.dmteam == "axis") { level.allies_count[local.i] = NIL; level.axis_count[local.i] = 1 }
 				}
 				else
 				{
+					level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL
+
 					level.allow_teams_to_win = 1
-					$player[local.i] thread frozen_player $player[local.i].mef_weaponclass
-					$player[local.i].dead = 1
+					local.entity thread frozen_player local.entity.mef_weaponclass
+					local.entity.dead = 1
 				}				
 			}
 		}
@@ -177,22 +188,22 @@ players_perteam_status:
 		if(level.allies_blewupbomb == 1 || level.allies_defusedbomb == 1) { thread addscore "allies"; break } // defusedbomb is for search & destroy only.
 		if(level.axis_blewupbomb == 1 || level.axis_defusedbomb == 1) { thread addscore "axis"; break }
 
-		if((level.allies_total <= 0 && level.axis_count <= 0) || (level.axis_total <= 0 && level.allies_count <= 0)) { thread addscore "draw"; break }
+		if((level.allies_total.size <= 0 && level.axis_count.size <= 0) || (level.axis_total.size <= 0 && level.allies_count.size <= 0)) { thread addscore "draw"; break }
 
-		if(level.allies_total > 0 && level.axis_total > 0)
+		if(level.allies_total.size > 0 && level.axis_total.size > 0)
 		{	
 			if(level.bomb_set != 1)
 			{
-				if(level.allies_count <= 0 && level.axis_count <= 0) { thread addscore "draw"; break }	
-				if(level.allies_count > 0 && level.axis_count <= 0) { thread addscore "allies"; break }
-				if(level.allies_count <= 0 && level.axis_count > 0) { thread addscore "axis"; break }
+				if(level.allies_count.size <= 0 && level.axis_count.size <= 0) { thread addscore "draw"; break }	
+				if(level.allies_count.size > 0 && level.axis_count.size <= 0) { thread addscore "allies"; break }
+				if(level.allies_count.size <= 0 && level.axis_count.size > 0) { thread addscore "axis"; break }
 			}
 			if(level.bomb_set == 1)
 			{
-				if(level.alliesplanted == 1 && level.axis_count <= 0) { thread addscore "allies"; break } // if the allies planted and they killed all axis players, make them win.
-				if(level.axisplanted == 1 && level.allies_count <= 0) { thread addscore "axis"; break }
+				if(level.alliesplanted == 1 && level.axis_count.size <= 0) { thread addscore "allies"; break } // if the allies planted and they killed all axis players, make them win.
+				if(level.axisplanted == 1 && level.allies_count.size <= 0) { thread addscore "axis"; break }
 
-				if((level.allies_count > 0 && level.axis_count <= 0) || (level.allies_count <= 0 && level.axis_count > 0)) { level.spectate_enemyteam = 1 }
+				if((level.allies_count.size > 0 && level.axis_count.size <= 0) || (level.allies_count.size <= 0 && level.axis_count.size > 0)) { level.spectate_enemyteam = 1 }
 			}	
 		}	// if allies or axis killed all other enemies but the bomb is still planted, spectate the enemy team and wait until the bomb is defused before adding score.
 	}				
@@ -231,15 +242,13 @@ player_fromspectator:
 
 	while(self != NULL && self.dmteam == "spectator") { waitframe }
 
-	local.teamcount = level.allies_count
-	local.teamcount2 = level.axis_count
+	local.teamcount = level.allies_count.size
+	local.teamcount2 = level.axis_count.size
 
-	while(self != NULL && self.dmteam != "spectator" && self.mef_weaponclass == NIL)
+	while(self != NULL && self.dmteam != "spectator" && self.inventory.size < 1)
 	{
-		local.teamcount = level.allies_count // these keep memory of the current living allies/axis players 1 frame before the killent if-statement.
-		local.teamcount2 = level.axis_count
-
-		self waitthread player_mef_weaponclass
+		local.teamcount = level.allies_count.size // these keep memory of the current living allies/axis players 1 frame before the killent if-statement.
+		local.teamcount2 = level.axis_count.size
 		waitframe
 	}
 
@@ -255,6 +264,7 @@ player_fromspectator:
 
 			self iprint ("Please wait. Round is currently in progress.")
 			self iprint ("Removing one death from your score... Switching to team-spectator...")
+			self adddeaths -1
 
 			if(level.newgametype == "snd") { self iprint ("You will respawn when this current round ends.") }
 			else { self iprint ("You will respawn when someone melts your frozen body.") }
@@ -288,8 +298,8 @@ frozen_player local.mef_weaponclass:
 
 	self.frozenent = local.ent
 	local.ent.frozenplayer = self
-	if(local.ent.team == "allies") { local.ent.teamcount = level.allies_count }
-	if(local.ent.team == "axis") { local.ent.teamcount = level.axis_count }
+	if(local.ent.team == "allies") { local.ent.teamcount = level.allies_count.size }
+	if(local.ent.team == "axis") { local.ent.teamcount = level.axis_count.size }
 
 	local.leftangle = self.angles[1] + 120
 	local.rightangle = self.angles[1] - 120
@@ -381,19 +391,19 @@ frozen_player local.mef_weaponclass:
 		if(local.ent != NULL)
 		{
 			if(level.allies_blewupbomb == 1 || level.axis_blewupbomb == 1 || level.allies_defusedbomb == 1 || level.axis_defusedbomb == 1) { local.ent thread kill_frozen_players; local.ent.dying = 1 }
-			if((level.allies_total <= 0 && level.axis_count <= 0) || (level.axis_total <= 0 && level.allies_count <= 0)) { local.ent thread kill_frozen_players; local.ent.dying = 1 } // draw
-			if(level.allies_total > 0 && level.axis_total > 0)
+			if((level.allies_total.size <= 0 && level.axis_count.size <= 0) || (level.axis_total.size <= 0 && level.allies_count.size <= 0)) { local.ent thread kill_frozen_players; local.ent.dying = 1 } // draw
+			if(level.allies_total.size > 0 && level.axis_total.size > 0)
 			{	
 				if(level.bomb_set != 1)
 				{
-					if(level.allies_count <= 0 && level.axis_count <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end } // draw
-					if(level.allies_count > 0 && level.axis_count <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end }  // allies
-					if(level.allies_count <= 0 && level.axis_count > 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end }  // axis
+					if(level.allies_count.size <= 0 && level.axis_count.size <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end } // draw
+					if(level.allies_count.size > 0 && level.axis_count.size <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end }  // allies
+					if(level.allies_count.size <= 0 && level.axis_count.size > 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end }  // axis
 				}				
 				if(level.bomb_set == 1)
 				{
-					if(level.alliesplanted == 1 && level.axis_count <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end } // if the allies planted and they killed all axis players
-					if(level.axisplanted == 1 && level.allies_count <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end }
+					if(level.alliesplanted == 1 && level.axis_count.size <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end } // if the allies planted and they killed all axis players
+					if(level.axisplanted == 1 && level.allies_count.size <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end }
 				}
 			}
 		}		   
@@ -440,11 +450,11 @@ allow_player_to_spectate local.origin:
 	self noclip
 	waitframe // make sure the player is hidden first
 
-	if(level.allies_count > 0 || level.axis_count > 0)
+	if(level.allies_count.size > 0 || level.axis_count.size > 0)
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++) // initially tele him to one of his living teammates, or to an enemy player if he was last one alive.
 		{
-			if((self.dmteam == "allies" && level.allies_count <= 0) || (self.dmteam == "axis" && level.axis_count <= 0))
+			if((self.dmteam == "allies" && level.allies_count.size <= 0) || (self.dmteam == "axis" && level.axis_count.size <= 0))
 			{
 				if(isalive $player[local.i] && $player[local.i].dmteam != self.dmteam && $player[local.i].dead != 1 && $player[local.i] != self)
 				{
@@ -461,7 +471,7 @@ allow_player_to_spectate local.origin:
 		self thread player_spectating local.team // need a faster while-loop in its own thread
 	}
 	
-	while(self != NULL && self.dmteam == local.team && self.dead == 1 && level.change_team_score != 1 && (level.allies_count > 0 || level.axis_count > 0) && level.round_starttime <= 0) // make sure to add these while loop conditions for internal while-loops too; if-statement true = "break".
+	while(self != NULL && self.dmteam == local.team && self.dead == 1 && level.change_team_score != 1 && (level.allies_count.size > 0 || level.axis_count.size > 0) && level.round_starttime <= 0) // make sure to add these while loop conditions for internal while-loops too; if-statement true = "break".
 	{
 		if(self.useheld != 1 && self.fireheld != 1) { self.togglespectarget = 1 }
 		if((self.fireheld == 1 && self.useheld != 1 && self.togglespectarget == 1) || (self.newspec == 1 && self.useheld != 1 && self.fireheld != 1)) 
@@ -473,7 +483,7 @@ allow_player_to_spectate local.origin:
 
 			while($player[local.i] == NULL || ($player[local.i] == self && ($player[local.i].frozenent == NIL || $player[local.i].frozenent == NULL)) || $player[local.i].dmteam != self.dmteam || !isalive $player[local.i] || ($player[local.i].dead == 1 && ($player[local.i].frozenent == NIL || $player[local.i].frozenent == NULL)))
 			{
-				if(level.spectate_enemyteam == 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count <= 0 && level.axis_count <= 0) || level.round_starttime > 0) { break }		
+				if(level.spectate_enemyteam == 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count.size <= 0 && level.axis_count.size <= 0) || level.round_starttime > 0) { break }		
 
 				local.i++
 				if(local.i > $player.size) { local.i = 1; waitframe }
@@ -484,7 +494,7 @@ allow_player_to_spectate local.origin:
 			while(level.spectate_enemyteam == 1 && ($player[local.i] == NULL || ($player[local.i] == self && ($player[local.i].frozenent == NIL || $player[local.i].frozenent == NULL)) || $player[local.i].dmteam == self.dmteam || !isalive $player[local.i] || $player[local.i].dead == 1)) // round is over, a team has won
 			{
 				self.spectargetdead = 0
-				if(level.spectate_enemyteam != 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count <= 0 && level.axis_count <= 0) || level.round_starttime > 0) { break }
+				if(level.spectate_enemyteam != 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count.size <= 0 && level.axis_count.size <= 0) || level.round_starttime > 0) { break }
 
 				local.i++
 				if(local.i > $player.size) { local.i = 1; waitframe }
@@ -502,7 +512,7 @@ allow_player_to_spectate local.origin:
 
 			while($player[local.i] == NULL || ($player[local.i] == self && ($player[local.i].frozenent == NIL || $player[local.i].frozenent == NULL)) || $player[local.i].dmteam != self.dmteam || !isalive $player[local.i] || ($player[local.i].dead == 1 && ($player[local.i].frozenent == NIL || $player[local.i].frozenent == NULL)))
 			{
-				if(level.spectate_enemyteam == 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count <= 0 && level.axis_count <= 0) || level.round_starttime > 0) { break }
+				if(level.spectate_enemyteam == 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count.size <= 0 && level.axis_count.size <= 0) || level.round_starttime > 0) { break }
 
 				local.i--
 				if(local.i < 1) { local.i = $player.size; waitframe }
@@ -513,7 +523,7 @@ allow_player_to_spectate local.origin:
 			while(level.spectate_enemyteam == 1 && ($player[local.i] == NULL || ($player[local.i] == self && ($player[local.i].frozenent == NIL || $player[local.i].frozenent == NULL)) || $player[local.i].dmteam == self.dmteam || !isalive $player[local.i] || $player[local.i].dead == 1)) // round is over, a team has won
 			{
 				self.spectargetdead = 0
-				if(level.spectate_enemyteam != 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count <= 0 && level.axis_count <= 0) || level.round_starttime > 0) { break }
+				if(level.spectate_enemyteam != 1 || self == NULL || self.dmteam != local.team || self.dead != 1 || level.change_team_score == 1 || (level.allies_count.size <= 0 && level.axis_count.size <= 0) || level.round_starttime > 0) { break }
 
 				local.i--
 				if(local.i < 1) { local.i = $player.size; waitframe }
@@ -546,7 +556,7 @@ allow_player_to_spectate local.origin:
 		killent self.entnum // "self kill" doesn't work if the player just respawned.
 	}
 
-	while(self != NULL && self.dead == 1 && level.allies_count <= 0 && level.axis_count <= 0 && level.change_team_score != 1 && level.round_starttime <= 0) // only if draw and there's no one to spectate, tele everyone to their frozen bodies.
+	while(self != NULL && self.dead == 1 && level.allies_count.size <= 0 && level.axis_count.size <= 0 && level.change_team_score != 1 && level.round_starttime <= 0) // only if draw and there's no one to spectate, tele everyone to their frozen bodies.
 	{
 		local.specorg = local.origin + ( 0 0 100 )
 		self.origin = (trace local.specorg (local.specorg + ( 0 0 0 ) + ((angles_toforward self.viewangles) * -50)) 1) - ( 0 0 82.125 )
@@ -561,9 +571,9 @@ player_spectating local.team:
 	while(self != NULL && !isalive self) { waitframe }	// if there's only one teammate left but he planted before dying, wait until allies/axis_count updates after finishing death animation, before beginning to spectate.
 	waitframe
 
-	while(self != NULL && self.dmteam == local.team && self.dead == 1 && level.change_team_score != 1 && (level.allies_count > 0 || level.axis_count > 0) && level.round_starttime <= 0)
+	while(self != NULL && self.dmteam == local.team && self.dead == 1 && level.change_team_score != 1 && (level.allies_count.size > 0 || level.axis_count.size > 0) && level.round_starttime <= 0)
 	{
-		if(level.allies_count == level.allies_total && level.axis_count == level.axis_total) { end } // if nobody is dead but somehow a player is spectating, end.
+		if(level.allies_count.size == level.allies_total.size && level.axis_count.size == level.axis_total.size) { end } // if nobody is dead but somehow a player is spectating, end.
 
 	   	if(level.spectate_enemyteam != 1)
 		{
@@ -601,6 +611,8 @@ player_spectating local.team:
 			if(self.spectarget == NIL || self.spectarget == NULL) { self.newspec = 1; waitframe }
 			if(self.spectarget == NIL || self.spectarget == NULL) { end }
 		}
+
+		self hide
 		waitframe
 	}
 	if(self != NULL) { self physics_on }
@@ -649,7 +661,7 @@ melt_frozen_player local.ent local.mef_weaponclass:
 	local.c = 1
 	while(level.meltrespawn != 1 && local.c <= $player.size)
 	{
-		while($player[local.c] != NULL && $player[local.c] istouching $("revivetrig" + local.ent.entnum) && $player[local.c].dead != 1) // don't revive until all players are far enough away from the melted player,
+		while($player[local.c] != NULL && $("revivetrig" + local.ent.entnum) != NULL && $player[local.c] istouching $("revivetrig" + local.ent.entnum) && $player[local.c].dead != 1) // don't revive until all players are far enough away from the melted player,
 		{ 												    				// otherwise players get stuck inside each other.
 			waitframe
 			if(level.meltrespawn == 1 || local.ent.frozenplayer == NIL || local.ent.frozenplayer == NULL || local.ent.frozenplayer.dmteam != local.team) { break }
@@ -662,19 +674,19 @@ melt_frozen_player local.ent local.mef_weaponclass:
 	if(local.ent.frozenplayer == NIL || local.ent.frozenplayer == NULL || local.ent.frozenplayer.dmteam == "spectator") { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }
 
 	if(level.allies_blewupbomb == 1 || level.axis_blewupbomb == 1 || level.allies_defusedbomb == 1 || level.axis_defusedbomb == 1) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }
-	if((level.allies_total <= 0 && level.axis_count <= 0) || (level.axis_total <= 0 && level.allies_count <= 0)) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end } // draw
-	if(level.allies_total > 0 && level.axis_total > 0)
+	if((level.allies_total.size <= 0 && level.axis_count.size <= 0) || (level.axis_total.size <= 0 && level.allies_count.size <= 0)) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end } // draw
+	if(level.allies_total.size > 0 && level.axis_total.size > 0)
 	{	
 		if(level.bomb_set != 1)
 		{
-			if(level.allies_count <= 0 && level.axis_count <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end } // draw
-			if(level.allies_count > 0 && level.axis_count <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }  // allies
-			if(level.allies_count <= 0 && level.axis_count > 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }  // axis
+			if(level.allies_count.size <= 0 && level.axis_count.size <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end } // draw
+			if(level.allies_count.size > 0 && level.axis_count.size <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }  // allies
+			if(level.allies_count.size <= 0 && level.axis_count.size > 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }  // axis
 		}					
 		if(level.bomb_set == 1)
 		{
-			if(level.alliesplanted == 1 && level.axis_count <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end } // if the allies planted and they killed all axis players
-			if(level.axisplanted == 1 && level.allies_count <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }
+			if(level.alliesplanted == 1 && level.axis_count.size <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end } // if the allies planted and they killed all axis players
+			if(level.axisplanted == 1 && level.allies_count.size <= 0) { $("revivetrig" + local.ent.entnum) remove; local.ent remove; end }
 		}
 	}
 
@@ -708,7 +720,7 @@ melt_frozen_player local.ent local.mef_weaponclass:
 		}
 	}
 	wait 0.1
-	$("revivetrig" + local.ent.entnum) remove
+	if($("revivetrig" + local.ent.entnum) != NULL) { $("revivetrig" + local.ent.entnum) remove }
 	local.ent remove
 end
 
@@ -831,7 +843,7 @@ pickup:
 	{
 		local.player iprint ("Cannot use. You are holding something already.")
 		wait 0.1
-		self triggerable
+		if(self != NULL) { self triggerable }
 		end
  	}
 	if(local.player.inuse != 1)
@@ -1623,11 +1635,11 @@ addscore local.teamwinner:
 	waitframe
 	level.disable_defuse = 1
 
-	if(level.allies_total <= 0 || level.axis_total <= 0) { thread global/messagetrig_print.scr::message "*** Nobody on other team, no point awarded! ***" 3; end }
+	if(level.allies_total.size <= 0 || level.axis_total.size <= 0) { thread global/messagetrig_print.scr::message "*** Nobody on other team, no point awarded! ***" 3; end }
 
 	if(local.teamwinner == "draw") { thread global/messagetrig_print.scr::message "*** Draw! No team points awarded. ***" 3 }
 
-	if((local.teamwinner == "allies" && (level.allies_count > 0 || level.alliesplanted == 1)) || level.allies_blewupbomb == 1) 
+	if((local.teamwinner == "allies" && (level.allies_count.size > 0 || level.alliesplanted == 1)) || level.allies_blewupbomb == 1) 
 	{	
 		if(level.allies_defusedbomb != 1 && level.axis_defusedbomb != 1) // in search and destroy if a team defused the bomb, ignore these dialogs since the victory "bomb defused" dialogs are in bomb_planted thread.
 		{
@@ -1651,7 +1663,7 @@ addscore local.teamwinner:
 		waitframe
 		level.POINTS[allies]++
 	}	
-	if((local.teamwinner == "axis" && (level.axis_count > 0 || level.axisplanted == 1)) || level.axis_blewupbomb == 1)
+	if((local.teamwinner == "axis" && (level.axis_count.size > 0 || level.axisplanted == 1)) || level.axis_blewupbomb == 1)
 	{	
 		if(level.allies_defusedbomb != 1 && level.axis_defusedbomb != 1)
 		{
@@ -1760,11 +1772,12 @@ new_player_hud:
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if($player[local.i].HUDcybsnd != 1)
+			if($player[local.i].HUDcybsnd != 1 && $player[local.i] getconnstate != 1)
 			{
 				$player[local.i] thread huddraw
 				$player[local.i].HUDcybsnd = 1
 			}
+			if($player[local.i] getconnstate == 1) { $player[local.i].huddraw = 0 }
 		}
 		wait 3
 	}

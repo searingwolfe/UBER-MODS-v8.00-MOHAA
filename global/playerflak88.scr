@@ -38,6 +38,14 @@ level.flak88s_maxangle = 330	// maximum angle-difference required (or maxangle -
 	local.trig setsize ( -60 -60 -50 ) ( 60 60 85 )
 	local.trig setthread ImDead
 
+	local.shottrig = spawn trigger_multiple spawnflags 128
+	local.shottrig.origin = local.flak88.origin
+	local.shottrig setsize ( -60 -60 -50 ) ( 60 60 85 )
+	local.shottrig setthread shottrig
+	local.shottrig.trigshot = local.trig
+	local.shottrig.flak88 = local.flak88
+	local.shottrig thread removetrig
+
 	local.flak88 setplayerusable 0
 	local.flak88.damagemodel = "models/statweapons/flak88_d.tik"
 	local.flak88 pitchCaps ( -60 25 0 )
@@ -79,6 +87,18 @@ chainreactors_remove local.c:
 
 	while(self != NULL && self.dead != 1) { waitframe }
 	level.chainreactors[local.c] = NIL
+end
+
+shottrig:
+
+	local.player = parm.other
+	if(self.trigshot != NULL && (self.trigshot.flak88.fplayer == NIL || (self.trigshot.flak88.fplayer != NIL && (self.trigshot.flak88.fplayer.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.trigshot.flak88.shooter = local.player }
+end
+
+removetrig:
+
+	while(self != NULL && self.flak88 != NULL && self.flak88.dead != 1) { waitframe }
+	if(self != NULL) { self remove }
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -141,6 +161,8 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				}
 			}
 		}
+		if(self.trigshot.nodamage == 1) { self.trigshot.nodamage = 0; self.trigshot takedamage }
+
 		if(isalive self.trigshot) { self.trigshot.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
 		if(self.trigshot.shooter != NIL) { self.trigshot thread shooter_NIL }
 		waitframe
@@ -189,6 +211,7 @@ playergetin_flak:
 	self nottriggerable
 	if(self.groundtarget != NIL && self.groundtarget != NULL) { self.groundtarget remove }
 
+	self.flak88.trigshot.driver = parm.other
 	self.flak88.fplayer = parm.other
 	local.team = self.flak88.fplayer.dmteam
 
@@ -361,23 +384,23 @@ projectile:
 
 	local.rocket gravity 0
 	local.rocket.velocity = (angles_toforward self.angles) * 6000
+	local.rocket.player_owner = self.fplayer
 
+	local.rocket thread waittill_touch local self local.player
 	local.hitthing = self
 	while(local.hitthing == self || local.hitthing == self.fplayer)
 	{
 		local.rocket waittill touch
 		local.hitthing = parm.other
 	}
-
 	local.rocket.velocity = ( 0 0 0 )
+
 	local.explode = spawn "fx/explosionTIGERshell.tik"
 	local.explode.origin = local.rocket.origin
 	local.explode.scale = 2.5
 	local.explode light 1 0 0 500
 	local.explode anim idle
 	//local.explode playsound bazooka_exp // already included in explosionTIGERshell
-
-	if(self != NULL) { local.rocket.player_owner = self.fplayer }
 
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
@@ -412,10 +435,28 @@ projectile:
 			}
 		}
 	}
-	local.rocket remove
 	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 }
 	waitframe
+	local.rocket remove
 	local.explode remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+waittill_touch local.thread local.turret local.player:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end } // self.hitwater not needed, since these projectiles already stop when hitting water.
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -477,7 +518,13 @@ ImDead:
 	local.explode playsound explode_flak88
 	exec global/earthquake.scr .35 2 0 0
 
-	if(self.shooter != NIL && self.shooter != NULL)
+	if(self.killer != NIL && self.killer != NULL)
+	{
+		if(self.killer.player_owner != NIL && self.killer.player_owner != NULL) { local.shooter = self.killer.player_owner }
+		else if(self.killer.owner != NIL && self.killer.owner != NULL) { local.shooter = self.killer.owner }
+		else { local.shooter = self.killer }
+	}
+	else if(self.shooter != NIL && self.shooter != NULL)
 	{
 		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
 		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }

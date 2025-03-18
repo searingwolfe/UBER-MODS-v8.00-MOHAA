@@ -611,6 +611,8 @@ player_spectating local.team:
 			if(self.spectarget == NIL || self.spectarget == NULL) { self.newspec = 1; waitframe }
 			if(self.spectarget == NIL || self.spectarget == NULL) { end }
 		}
+
+		self hide
 		waitframe
 	}
 	if(self != NULL) { self physics_on }
@@ -659,7 +661,7 @@ melt_frozen_player local.ent local.mef_weaponclass:
 	local.c = 1
 	while(level.meltrespawn != 1 && local.c <= $player.size)
 	{
-		while($player[local.c] != NULL && $player[local.c] istouching $("revivetrig" + local.ent.entnum) && $player[local.c].dead != 1) // don't revive until all players are far enough away from the melted player,
+		while($player[local.c] != NULL && $("revivetrig" + local.ent.entnum) != NULL && $player[local.c] istouching $("revivetrig" + local.ent.entnum) && $player[local.c].dead != 1) // don't revive until all players are far enough away from the melted player,
 		{ 												    				// otherwise players get stuck inside each other.
 			waitframe
 			if(level.meltrespawn == 1 || local.ent.frozenplayer == NIL || local.ent.frozenplayer == NULL || local.ent.frozenplayer.dmteam != local.team) { break }
@@ -718,7 +720,7 @@ melt_frozen_player local.ent local.mef_weaponclass:
 		}
 	}
 	wait 0.1
-	$("revivetrig" + local.ent.entnum) remove
+	if($("revivetrig" + local.ent.entnum) != NULL) { $("revivetrig" + local.ent.entnum) remove }
 	local.ent remove
 end
 
@@ -841,7 +843,7 @@ pickup:
 	{
 		local.player iprint ("Cannot use. You are holding something already.")
 		wait 0.1
-		self triggerable
+		if(self != NULL) { self triggerable }
 		end
  	}
 	if(local.player.inuse != 1)

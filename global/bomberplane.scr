@@ -144,36 +144,25 @@ bomb local.playerowner:
 	local.bomb gravity level.bomberplane_bombgravity
 	local.bomb.velocity = ( (self.velocity[0] * level.bomberplane_bombspeed) (self.velocity[1] * level.bomberplane_bombspeed) (self.velocity[2] * level.bomberplane_bombspeed) )
 
+	local.bomb thread waittill_touch local local.playerowner
 	local.hitthing = self
 	while(local.hitthing == self)
 	{
 		local.bomb waittill touch
 		local.hitthing = parm.other
 	}
+	local.bomb.velocity = ( 0 0 0 )
+
+	if(local.bomb.hitwater != 1) { thread bomb_explode local.bomb local.playerowner }
+end
+
+bomb_explode local.bomb local.playerowner:
 	
 	local.origin = local.bomb.origin
 	//local.bomb explode // this creates its own radiusdamage
 
-	if(level.water_volumes != NIL && level.water_volumes != 0)
-	{
-		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
-		{
-			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
-			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
-			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
-			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
-			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
-			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
-	
-			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
-			{
-				local.hit_water = 1
-			}
-		}
-	}
-
 	local.boom = spawn script_model targetname "mortar_dirt_nosound"
-	if(local.hit_water == 1) { local.boom model animate/fx_mortar_water.tik }
+	if(local.bomb.hitwater == 1) { local.boom model animate/fx_mortar_water.tik }
 	else { local.boom model emitters/mortar_dirt_nosound.tik } // emitters/fx_explosion_mine.tik
 	local.boom.origin = local.origin
 	local.boom.scale = 1.5 // = 1 if using fx_explosion_mine.tik
@@ -216,13 +205,13 @@ bomb local.playerowner:
 	}
 
 	if(self != NULL && vector_length(local.boom.origin - self.origin) <= 600) { self nodamage; local.nodamage = 1 }
-	if(local.hit_water == 1) { local.boom playsound artyexp_water }
+	if(local.bomb.hitwater == 1) { local.boom playsound artyexp_water }
 	else { local.boom playsound artyexp_sand }
 
 	waitframe
 	if(local.blewup == 1 && local.nodamage != 1) { radiusdamage local.boom.origin 300 600 }
 	local.boom remove
-	local.bomb remove
+	if(local.bomb != NULL) { local.bomb remove }
 	if(self != NULL && local.nodamage == 1) { self takedamage }
 end
 
@@ -240,6 +229,49 @@ bombtwist:
 		{
 			self.angles = (  self.angles[0] self.angles[1] local.i )
 		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+waittill_touch local.thread local.playerowner:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove }
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end }
+
+		if(self.hitwater != 1 && level.water_volumes != NIL && level.water_volumes != 0)
+		{
+			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2] + 10 // moving very fast may explode slightly above the actual water.
+				local.origin = self.origin
+	
+				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+				{
+					self.hitwater = 1
+					self.velocity = ( 0 0 0 )
+					if(local.thread != NULL) { local.thread remove }
+
+					if(self.model == "models/ammo/us_bomb.tik") { thread bomb_explode self local.playerowner }
+					else { self thread plane_explode_null }
+					end
+				}
+			}
+		}
+		waitframe
 	}
 end
 
@@ -305,15 +337,17 @@ end
 
 plane_crash_null:
 
+	self thread waittill_touch local
 	self waittill touch
-	self thread plane_explode_null
-end	
+	if(self.hitwater != 1) { self thread plane_explode_null }
+end
 
 plane_explode_null:
 
 	local.origin = self.origin
 	local.scale = self.scale
 	local.model = self.model
+	local.hitwater = self.hitwater
 	self explode
 	self remove
 
@@ -330,14 +364,26 @@ plane_explode_null:
 	local.Exp light 1 0 1 local.radius
 	local.Exp anim start
 	local.Exp.scale = local.expscale
-	local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik"
-	local.Exp2.origin = local.origin
-	local.Exp2 anim start
-	local.Exp2.scale = local.expscale
+
+	if(local.hitwater == 1)
+	{
+		local.Exp2 = spawn "animate/fx_mortar_water.tik"
+		local.Exp2.origin = local.origin
+		local.Exp2 anim start
+		local.Exp2.scale = local.expscale * 1.20
+		local.Exp playsound artyexp_water
+	}
+	else
+	{
+		local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
+		local.Exp2.origin = local.origin
+		local.Exp2 anim start
+		local.Exp2.scale = local.expscale
+		local.Exp playsound artyexp_sand
+	}
 
 	exec global/earthquake.scr .35 2 0 0
 	radiusdamage local.origin 500 local.radius
-	local.Exp playsound artyexp_sand
 	local.Exp2 playsound explodeplane
 
 	local.Exp anim start

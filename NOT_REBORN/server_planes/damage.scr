@@ -1,6 +1,5 @@
 // file for, shooting. being shot, and weapons
 
-
 main local.action:
 
 	switch(local.action)
@@ -415,7 +414,7 @@ rocket local.pos:
 
 	local.shell moveto local.pos
 	local.shell waitmove	
-	self thread explode local.shell.origin local.shell
+	self thread explode local.shell.origin local.shell 16
 end
 
 change_weapon:
@@ -442,7 +441,7 @@ change_weapon:
 	}
 end
 
-explode local.explosionplace local.projectile: 
+explode local.explosionplace local.projectile local.damagetype: 
 
    local.projectile thread bang local.explosionplace
    local.radius = 200.00 * 200.00 
@@ -465,7 +464,7 @@ explode local.explosionplace local.projectile:
 
             local.dmg_fact = 1 - local.distance / local.radius 
             local.dmg = 250 * local.dmg_fact + 30 
-            local.player damage self local.dmg self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 
+            local.player damage self local.dmg self (0 0 0) (0 0 0) (0 0 0) 0 1 local.damagetype -1 
          } 
       } 
 
@@ -480,12 +479,13 @@ explode local.explosionplace local.projectile:
 		{
 			if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.projectile 360)
 			{
-				$player[local.i] damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1
+				if(local.projectile istouching $player[local.i]) { $player[local.i] damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 1 local.damagetype 2 }
+				else { $player[local.i] damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
 			}
 			else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 			{
-				if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
-				else { $player[local.i].drivingent damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
+				else { $player[local.i].drivingent damage $world 250 $world (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
 			}
 		}
 		else if($player[local.i] != self && $player[local.i].dmteam == self.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
@@ -493,13 +493,14 @@ explode local.explosionplace local.projectile:
 		{
 			if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.projectile 360)
 			{
-				$player[local.i] damage self 250 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				if(local.projectile istouching $player[local.i]) { $player[local.i] damage self 250 self (0 0 0) (0 0 0) (0 0 0) 0 1 local.damagetype 2 } // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+				else { $player[local.i] damage self 250 self (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
 			}
 			else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 			{
 				$player[local.i].drivingent.shooter = self
-				if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 250 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
-				else { $player[local.i].drivingent damage self 250 self (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 }
+				if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 250 self (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
+				else { $player[local.i].drivingent damage self 250 self (0 0 0) (0 0 0) (0 0 0) 0 1 9 -1 }
 			}
 		}
 	}
@@ -513,35 +514,15 @@ bang local.place:
 
 	if(self.model == "models/ammo/us_bomb.tik")
 	{
-		if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
+		if(self.hitwater == 1)		
 		{
-			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
-			{
-				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
-				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
-				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
-				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
-				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
-				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
-				local.origin = self.origin
-	
-				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
-				{
-					local.Exp4 = spawn "animate/fx_mortar_water.tik" //targetname "mortar_dirt_nosound"
-					local.Exp4 anim start
-					local.Exp4 playsound artyexp_water
-				}
-				else
-				{
-					local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik" //targetname "mortar_dirt_nosound"
-					local.Exp4 anim start
-					local.Exp4 playsound artyexp_sand	
-				}
-			}
+			local.Exp4 = spawn "animate/fx_mortar_water.tik" //targetname "mortar_dirt_nosound"
+			local.Exp4 anim start
+			local.Exp4 playsound artyexp_water
 		}
 		else
 		{
-			local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik" //targetname "mortar_dirt_nosound"
+			local.Exp4 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
 			local.Exp4 anim start
 			local.Exp4 playsound artyexp_sand	
 		}
@@ -586,6 +567,7 @@ bomb:
 	local.bomb playsound leadinmp2
 	local.didnt=1
 
+	local.bomb thread waittill_touch local self
 	while(local.didnt==1)
 	{
 		local.bomb waittill touch
@@ -594,8 +576,9 @@ bomb:
 			local.didnt=0
 		}
 	}
+	local.bomb.velocity = ( 0 0 0 )
 	
-	self thread explode local.bomb.origin local.bomb
+	if(local.bomb.hitwater != 1) { self thread explode local.bomb.origin local.bomb 9 }
 end
 
 bombtwist local.bomb:
@@ -612,5 +595,48 @@ bombtwist local.bomb:
 		{
 			local.bomb.angles = (  local.bomb.angles[0] local.bomb.angles[1] local.i )
 		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+waittill_touch local.thread local.player:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end }
+
+		if(self.hitwater != 1 && level.water_volumes != NIL && level.water_volumes != 0)
+		{
+			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2] + 50 // moving very fast may explode slightly above the actual water.
+				local.origin = self.origin
+	
+				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+				{
+					self.hitwater = 1
+					self.velocity = ( 0 0 0 )
+					if(local.thread != NULL) { local.thread remove }
+
+					if(self.model == "models/ammo/us_bomb.tik") { local.player thread explode self.origin self 9 }
+					else { local.player thread explode self.origin self 16 }
+					end
+				}
+			}
+		}
+		waitframe
 	}
 end

@@ -70,8 +70,16 @@ catchfire local.model local.burntime local.damageinc local.burnscale local.fires
 	}
 	if(local.extinguished == 1) { break }
 
-
-	self volumedamage local.damageinc // "self hurt 1" works too
+	if(self.driving != 1 && self.flying != 1)
+	{
+		self damage $world local.damageinc $world (0 0 0) (0 0 0) (0 0 0) 0 9 21 0
+	}
+	else if(self.drivingent != NIL && self.drivingent != NULL)
+	{
+		if(self.flying == 1) { $("planehit" + self.entnum) damage $world local.damageinc $world (0 0 0) (0 0 0) (0 0 0) 0 9 5 0 }
+		else { self.drivingent damage $world local.damageinc $world (0 0 0) (0 0 0) (0 0 0) 0 9 5 0 }
+	}
+	//self volumedamage local.damageinc // "self hurt 1" works too
 	self.onfire_count++
 	if(self.health <= local.damageinc) { self kill } // tell players that they've killed themselves.
   	wait 0.1

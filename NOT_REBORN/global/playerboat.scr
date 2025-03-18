@@ -1,4 +1,4 @@
-main local.name local.model local.origin local.angles local.health local.boatspeed local.resettime local.scale local.gotout:
+main local.name local.model local.origin local.angles local.health local.vehiclespeed local.resettime local.scale local.gotout local.door_open:
 
 	if(local.model == NIL) { wait 1; println("----- ERROR playerboat.scr: 'model' parameter is missing!"); end }
 	if(local.model[0] != "m" && local.model[1] != "o" && local.model[2] != "d" && local.model[3] != "e" && local.model[4] != "l" && local.model[5] != "s")
@@ -29,8 +29,8 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 	local.vehicle.angles = local.angles
 	local.vehicle.desmodel = local.desmodel
 	local.vehicle.health = local.health
-	local.vehicle.boatspeed = local.boatspeed
-	local.vehicle.boatspeed_max = local.boatspeed
+	local.vehicle.vehiclespeed = local.vehiclespeed
+	local.vehicle.vehiclespeed_max = local.vehiclespeed
 	local.vehicle.resettime = local.resettime
 	if(local.scale == NIL || local.vehicle.model != "models/vehicles/uboat.tik") { local.vehicle.scale = 1 }
 	else
@@ -44,20 +44,14 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 	local.vehicle turnrate 5; local.vehicle.turningrate = 5.000
 	if(local.gotout == 1) { local.vehicle playsound sdkfz_snd_stop }
 
+	if(local.vehicle.model== "models/vehicles/uboat.tik") { local.vehicle.outheight = 180 }
+	else { local.vehicle.outheight = 120 } // if this is 100 or lower and the boat is still moving after the player gets out, the player will be run over by the boat and killed.
+
 	local.vehicle.seats = 1		// initialize this before adding seats in "seatstuff" thread to avoid NIL errors
 	local.vehicle thread vehiclereset
 	local.vehicle thread vehicledamage
 	local.vehicle thread vehicledeath
 	local.vehicle thread vehicletrigger
-
-	local.trig = spawn trigger_multiple spawnflags 128
-	local.trig.origin = local.vehicle.origin
-	local.trig.vehicle = local.vehicle
-	local.trig glue local.vehicle
-	local.trig thread removetrig
-	local.trig setthread shottrig
-	if(local.vehicle.model == "models/vehicles/uboat.tik") { local.trig setsize ( -150 -150 0 ) ( 150 150 280 ) }
-	else { local.trig setsize ( -90 -90 0 ) ( 90 90 100 ) }
 
 	if(level.boat_initorigin[local.name] == NIL) { level.boat_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
 	if(level.boat_initangles[local.name] == NIL) { level.boat_initangles[local.name] = local.angles }
@@ -70,6 +64,8 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 		cache models/emitters/fancyfire.tik; cache models/emitters/thin_black_short.tik
 		cache models/emitters/mortar_higgins.tik
 		cache models/emitters/mortar_dirt_nosound.tik
+		cache models/static/corona_util.tik
+		if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik") { cache models/vehicles/higginsdoor.tik; cache models/vehicles/mercedes.tik }
 		thread scriptmaster local.vehicle.model
 		level.vehiclescriptmaster[local.vehicle.model] = 1
 		level.vehiclescriptmaster[local.model] = 1
@@ -86,27 +82,48 @@ main local.name local.model local.origin local.angles local.health local.boatspe
 		local.vehicle thread boatstuck_inwall_fix
 		local.vehicle thread turret_laser local.name
 	}
-/*
 	if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik")
 	{
-		local.vehicle attachmodel models/vehicles/higginsdoor.tik "Box01" 1 (local.name + "_door") 1 -1 -1 -1 -1 ( 0 0 0 )
-		$(local.name + "_door").angles = ( 180 0 -90 )
-		$(local.name + "_door") notsolid
+		local.vehicle attachmodel models/static/corona_util.tik "Box01" 1 (local.name + "_doorglue") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+		$(local.name + "_doorglue") notsolid
+		local.vehicle.doorglue = $(local.name + "_doorglue")
+		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box01" 1 (local.name + "_doorclosed") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+		$(local.name + "_doorclosed").angles = ( 90 0 0 )
+		$(local.name + "_doorclosed") notsolid
+		local.vehicle.doorclosed = $(local.name + "_doorclosed")
+		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box01" 1 (local.name + "_dooropen") 1 -1 -1 -1 -1 ( 309 0 -225 ) //( +up -down, +left -right, -forward +backward )
+		$(local.name + "_dooropen").angles = ( 0 180 180 )
+		$(local.name + "_dooropen") notsolid
+		local.vehicle.dooropen = $(local.name + "_dooropen")
+
+		local.vehicle.door_open = local.door_open
+		if(local.door_open == 1) { $(local.name + "_doorclosed") hide; $(local.name + "_dooropen") show }
+		else { $(local.name + "_doorclosed") show; $(local.name + "_dooropen") hide }
+
+		local.doorclip = spawn script_model targetname (local.name + "_doorclip")
+		local.doorclip model "vehicles/mercedes.tik"
+		local.doorclip solid
+		local.doorclip hide
+		local.vehicle.doorclip = local.doorclip // do not use local.vehicle.doorclip = $(local.name + "_doorclip"), otherwise mysterious "array" console errors will occur, even though $(local.name + "_doorclip").size = 1, and even though only 1 entity is inside of .doorclip.
+		local.vehicle thread keep_at_door local.doorclip local.door_open
 	}
-*/
-	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.tank }
+										// "local.player.touching_playerboat" or "$player[1].touching_playerboat" can be included in trigger setthreads
+	if(level.touching_playerboat != 1) { thread touching_playerboat }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
+
+	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.vehicle }
 	else
 	{
 		for(local.c = 1; local.c <= 999; local.c++)
 		{
 			if(level.chainreactors[local.c] == NIL)
 			{
-				level.chainreactors[local.c] = local.tank
+				level.chainreactors[local.c] = local.vehicle
 				local.vehicle thread chainreactors_remove local.c
 				break
 			}
 		}
 	}
+	local.vehicle thread move_stuck_players // the vehicle might respawn on top of other players, move them onto the top of it.
 
 	if(level.drivable_entities == NIL) { level.drivable_entities[1] = local.name }
 	else
@@ -127,7 +144,8 @@ end
 
 shottrig:
 
-	if(self.vehicle != NULL) { self.vehicle.shooter = self }
+	local.player = parm.other
+	if(self.vehicle != NULL && (self.vehicle.driver == NIL || (self.vehicle.driver != NIL && (self.vehicle.driver.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.vehicle.shooter = local.player }
 end
 
 removetrig:
@@ -147,8 +165,9 @@ end
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
 
 	local.health = self.health
-	while(self != NULL && self.health > 0)
+	while(self != NULL && self.health > 0 && (self.driver == NIL || self.damagetrig.health > 0))
 	{
+		if(self.driver != NIL && self.damagetrig.health < self.health) { self.health = self.damagetrig.health }
 		if(self.health < local.health && self.shooter != NIL && self.shooter != NULL)
 		{
 			if(self.passengers != NIL && self.passengers.size >= 1)
@@ -187,18 +206,25 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				}
 			}
 
-			for(local.i = 1; local.i <= $player.size; local.i++)
+			if(self.model != "models/vehicles/uboat.tik")
 			{
-				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self && $player[local.i].passenger != 1)
+				for(local.i = 1; local.i <= $player.size; local.i++)
 				{
-					for(local.i = 1; local.i <= self.passengers.size; local.i++)
+					if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self && $player[local.i].passenger != 1)
 					{
-						self.passengers[local.i] damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+						for(local.i = 1; local.i <= self.passengers.size; local.i++)
+						{
+							self.passengers[local.i] damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+						}
 					}
 				}
 			}
 		}
-		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(isalive self) // need "isalive" check to avoid "cannot give health to dead entities" error
+		{
+			self.health = local.health
+			if(self.driver != NIL) { self.damagetrig.health = local.health }
+		}
 		if(self.shooter != NIL) { self thread shooter_NIL }
 		waitframe
 	}
@@ -275,12 +301,15 @@ playergetin:
 		//self.driver iprint ("Lean Left/Right = aim turret down/up. Lean Left/Right (while not moving) = look behind.")
 		self.driver iprint ("JUMP = exit boat. FIRE = shoot rockets. FIRE + USE(e) = throw grenades.")
 	}
-	else { self.driver iprint ("JUMP = exit boat. Hold FIRE = look behind.") }
+	else { self.driver iprint ("JUMP = exit boat. Hold FIRE = look behind. Lean Left/Right = close/open door.") }
 
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
 	self.driver loopsound wavelaps
 	self.turretlaser_offset = 0
+
+	self waitthread spawn_driver_seat_and_trigs
+	if($("driver_seat_" + self.entnum) != NULL) { self.driver glue $("driver_seat_" + self.entnum) }
 
 	if(local.driver.using_pack == 1)
 	{
@@ -295,8 +324,8 @@ playergetin:
 	local.decel_rate = 30	// how many divisions of local.c for deceleration/acceleration. Higher = more time to reach max speed, Lower = less time to reach max speed.
 	local.deceleration = local.c
 	local.drivervelocity_old = ( 0 0 0 )
-	local.forward = 0
-	local.backward = 0
+	self.movingforward = 0
+	self.movingbackward = 0
 	local.d = local.c	// vehicle turnrate will increase equally when accelerating, but will decrease 4x as fast when decelerating.
 
 	self.attachingdriver = 0
@@ -336,6 +365,7 @@ playergetin:
 
 				self.turretlaser.origin = $(self.targetname + "_tag_barrel").origin
 				self.turretlaser endpoint local.groundtarget
+				self.turretlaser_point.origin = local.groundtarget
 			}
 
 			if(self.driver.fireheld == 1)
@@ -351,24 +381,49 @@ playergetin:
 				{
 					if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] < -15)
 					{
-						if(self.turretlaser_offset > -15) { self.turretlaser activate; self.turretlaser_offset -= .25 }
-						else { self.turretlaser deactivate; self.turretlaser_offset = -15 }
+						if(self.turretlaser_offset > -15) { self.turretlaser activate; self.turretlaser_point show; self.turretlaser_offset -= .25 }
+						else { self.turretlaser deactivate; self.turretlaser_point hide; self.turretlaser_offset = -15 }
 					}
 
 					if((self.driver getcontrollerangles 0)[2] > 15 && (self.driver getcontrollerangles 0)[2] >= -15)
 					{
-						if(self.turretlaser_offset < 3) { self.turretlaser activate; self.turretlaser_offset += .25 }
-						else { self.turretlaser deactivate; self.turretlaser_offset = 3 }
+						if(self.turretlaser_offset < 3) { self.turretlaser activate; self.turretlaser_point show; self.turretlaser_offset += .25 }
+						else { self.turretlaser deactivate; self.turretlaser_point hide; self.turretlaser_offset = 3 }
 					}
-					if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] >= -15) { self.turretlaser deactivate }
+					if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] >= -15) { self.turretlaser deactivate; self.turretlaser_point hide }
 				}
 			}
-			else { self.turretlaser deactivate }
+			else { self.turretlaser deactivate; self.turretlaser_point hide }
 		}
-		else if(self.driver.fireheld == 1) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) }
+		else
+		{
+			if(self.driver.fireheld == 1) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) }
+
+			if((self.driver getcontrollerangles 0)[2] > 15 && local.toggle != 1 && self.door_open == 1 && self.door_count >= 20) // lean left to close higgins door
+			{
+				//self.driver iprint "Closing the higgins door."
+				self.doorclip playsound higgins_door_close
+				self.dooropen hide
+				self.doorclosed show
+				self.door_open = 0
+				local.toggle = 1
+			}
+			if((self.driver getcontrollerangles 0)[2] < -15 && local.toggle != 1 && self.door_open != 1 && self.door_count >= 20) // lean right to open higgins door
+			{
+				//self.driver iprint "Opening the higgins door."
+				self.doorclip playsound higgins_door_open
+				self.dooropen show
+				self.doorclosed hide
+				self.door_open = 1
+				local.toggle = 1
+			}
+			if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] >= -15) { local.toggle = 0; local.toggle2 = 0 }
+		}
 
 		if(self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 + (self.angles[0] - 360)) self.driver.viewangles[1] self.driver.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
 		if(self.driver.viewangles[0] < -180) { self.driver.viewangles = ( (self.driver.viewangles[0] + 360) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
+
+		if(self.vehiclespeed == 0) { self.movingforward = 0; self.movingbackward = 0 }
 
 		if(self.velocity != ( 0 0 0 )) // make boats drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind).
 		{
@@ -376,14 +431,14 @@ playergetin:
 
 			if(self.driver.driving_state_backward == 1)
 			{
-				if(local.forward == 1 && local.c < local.deceleration) // slowing down, before reversing begins.
+				if(self.movingforward == 1 && local.c < local.deceleration) // slowing down, before reversing begins.
 				{
 					local.c += local.deceleration * 2.000 / local.decel_rate
 					local.d += 4.000 * local.deceleration / local.decel_rate
-					if(local.c > local.deceleration) { local.c = local.deceleration; self.boatspeed = 0 }
+					if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
 					if(local.d > local.deceleration) { local.d = local.deceleration }
-					self.boatspeed = self.boatspeed_max / local.c
-					self.velocity = self.driver.velocity * (self.boatspeed / self.boatspeed_max * -1) + self.forwardvector * self.boatspeed
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity * (self.vehiclespeed / self.vehiclespeed_max * -1) + self.forwardvector * self.vehiclespeed
 				}
 				else
 				{
@@ -391,22 +446,22 @@ playergetin:
 					local.d -= local.deceleration / local.decel_rate
 					if(local.c < 1) { local.c = 1 }
 					if(local.d < 1) { local.d = 1 }
-					self.boatspeed = self.boatspeed_max / local.c
-					self.velocity = self.driver.velocity + self.forwardvector * self.boatspeed * -0.500 // only reverse at half the maximum boat speed
-					local.forward = 0
-					local.backward = 1
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -0.500 // only reverse at half the maximum boat speed
+					self.movingforward = 0
+					self.movingbackward = 1
 				}
 			}
 			else // make boats drive faster, only when holding W (forward key).
 			{
-				if(local.backward == 1 && local.c < local.deceleration) // slowing down, before driving forward begins.
+				if(self.movingbackward == 1 && local.c < local.deceleration) // slowing down, before driving forward begins.
 				{
 					local.c += local.deceleration * 2.000 / local.decel_rate
 					local.d += 4.000 * local.deceleration / local.decel_rate
-					if(local.c > local.deceleration) { local.c = local.deceleration; self.boatspeed = 0 }
+					if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
 					if(local.d > local.deceleration) { local.d = local.deceleration }
-					self.boatspeed = self.boatspeed_max / local.c
-					self.velocity = self.driver.velocity * (self.boatspeed / self.boatspeed_max * -1) + self.forwardvector * self.boatspeed * -0.500 // only reverse at half the maximum boat speed
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity * (self.vehiclespeed / self.vehiclespeed_max * -1) + self.forwardvector * self.vehiclespeed * -0.500 // only reverse at half the maximum boat speed
 				}
 				else
 				{
@@ -414,10 +469,10 @@ playergetin:
 					local.d -= local.deceleration / local.decel_rate
 					if(local.c < 1) { local.c = 1 }
 					if(local.d < 1) { local.d = 1 }
-					self.boatspeed = self.boatspeed_max / local.c
-					self.velocity = self.driver.velocity + self.forwardvector * self.boatspeed
-					local.forward = 1
-					local.backward = 0
+					self.vehiclespeed = self.vehiclespeed_max / local.c
+					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed
+					self.movingforward = 1
+					self.movingbackward = 0
 				}
 			}
 
@@ -434,11 +489,24 @@ playergetin:
 			if(local.d > local.deceleration) { local.d = local.deceleration }
 
 			local.c += local.deceleration / local.decel_rate
-			if(local.c > local.deceleration) { local.c = local.deceleration; self.boatspeed = 0 }
-			else { self.boatspeed = self.boatspeed_max / local.c }
+			if(local.c > local.deceleration) { local.c = local.deceleration; self.vehiclespeed = 0 }
+			else { self.vehiclespeed = self.vehiclespeed_max / local.c }
 
-			if(self.driver.driving_state_backward == 1) { self.velocity = local.drivervelocity_old + self.forwardvector * self.boatspeed * -1 }
-			else { self.velocity = local.drivervelocity_old + self.forwardvector * self.boatspeed }
+			if(self.driver.driving_state_backward == 1) { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed * -1 }
+			else { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed }
+		}
+
+		if(self.model != "models/vehicles/uboat.tik")
+		{
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig || $("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig))
+				{
+					self.shooter = $player[local.i]
+					self.driver takedamage
+					self.driver damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
 		}
 
 		local.drivervelocity_old = self.driver.velocity
@@ -448,7 +516,7 @@ playergetin:
 
 	if(self != NULL) // spawn in the new vehicle and remove the old one.
 	{
-		thread main self.name self.model self.origin self.angles self.health self.boatspeed_max self.resettime self.scale 1
+		thread main self.name self.model self.origin self.angles self.health self.vehiclespeed_max self.resettime self.scale 1 self.door_open
 
 		if(self.driver != NIL && self.driver != NULL)
 		{
@@ -499,21 +567,16 @@ driverreset local.status:
 	if(local.status != 1) { cueplayer }				// reattaches camera to player's head
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
+	if($("driver_seat_" + self.entnum) != NULL) { self.driver unglue }
 
-	if(self.model == "models/vehicles/uboat.tik") { local.outheight = 180 }
-	else { local.outheight = 120 } // if this is 100 or lower and the boat is still moving after the player gets out, the player will be run over by the boat and killed.
-
-	if(self.driver.dmteam != spectator)
+	if(local.status != 2)
 	{
 		self.driver show
 		if(local.status != 1) { self.driver solid }
 		self.driver takedamage
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
-		if(local.status != 1 && local.status != 2)
-		{
-			self.driver.origin = self.origin + (angles_toup self.angles * local.outheight)
-			self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
-		}
+		self.driver.origin = self.origin + (angles_toup self.angles * self.outheight)
+		self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
 	}
 end
 
@@ -556,44 +619,43 @@ vehicledeath:
 	local.sin = (waitthread global/math.scr::sine self.angles[1]) * local.distance * local.desvehicle.scale
 	local.cos = (waitthread global/math.scr::cosine self.angles[1]) * local.distance * local.desvehicle.scale
 
-	local.r = randomint(2)
-	if(local.r == 0) { local.one = 1 }
-	if(local.r == 1) { local.one = -1 }
+	if(self.angles[2] > 5 && self.angles[2] < 180) { local.one = 1 }
+	if(self.angles[2] > 180 && self.angles[2] < 355) { local.one = -1 }
+	if(self.angles[2] <= 5 || self.angles[2] >= 345)
+	{
+		local.r = randomint(2)
+		if(local.r == 0) { local.one = 1 }
+		if(local.r == 1) { local.one = -1 }
+	}
 
 	if(self.model == "models/vehicles/uboat.tik")
 	{
 		local.desvehicle.angles = self.angles + ( 0 0 ((randomint(20) + 15) * local.one) )
-		local.sin2 = (waitthread global/math.scr::sine self.angles[1]) * local.distance2 * -1 * local.desvehicle.scale
-		local.cos2 = (waitthread global/math.scr::cosine self.angles[1]) * local.distance2 * -1 * local.desvehicle.scale
-		local.height = 150 * local.desvehicle.scale
-
-		local.offset = (waitthread global/math.scr::tangent self.angles[0]) * local.distance * local.desvehicle.scale
-		local.offset2 = (waitthread global/math.scr::tangent self.angles[0]) * local.distance2 * -1 * local.desvehicle.scale
 
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
-		local.fire.origin = local.desvehicle.origin + ( local.cos local.sin (local.height - local.offset) )
+		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
 		local.fire.angles = ( 0 0 0 )
 		local.fire.scale = 5 * local.desvehicle.scale
 		local.fire anim start
 		local.fire notsolid
 		local.smoke = spawn script_model
 		local.smoke model "models/emitters/thin_black_short.tik"
-		local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin (local.height - local.offset) )
+		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
 		local.smoke.angles = ( 0 0 0 )
 		local.smoke.scale = 3.5 * local.desvehicle.scale
 		local.smoke anim start
 		local.smoke notsolid
 		local.fire2 = spawn script_model
 		local.fire2 model "models/emitters/fancyfire.tik"
-		local.fire2.origin = local.desvehicle.origin + ( local.cos2 local.sin2 (local.height - local.offset2) )
+		local.fire2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance2 * -1 + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
 		local.fire2.angles = ( 0 0 0 )
 		local.fire2.scale = 5 * local.desvehicle.scale
 		local.fire2 anim start
 		local.fire2 notsolid
 		local.smoke2 = spawn script_model
 		local.smoke2 model "models/emitters/thin_black_short.tik"
-		local.smoke2.origin = local.desvehicle.origin + ( local.cos2 local.sin2 (local.height - local.offset2) )
+		local.smoke2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance2 * -1 + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
 		local.smoke2.angles = ( 0 0 0 )
 		local.smoke2.scale = 3.5 * local.desvehicle.scale
 		local.smoke2 anim start
@@ -605,14 +667,14 @@ vehicledeath:
 
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
-		local.fire.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
+		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 42
 		local.fire.angles = ( 0 0 0 )
 		local.fire.scale = 1
 		local.fire anim start
 		local.fire notsolid
 		local.smoke = spawn script_model
 		local.smoke model "models/emitters/thin_black_short.tik"
-		local.smoke.origin = local.desvehicle.origin + ( local.cos local.sin 42 )
+		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 42
 		local.smoke.angles = ( 0 0 0 )
 		local.smoke.scale = .7
 		local.smoke anim start
@@ -737,7 +799,7 @@ mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2:
 	local.origin = self.originold  // respawns the vehicle where it was destroyed, only by setting "thread main" origin/angles to "local.origin" "local.angles".
 	local.angles = self.angles
 	local.health = level.boat_inithealth[self.name]
-	local.boatspeed = self.boatspeed_max
+	local.vehiclespeed = self.vehiclespeed_max
 	local.resettime = self.resettime
 	local.scale = self.scale
 
@@ -749,7 +811,7 @@ mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2:
 	if(local.fire2 != NIL && local.fire2 != NULL) { local.fire2 remove }
 	if(local.smoke2 != NIL && local.smoke2 != NULL) { local.smoke2 remove }
 	local.desvehicle remove
-	thread main local.name local.model level.boat_initorigin[local.name] level.boat_initangles[local.name] local.health local.boatspeed local.resettime local.scale
+	thread main local.name local.model level.boat_initorigin[local.name] level.boat_initangles[local.name] local.health local.vehiclespeed local.resettime local.scale
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -775,9 +837,8 @@ passengers:
 		end
 	}
 
-	if(self.dist_offset[local.s] == NIL) { end }
-	local.distoffset = self.dist_offset[local.s]
-	local.outheight = 150
+	self waitthread spawn_passenger_seat local.s
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { local.player glue $("passenger_seat_" + local.s + "_" + self.entnum) }
 
 	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
 	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
@@ -794,38 +855,37 @@ passengers:
 	local.player.driving_state_jump = 0
 	local.PI = 3.14159265359
 	local.driver = self.driver
+	local.outheight = self.outheight
+	local.model = self.model
 
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0 && $("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
 	{
 		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
 
-		local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
-		local.sin = (waitthread global/math.scr::sine local.degrees) * self.dist_offset[local.s]
-		local.cos = (waitthread global/math.scr::cosine local.degrees) * self.dist_offset[local.s]
-
-		if(self.driver.driving_state_backward == 1) { local.direction = -1 }
-		else { local.direction = 1 }
-		if(self.velocity != ( 0 0 0 ))
-		{
-			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) + self.forwardvector * self.boatspeed * .075 * local.direction
-		}
-		else { local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) }
+		local.angles = self.angles
+		local.dist = vector_length($("passenger_seat_" + local.s + "_" + self.entnum).origin - self.origin)
+		local.s_ang = vector_toangles($("passenger_seat_" + local.s + "_" + self.entnum).origin - self.origin)
+		local.s_vec = angles_toforward(local.s_ang) * local.dist
 
 		if(local.player.fireheld != 1)
 		{
-			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
-			else { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) }
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) + ( self.angles[0] self.playerang_offset[local.s] self.angles[2] ) } // some vehicles' passengers should not face forward (view is blocked)
+			else { local.player.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
 		}
+
+		if(local.player.viewangles[0] > 180) { local.player.viewangles = ( (10 + (self.angles[0] - 360)) local.player.viewangles[1] local.player.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
+		if(local.player.viewangles[0] < -180) { local.player.viewangles = ( (local.player.viewangles[0] + 360) local.player.viewangles[1] local.player.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(local.player.driving_state_jump == 1) // Press JUMP to exit vehicle.
 		{
+			local.player unglue
 			if(local.player.isdog != 1) { local.player show }
 			local.player give "models/items/binoculars.tik"
 			local.player solid
 			local.player takedamage
 			//local.player noclip
 			local.player forcetorsostate STAND
-			local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight)
+			local.player.origin += local.s_vec + angles_toup(self.angles) * self.outheight
 			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
 			local.player thread wallstuck_fix
@@ -833,14 +893,20 @@ passengers:
 			local.player.passenger = 0
 			local.player.ridingent = NIL
 			local.player.driving = 0
+			if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
 			end
 		}
 		waitframe
 	}
-	if(self != NULL) { self.passengers[local.s] = NIL }
+	if(self != NULL)
+	{
+		self.passengers[local.s] = NIL
+		if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+	}
 
 	if(local.player != NULL)
 	{
+		local.player unglue
 		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
 		local.player.passenger = 0
 		local.player.ridingent = NIL
@@ -855,14 +921,11 @@ passengers:
 			local.player forcetorsostate STAND
 			if(local.player.dmteam == local.team) // if the passenger did not switch teams
 			{
-				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units
-				local.cos = local.cos / local.distoffset * 25
-	
-				if(self != NULL) { local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight) }
-				else { local.player.origin += ( local.cos local.sin local.outheight ) }
+				if(local.model != "models/vehicles/uboat.tik") { local.player.origin += local.s_vec * 1.5 + angles_toup(local.angles) * local.outheight }
+				else { local.player.origin = self.origin + (angles_toup self.angles * self.outheight) }
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 				local.player thread wallstuck_fix
-
+	
 				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1))
 				{
 					if(self != NULL && self.shooter != NIL)
@@ -968,61 +1031,61 @@ projectile local.secondary:
 	local.player = self.driver // used for the for-loop later
 	self.gun = $(self.name + "_tag_barrel")
 
-	local.projectile = spawn script_model
+	local.rocket = spawn script_model
 	if(local.secondary == 1)
 	{
-		if(local.player.dmteam == "axis") { local.projectile model "projectiles/steilhandgranate_primary.tik" }
-		else { local.projectile model "projectiles/M2FGrenade_primary.tik" }
+		if(local.player.dmteam == "axis") { local.rocket model "projectiles/steilhandgranate_primary.tik" }
+		else { local.rocket model "projectiles/M2FGrenade_primary.tik" }
 	}
-	else { local.projectile model "projectiles/tigercannonshell.tik" } // "projectiles/panzerschreckshell.tik"
-	local.projectile.origin = self.gun.origin
-	local.projectile light 0 1 0 400
-	local.projectile.scale = 1
-	local.projectile solid
-	local.projectile physics_on    // need this for gravity and waittill touch to work.
-	local.projectile.scale = 3
-
-	if(self != NULL) { local.projectile.player_owner = self.driver }
+	else { local.rocket model "projectiles/tigercannonshell.tik" } // "projectiles/panzerschreckshell.tik"
+	local.rocket.origin = self.gun.origin
+	local.rocket light 0 1 0 400
+	local.rocket.scale = 1
+	local.rocket solid
+	local.rocket physics_on    // need this for gravity and waittill touch to work.
+	local.rocket.scale = 3
+	if(self != NULL) { local.rocket.player_owner = self.driver }
 
 	if(local.secondary == 1)
 	{
-		local.projectile playsound grenadethrow
-		local.projectile.angles = ( -90 self.angles[1] 0 )
-		local.projectile thread rotate
+		local.rocket playsound grenadethrow
+		local.rocket.angles = ( -90 self.angles[1] 0 )
+		local.rocket thread rotate
 
-		local.projectile gravity .8
+		local.rocket gravity .8
 		local.fwd_vec = angles_toforward ( 0 self.angles[1] 0 )
-		local.projectile.velocity = ( local.fwd_vec[0] local.fwd_vec[1] .500 ) * 950 // local.fwd_vec[2] = .500 = 45 degrees facing upward
+		local.rocket.velocity = ( local.fwd_vec[0] local.fwd_vec[1] .500 ) * 950 // local.fwd_vec[2] = .500 = 45 degrees facing upward
 	}
 	else
 	{
-		local.projectile loopsound rocketfireloop
-		local.projectile.angles = ( self.turretlaser_offset (self.angles[1] + 180) 0 )
+		local.rocket loopsound rocketfireloop
+		local.rocket.angles = ( self.turretlaser_offset (self.angles[1] + 180) 0 )
 
-		local.projectile gravity 0
-		local.projectile.velocity = (angles_toforward ( (self.angles[0] + self.turretlaser_offset) self.angles[1] self.angles[2] )) * 6000
+		local.rocket gravity 0
+		local.rocket.velocity = (angles_toforward ( (self.angles[0] + self.turretlaser_offset) self.angles[1] self.angles[2] )) * 6000
 	}
 
 	if(local.secondary == 1) { wait 3 }
 	else
 	{
+		local.rocket thread waittill_touch local self local.player
 		local.hitthing = self
 		while(local.hitthing == self || (self != NULL && local.hitthing == self.gun))
 		{
-			local.projectile waittill touch
+			local.rocket waittill touch
 			local.hitthing = parm.other
 		}
 	}
+	local.rocket.velocity = ( 0 0 0 )
 
-	local.projectile.velocity = ( 0 0 0 )
 	local.explode = spawn "fx/explosionTIGERshell.tik" // "fx/explosionPANZERIVshell.tik"
-	local.explode.origin = local.projectile.origin
+	local.explode.origin = local.rocket.origin
 	local.explode.scale = 1
 	local.explode light 1 0 0 600
 	local.explode anim idle
 	//local.explode playsound bazooka_exp // already included in explosionPANZERIVshell
 
-	if(self != NULL && local.projectile istouching self) { local.blewup = 0 }
+	if(self != NULL && local.rocket istouching self) { local.blewup = 0 }
 	else { local.blewup = 1 }
 
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
@@ -1031,7 +1094,7 @@ projectile local.secondary:
 		{
 			if(local.player == NIL || local.player == NULL)
 			{
-				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.projectile 360)
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
 				{
 					$player[local.i] damage $world 500 $world (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1
 				}
@@ -1044,7 +1107,7 @@ projectile local.secondary:
 			else if($player[local.i] != local.player && $player[local.i].dmteam == local.player.dmteam && getcvar("g_teamdamage") != "1" && getcvar("g_gametype") != "1") { local.blewup = 0 }
 			else
 			{
-				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.projectile 360)
+				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.rocket 360)
 				{
 					$player[local.i] damage local.player 500 local.player (0 0 0) (0 0 0) (0 0 0) 0 1 15 -1 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
 				}
@@ -1057,12 +1120,32 @@ projectile local.secondary:
 			}
 		}
 	}
-	local.projectile remove
 	if(local.blewup == 1) { radiusdamage local.explode.origin 500 500 } // 110 200
 	waitframe
+	local.rocket remove
 	wait .2 // keeps the explosion light visible longer
 	local.explode remove
 end
+
+////////////////////////////////////////////////////////////////////////
+
+waittill_touch local.thread local.turret local.player:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end } // self.hitwater not needed, since these projectiles already stop when hitting water.
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
 
 rotate:
 
@@ -1090,8 +1173,16 @@ turret_laser local.name:
 	local.laser endpoint $(local.name + "_tag_barrel").origin
 	self.turretlaser = local.laser
 
+	local.point = spawn script_model
+	local.point model "static/corona_util.tik"
+	local.point.origin = $(local.name + "_tag_barrel").origin
+	//local.point light 1 0 0 250
+	local.point hide
+	self.turretlaser_point = local.point
+
 	while(self != NULL) { waitframe }
 	local.laser remove
+	local.point remove
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1100,85 +1191,93 @@ seatstuff:
 
 	if(self.model == "models/vehicles/higginsxtrahull.tik")
 	{
-		self.seats = 9
-
-		self.degree_offset[1] = 25.796		// [1] = front passenger. [2] = back right, [3], [4], [5] = front right. [6] = front left, [7], [8], [9] = back left
-		self.dist_offset[1] = 133.282
-		self.height_offset[1] = 50
-
-		self.degree_offset[5] = 170.198 // very front right
-		self.dist_offset[5] = 218.976
-		self.height_offset[5] = 50
-		self.degree_offset[4] = 137.859
-		self.dist_offset[4] = 163.920
-		self.height_offset[4] = 50
-		self.degree_offset[3] = 142.595
-		self.dist_offset[3] = 63.107
-		self.height_offset[3] = 50
-		self.degree_offset[2] = 51.896
-		self.dist_offset[2] = 48.277
-		self.height_offset[2] = 50 // back right
-
-		self.degree_offset[6] = -168.554 // very front left
-		self.dist_offset[6] = 218.308
-		self.height_offset[6] = 50
-		self.degree_offset[7] = -161.461
-		self.dist_offset[7] = 136.358
-		self.height_offset[7] = 50
-		self.degree_offset[8] = -136.768
-		self.dist_offset[8] = 63.300
-		self.height_offset[8] = 50
-		self.degree_offset[9] = -54.647
-		self.dist_offset[9] = 53.714
-		self.height_offset[9] = 50 // back left
+		self.seats = 9 // [1] = front passenger. [2] = back right, [3], [4], [5] = front right. [6] = front left, [7], [8], [9] = back left
 	}
-	if(self.model == "models/vehicles/uboat.tik")
+	else if(self.model == "models/vehicles/uboat.tik")
 	{
-		self.seats = 5
-
-		self.degree_offset[1] = 22.158		// [1], [2] = right, left front captain platform, [3] = back of captain platform, [4], [5] = right side (facing forward), left side of middle platform
-		self.dist_offset[1] = 120
-		self.height_offset[1] = 322
-		self.degree_offset[2] = -22.158
-		self.dist_offset[2] = 120
-		self.height_offset[2] = 322
-
-		self.degree_offset[3] = 0
-		self.dist_offset[3] = 270
-		self.height_offset[3] = 322
-		self.playerang_offset[3] = 180	// this keeps the passenger facing 180 behind the driver's angles by default
-
-		self.degree_offset[4] = 10
-		self.dist_offset[4] = 413
-		self.height_offset[4] = 235
-		self.playerang_offset[4] = -90
-		self.degree_offset[5] = -10
-		self.dist_offset[5] = 413
-		self.height_offset[5] = 235
-		self.playerang_offset[5] = 90
+		self.seats = 5 // [1], [2] = right, left front captain platform, [3] = back of captain platform, [4], [5] = right side (facing forward), left side of middle platform
 	}
 end
-			// run "exec global/playerboat.scr::test boat_01" in any map .scr script, or any boat's targetname other than "boat_01". make sure the boat's angles is ( 0 0 0 )
-test local.targetname:	// player[1] can now stand anywhere on the boat and easily calculate the desired passenger seat's "degree_offset" and "dist_offset" for the "seatstuff" thread.
 
-	while($player.size < 1) { waitframe }
-	while($player.size >= 1)
+spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwise initializing all seats when vehicle spawns will greatly increase map's entity count.
+
+	local.trig = spawn trigger_multiple spawnflags 128 // for calculating how much damage was given (triggers with health will not go to a setthread until it's fully dead).
+	local.trig.origin = self.origin
+	local.trig.health = self.health
+	local.trig.vehicle = self
+	self.damagetrig = local.trig
+	local.trig glue self
+	local.trig thread removetrig
+	if(self.model == "models/vehicles/uboat.tik") { local.trig setsize ( -450 -450 0 ) ( 450 450 420 ) }
+	else { local.trig setsize ( -90 -90 0 ) ( 90 90 159 ) }
+	local.trig.model = self.model
+	local.trig.scale = self.scale
+	local.trig hide
+
+	local.trigshot = spawn trigger_multiple spawnflags 128 // instantly determine the vehicle's shooter (runs setthread each time it's triggered).
+	local.trigshot.origin = self.origin
+	local.trigshot.vehicle = self
+	self.trigshot = local.trigshot
+	local.trigshot glue self
+	local.trigshot thread removetrig
+	local.trigshot setthread shottrig
+	if(self.model == "models/vehicles/uboat.tik") { local.trigshot setsize ( -450 -450 0 ) ( 450 450 420 ) }
+	else { local.trigshot setsize ( -90 -90 0 ) ( 90 90 159 ) }
+	local.trigshot.model = self.model
+	local.trigshot.scale = self.scale
+	local.trigshot hide
+
+	if($("driver_seat_" + self.entnum) != NULL) { $("driver_seat_" + self.entnum) remove }
+
+	if(self.model == "models/vehicles/higginsxtrahull.tik") // "Box01", "Box02", or similar is determined by the model's .skc file.
 	{
-		if($(local.targetname) == NULL) { wait 2; iprintlnbold("$" + local.targetname + " = NULL"); println("$" + local.targetname + " = NULL"); break }
-
-		local.v1 = ( $(local.targetname).origin[0] $(local.targetname).origin[1] 0 )
-		local.v2 = ( $player[1].origin[0] $player[1].origin[1] 0 )
-
-		local.v = vector_length(local.v1 - local.v2)
-		local.a = vector_toangles(local.v1 - local.v2)
-		if($(local.targetname).model != "models/vehicles/uboat.tik") { local.a2 = local.a[1] + 180 }
-		else { local.a2 = local.a[1] }
-		if(local.a2 >= 180) { local.a2 -= 360 }
-
-		iprintlnbold("degree = " + local.a2 + " ... dist = " + local.v)
-		wait 2
+		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 120 50 58 ) // ( -forward +backward, +up -down, +left -right )
 	}
-	thread test local.targetname
+	else if(self.model == "models/vehicles/uboat.tik")
+	{
+		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 0 323 40 ) // ( -right +left, +up -down, +forward -backward )
+	}
+
+	if($("driver_seat_" + self.entnum) != NULL)
+	{
+		$("driver_seat_" + self.entnum).angles = self.angles
+		$("driver_seat_" + self.entnum) bind self
+		$("driver_seat_" + self.entnum) hide
+	}
+end
+
+spawn_passenger_seat local.s: // only spawn seats when needed.
+
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+
+	local.add = 0
+	if(self.model == "models/vehicles/higginsxtrahull.tik") //( +left -right, +up -down, +forward -backward )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 120 64 -58 ) } // ( -forward +backward, +up -down, +left -right )
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 30 64 -40 ) }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -50 64 -40 ) }
+		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -122 64 -40 ) }
+		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -215 64 -40 ) }
+		if(local.s == 6) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -215 64 40 ) } // each entity can only have 8 attachmodels max,
+		if(local.s == 7) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -122 64 40 ) } // so attach more seats to the vehicle's glued triggers instead,
+		if(local.s == 8) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -50 64 40 ) } // and give the triggers identical models.
+		if(local.s == 9) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 30 64 40 ) }
+	}
+	else if(self.model == "models/vehicles/uboat.tik") // ( -forward +backward, +up -down, +left -right )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -45 321 -111 ) } // ( -right +left, +up -down, +forward -backward )
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 45 321 -111 ) }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 0 321 -270 ); local.add = 180 }
+		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -71 234 -407 ); local.add = -90 }
+		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 71 234 -407 ); local.add = 90 }
+	}
+
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
+	{
+		$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( 0 local.add 0 )
+		$("passenger_seat_" + local.s + "_" + self.entnum) bind self
+		$("passenger_seat_" + local.s + "_" + self.entnum) hide
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1250,6 +1349,87 @@ boatstuck_inwall_fix:
 		}
 		waitframe
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+touching_playerboat:
+
+	level.touching_playerboat = 1
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			$player[local.i].touching_playerboat = 0 // ensures that only one boat needs to be touched for touching_playerboat = 1.
+		}
+
+		for(local.a = 0; local.a <= level.drivable_entities.size; local.a++)
+		{
+			for(local.s = 1; $(level.drivable_entities[local.a]) != NULL && local.s <= $(level.drivable_entities[local.a]).size; local.s++) // sometimes, two vehicles with the same targetname can exist
+			{													// for 1 or 2 frames. this for-loop prevents any console errors.
+				for(local.i = 1; local.i <= $player.size; local.i++)
+				{
+					if($player[local.i] istouching $(level.drivable_entities[local.a])[local.s]) { $player[local.i].touching_playerboat = 1 }
+
+					if($(level.drivable_entities[local.a])[local.s].doorclip != NIL && $(level.drivable_entities[local.a])[local.s].doorclip != NULL && $player[local.i] istouching $(level.drivable_entities[local.a])[local.s].doorclip)
+					{
+						$player[local.i].touching_playerboat = 1
+					}
+				}
+			}
+		}
+		waitframe
+	}
+
+	thread touching_playerboat
+end
+
+////////////////////////////////////////////////////////////////////////
+
+move_stuck_players:
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && ($player[local.i] istouching self || (self.model == "models/vehicles/higginsxtrahull.tik" && $player[local.i] istouching self.doorclip)))
+		{
+			if($player[local.i] istouching self.doorclip) { local.add = 120 }
+			else { local.add = 0 }
+			$player[local.i].origin += (angles_toup self.angles * (self.outheight + local.add))
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+keep_at_door local.doorclip local.door_open:
+
+	if(self.door_open != 1) { local.height = 60; local.angle = 0; local.dist = 285 }
+	else { local.height = -47; local.angle = 22; local.dist = 235 }
+	self.door_count = 0
+
+	while(self != NULL)
+	{
+		if(self.door_open != local.door_open && self.door_count >= 20)
+		{
+			self.door_count = 0
+			if(self.door_open != 1) { local.height = 60; local.angle = 0; local.dist = 285 }
+			else { local.height = -47; local.angle = 22; local.dist = 235 }
+		}
+		else { self.door_count++ }
+		if(self.door_count >= 20) { self.door_count = 20 }
+
+		if(self.movingbackward == 1) { local.direction = -1 }
+		else { local.direction = 1 }
+
+		local.doorclip.origin = self.origin + self.leftvector * 0 + self.forwardvector * local.dist + self.upvector * local.height + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
+		local.doorclip.angles = ( (self.angles[2] * -1) self.angles[1] self.angles[0] ) + ( 0 90 local.angle )
+
+		local.door_open = self.door_open
+		waitframe
+	}
+	local.doorclip remove
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1386,7 +1566,15 @@ if(level.vehiclescriptmaster3 != 1)
 	local.master aliascache vehicledeathwater sound/mechanics/Mec_WaterLoop_03.wav soundparms 1.2 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
 }
 
+if(level.vehiclescriptmaster4 != 1)
+{
+	local.master aliascache higgins_door_open sound/mechanics/DoorHatchOpen_02.wav soundparms 1.5 0.0 1.0 0.0 160 1600 item loaded maps level.mapname
+	local.master aliascache higgins_door_close sound/mechanics/DoorMetalClose_stop1.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+	local.master aliascache higgins_door_close sound/mechanics/DoorMetalClose_stop3.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+}
+
 level.boatscriptmaster = 1
 level.vehiclescriptmaster2 = 1
 level.vehiclescriptmaster3 = 1
+level.vehiclescriptmaster4 = 1
 end

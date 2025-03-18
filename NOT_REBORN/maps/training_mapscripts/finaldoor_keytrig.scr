@@ -19,7 +19,7 @@ end
 finaldoorkey local.playerorigin:
 
  local.finalkey = spawn trigger_use targetname "final_doorkey"
- local.finalkey setsize ( -30 -30 -50 ) ( 30 30 50 )
+ local.finalkey setsize ( -20 -20 -20 ) ( 20 20 20 )
  local.finalkey model "items/camera.tik"
  local.finalkey.scale = 2.5 
  local.finalkey show
@@ -96,7 +96,9 @@ doit_key local.origin:
 			level.finalkey_went2spectator = 0
 			goto finaldoorkey local.originold 
 		}
-    		goto finaldoorkey self.origin
+
+		local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
+    		goto finaldoorkey local.droppedorigin
 	}
 
 	else if(level.finaldoorunlocked == 1)

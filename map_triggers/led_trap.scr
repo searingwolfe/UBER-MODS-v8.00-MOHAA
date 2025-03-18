@@ -16,7 +16,7 @@ exec global/aliascache_triggersounds.scr led_trap
 	level.leddropped[local.name] = 0
 	local.trigger = spawn trigger_use targetname ("led_trigger1" + local.name)
  	local.trigger.origin = local.origin + ( 0 0 12 )
- 	local.trigger setsize ( -30 -30 -20 ) ( 30 30 50 )
+ 	local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
  	local.trigger.scale = 0.3
  }
  else if(level.leddropped[local.name] == 1)
@@ -168,7 +168,11 @@ doit local.origin local.name:
 		}
 
 		if(level.traptype[local.name] == 1) { goto main local.origin local.name 1 }
-    		else if(level.traptype[local.name] == 2) { goto main self.origin local.name 2 }
+    		else if(level.traptype[local.name] == 2)
+		{
+			local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
+			goto main local.droppedorigin local.name 2
+		}
 	}
 
     	else if(level.leddropped[local.name] != 1) 

@@ -54,6 +54,7 @@ radiobombblowup local.origin local.angles local.name:
 		local.debris.scale = 1.5
 		local.debris anim start
 
+		//local.explosion playsound explode_mine
 		//radiusdamage local.explosion.origin 500 level.rw_damageradius[local.name]
 		local.blewup = 1
 		for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so explosions can count as score/kills
@@ -133,7 +134,7 @@ radiobomb local.origin local.angles local.name:
 
  local.trigger = spawn trigger_use targetname ("rbomb_trigger1" + local.name) 	
  local.trigger model "animate/pulse_radiobomb_pickup.tik"
- local.trigger setsize ( -30 -30 -50 ) ( 30 30 50 )
+ local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
  local.trigger.scale = 1
  //local.trigger light 0 0 1 100
  local.trigger show	
@@ -222,7 +223,8 @@ doit local.name local.origin local.angles:
 		goto radiobomb local.origin local.angles local.name
      	}
 	
-	goto radiobomb self.origin self.angles local.name
+	local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
+	goto radiobomb local.droppedorigin self.angles local.name
      }
      if(level.rw_bombnowplanted[local.name] == 1) 
      { 
@@ -313,7 +315,7 @@ walkietalkie local.origin local.angles local.name:
  if(level.radiobomb_blowup[local.name] == 1 && level.bombstill_at1storigin[local.name] == 0) { local.trigger.origin = level.walkietalkie_origin[local.name]
 											       local.trigger.angles = level.walkietalkie_angles[local.name]
 											       level.rbomb_dropped[local.name] = 0 }
- local.trigger setsize ( -30 -30 -50 ) ( 30 30 50 )
+ local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
  local.trigger.scale = 1
  //local.trigger light 0.5 0 1 100
  local.trigger show
@@ -392,7 +394,8 @@ doit2 local.name local.origin local.angles:
 		goto walkietalkie local.origin local.angles local.name
 	}
 	
-	goto walkietalkie self.origin self.angles local.name
+	local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
+	goto walkietalkie local.droppedorigin self.angles local.name
      }
      if(level.rw_bombnowplanted[local.name] == 1) 
      { 

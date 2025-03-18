@@ -23,14 +23,14 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	if(local.model == "models/vehicles/sdkfz.tik")
 	{
 		local.desmodel = models/vehicles/sdkfz_green_d.tik
-		//if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/sdkfz_mg42.tik; cache models/vehicles/sdkfz_mg42_viewmodel.tik } // cache models/vehicles/sdkfz_shield.tik
-		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik }
+		//if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/sdkfz_mg42.tik; cache models/vehicles/sdkfz_mg42_viewmodel.tik; cache models/vehicles/sdkfz_shield.tik }
+		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik; cache models/vehicles/sdkfz_shield.tik }
 	}
 	if(local.model == "models/vehicles/sdkfz_afrika.tik")
 	{
 		local.desmodel = models/vehicles/sdkfz_desert_d.tik
-		//if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/sdkfz_mg42.tik; cache models/vehicles/sdkfz_mg42_viewmodel.tik }
-		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik }
+		//if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/sdkfz_mg42.tik; cache models/vehicles/sdkfz_mg42_viewmodel.tik; cache models/vehicles/sdkfz_shield.tik }
+		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik; cache models/vehicles/sdkfz_shield.tik }
 	}
 	if(local.model == "models/vehicles/jeep.tik")
 	{
@@ -82,21 +82,18 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 		if(local.vehicle.model != "models/vehicles/jeep.tik") { local.vehicle.gun.scale = 0.5 }
 	}
 
+	if(local.vehicle.model == "models/vehicles/shermantank.tik") { local.vehicle.outheight = 128 }
+	else if(local.vehicle.model == "models/vehicles/bmwbike.tik" || local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik") { local.vehicle.outheight = 50 }
+	else if(local.vehicle.model == "models/vehicles/jeep.tik" || local.vehicle.model == "models/vehicles/jeep_bench.tik" || local.vehicle.model == "models/vehicles/opeltruck.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.vehicle.outheight = 60 }
+	else if(local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/gmctruck.tik") { local.vehicle.outheight = 70 }
+	else if(local.vehicle.model == "models/vehicles/mercedes.tik") { local.vehicle.outheight = 90 }
+	else { local.vehicle.outheight = 100 }
+
 	local.vehicle.seats = 1		// initialize this before adding seats in "seatstuff" thread to avoid NIL errors
 	local.vehicle thread vehiclereset
 	local.vehicle thread vehicledamage
 	local.vehicle thread vehicledeath
 	local.vehicle thread vehicletrigger
-
-	local.trig = spawn trigger_multiple spawnflags 128
-	local.trig.origin = local.vehicle.origin
-	local.trig.vehicle = local.vehicle
-	local.trig glue local.vehicle
-	local.trig thread removetrig
-	local.trig setthread shottrig
-	if(local.vehicle.model == "models/vehicles/opeltruck.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen.tik" || local.vehicle.model == "models/vehicles/opeltruckgreen_canopy.tik" || local.vehicle.model == "models/vehicles/gmctruck.tik" || local.vehicle.model == "models/vehicles/jeep.tik" || local.vehicle.model == "models/vehicles/jeep_bench.tik") { local.trig setsize ( -65 -65 0 ) ( 65 65 100 ) }
-	else if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/shermantank.tik") { local.trig setsize ( -80 -80 0 ) ( 80 80 100 ) }
-	else { local.trig setsize ( -50 -50 0 ) ( 50 50 100 ) }
 
 	if(level.vehicle_initorigin[local.name] == NIL) { level.vehicle_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
 	if(level.vehicle_initangles[local.name] == NIL) { level.vehicle_initangles[local.name] = local.angles }
@@ -116,26 +113,38 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 		level.vehiclescriptmaster[local.vehicle.model] = 1
 		level.vehiclescriptmaster[local.model] = 1
 	}
-/*
-	if(local.vehicle.model == "models/vehicles/sdkfz.tik")
+
+	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik")
 	{
 		local.vehicle attachmodel models/vehicles/sdkfz_shield.tik "Box02" 1 ("shielddummy_" + local.vehicle.entnum) 1 -1 -1 -1 -1 ( -42 106 4.25 ) //( +backward -forward, +up -down, +left -right )
 		$("shielddummy_" + local.vehicle.entnum).angles = ( 180 0 -90 )
+
+		if(local.vehicle.gun != NIL && local.vehicle.gun != NULL && local.vehicle.gun.model == "models/vehicles/jeep_30cal.tik")
+		{
+			local.vehicle attachmodel models/static/jug.tik "Box02" 1 ("turretglue_" + local.vehicle.entnum) 1 -1 -1 -1 -1 ( -30 106 4 ) //( +backward -forward, +up -down, +left -right )
+			$("turretglue_" + local.vehicle.entnum).angles = local.vehicle.angles
+			$("turretglue_" + local.vehicle.entnum) bind local.vehicle
+			$("turretglue_" + local.vehicle.entnum) hide
+			local.vehicle.gun glue $("turretglue_" + local.vehicle.entnum) // move the bottom of the turret down onto the vehicle's roof.
+		}
 	}
-*/
-	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.tank }
+										// "local.player.touching_playervehicle" or "$player[1].touching_playervehicle" can be included in trigger setthreads
+	if(level.touching_playervehicle != 1) { thread touching_playervehicle }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
+
+	if(level.chainreactors == NIL || (level.chainreactors != NIL && level.chainreactors.size < 1)) { level.chainreactors[1] = local.vehicle }
 	else
 	{
 		for(local.c = 1; local.c <= 999; local.c++)
 		{
 			if(level.chainreactors[local.c] == NIL)
 			{
-				level.chainreactors[local.c] = local.tank
+				level.chainreactors[local.c] = local.vehicle
 				local.vehicle thread chainreactors_remove local.c
 				break
 			}
 		}
 	}
+	local.vehicle thread move_stuck_players // the vehicle might respawn on top of other players, move them onto the top of it.
 
 	if(level.drivable_entities == NIL) { level.drivable_entities[1] = local.name }
 	else
@@ -156,7 +165,8 @@ end
 
 shottrig:
 
-	if(self.vehicle != NULL) { self.vehicle.shooter = self }
+	local.player = parm.other
+	if(self.vehicle != NULL && (self.vehicle.driver == NIL || (self.vehicle.driver != NIL && (self.vehicle.driver.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.vehicle.shooter = local.player }
 end
 
 removetrig:
@@ -195,8 +205,9 @@ end
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
 
 	local.health = self.health
-	while(self != NULL && self.health > 0)
+	while(self != NULL && self.health > 0 && (self.driver == NIL || self.damagetrig.health > 0))
 	{
+		if(self.driver != NIL && self.damagetrig.health < self.health) { self.health = self.damagetrig.health }
 		if(self.health < local.health && self.shooter != NIL && self.shooter != NULL)
 		{
 			if(self.passengers != NIL && self.passengers.size >= 1)
@@ -232,7 +243,6 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					else { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
 					self.driver = NIL
-
 				}
 			}
 
@@ -247,8 +257,11 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				}
 			}
 		}
-
-		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(isalive self) // need "isalive" check to avoid "cannot give health to dead entities" error
+		{
+			self.health = local.health
+			if(self.driver != NIL) { self.damagetrig.health = local.health }
+		}
 		if(self.shooter != NIL) { self thread shooter_NIL }
 		waitframe
 	}
@@ -331,14 +344,18 @@ playergetin:
 	self.driver hide
 	self.driver nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
 	self.driver notsolid
-	//if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
-	//if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
-	//if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn.") }
+	if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
+	if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
+	if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn.") }
 	self.driver iprint ("JUMP = exit vehicle, hold FIRE = look behind.")
 	self.driver.driving_state_jump = 0
 
 	self attachdriverslot 0 self.driver //attachpassengerslot //attachturretslot
 	self thread dummyavatar
+
+	self waitthread spawn_driver_seat_and_trigs
+	if($("driver_seat_" + self.entnum) != NULL) { self.driver glue $("driver_seat_" + self.entnum) }
+	if($("rear_view_" + self.entnum) != NULL) { local.rearview = 1 }
 
 	if(local.driver.using_pack == 1)
 	{
@@ -353,9 +370,9 @@ playergetin:
 	local.decel_rate = 30 	// how many divisions of local.c for deceleration/acceleration. Higher = more time to reach max speed, Lower = less time to reach max speed.
 	local.deceleration = local.c
 	local.drivervelocity_old = ( 0 0 0 )
-	local.forward = 0
-	local.backward = 0
-	local.d = local.c	// vehicle turnrate will increase equally when accelerating, but will decrease 3.750x as fast when decelerating.
+	self.movingforward = 0
+	self.movingbackward = 0
+	local.d = local.c	// vehicle turnrate will increase 1.875x as fast when accelerating, but will decrease 3.750x as fast when decelerating.
 
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
@@ -386,7 +403,16 @@ playergetin:
 
 		if(self.driver.useheld != 1)
 		{
-			if(self.driver.fireheld == 1) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) } // hold FIRE for rear-view mirror (look backwards)
+			if(self.driver.fireheld == 1) // hold FIRE for rear-view mirror (look backwards)
+			{
+				self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) )
+
+				if(local.firehelding != 1 && local.rearview == 1)
+				{
+					self waitthread rearview_adjust 1
+				}
+			}
+			else if(local.firehelding == 1) { self waitthread rearview_adjust 0 }
 	
 			if((self.driver getcontrollerangles 0)[2] > 15 && local.toggle != 1 && self.nohorn != 1) // lean left to honk horn
 			{
@@ -406,11 +432,13 @@ playergetin:
 		if(self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 + (self.angles[0] - 360)) self.driver.viewangles[1] self.driver.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
 		if(self.driver.viewangles[0] < -180) { self.driver.viewangles = ( (self.driver.viewangles[0] + 360) self.driver.viewangles[1] self.driver.viewangles[2] ) } // prevent camera from moving too far down.
 
+		if(self.vehiclespeed == 0) { self.movingforward = 0; self.movingbackward = 0 }
+
 		if(self.velocity != ( 0 0 0 )) // make vehicles drive faster in reverse, only when holding S (walk backwards key) and when holding FIRE (looking behind).
 		{
 			if(self.driver.driving_state_backward == 1)
 			{
-				if(local.forward == 1 && local.c < local.deceleration) // slowing down, before reversing begins.
+				if(self.movingforward == 1 && local.c < local.deceleration) // slowing down, before reversing begins.
 				{
 					local.c += local.deceleration * 2.000 / local.decel_rate
 					local.d += 3.750 * local.deceleration / local.decel_rate
@@ -422,18 +450,18 @@ playergetin:
 				else
 				{
 					local.c -= local.deceleration / local.decel_rate
-					local.d -= local.deceleration / local.decel_rate
+					local.d -= 1.875 * local.deceleration / local.decel_rate
 					if(local.c < 1) { local.c = 1 }
 					if(local.d < 1) { local.d = 1 }
 					self.vehiclespeed = self.vehiclespeed_max / local.c
 					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed * -0.500 // only reverse at half the maximum vehicle speed
-					local.forward = 0
-					local.backward = 1
+					self.movingforward = 0
+					self.movingbackward = 1
 				}
 			}
 			else // make vehicles drive faster, only when holding W (forward key).
 			{
-				if(local.backward == 1 && local.c < local.deceleration) // slowing down, before driving forward begins.
+				if(self.movingbackward == 1 && local.c < local.deceleration) // slowing down, before driving forward begins.
 				{
 					local.c += local.deceleration * 2.000 / local.decel_rate
 					local.d += 3.750 * local.deceleration / local.decel_rate
@@ -445,13 +473,13 @@ playergetin:
 				else
 				{
 					local.c -= local.deceleration / local.decel_rate
-					local.d -= local.deceleration / local.decel_rate
+					local.d -= 1.875 * local.deceleration / local.decel_rate
 					if(local.c < 1) { local.c = 1 }
 					if(local.d < 1) { local.d = 1 }
 					self.vehiclespeed = self.vehiclespeed_max / local.c
 					self.velocity = self.driver.velocity + self.forwardvector * self.vehiclespeed
-					local.forward = 1
-					local.backward = 0
+					self.movingforward = 1
+					self.movingbackward = 0
 				}
 			}
 
@@ -483,6 +511,22 @@ playergetin:
 			if(self.driver.driving_state_backward == 1) { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed * -1 }
 			else { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed }
 		}
+
+		if(self.model != "models/vehicles/sdkfz.tik" && self.model != "models/vehicles/sdkfz_afrika.tik" && self.model != "models/vehicles/shermantank.tik")
+		{
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig || $("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig))
+				{
+					self.shooter = $player[local.i]
+					self.driver takedamage
+					self.driver damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+
+		if(local.driver.fireheld == 1) { local.firehelding = 1 }
+		else { local.firehelding = 0 }
 
 		local.drivervelocity_old = self.driver.velocity
 		local.driver stufftext ("set phealth " + int(local.driver.health))
@@ -542,25 +586,16 @@ driverreset local.status:
 	if(local.status != 1) { cueplayer }				// reattaches camera to player's head
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
+	if($("driver_seat_" + self.entnum) != NULL) { self.driver unglue }
 
-	if(self.model == "models/vehicles/shermantank.tik") { local.outheight = 128 }
-	else if(self.model == "models/vehicles/bmwbike.tik" || self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik") { local.outheight = 50 }
-	else if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.outheight = 60 }
-	else if(self.model == "models/vehicles/m3.tik" || self.model == "models/vehicles/gmctruck.tik") { local.outheight = 70 }
-	else if(self.model == "models/vehicles/mercedes.tik") { local.outheight = 90 }
-	else { local.outheight = 100 }
-
-	if(self.driver.dmteam != spectator)
+	if(local.status != 2)
 	{
 		self.driver show
 		if(local.status != 1) { self.driver solid }
 		self.driver takedamage
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
-		if(local.status != 1 && local.status != 2)
-		{
-			self.driver.origin = self.origin + (angles_toup self.angles * local.outheight)
-			self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
-		}
+		self.driver.origin = self.origin + (angles_toup self.angles * self.outheight)
+		self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
 	}
 end
 
@@ -637,9 +672,14 @@ vehicledeath:
 	}
 	if(self.desmodel == NIL || self.desmodel == models/vehicles/bmwbike_d.tik || self.desmodel == models/vehicles/opeltruckgreen_d.tik)
 	{
-		local.r = randomint(2)
-		if(local.r == 0) { local.one = 1 }
-		if(local.r == 1) { local.one = -1 }
+		if(self.angles[2] > 5 && self.angles[2] < 180) { local.one = 1 }
+		if(self.angles[2] > 180 && self.angles[2] < 355) { local.one = -1 }
+		if(self.angles[2] <= 5 || self.angles[2] >= 345)
+		{
+			local.r = randomint(2)
+			if(local.r == 0) { local.one = 1 }
+			if(local.r == 1) { local.one = -1 }
+		}
 		if(self.desmodel != models/vehicles/bmwbike_d.tik && self.desmodel != models/vehicles/opeltruckgreen_d.tik)
 		{
 			local.desvehicle model self.model
@@ -655,14 +695,14 @@ vehicledeath:
 
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
-		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + local.desvehicle.upvector * 42
+		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 42
 		local.fire.angles = ( 0 0 0 )
 		local.fire.scale = 1
 		local.fire anim start
 		local.fire notsolid
 		local.smoke = spawn script_model
 		local.smoke model "models/emitters/thin_black_short.tik"
-		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + local.desvehicle.upvector * 42
+		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 42
 		local.smoke.angles = ( 0 0 0 )
 		local.smoke.scale = 0.7
 		local.smoke anim start
@@ -855,8 +895,9 @@ floodedreset:
 		local.c++
 		waitframe
 	}
-
 	local.smoke remove
+	if(self == NULL || self.dead == 1) { end }
+
 	if(self.gun != NIL && self.gun != NULL) { self.gun remove }
 	self remove
 	thread main local.name local.model level.vehicle_initorigin[local.name] level.vehicle_initangles[local.name] local.health local.vehiclespeed local.resettime local.headlights local.noheadlights
@@ -963,13 +1004,13 @@ turretplayer_reset local.team local.player local.dead:
 	self.gun lock
 	self.turretplayer = NIL
 
-	if(self.model == "models/vehicles/jeep.tik") { local.outheight = 100 }
-	else { local.outheight = 180 }
-
 	if(local.player.dmteam != local.team && local.player.dmteam != "spectator") { local.player respawn }
 	else { local.player.viewangles = ( self.gun.angles[0] self.gun.angles[1] 0 ) }
 
-	if(local.player.dmteam == local.team) { local.player.origin = self.origin + self.forwardvector * -100 + (angles_toup self.angles * local.outheight) }
+	if(self.model == "models/vehicles/jeep.tik") { local.multiplier = -100 }
+	else { local.multiplier = 100 }
+
+	if(local.player.dmteam == local.team) { local.player.origin = self.origin + self.forwardvector * local.multiplier + (angles_toup self.angles * self.outheight) }
 
 	if(!isalive local.player || (self.driver != NIL && self.driver != NULL && !isalive self.driver) || local.dead == 1)
 	{
@@ -1006,11 +1047,8 @@ passengers:
 		end
 	}
 
-	if(self.dist_offset[local.s] == NIL) { end }
-	local.distoffset = self.dist_offset[local.s]
-
-	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/bmwbike.tik") { local.outheight = 100 }
-	else { local.outheight = 180 }
+	self waitthread spawn_passenger_seat local.s
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { local.player glue $("passenger_seat_" + local.s + "_" + self.entnum) }
 
 	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
 	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
@@ -1027,45 +1065,36 @@ passengers:
 	local.player.driving_state_jump = 0
 	local.PI = 3.14159265359
 	local.driver = self.driver
+	local.outheight = self.outheight
 
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0 && $("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
 	{
 		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
 
-		local.degrees = self.angles[1] + 180 + self.degree_offset[local.s] // 180 degrees added in "local.degrees" to find origin of passenger's seat, instead of driver's seat.
-		local.sin = (waitthread global/math.scr::sine local.degrees) * self.dist_offset[local.s]
-		local.cos = (waitthread global/math.scr::cosine local.degrees) * self.dist_offset[local.s]
-
-		if(self.driver.driving_state_backward == 1) { local.direction = -1 }
-		else { local.direction = 1 }
-		if(self.velocity != ( 0 0 0 ))
-		{
-			local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
-		}
-		else { local.player.origin = self.origin + ( local.cos local.sin self.height_offset[local.s] ) }
+		local.angles = self.angles
+		local.dist = vector_length($("passenger_seat_" + local.s + "_" + self.entnum).origin - self.origin)
+		local.s_ang = vector_toangles($("passenger_seat_" + local.s + "_" + self.entnum).origin - self.origin)
+		local.s_vec = angles_toforward(local.s_ang) * local.dist
 
 		if(local.player.fireheld != 1)
 		{
-			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) + ( 0 self.playerang_offset[local.s] 0 ) } // some vehicles' passengers should not face forward (view is blocked)
-			else { local.player.viewangles = ( 0 self.angles[1] self.angles[2] ) }
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) + ( self.angles[0] self.playerang_offset[local.s] self.angles[2] ) } // some vehicles' passengers should not face forward (view is blocked)
+			else { local.player.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
 		}
+
+		if(local.player.viewangles[0] > 180) { local.player.viewangles = ( (10 + (self.angles[0] - 360)) local.player.viewangles[1] local.player.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
+		if(local.player.viewangles[0] < -180) { local.player.viewangles = ( (local.player.viewangles[0] + 360) local.player.viewangles[1] local.player.viewangles[2] ) } // prevent camera from moving too far down.
 
 		if(local.player.driving_state_jump == 1) // Press JUMP to exit vehicle.
 		{
+			local.player unglue
 			if(local.player.isdog != 1) { local.player show }
 			local.player give "models/items/binoculars.tik"
 			local.player solid
 			local.player takedamage
 			//local.player noclip
 			local.player forcetorsostate STAND
-			if(self != NULL && self.model == "models/vehicles/jeep.tik" && self.turretplayer != NIL && self.turretplayer != NULL)
-			{
-				local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s] * 1.5) + (angles_toup self.angles * local.outheight)
-			}
-			else  // using player's origin prevents passengers getting stuck inside each other
-			{
-				local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight)
-			}
+			local.player.origin += local.s_vec + angles_toup(self.angles) * self.outheight
 			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
 			local.player thread wallstuck_fix
@@ -1073,14 +1102,20 @@ passengers:
 			local.player.passenger = 0
 			local.player.ridingent = NIL
 			local.player.driving = 0
+			if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
 			end
 		}
 		waitframe
 	}
-	if(self != NULL) { self.passengers[local.s] = NIL }
+	if(self != NULL)
+	{
+		self.passengers[local.s] = NIL
+		if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+	}
 
 	if(local.player != NULL)
 	{
+		local.player unglue
 		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
 		local.player.passenger = 0
 		local.player.ridingent = NIL
@@ -1095,11 +1130,7 @@ passengers:
 			local.player forcetorsostate STAND
 			if(local.player.dmteam == local.team) // if the passenger did not switch teams
 			{
-				local.sin = local.sin / local.distoffset * 25 // when all passengers get out at the same time, make sure they're spaced out a few more units
-				local.cos = local.cos / local.distoffset * 25
-	
-				if(self != NULL) { local.player.origin += angles_toforward( self.angles[0] (self.angles[1] + 180 + self.degree_offset[local.s]) self.angles[2] ) * (self.dist_offset[local.s]) + (angles_toup self.angles * local.outheight) }
-				else { local.player.origin += ( local.cos local.sin local.outheight ) }
+				local.player.origin += local.s_vec * 1.5 + angles_toup(local.angles) * local.outheight
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 				local.player thread wallstuck_fix
 	
@@ -1131,169 +1162,251 @@ end
 
 seatstuff:
 
-	if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
-	{
-		self.seats = 5 // not including driver's seat
-		self.degree_offset[1] = 160		// [1] = front passenger, [2] & [3] = left side rear passengers, [4] & [5] = right side rear passengers 
-		self.dist_offset[1] = 60
-		self.height_offset[1] = 17
-		self.degree_offset[2] = -55
-		self.dist_offset[2] = 36
-		self.height_offset[2] = 60
-		self.degree_offset[3] = -17
-		self.dist_offset[3] = 100
-		self.height_offset[3] = 60
-		self.degree_offset[4] = 55
-		self.dist_offset[4] = 36
-		self.height_offset[4] = 60
-		self.degree_offset[5] = 17
-		self.dist_offset[5] = 100
-		self.height_offset[5] = 60
-
-		if(self.model == "models/vehicles/opeltruckgreen_canopy.tik")
-		{
-			self.height_offset[2] = 42
-			self.height_offset[3] = 42
-			self.height_offset[4] = 42
-			self.height_offset[5] = 42
-			self.playerang_offset[2] = 180
-			self.playerang_offset[3] = 180
-			self.playerang_offset[4] = 180
-			self.playerang_offset[5] = 180
-		}
-	}
 	if(self.model == "models/vehicles/jeep.tik")
 	{
-		self.seats = 1
-		self.degree_offset[1] = 40		// [1] = front passenger
-		self.dist_offset[1] = 39
-		self.height_offset[1] = 10
+		self.seats = 1 // [1] = front passenger, not including driver's seat.
 	}
-	if(self.model == "models/vehicles/jeep_bench.tik")
+	else if(self.model == "models/vehicles/jeep_bench.tik")
 	{
-		self.seats = 2
-		self.degree_offset[1] = 40		// [1] = front passenger, [2] = back seat (30cal spot)
-		self.dist_offset[1] = 39
-		self.height_offset[1] = 10
-		self.degree_offset[2] = 0
-		self.dist_offset[2] = 80
-		self.height_offset[2] = 10
+		self.seats = 2 // [1] = front passenger, [2] = back seat (30cal spot)
 	}
-	if(self.model == "models/vehicles/bmwbike.tik")
+	else if(self.model == "models/vehicles/bmwbike.tik")
 	{
-		self.seats = 2
-		self.degree_offset[1] = 50		// [1] = side car seat, [2] = behind driver
-		self.dist_offset[1] = 24
-		self.height_offset[1] = 0
-		self.degree_offset[2] = -25
-		self.dist_offset[2] = 52
-		self.height_offset[2] = 0
+		self.seats = 2 // [1] = side car seat, [2] = behind driver
 	}
-	if(self.model == "models/vehicles/m3.tik")
+	else if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
 	{
-		self.seats = 5
-		self.degree_offset[1] = 100		// [1] = front passenger, [2] & [3] = left side rear passengers, [4] & [5] = right side rear passengers 
-		self.dist_offset[1] = 35
-		self.height_offset[1] = 35
-		self.degree_offset[2] = -25
-		self.dist_offset[2] = 67
-		self.height_offset[2] = 35
-		self.degree_offset[3] = -12
-		self.dist_offset[3] = 135
-		self.height_offset[3] = 35
-		self.degree_offset[4] = 25
-		self.dist_offset[4] = 67
-		self.height_offset[4] = 35
-		self.degree_offset[5] = 12
-		self.dist_offset[5] = 135
-		self.height_offset[5] = 35
+		self.seats = 7 // [1] = front passenger, [2] & [3] & [4] = left side rear passengers, [5] & [6] & [7] = right side rear passengers
 	}
-	if(self.model == "models/vehicles/gmctruck.tik")
+	else if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik")
 	{
-		self.seats = 5
-		self.degree_offset[1] = 164		// [1] = front passenger, [2] & [3] = left side rear passengers, [4] & [5] = right side rear passengers 
-		self.dist_offset[1] = 65
-		self.height_offset[1] = 35	
-		self.degree_offset[2] = -25
-		self.dist_offset[2] = 50
-		self.height_offset[2] = 60
-		self.degree_offset[3] = -10
-		self.dist_offset[3] = 120
-		self.height_offset[3] = 60
-		self.degree_offset[4] = 25
-		self.dist_offset[4] = 50
-		self.height_offset[4] = 60
-		self.degree_offset[5] = 10
-		self.dist_offset[5] = 120
-		self.height_offset[5] = 60
+		self.seats = 4 // [1] & [2] = left side rear passengers, [3] & [4] = right side rear passengers
+	}
+	else if(self.model == "models/vehicles/mercedes.tik")
+	{
+		self.seats = 3 // [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
+	}
+	else if(self.model == "models/vehicles/gmctruck.tik")
+	{
+		self.seats = 7 // [1] = front passenger, [2] & [3] & [4] = left side rear passengers, [5] & [6] & [7] = right side rear passengers
+	}
+	else if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik")
+	{
+		self.seats = 3 // [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
+	}
+	else if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
+	{
+		self.seats = 3 // [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
+	}
+	else if(self.model == "models/vehicles/m3.tik")
+	{
+		self.seats = 7 // [1] = front passenger, [2] & [3] & [4] = left side rear passengers, [5] & [6] & [7] = right side rear passengers
+	}
+	else if(self.model == "models/vehicles/shermantank.tik")
+	{
+		self.seats = 1 // [1] = tank's port hole
+	}
+end
 
-		self.playerang_offset[2] = 180
-		self.playerang_offset[3] = 180
-		self.playerang_offset[4] = 180
-		self.playerang_offset[5] = 180
-	}
-	if(self.model == "models/vehicles/mercedes.tik")
+spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwise initializing all seats when vehicle spawns will greatly increase map's entity count.
+
+	local.trig = spawn trigger_multiple spawnflags 128 // for calculating how much damage was given (triggers with health will not go to a setthread until it's fully dead).
+	local.trig.origin = self.origin
+	local.trig.health = self.health
+	local.trig.vehicle = self
+	self.damagetrig = local.trig
+	local.trig glue self
+	local.trig thread removetrig
+	local.trig.model = self.model
+	local.trig.scale = self.scale
+	local.trig hide
+
+	local.trigshot = spawn trigger_multiple spawnflags 128 // instantly determine the vehicle's shooter (runs setthread each time it's triggered).
+	local.trigshot.origin = self.origin
+	local.trigshot.vehicle = self
+	self.trigshot = local.trigshot
+	local.trigshot glue self
+	local.trigshot thread removetrig
+	local.trigshot setthread shottrig
+	local.trigshot.model = self.model
+	local.trigshot.scale = self.scale
+	local.trigshot hide
+
+	if($("driver_seat_" + self.entnum) != NULL) { $("driver_seat_" + self.entnum) remove }
+
+	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") // ( -right +left, +up -down, +forward -backward )
 	{
-		self.seats = 3
-		self.degree_offset[1] = 90		// [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
-		self.dist_offset[1] = 15
-		self.height_offset[1] = -10
-		self.degree_offset[2] = -18
-		self.dist_offset[2] = 50
-		self.height_offset[2] = -10
-		self.degree_offset[3] = 18
-		self.dist_offset[3] = 50
-		self.height_offset[3] = -10
+		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 24 5 -30 ) // "Box01", "Box02", or similar is determined by the model's .skc file.
+		local.trig setsize ( -50 -50 0 ) ( 50 50 100 )
+		local.trigshot setsize ( -50 -50 0 ) ( 50 50 100 )
 	}
-	if(self.model == "models/vehicles/shermantank.tik")
+	else if(self.model == "models/vehicles/bmwbike.tik") // ( -right +left, +up -down, +forward -backward )
 	{
-		self.seats = 1
-		self.degree_offset[1] = 9		// [1] = tank's port hole
-		self.dist_offset[1] = 155
-		self.height_offset[1] = 85
+		self attachmodel models/static/jug.tik "Box02" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 22 0 -14 ) 
+		local.trig setsize ( -45 -45 0 ) ( 45 45 95 )
+		local.trigshot setsize ( -45 -45 0 ) ( 45 45 95 )
 	}
-	if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik")
+	else if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") // ( -right +left, -forward +backward, +up -down )
 	{
-		self.seats = 4
-		self.degree_offset[1] = -65		// [1] & [2] = left side rear passengers, [3] & [4] = right side rear passengers 
-		self.dist_offset[1] = 25
-		self.height_offset[1] = 35
-		self.degree_offset[2] = -14
-		self.dist_offset[2] = 93
-		self.height_offset[2] = 35
-		self.degree_offset[3] = 65
-		self.dist_offset[3] = 25
-		self.height_offset[3] = 35
-		self.degree_offset[4] = 14
-		self.dist_offset[4] = 93
-		self.height_offset[4] = 35
+		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 19.5 -40 20 )
+		self attachmodel models/static/jug.tik "Box01" 1 ("rear_view_" + self.entnum) 1 -1 -1 -1 -1 ( 0 -10 20 )
+		local.trig setsize ( -60 -60 0 ) ( 60 60 155 )
+		local.trigshot setsize ( -60 -60 0 ) ( 60 60 155 )
 	}
-	if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik")
+	else if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik") //( +backward -forward, +up -down, +left -right )
 	{
-		self.seats = 3
-		self.degree_offset[1] = 46		// [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
-		self.dist_offset[1] = 25
-		self.height_offset[1] = 0
-		self.degree_offset[2] = -12
-		self.dist_offset[2] = 81
-		self.height_offset[2] = 0
-		self.degree_offset[3] = 12
-		self.dist_offset[3] = 81
-		self.height_offset[3] = 0
+		self attachmodel models/static/jug.tik "Box02" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 50 75 4 )
+		local.trig setsize ( -68 -68 0 ) ( 68 68 145 )
+		local.trigshot setsize ( -68 -68 0 ) ( 68 68 145 )
 	}
-	if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
+	else if(self.model == "models/vehicles/mercedes.tik") //( -right +left, +up -down, +forward -backward )
 	{
-		self.seats = 3
-		self.degree_offset[1] = 60		// [1] = front passenger, [2] = behind driver seat, [3] = behind front passenger
-		self.dist_offset[1] = 15
-		self.height_offset[1] = -7
-		self.degree_offset[2] = -12
-		self.dist_offset[2] = 75
-		self.height_offset[2] = -7
-		self.degree_offset[3] = 12
-		self.dist_offset[3] = 75
-		self.height_offset[3] = -7
+		self attachmodel models/static/jug.tik "Box02" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 17 -10 5 )
+		local.trig setsize ( -40 -40 0 ) ( 40 40 85 )
+		local.trigshot setsize ( -40 -40 0 ) ( 40 40 85 )
 	}
+	else if(self.model == "models/vehicles/gmctruck.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 16 35 56 )
+		self attachmodel models/static/jug.tik "Box01" 1 ("rear_view_" + self.entnum) 1 -1 -1 -1 -1 ( 0 30 15 )
+		local.trig setsize ( -56 -56 0 ) ( 56 56 164 )
+		local.trigshot setsize ( -56 -56 0 ) ( 56 56 164 )
+	}
+	else if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		self attachmodel models/static/jug.tik "Box02" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 17 2 -17 )
+		local.trig setsize ( -40 -40 0 ) ( 40 40 97 )
+		local.trigshot setsize ( -40 -40 0 ) ( 40 40 97 )
+	}
+	else if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		self attachmodel models/static/jug.tik "Box02" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 15 -5.5 -8 )
+		local.trig setsize ( -40 -40 0 ) ( 40 40 89.5 )
+		local.trigshot setsize ( -40 -40 0 ) ( 40 40 89.5 )
+	}
+	else if(self.model == "models/vehicles/m3.tik") //( +forward -backward, +up -down, -left +right )
+	{
+		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 0 60 0 )
+		local.trig setsize ( -60 -60 0 ) ( 60 60 163 )
+		local.trigshot setsize ( -60 -60 0 ) ( 60 60 163 )
+	}
+	else if(self.model == "models/vehicles/shermantank.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		self attachmodel models/static/jug.tik "Box02" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 0 75 -125 )
+		local.trig setsize ( -70 -70 0 ) ( 70 70 180 )
+		local.trigshot setsize ( -70 -70 0 ) ( 70 70 180 )
+	}
+
+	if($("driver_seat_" + self.entnum) != NULL)
+	{
+		$("driver_seat_" + self.entnum).angles = self.angles
+		$("driver_seat_" + self.entnum) bind self
+		$("driver_seat_" + self.entnum) hide
+	}
+	if($("rear_view_" + self.entnum) != NULL)
+	{
+		$("rear_view_" + self.entnum).angles = self.angles + ( 0 180 0 )
+		$("rear_view_" + self.entnum) bind self
+		$("rear_view_" + self.entnum) hide
+	}
+end
+
+spawn_passenger_seat local.s: // only spawn seats when needed.
+
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+
+	local.add = 0
+	if(self.model == "models/vehicles/jeep.tik") // ( -right +left, +up -down, +forward -backward )
+	{
+		self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -30 )
+	}
+	else if(self.model == "models/vehicles/jeep_bench.tik") // ( -right +left, +up -down, +forward -backward )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -30 ) } // or -25
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 0 10 -80 ) }
+	}
+	else if(self.model == "models/vehicles/bmwbike.tik") // ( -right +left, +up -down, +forward -backward )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -18 0 -12 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 22 0 -44 ) }
+	}
+	else if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") // ( -right +left, -forward +backward, +up -down )
+	{
+		if(self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.num = 180 }
+		else { local.num = 0 }
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -19.5 -40 20 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 22 60 ); local.add = local.num }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 87 60 ); local.add = local.num }
+		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 152 60 ); local.add = local.num }
+		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 22 60 ); local.add = local.num }
+		if(local.s == 6) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 87 60 ); local.add = local.num }
+		if(local.s == 7) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 152 60 ); local.add = local.num }
+	}
+	else if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik") //( +backward -forward, +up -down, +left -right )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 10 50 22 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 10 50 -14 ) }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 90 50 22 ) }
+		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 90 50 -14 ) }
+	}
+	else if(self.model == "models/vehicles/mercedes.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 -10 5 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 17 -10 -47 ) }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 -10 -47 ) }
+	}
+	else if(self.model == "models/vehicles/gmctruck.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -16.5 35 56 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -2 ); local.add = 180 }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -67 ); local.add = 180 }
+		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -132 ); local.add = 180 }
+		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -2 ); local.add = 180 }
+		if(local.s == 6) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -67 ); local.add = 180 }
+		if(local.s == 7) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -132 ); local.add = 180 }
+	}
+	else if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 2 -17 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 17 2 -73 ) }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 2 -73 ) }
+	}
+	else if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -15 -5.5 -8 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 15 -5.5 -72 ) }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -15 -5.5 -72 ) }
+	}
+	else if(self.model == "models/vehicles/m3.tik") // ( +forward -backward, +up -down, -left +right )
+	{
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 3 30 27 ) }
+		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -53 68 -38 ) }
+		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -103 68 -38 ) }
+		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -153 68 -38 ) }
+		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -53 68 33 ) }
+		if(local.s == 6) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -103 68 33 ) }
+		if(local.s == 7) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -153 68 33 ) }
+	}
+	else if(self.model == "models/vehicles/shermantank.tik") //( -right +left, +up -down, +forward -backward )
+	{
+		self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 85 -153 )
+	}
+
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
+	{
+		$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( 0 local.add 0 )
+		$("passenger_seat_" + local.s + "_" + self.entnum) bind self
+		$("passenger_seat_" + local.s + "_" + self.entnum) hide
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+rearview_adjust local.firehelding:
+
+	self.driver unglue
+	if(local.firehelding == 1) { self.driver glue $("rear_view_" + self.entnum) }
+	else { self.driver glue $("driver_seat_" + self.entnum) }
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1374,47 +1487,14 @@ deadcorona local.tag:
 			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
 			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
 		}
-		if(self.model == "models/vehicles/bmwbike.tik") // simulate headlight tag for bmwbikes
+		else if(self.model == "models/vehicles/bmwbike.tik") // simulate headlight tag for bmwbikes
 		{
 			self attachmodel models/miscobj/searchlight.tik "Box02" 0.365 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 22.5 52 34 ) //( -right +left, +up -down, +forward -backward )
 			self attachmodel models/static/jug.tik "Box02" 0.9 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( 22.5 52 42 )
 			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
 			$("headlight_2_" + self.entnum).angles = ( 0 0 180 )
 		}
-		if(self.model == "models/vehicles/m3.tik") // simulate headlight tags for m3 halftracks
-		{
-			self attachmodel models/miscobj/searchlight.tik "Box01" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 125 77 25.5 ) //( +forward -backward, +up -down, +left -right )
-			self attachmodel models/miscobj/searchlight.tik "Box01" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( 125 77 -29.5 )
-			self attachmodel models/static/jug.tik "Box01" 0.6 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 130 77 25.5 )
-			self attachmodel models/static/jug.tik "Box01" 0.6 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( 130 77 -29.5 )
-			$("headlight_1_" + self.entnum).angles = ( 180 0 90 )
-			$("headlight_2_" + self.entnum).angles = ( 180 0 90 )
-			$("headlight_3_" + self.entnum).angles = ( 90 0 180 )
-			$("headlight_4_" + self.entnum).angles = ( 90 0 180 )
-		}
-		if(self.model == "models/vehicles/shermantank.tik") // simulate headlight tags for shermantanks
-		{
-			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 45.8 80.5 -23 ) //( -right +left, +up -down, +forward -backward )
-			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -45.5 80.5 -23 )
-			self attachmodel models/static/jug.tik "Box02" 0.6 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 45.8 80.5 -17 )
-			self attachmodel models/static/jug.tik "Box02" 0.6 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -45.5 80.5 -17 )
-			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
-			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
-			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
-			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
-		}
-		if(self.model == "models/vehicles/gmctruck.tik") // simulate headlight tags for gmctrucks
-		{
-			self attachmodel models/miscobj/searchlight.tik "Box01" 0.32 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 26 72.5 160 ) //( -right +left, +up -down, +forward -backward )
-			self attachmodel models/miscobj/searchlight.tik "Box01" 0.32 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -27.5 72.5 160 )
-			self attachmodel models/static/jug.tik "Box01" 0.75 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 26 72.5 165 )
-			self attachmodel models/static/jug.tik "Box01" 0.75 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -27.5 72.5 165 )
-			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
-			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
-			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
-			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
-		}
-		if(self.model == "models/vehicles/mercedes.tik") // simulate headlight tags for mercedes cars
+		else if(self.model == "models/vehicles/mercedes.tik") // simulate headlight tags for mercedes cars
 		{
 			self attachmodel models/miscobj/searchlight.tik "Box02" 0.4 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 22 46.5 98 ) //( -right +left, +up -down, +forward -backward )
 			self attachmodel models/miscobj/searchlight.tik "Box02" 0.4 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -23 46.5 98 )
@@ -1425,7 +1505,7 @@ deadcorona local.tag:
 			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
 			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
 		}
-		if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik")
+		else if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik")
 		{
 			self attachmodel models/miscobj/searchlight.tik "Box02" 0.32 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 26 55 95.25 ) //( -right +left, +up -down, +forward -backward )
 			self attachmodel models/miscobj/searchlight.tik "Box02" 0.32 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -26.5 55 95.25 )
@@ -1436,12 +1516,45 @@ deadcorona local.tag:
 			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
 			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
 		}
-		if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
+		else if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
 		{
 			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 15.75 44.25 86.5 ) //( -right +left, +up -down, +forward -backward )
 			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -16.2 44.25 86.5 )
 			self attachmodel models/static/jug.tik "Box02" 0.75 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 15.75 44.25 92 )
 			self attachmodel models/static/jug.tik "Box02" 0.75 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -16.2 44.25 92 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+		else if(self.model == "models/vehicles/gmctruck.tik") // simulate headlight tags for gmctrucks
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.32 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 26 72.5 160 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.32 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -27.5 72.5 160 )
+			self attachmodel models/static/jug.tik "Box01" 0.75 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 26 72.5 165 )
+			self attachmodel models/static/jug.tik "Box01" 0.75 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -27.5 72.5 165 )
+			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 0 0 180 )
+		}
+		else if(self.model == "models/vehicles/m3.tik") // simulate headlight tags for m3 halftracks
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 125 77 25.5 ) //( +forward -backward, +up -down, -left +right )
+			self attachmodel models/miscobj/searchlight.tik "Box01" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( 125 77 -29.5 )
+			self attachmodel models/static/jug.tik "Box01" 0.6 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 130 77 25.5 )
+			self attachmodel models/static/jug.tik "Box01" 0.6 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( 130 77 -29.5 )
+			$("headlight_1_" + self.entnum).angles = ( 180 0 90 )
+			$("headlight_2_" + self.entnum).angles = ( 180 0 90 )
+			$("headlight_3_" + self.entnum).angles = ( 90 0 180 )
+			$("headlight_4_" + self.entnum).angles = ( 90 0 180 )
+		}
+		else if(self.model == "models/vehicles/shermantank.tik") // simulate headlight tags for shermantanks
+		{
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_1_" + self.entnum) 1 -1 -1 -1 -1 ( 45.8 80.5 -23 ) //( -right +left, +up -down, +forward -backward )
+			self attachmodel models/miscobj/searchlight.tik "Box02" 0.3 ("headlight_2_" + self.entnum) 1 -1 -1 -1 -1 ( -45.5 80.5 -23 )
+			self attachmodel models/static/jug.tik "Box02" 0.6 ("headlight_3_" + self.entnum) 1 -1 -1 -1 -1 ( 45.8 80.5 -17 )
+			self attachmodel models/static/jug.tik "Box02" 0.6 ("headlight_4_" + self.entnum) 1 -1 -1 -1 -1 ( -45.5 80.5 -17 )
 			$("headlight_1_" + self.entnum).angles = ( 90 0 90 )
 			$("headlight_2_" + self.entnum).angles = ( 90 0 90 )
 			$("headlight_3_" + self.entnum).angles = ( 0 0 180 )
@@ -1510,22 +1623,12 @@ dummyavatar:
 
 	if(self != NULL)
 	{
-		if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
-		{
-			self attachmodel self.driver.model "Box07" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( 20 -35 17 ) //( +left -right, +backward -forward, +up -down )
-			$("driverdummy_" + self.entnum).angles = ( 0 -90 0 )
-		}
-		if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik")
-		{
-			self attachmodel self.driver.model "Box01" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( 24.5 10 -30 ) //( +left -right, +up -down, +forward -backward )
-			$("driverdummy_" + self.entnum).angles = ( -90 0 -90 )
-		}
 		if(self.model == "models/vehicles/m3.tik")
 		{
-			self attachmodel self.driver.model "Box01" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( 3 30 -32 ) //( +forward -backward, +up -down, +left -right )
+			self attachmodel self.driver.model "Box01" 1 ("driverdummy_" + self.entnum) 1 -1 -1 -1 -1 ( 3 30 -32 ) //( +forward -backward, +up -down, -left +right )
 			$("driverdummy_" + self.entnum).angles = ( 0 0 -90 )
 		}
-		if(self.model == "models/vehicles/bmwbike.tik" || self.model == "models/vehicles/gmctruck.tik" || self.model == "models/vehicles/mercedes.tik" || self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik" || self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik")
+		else if(self.model != "models/vehicles/sdkfz.tik" && self.model != "models/vehicles/sdkfz_afrika.tik" && self.model != "models/vehicles/m3.tik" && self.model != "models/vehicles/shermantank.tik")
 		{
 			self.driver show
 		}
@@ -1564,6 +1667,49 @@ wallstuck_fix:
 		waitframe
 	}
 	if(self != NULL) { self.wallstuck_fixing = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+touching_playervehicle:
+
+	level.touching_playervehicle = 1
+
+	while($player.size < 1) { waitframe }
+	while($player.size >= 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			$player[local.i].touching_playervehicle = 0 // ensures that only one vehicle needs to be touched for touching_playervehicle = 1.
+		}
+
+		for(local.a = 0; local.a <= level.drivable_entities.size; local.a++)
+		{
+			for(local.s = 1; $(level.drivable_entities[local.a]) != NULL && local.s <= $(level.drivable_entities[local.a]).size; local.s++) // sometimes, two vehicles with the same targetname can exist
+			{													// for 1 or 2 frames. this for-loop prevents any console errors.
+				for(local.i = 1; local.i <= $player.size; local.i++)
+				{
+					if($player[local.i] istouching $(level.drivable_entities[local.a])[local.s]) { $player[local.i].touching_playervehicle = 1 }
+				}
+			}
+		}
+		waitframe
+	}
+
+	thread touching_playervehicle
+end
+
+////////////////////////////////////////////////////////////////////////
+
+move_stuck_players:
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && $player[local.i] istouching self)
+		{
+			$player[local.i].origin += (angles_toup self.angles * self.outheight)
+		}
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

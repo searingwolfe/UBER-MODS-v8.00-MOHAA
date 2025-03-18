@@ -27,13 +27,22 @@ level.nebelwerfers_velocity = 2500	// 4000   for Spearhead-version projectiles
 	local.trig = spawn trigger_multiple spawnflags 128 targetname "nebelwerfer_healthtrig"
 	local.trig.health = local.health // need this, otherwise trig = NULL
 	local.trig.origin = local.nebelwerfer.origin
-	local.trig setsize ( -42.5 -42.5 -1 ) ( 42.5 42.5 135 )
+	local.trig setsize ( -50 -50 -10 ) ( 50 50 135 )
 	local.trig setthread ImDead
+
+	local.shottrig = spawn trigger_multiple spawnflags 128
+	local.shottrig.origin = local.nebelwerfer.origin
+	local.shottrig setsize ( -50 -50 -10 ) ( 50 50 135 )
+	local.shottrig setthread shottrig
+	local.shottrig.trigshot = local.trig
+	local.shottrig.nebelwerfer = local.nebelwerfer
+	local.shottrig thread removetrig
 
 	local.nebelwerfer setplayerusable 0
 	local.nebelwerfer.damagemodel = "models/statweapons/nebelwerfer_d.tik"
 	local.nebelwerfer pitchCaps ( -60 25 0 )
 	local.nebelwerfer.trigshot = local.trig
+	local.nebelwerfer.shottrig = local.shottrig
 	local.nebelwerfer.init_angles = local.init_angles
 	local.nebelwerfer thread ResetNebel
 
@@ -74,13 +83,25 @@ chainreactors_remove local.c:
 	level.chainreactors[local.c] = NIL
 end
 
+shottrig:
+
+	local.player = parm.other
+	if(self.trigshot != NULL && (self.trigshot.nebelwerfer.wplayer == NIL || (self.trigshot.nebelwerfer.wplayer != NIL && (self.trigshot.nebelwerfer.wplayer.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.trigshot.nebelwerfer.shooter = local.player }
+end
+
+removetrig:
+
+	while(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1) { waitframe }
+	if(self != NULL) { self remove }
+end
+
 ////////////////////////////////////////////////////////////////////////
 
 ResetNebel:
 
 	local.trig = spawn trigger_use
 	local.trig.origin = self.origin
-	local.trig setsize ( -42.5 -42.5 -1 ) ( 42.5 42.5 115 )
+	local.trig setsize ( -50 -50 -10 ) ( 50 50 135 )
 	local.trig.nebelwerfer = self
 	local.trig setthread playergetin_nebel
 
@@ -120,6 +141,8 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 				}
 			}
 		}
+		if(self.trigshot.nodamage == 1) { self.trigshot.nodamage = 0; self.trigshot takedamage }
+
 		if(isalive self.trigshot) { self.trigshot.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
 		if(self.trigshot.shooter != NIL) { self.trigshot thread shooter_NIL }
 		waitframe
@@ -147,6 +170,7 @@ playergetin_nebel:
 	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	self nottriggerable
+	self.nebelwerfer.trigshot.driver = parm.other
 	self.nebelwerfer.wplayer = parm.other
 	local.team = self.nebelwerfer.wplayer.dmteam
 
@@ -186,7 +210,7 @@ playergetin_nebel:
 
 	while(self != NULL && self.nebelwerfer != NULL && self.nebelwerfer.dead != 1 && self.nebelwerfer.wplayer != NIL && self.nebelwerfer.wplayer != NULL && isalive self.nebelwerfer.wplayer && self.nebelwerfer.wplayer.dmteam == local.team && self.nebelwerfer.wplayer.health > 0 && self.nebelwerfer.wplayer.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		self.nebelwerfer.wplayer.origin = self.nebelwerfer.origin  + ( -10 0 20 )
+		self.nebelwerfer.wplayer.origin = self.nebelwerfer.origin + self.nebelwerfer.forwardvector * -10 + ( 0 0 20 )
 		local.fwd_vec = angles_toforward self.nebelwerfer.wplayer.viewangles
 		local.start = self.nebelwerfer.wplayer gettagposition "Bip01 Head"
 		local.range = 10240
@@ -230,7 +254,7 @@ playergetin_nebel:
 		waitframe
 	}
 
-	if(local.player != NULL) { local.player.driving = 0; local.player.drivingent = NIL }
+	if(local.player != NIL && local.player != NULL) { local.player.driving = 0; local.player.drivingent = NIL }
 	if(self == NULL && local.player != NIL && local.player != NULL)
 	{
 		local.player takedamage
@@ -398,23 +422,23 @@ projectile:
 
 	local.rocket gravity level.nebelwerfers_gravity
 	local.rocket.velocity = (angles_toforward self.angles) * level.nebelwerfers_velocity
+	local.rocket.player_owner = self.wplayer
 
+	local.rocket thread waittill_touch local self local.player
 	local.hitthing = self
-	while(local.hitthing == self || local.hitthing == self.wplayer)
+	while(local.hitthing == self || local.hitthing == self.fplayer)
 	{
 		local.rocket waittill touch
 		local.hitthing = parm.other
 	}
-
 	local.rocket.velocity = ( 0 0 0 )
+
 	local.explode = spawn "fx/explosionPANZERIVshell.tik"
 	local.explode.origin = local.rocket.origin
 	local.explode.scale = 2.5
 	//local.explode light 1 0 0 500
 	local.explode anim idle
 	//local.explode playsound bazooka_exp // already included in explosionPANZERIVshell
-
-	if(self != NULL) { local.rocket.player_owner = self.wplayer }
 
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
@@ -456,10 +480,28 @@ projectile:
 			local.blewup = 0 // radiusdamage already included in "ImDead" thread.
 		}
 	}
-	local.rocket remove
 	if(local.blewup == 1) { radiusdamage local.explode.origin 250 200 } // 110 200
 	waitframe
+	local.rocket remove
 	local.explode remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+waittill_touch local.thread local.turret local.player:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end } // self.hitwater not needed, since these projectiles already stop when hitting water.
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -559,7 +601,13 @@ ImDead:
 	local.explode playsound explode_flak88
 	exec global/earthquake.scr .35 2 0 0
 
-	if(self.shooter != NIL && self.shooter != NULL)
+	if(self.killer != NIL && self.killer != NULL)
+	{
+		if(self.killer.player_owner != NIL && self.killer.player_owner != NULL) { local.shooter = self.killer.player_owner }
+		else if(self.killer.owner != NIL && self.killer.owner != NULL) { local.shooter = self.killer.owner }
+		else { local.shooter = self.killer }
+	}
+	else if(self.shooter != NIL && self.shooter != NULL)
 	{
 		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
 		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
@@ -614,8 +662,9 @@ ImDead:
 	self.nebelwerfer.dead = 0
 	self.nebelwerfer.nebelfirecount = 0
 	self.nebelwerfer.wplayer = NIL
-	self remove
+
 	thread main local.turret local.health local.resettime local.origin local.angles
+	self remove
 end
 
 ////////////////////////////////////////////////////////////////////////

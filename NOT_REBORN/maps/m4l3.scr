@@ -577,12 +577,14 @@ airstrikes_alternate:
 
 	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { end }
 
-	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane.scr
+	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane_nospline.scr
 	level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
 	level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
-
+	level.bomberplane_bombspawntime = 0.2	// time between spawning bombs; lower = bombs spawn less often.
+	level.bomberplane_speed = 2350		// lower = planes move slower.
+								// keep setsize1 height = 0, unless setsize2 height is < 0.
 	level.bomberplane_map_setsize1 = ( -7915 -8200 0 )	// just like a .tik file, adjust these map_setsizes so the planes aren't dropping bombs outside of the map (also includes skybox height).
-	level.bomberplane_map_setsize2 = ( 7100 7170 983 )	// start at ( 0 0 0 ) on the map. setsize1 must have - numbers, and setsize2 must have + numbers.
+	level.bomberplane_map_setsize2 = ( 7100 7170 983 )	// setsize1 should be corner of 3rd quadrant (-x min and -y min). setsize2 should be corner of 1st quadrant (+x max and +y max).
 
 	while(1) //parameters: team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike)
 	{
@@ -1136,192 +1138,111 @@ end
 
 tdm_spawns:
 
-	spawn info_player_axis "origin" "54.679 6225.361 0.125" "angle" "43" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "39.477 6810.910 0.125" "angle" "-11" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1317.008 6991.173 0.125" "angle" "-20" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "2278.439 6953.906 0.125" "angle" "-36" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "3641.144 6703.010 2.125" "angle" "-82" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "4018.632 6133.718 5.729" "angle" "-103" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "3668.789 5532.581 7.115" "angle" "-32" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "4000.874 5232.875 2.320" "angle" "-100" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "3743.127 5232.875 2.102" "angle" "-82" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "3550.123 3758.875 -9.890" "angle" "-56" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "4020.726 3802.875 -7.031" "angle" "-81" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "4622.122 2688.982 2.171" "angle" "-113" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "4675.985 1451.423 -10.988" "angle" "-157" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "3461.031 592.206 -19.536" "angle" "-175" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "2723.125 303.127 -19.875" "angle" "69" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "2555.466 744.667 -3.354" "angle" "-77" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "2527.125 140.515 8.118" "angle" "68" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "2445.190 19.463 9.763" "angle" "-169" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "2472.875 864.875 4.824" "angle" "-151" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1872.875 1695.134 -9.613" "angle" "-157" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1070.875 3032.875 -2.203" "angle" "-143" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1123.794 176.875 -45.875" "angle" "-49" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1042.114 164.147 -45.875" "angle" "-126" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "567.125 -1128.875 -63.875" "angle" "24" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "2128.788 -1149.314 -38.032" "angle" "-174" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1863.123 -1945.155 -44.170" "angle" "133" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1238.066 -2456.498 -31.551" "angle" "111" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "23.884 2786.951 2.125" "angle" "-154" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "124.819 2172.607 2.125" "angle" "-87" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1338.957 -1931.162 -91.173" "angle" "121" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1733.307 -1085.935 -45.875" "angle" "164" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "-1970.384 2470.570 2.125" "angle" "-87" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "-2520.470 2692.788 2.125" "angle" "-69" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "-3364.038 2831.288 2.125" "angle" "-51" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1270.698 223.125 -45.875" "angle" "160" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "-614.280 2260.593 2.125" "angle" "-104" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "596.824 2512.499 2.125" "angle" "-108" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1360.706 1436.698 28.862" "angle" "175" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "391.125 -2456.875 30.796" "angle" "58" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "532.873 -1065.506 -66.397" "angle" "143" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "-288.875 -63.125 -31.702" "angle" "-42" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "-344.875 -1096.874 0.125" "angle" "33" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "1531.909 1888.875 2.125" "angle" "-160" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "-1724.874 87.125 -15.875" "angle" "65" "targetname" "axis_spawn"
-	spawn info_player_axis "origin" "3662.198 3142.465 4.879" "angle" "-46" "targetname" "axis_spawn"
-
-	spawn info_player_allied "origin" "-4767.125 -8160.875 155.493" "angle" "127" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5832.875 -8160.875 153.761" "angle" "34" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5832.875 -6763.125 -53.538" "angle" "-33" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4768.984 -6913.168 26.020" "angle" "151" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5644.875 -6940.875 -67.875" "angle" "20" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5697.044 -6679.741 -88.073" "angle" "65" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4933.477 -6697.778 -65.593" "angle" "109" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6356.623 -6120.404 -93.083" "angle" "42" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6932.875 -5623.328 -150.205" "angle" "30" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6682.997 -4999.330 -190.366" "angle" "-34" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6653.356 -4832.875 -165.676" "angle" "41" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6795.979 -4064.188 -59.449" "angle" "33" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5782.684 -3735.434 -234.178" "angle" "-29" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5031.125 -4864.875 -311.875" "angle" "150" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3815.720 -5987.930 -271.178" "angle" "117" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-2356.918 -5756.563 -293.620" "angle" "119" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-2471.280 -5089.208 -343.983" "angle" "144" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-1867.121 -4208.051 -330.074" "angle" "153" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3543.125 -5608.875 -310.875" "angle" "116" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4008.874 -5608.874 -310.875" "angle" "56" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3039.125 -4024.874 -318.875" "angle" "151" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3055.125 -3679.125 -318.875" "angle" "-143" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3457.125 -4032.875 -310.875" "angle" "143" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3968.875 -4032.875 -318.875" "angle" "38" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4684.242 -4631.132 -315.403" "angle" "91" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4904.873 -4123.273 -303.478" "angle" "53" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4792.875 -4072.874 -305.555" "angle" "57" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3447.125 -2839.125 -148.851" "angle" "-159" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-2209.237 -3254.894 -136.303" "angle" "178" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3447.125 -2839.125 -148.657" "angle" "-146" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-3831.172 -2109.324 -59.691" "angle" "-70" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6377.515 -855.261 34.751" "angle" "-40" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6360.875 -808.875 36.125" "angle" "33" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6360.875 1008.875 12.261" "angle" "-32" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4943.125 807.126 -7.875" "angle" "155" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4901.871 41.396 -54.422" "angle" "-64" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4432.599 633.049 0.125" "angle" "-144" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-4728.856 732.231 3.133" "angle" "-83" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6217.589 595.650 -37.595" "angle" "-23" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6005.629 807.599 -35.383" "angle" "-70" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6050.835 -674.044 6.303" "angle" "21" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6060.435 -361.185 6.494" "angle" "-22" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5425.375 -2583.125 -85.585" "angle" "-107" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-6053.935 -1191.225 -48.257" "angle" "-66" "targetname" "allied_spawn"
-	spawn info_player_allied "origin" "-5963.683 -1204.392 -55.738" "angle" "-91" "targetname" "allied_spawn"
+	local.team1 = "allied" // do not use "allies"
+	local.team2 = "axis"
+	thread player_spawns local.team1 local.team2
 end
 
 ffa_spawns:
 
-	spawn info_player_deathmatch "origin" "54.679 6225.361 0.125" "angle" "43" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "39.477 6810.910 0.125" "angle" "-11" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1317.008 6991.173 0.125" "angle" "-20" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2278.439 6953.906 0.125" "angle" "-36" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "3641.144 6703.010 2.125" "angle" "-82" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "4018.632 6133.718 5.729" "angle" "-103" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "3668.789 5532.581 7.115" "angle" "-32" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "4000.874 5232.875 2.320" "angle" "-100" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "3743.127 5232.875 2.102" "angle" "-82" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "3550.123 3758.875 -9.890" "angle" "-56" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "4020.726 3802.875 -7.031" "angle" "-81" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "4622.122 2688.982 2.171" "angle" "-113" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "4675.985 1451.423 -10.988" "angle" "-157" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "3461.031 592.206 -19.536" "angle" "-175" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2723.125 303.127 -19.875" "angle" "69" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2555.466 744.667 -3.354" "angle" "-77" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2527.125 140.515 8.118" "angle" "68" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2445.190 19.463 9.763" "angle" "-169" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2472.875 864.875 4.824" "angle" "-151" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1872.875 1695.134 -9.613" "angle" "-157" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1070.875 3032.875 -2.203" "angle" "-143" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1123.794 176.875 -45.875" "angle" "-49" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1042.114 164.147 -45.875" "angle" "-126" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "567.125 -1128.875 -63.875" "angle" "24" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "2128.788 -1149.314 -38.032" "angle" "-174" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1863.123 -1945.155 -44.170" "angle" "133" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1238.066 -2456.498 -31.551" "angle" "111" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "23.884 2786.951 2.125" "angle" "-154" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "124.819 2172.607 2.125" "angle" "-87" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1338.957 -1931.162 -91.173" "angle" "121" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1733.307 -1085.935 -45.875" "angle" "164" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-1970.384 2470.570 2.125" "angle" "-87" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-2520.470 2692.788 2.125" "angle" "-69" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3364.038 2831.288 2.125" "angle" "-51" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1270.698 223.125 -45.875" "angle" "160" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-614.280 2260.593 2.125" "angle" "-104" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "596.824 2512.499 2.125" "angle" "-108" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1360.706 1436.698 28.862" "angle" "175" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "391.125 -2456.875 30.796" "angle" "58" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "532.873 -1065.506 -66.397" "angle" "143" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-288.875 -63.125 -31.702" "angle" "-42" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-344.875 -1096.874 0.125" "angle" "33" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "1531.909 1888.875 2.125" "angle" "-160" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-1724.874 87.125 -15.875" "angle" "65" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "3662.198 3142.465 4.879" "angle" "-46" "targetname" "deathmatch_spawn"
+	local.team1 = "deathmatch"
+	local.team2 = "deathmatch"
+	thread player_spawns local.team1 local.team2
+end
 
-	spawn info_player_deathmatch "origin" "-4767.125 -8160.875 155.493" "angle" "127" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5832.875 -8160.875 153.761" "angle" "34" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5832.875 -6763.125 -53.538" "angle" "-33" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4768.984 -6913.168 26.020" "angle" "151" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5644.875 -6940.875 -67.875" "angle" "20" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5697.044 -6679.741 -88.073" "angle" "65" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4933.477 -6697.778 -65.593" "angle" "109" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6356.623 -6120.404 -93.083" "angle" "42" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6932.875 -5623.328 -150.205" "angle" "30" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6682.997 -4999.330 -190.366" "angle" "-34" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6653.356 -4832.875 -165.676" "angle" "41" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6795.979 -4064.188 -59.449" "angle" "33" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5782.684 -3735.434 -234.178" "angle" "-29" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5031.125 -4864.875 -311.875" "angle" "150" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3815.720 -5987.930 -271.178" "angle" "117" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-2356.918 -5756.563 -293.620" "angle" "119" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-2471.280 -5089.208 -343.983" "angle" "144" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-1867.121 -4208.051 -330.074" "angle" "153" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3543.125 -5608.875 -310.875" "angle" "116" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4008.874 -5608.874 -310.875" "angle" "56" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3039.125 -4024.874 -318.875" "angle" "151" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3055.125 -3679.125 -318.875" "angle" "-143" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3457.125 -4032.875 -310.875" "angle" "143" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3968.875 -4032.875 -318.875" "angle" "38" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4684.242 -4631.132 -315.403" "angle" "91" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4904.873 -4123.273 -303.478" "angle" "53" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4792.875 -4072.874 -305.555" "angle" "57" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3447.125 -2839.125 -148.851" "angle" "-159" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-2209.237 -3254.894 -136.303" "angle" "178" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3447.125 -2839.125 -148.657" "angle" "-146" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-3831.172 -2109.324 -59.691" "angle" "-70" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6377.515 -855.261 34.751" "angle" "-40" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6360.875 -808.875 36.125" "angle" "33" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6360.875 1008.875 12.261" "angle" "-32" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4943.125 807.126 -7.875" "angle" "155" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4901.871 41.396 -54.422" "angle" "-64" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4432.599 633.049 0.125" "angle" "-144" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-4728.856 732.231 3.133" "angle" "-83" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6217.589 595.650 -37.595" "angle" "-23" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6005.629 807.599 -35.383" "angle" "-70" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6050.835 -674.044 6.303" "angle" "21" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6060.435 -361.185 6.494" "angle" "-22" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5425.375 -2583.125 -85.585" "angle" "-107" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-6053.935 -1191.225 -48.257" "angle" "-66" "targetname" "deathmatch_spawn"
-	spawn info_player_deathmatch "origin" "-5963.683 -1204.392 -55.738" "angle" "-91" "targetname" "deathmatch_spawn"
+player_spawns local.team1 local.team2:
+
+	spawn ("info_player_" + local.team2) "origin" "54.679 6225.361 0.125" "angle" "43" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "39.477 6810.910 0.125" "angle" "-11" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1317.008 6991.173 0.125" "angle" "-20" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "2278.439 6953.906 0.125" "angle" "-36" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3641.144 6703.010 2.125" "angle" "-82" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4018.632 6133.718 5.729" "angle" "-103" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3668.789 5532.581 7.115" "angle" "-32" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4000.874 5232.875 2.320" "angle" "-100" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3743.127 5232.875 2.102" "angle" "-82" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3550.123 3758.875 -9.890" "angle" "-56" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4020.726 3802.875 -7.031" "angle" "-81" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4622.122 2688.982 2.171" "angle" "-113" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4675.985 1451.423 -10.988" "angle" "-157" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3461.031 592.206 -19.536" "angle" "-175" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "2723.125 303.127 -19.875" "angle" "69" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "2555.466 744.667 -3.354" "angle" "-77" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "2527.125 140.515 8.118" "angle" "68" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "2445.190 19.463 9.763" "angle" "-169" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "2472.875 864.875 4.824" "angle" "-151" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1872.875 1695.134 -9.613" "angle" "-157" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1070.875 3032.875 -2.203" "angle" "-143" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1123.794 176.875 -45.875" "angle" "-49" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1042.114 164.147 -45.875" "angle" "-126" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "567.125 -1128.875 -63.875" "angle" "24" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "2128.788 -1149.314 -38.032" "angle" "-174" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1863.123 -1945.155 -44.170" "angle" "133" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1238.066 -2456.498 -31.551" "angle" "111" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "23.884 2786.951 2.125" "angle" "-154" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "124.819 2172.607 2.125" "angle" "-87" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1338.957 -1931.162 -91.173" "angle" "121" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1733.307 -1085.935 -45.875" "angle" "164" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-1970.384 2470.570 2.125" "angle" "-87" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-2520.470 2692.788 2.125" "angle" "-69" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-3364.038 2831.288 2.125" "angle" "-51" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1270.698 223.125 -45.875" "angle" "160" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-614.280 2260.593 2.125" "angle" "-104" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "596.824 2512.499 2.125" "angle" "-108" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1360.706 1436.698 28.862" "angle" "175" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "391.125 -2456.875 30.796" "angle" "58" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "532.873 -1065.506 -66.397" "angle" "143" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-288.875 -63.125 -31.702" "angle" "-42" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-344.875 -1096.874 0.125" "angle" "33" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "1531.909 1888.875 2.125" "angle" "-160" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-1724.874 87.125 -15.875" "angle" "65" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3662.198 3142.465 4.879" "angle" "-46" "targetname" (local.team2 + "_spawn")
+
+	spawn ("info_player_" + local.team1) "origin" "-4767.125 -8160.875 155.493" "angle" "127" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5832.875 -8160.875 153.761" "angle" "34" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5832.875 -6763.125 -53.538" "angle" "-33" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4768.984 -6913.168 26.020" "angle" "151" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5644.875 -6940.875 -67.875" "angle" "20" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5697.044 -6679.741 -88.073" "angle" "65" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4933.477 -6697.778 -65.593" "angle" "109" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6356.623 -6120.404 -93.083" "angle" "42" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6932.875 -5623.328 -150.205" "angle" "30" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6682.997 -4999.330 -190.366" "angle" "-34" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6653.356 -4832.875 -165.676" "angle" "41" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6795.979 -4064.188 -59.449" "angle" "33" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5782.684 -3735.434 -234.178" "angle" "-29" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5031.125 -4864.875 -311.875" "angle" "150" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3815.720 -5987.930 -271.178" "angle" "117" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-2356.918 -5756.563 -293.620" "angle" "119" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-2471.280 -5089.208 -343.983" "angle" "144" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-1867.121 -4208.051 -330.074" "angle" "153" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3543.125 -5608.875 -310.875" "angle" "116" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4008.874 -5608.874 -310.875" "angle" "56" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3039.125 -4024.874 -318.875" "angle" "151" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3055.125 -3679.125 -318.875" "angle" "-143" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3457.125 -4032.875 -310.875" "angle" "143" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3968.875 -4032.875 -318.875" "angle" "38" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4684.242 -4631.132 -315.403" "angle" "91" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4904.873 -4123.273 -303.478" "angle" "53" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4792.875 -4072.874 -305.555" "angle" "57" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3447.125 -2839.125 -148.851" "angle" "-159" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-2209.237 -3254.894 -136.303" "angle" "178" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3447.125 -2839.125 -148.657" "angle" "-146" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3831.172 -2109.324 -59.691" "angle" "-70" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6377.515 -855.261 34.751" "angle" "-40" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6360.875 -808.875 36.125" "angle" "33" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6360.875 1008.875 12.261" "angle" "-32" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4943.125 807.126 -7.875" "angle" "155" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4901.871 41.396 -54.422" "angle" "-64" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4432.599 633.049 0.125" "angle" "-144" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4728.856 732.231 3.133" "angle" "-83" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6217.589 595.650 -37.595" "angle" "-23" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6005.629 807.599 -35.383" "angle" "-70" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6050.835 -674.044 6.303" "angle" "21" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6060.435 -361.185 6.494" "angle" "-22" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5425.375 -2583.125 -85.585" "angle" "-107" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-6053.935 -1191.225 -48.257" "angle" "-66" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-5963.683 -1204.392 -55.738" "angle" "-91" "targetname" (local.team1 + "_spawn")
 end
 
 ////////////////////////////////////////////////////////////////////////

@@ -65,6 +65,9 @@ main local.name local.model local.origin local.angles local.health local.resetti
 		else { local.tank playsound tank_snd_stop }
 	}
 
+	if(local.tank.model == "models/vehicles/kingtank.tik") { local.tank.outheight = 170 }
+	else { local.tank.outheight = 150 }
+
 	local.tank thread tankreset local.groundtarget
 	local.tank thread tankdamage
 	local.tank thread tankdeath
@@ -106,6 +109,17 @@ main local.name local.model local.origin local.angles local.health local.resetti
 				break
 			}
 		}
+	}
+	local.tank thread move_stuck_players // the vehicle might respawn on top of other players, move them onto the top of it.
+
+	if(level.drivable_entities == NIL) { level.drivable_entities[1] = local.name }
+	else
+	{
+		for(local.d = 1; local.d <= level.drivable_entities.size; local.d++)
+		{
+			if(level.drivable_entities[local.d] == local.name) { end }
+		}
+		level.drivable_entities[level.drivable_entities.size + 1] = local.name
 	}
 end
 
@@ -377,9 +391,6 @@ driverreset local.death local.newteam local.changescore:
 	if(local.changescore != 1 && level.bbactive != 0) { self.driver thread weaponfix local.newteam } // player's weapon is invisible when they exit the tank. auto-switch their weapons to make them visible again (wait until they're alive)
 	else { self.driver thread weaponfix2 }
 
-	if(self.model == "models/vehicles/kingtank.tik") { local.outheight = 170 }
-	else { local.outheight = 150 }
-
 	if(self.driver.dmteam != spectator)
 	{
 		self.driver show
@@ -388,7 +399,7 @@ driverreset local.death local.newteam local.changescore:
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
 		if(local.death != 1 && local.changescore != 1)
 		{
-			if(local.newteam != 1) { self.driver.origin = self.origin + (angles_toup self.angles * local.outheight) }
+			if(local.newteam != 1) { self.driver.origin = self.origin + (angles_toup self.angles * self.outheight) }
 			self.driver.viewangles = ( self.angles[0] self.angles[1] 0 )
 		}
 	}
@@ -432,23 +443,23 @@ projectile:
 	local.rocket gravity 0
 	local.angles = ( self.driver.viewangles[0] self.gun.angles[1] self.driver.viewangles[2] )
 	local.rocket.velocity = (angles_toforward local.angles) * 6000
+	local.rocket.player_owner = self.driver
 
+	local.rocket thread waittill_touch local self local.player
 	local.hitthing = self
-	while(local.hitthing == self || (self != NULL && local.hitthing == self.gun))
+	while(local.hitthing == self || local.hitthing == self.fplayer)
 	{
 		local.rocket waittill touch
 		local.hitthing = parm.other
 	}
-
 	local.rocket.velocity = ( 0 0 0 )
+
 	local.explode = spawn "fx/explosionTIGERshell.tik"
 	local.explode.origin = local.rocket.origin
 	local.explode.scale = 2.5
 	local.explode light 1 0 0 500
 	local.explode anim idle
 	//local.explode playsound bazooka_exp // already included in explosionTIGERshell
-
-	if(self != NULL) { local.rocket.player_owner = self.driver }
 
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so rockets can count as score/kills
@@ -483,11 +494,31 @@ projectile:
 			}
 		}
 	}
-	local.rocket remove
 	if(local.blewup == 1) { radiusdamage local.explode.origin 500 400 } // occurs one frame after impact, otherwise some scorepoints (i.e. killing players using nebelwerfers) will not count properly.
 	waitframe
+	local.rocket remove
 	local.explode remove
 end
+
+////////////////////////////////////////////////////////////////////////
+
+waittill_touch local.thread local.turret local.player:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end } // self.hitwater not needed, since these projectiles already stop when hitting water.
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
 
 smokey:
 
@@ -755,8 +786,9 @@ floodedreset:
 		local.c++
 		waitframe
 	}
-
 	local.smoke remove
+	if(self == NULL || self.dead == 1) { end }
+
 	if(self.gun2 != NIL && self.gun2 != NULL) { self.gun2 remove }
 	if(self.gun != NIL && self.gun != NULL) { self.gun2 remove }
 	self remove
@@ -1012,6 +1044,19 @@ removeclass_camera:
 			waitframe
 		}
 		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+move_stuck_players:
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && ($player[local.i] istouching self || $player[local.i] istouching self.gun))
+		{
+			$player[local.i].origin += (angles_toup self.angles * self.outheight)
+		}
 	}
 end
 

@@ -232,15 +232,63 @@ end
 
 waittill_touch:
 
+	self thread waittill_touch_check local
 	self waittill touch
 	if(self != NULL)
 	{
 		self.angles = ( 0 self.angles[1] 0 )
 		self.velocity = ( 0 0 0 )
 		self rotatex 0
-		self playsound mine_dirt_landing
+		if(self.hitwater != 1 && self.hitmetal != 1) { self playsound mine_dirt_landing }
 		self droptofloor
 		self setsize ( 0 0 0 ) ( 0 0 0 ) // for some reason, notsolid does not work after mines were given velocity; use this instead.
+	}
+end
+
+waittill_touch_check local.thread:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			local.thread remove // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.hitwater != 1 && level.water_volumes != NIL && level.water_volumes != 0)
+		{
+			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+				local.origin = self.origin
+	
+				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+				{
+					self playsound mine_water_landing
+					self.hitwater = 1
+					break
+				}
+			}
+		}
+
+		for(local.h = 1; self.hitmetal != 1 && local.h <= level.chainreactors.size; local.h++)
+		{
+			if(level.chainreactors[local.h] != NIL && level.chainreactors[local.h] != NULL && self istouching level.chainreactors[local.h])
+			{
+				self playsound mine_metal_landing
+				self.hitmetal = 1
+				break
+			}
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end }
+		waitframe
 	}
 end
 
@@ -472,4 +520,6 @@ scriptmaster:
 	local.master aliascache placedown_mines1 sound/items/Item_Bangaloredirt01.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps level.mapname
 	local.master aliascache placedown_mines2 sound/items/Item_Bangaloredirt02.WAV soundparms 1.5 0.2 0.8 0.4 250 1000 weapon loaded maps level.mapname
 	local.master aliascache mine_dirt_landing sound/characters/fs_dirt_land_01.wav soundparms 0.9 0.2 0.9 0.2 250 2000 auto loaded maps level.mapname
+	local.master aliascache mine_water_landing sound/characters/fs_water_land_01.wav soundparms 0.9 0.2 0.9 0.2 250 2000 auto loaded maps level.mapname
+	local.master aliascache mine_metal_landing sound/characters/fs_metal_land_01.wav soundparms 0.9 0.2 0.9 0.2 250 2000 auto loaded maps level.mapname
 end

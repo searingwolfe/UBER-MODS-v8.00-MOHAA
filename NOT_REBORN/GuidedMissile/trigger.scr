@@ -279,11 +279,12 @@ end
 
 waittouch local.player:
 
+	self thread waittill_touch local local.player
 	self waittill touch
 	if(self != NULL)
 	{
 		self.impact = 1
-		if(local.player != NIL && local.player != NULL) { local.player thread DestroyMissile self }
+		if(self.hitwater != 1 && local.player != NIL && local.player != NULL) { local.player thread DestroyMissile self }
 	}
 end
 
@@ -302,7 +303,49 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-DestroyMissile local.missile local.hitwater:
+waittill_touch local.thread local.player:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.impact == 1) { end }
+
+		if(self.hitwater != 1 && level.water_volumes != NIL && level.water_volumes != 0)
+		{
+			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+				local.origin = self.origin + angles_toup(self.angles) * 100 // moving very fast may explode slightly above the actual water.
+	
+				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+				{
+					self.hitwater = 1
+					self.impact = 1
+					if(local.thread != NULL) { local.thread remove }
+
+					local.player thread DestroyMissile self
+					end
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+DestroyMissile local.missile:
 
 	if(self == NULL || local.missile == NIL || local.missile == NULL || (local.missile != NIL && local.missile != NULL && local.missile.dead == 1)) { end }
 
@@ -338,28 +381,7 @@ DestroyMissile local.missile local.hitwater:
 	local.Exp notsolid
 	local.Exp playsound missileboom
 
-	if(level.water_volumes != NIL && level.water_volumes != 0) // if vehicles are inside a water volume, blow them up.
-	{
-		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
-		{
-			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
-			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
-			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
-			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
-			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
-			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
-			local.origin = local.missile.origin
-	
-			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
-			{
-				local.missile.origin = ( local.missile.origin[0] local.missile.origin[1] local.Z_max[local.v] )
-				local.hitwater = 1
-				break
-			}
-		}
-	}
-
-	if(local.hitwater == 1)
+	if(local.missile.hitwater == 1)
 	{
    		local.Exp2 = spawn models/animate/fx_mortar_water.tik
    		local.Exp2.origin = local.missile.origin
@@ -402,7 +424,8 @@ DestroyMissile local.missile local.hitwater:
 			{
 				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.missile 360) // "cansee self" does not work.
 				{
-					$player[local.i] damage self level.guidedmissile_damage self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0
+					if(local.missile istouching $player[local.i]) { $player[local.i] damage self level.guidedmissile_damage self (0 0 0) (0 0 0) (0 0 0) 0 9 16 0 }
+					else { $player[local.i] damage self level.guidedmissile_damage self (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 				}
 				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 				{
@@ -415,7 +438,8 @@ DestroyMissile local.missile local.hitwater:
 			{
 				if($player[local.i].driving != 1 && $player[local.i].flying != 1 && $player[local.i] cansee local.missile 360)
 				{
-					$player[local.i] damage local.missile.trig.shooter level.guidedmissile_damage local.missile.trig.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+					if(local.missile istouching $player[local.i]) { $player[local.i] damage local.missile.trig.shooter level.guidedmissile_damage local.missile.trig.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 16 0 } // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+					else { $player[local.i] damage local.missile.trig.shooter level.guidedmissile_damage local.missile.trig.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 				}
 				else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 				{

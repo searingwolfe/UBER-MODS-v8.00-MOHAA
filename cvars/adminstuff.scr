@@ -5,10 +5,10 @@ main:
 //----- to prevent "Same Name Fix" & "Check Player Stufftexts" threads from kicking them.
 //-----------------------------------------------------------------------------
 
-	level.admin_IPs = makeArray	// do not include :port extensions
-		//10.1.10.250 		// LAN ip admins
-		//10.1.10.251
-		//73.84.96.108 		// not-LAN ip admins
+	level.admin_IPs = makeArray		// must include :port extensions and quotations.
+		// "10.1.10.250:12203" 		// LAN ip admins
+		// "10.1.10.251:12203"
+		// "73.84.96.108:12345" 	// not-LAN ip admins
 		// add
 		// add
 		// more
@@ -65,8 +65,9 @@ main:
 
 	level waittill spawn // waiting for other mods to finish loading, before checking if "intermission" event is already registered.
 	while(game.game == NIL) { waitframe }
-	if(game.game == "AA" && level.registerev_intermission != 1) { local.result = registerev intermission cvars/adminstuff.scr::intermission }
+	if(game.game == "AA" && level.registerev_intermission != 1) { local.result = registerev intermission global/intermission_serverautoreopen.scr }
 	level.registerev_intermission = 1
+	level.adminstuff_cvars_loaded = 1
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -127,20 +128,19 @@ anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks
 				{
 					if($player[local.i].userinfo[local.c] == local.hacks[local.h][1][0]) // simulate a strstr() function to see if one string exists inside of another.
 					{
-						local.kick = 1
+						$player[local.i].kick_for_using_cvar_hacks = 1
 						for(local.s = 0; local.s < local.hacks[local.h][1].size; local.s++)
 						{
 							if(local.c + local.s >= $player[local.i].userinfo.size || $player[local.i].userinfo[local.c + local.s] != local.hacks[local.h][1][local.s])
 							{
-								local.kick = 0
+								$player[local.i].kick_for_using_cvar_hacks = 0
 								break
 							}
 						}
 					}
-					if(local.kick == 1 && $player[local.i] != NULL)
+					if($player[local.i].kick_for_using_cvar_hacks == 1 && $player[local.i] != NULL)
 					{
-						println("----- Auto-kicked " + netname $player[local.i] + " for joining with cvar hacks.")
-						stuffsrv("clientkickr " + (local.i - 1) + " \"joining with cvar hacks.\"")
+						$player[local.i] thread kick_for_using_cvar_hacks
 						local.break = 1
 						break
 					}
@@ -151,6 +151,19 @@ anti_hacks: // any player that joins whose .userinfo has one of the "local.hacks
 		waitframe
 	}
 	thread anti_hacks
+end
+
+kick_for_using_cvar_hacks:
+
+	if($player[local.i].kicking_for_using_cvar_hacks == 1) { end }
+	$player[local.i].kicking_for_using_cvar_hacks = 1
+
+	wait 3
+	if(self != NULL)
+	{
+		println("----- Auto-kicked " + netname self + " for joining with cvar hacks.")
+		stuffsrv("clientkickr " + (getclientnum self) + " \"joining with cvar hacks.\"")
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -168,6 +181,13 @@ samename_fix:
 		{
 			for(local.p = 1; local.p <= level.admin_IPs.size; local.p++)
 			{
+				local.ip = ""
+				for(local.u = 0; local.u < $player[local.i].IP_address_init.size; local.u++)
+				{
+					if($player[local.i].IP_address_init[local.u] == ":") { break } // removes IP port extension
+					local.ip += $player[local.i].IP_address_init[local.u]
+				}
+
 				if($player[local.i] isadmin == 1 || ($player[local.i].IP_address_init != NIL && $player[local.i].IP_address_init == level.admin_IPs[local.p][1]))
 				{
 					$player[local.i].admin_name_priority = 1
@@ -529,21 +549,6 @@ date_time_timezone:
 
 	local.datetime = getdate("%D") + " " + gettime(0)
 	println(local.datetime)
-end
-
-////////////////////////////////////////////////////////////////////////
-
-intermission local.type: // erase all playernames from the previous map, then save all players' names and IPs in the current map just before a new map loads (or current one restarts).
-
-	if(int(local.type) != 0) // this thread is not used, since only one "intermission" event can be registered at a time. The active "intermission" thread is in global/victory_podium.scr.
-	{
-		local.ret = fremove "main/cvars/playernames.txt"
-		local.result = fnewdir "main/cvars"
-		local.file = fopen "main/cvars/playernames.txt" "a+"
-		local.return = fseek local.file 0 2
-		for(local.i = 1; local.i <= $player.size; local.i++) { local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n") }
-		local.result = fclose local.file
-	}
 end
 
 ////////////////////////////////////////////////////////////////////////

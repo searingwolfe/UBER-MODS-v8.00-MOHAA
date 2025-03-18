@@ -5,6 +5,9 @@ main local.name local.origin local.angles local.light local.thrown local.remove:
 	if(level.knife_resettime == NIL || level.knife_resettime <= 0) { level.knife_resettime = 45 }
 	if(level.knife_velocity == NIL || level.knife_velocity <= 0) { level.knife_velocity = 1400 }
 
+	if(level.throwingknife_scriptmaster != 1) { thread initialize }
+	level.throwingknife_scriptmaster = 1
+
 	if(local.thrown != 1) // run one time after map loads.
 	{
 		level.knife_origin[local.name] = local.origin
@@ -30,9 +33,6 @@ main local.name local.origin local.angles local.light local.thrown local.remove:
 	if(local.thrown == 1) { local.trigger thread resettimer local.name level.knife_light[local.name] }
 	waitframe
 	local.trigger.angles = local.angles // sometimes, angles do not update unless a waitframe occurs first
-
-	if(level.throwingknife_scriptmaster != 1) { thread initialize }
-	level.throwingknife_scriptmaster = 1
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -198,34 +198,13 @@ throw_knife:
 	local.knife thread flytimer
 	local.knife.player_owner = self
 
+	local.knife thread waittill_touch local
 	local.hitthing = self
 	while(local.hitthing == self)
 	{
 		local.knife waittill touch
 		local.hitthing = parm.other
-
-		if(local.knife.hitwater != 1 && level.water_volumes != NIL && level.water_volumes != 0)
-		{
-			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
-			{
-				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
-				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
-				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
-				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
-				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
-				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
-				local.origin = local.knife.origin
-	
-				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
-				{
-					local.knife playsound waterimpact
-					local.knife.hitwater = 1
-					break
-				}
-			}
-		}
 	}
-	
 	local.knife.velocity = ( 0 0 0 ) // velocity = 0 works, but gives a "cannot cast integer to vector" console error.
 
 	for(local.i = 1; local.i <= $player.size; local.i++)
@@ -305,18 +284,21 @@ throw_knife:
 				local.touchedself = 1
 				local.iold = local.i
 			}
-
 			local.knife playsound fleshimpact
 		}
 		else if(local.touchedplayer != 1 && local.touchedself != 1)
 		{
-			if(local.hitthing.classname == DrivableVehicle || local.hitthing.classname == VehicleTank || local.hitthing.classname == VehicleTurretGun)
+			for(local.h = 1; local.h <= level.chainreactors.size; local.h++)
 			{
-				local.knife playsound metalimpact
+				if(level.chainreactors[local.h] != NIL && level.chainreactors[local.h] != NULL && local.knife istouching level.chainreactors[local.h])
+				{
+					local.knife playsound metalimpact
+					local.knife.hitmetal = 1
+					break
+				}
 			}
-			else { local.knife playsound groundimpact }
+			if(local.knife.hitmetal != 1 && local.knife.hitwater != 1) { local.knife playsound groundimpact }
 		}
-
 	}
 	if(local.touchedplayer != 1 && local.knife.flewlong != 1) 
 	{							// if player throws knife upwards, knife's origin lowers a few units in height so it's not inside the wall
@@ -358,10 +340,49 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+waittill_touch local.thread:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove }
+			if(self != NULL) { self remove }
+			end
+		}
+
+		if(self.hitwater != 1 && level.water_volumes != NIL && level.water_volumes != 0)
+		{
+			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+				local.origin = self.origin
+	
+				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+				{
+					self playsound waterimpact
+					self.hitwater = 1
+					break
+				}
+			}
+		}
+
+		if(self.velocity == ( 0 0 0 )) { end }
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
 rotate:
 
 	local.rotatespeed = randomint(50) + 80 // randomize rotation speed. min of 80, max of 130
-	while(self.rotate == 1)
+	while(self != NULL && self.rotate == 1)
 	{
 		self.angles = (self.angles + ( local.rotatespeed 0 0 ))
 		waitframe

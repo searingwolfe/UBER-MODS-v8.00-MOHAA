@@ -69,7 +69,10 @@ main local.podium_origin local.podium_angle local.camera_origin local.camera_ang
 	thread sound
 
 	while(game.game == NIL) { waitframe }
-	if(game.game == "AA" && level.registerev_intermission != 1) { local.result = registerev intermission global/victory_podium.scr::intermission }
+	waitframe
+	if(level.check_player_IPs == 1) { end } // if cvars/adminstuff.scr already ran, end this to prevent "registerev intermission" from running twice (otherwise "unregisterev intermission" may be required).
+
+	if(game.game == "AA" && level.registerev_intermission != 1) { local.result = registerev intermission global/intermission_serverautoreopen.scr }
 	level.registerev_intermission = 1
 end
 
@@ -542,34 +545,6 @@ blink:
 		wait .5
 		if(self != NULL) { self show }
 	}
-end
-
-//-----------------------------------------------------------------------------
-
-intermission local.type:
-
-	if(local.type == NIL || int(local.type) != 0)
-	{
-		local.ret = fremove "main/cvars/playernames.txt"
-		local.result = fnewdir "main/cvars"
-		local.file = fopen "main/cvars/playernames.txt" "a+"
-		local.return = fseek local.file 0 2
-		if($player != NULL)
-		{
-			for(local.i = 1; local.i <= $player.size; local.i++)
-			{
-				local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n")
-			}
-		}
-		local.result = fclose local.file
-		end
-	}
-
-	if(level.time == NIL || int(level.time) < 60) { end }
-	if($intermission_camera == NULL) { wait 1; println("----- ERROR victory_podium.scr: $intermission_camera could not be found!"); end }
-	if($victory_podium == NULL) { wait 1; println("----- ERROR victory_podium.scr: $victory_podium could not be found!"); end }
-
-	exec global/victory_podium.scr::map_ended $victory_podium[1].origin $victory_podium[1].angle 0 300 2.5 0.8
 end
 
 //-----------------------------------------------------------------------------

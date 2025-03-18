@@ -5,7 +5,7 @@ exec global/aliascache_triggersounds.scr joint
  local.player = parm.other
  local.trigger = spawn trigger_use targetname "joint_trigger"
  local.trigger.origin = local.origin + ( 0 0 30 )
- local.trigger setsize ( -30 -30 -20 ) ( 30 30 50 )
+ local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
  local.trigger model "items/cigarette.tik" 
  local.trigger.angles = ( 0 90 -45 )
  local.trigger.scale = 5
@@ -126,7 +126,11 @@ doit local.origin:
 			level.joint_went2spectator = 0
 			goto main local.originold 
 		}
-		goto main self.origin // using "goto" here immediately ends "doit" script and runs "main" as a new thread.
+
+		//while(self != NULL && !isalive self && (local.droppedorigin == NIL || local.droppedorigin != self.origin)) { local.droppedorigin = self.origin; waitframe }
+		local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
+
+		goto main local.droppedorigin // using "goto" here immediately ends "doit" script and runs "main" as a new thread.
     	}
 	if(level.jointdropped_useheld == 1)
 	{

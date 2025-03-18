@@ -6,7 +6,12 @@ main local.target local.inflictor local.damage local.position local.direction lo
 //-----------------------------------------------------------------------------
 
 	// give score to players who destroy nebelwerfers or flak88s with players using them, using explosives of various types (or shotgun-blasting & destroying them).
-	if((local.entity.targetname == "flak88_healthtrig" || local.entity.targetname == "nebelwerfer_healthtrig") && local.inflictor != NULL) { local.entity.shooter = local.inflictor; end }
+	if((local.entity.targetname == "flak88_healthtrig" || local.entity.targetname == "nebelwerfer_healthtrig") && local.inflictor != NULL) 
+	{
+		if(local.entity.driver == NIL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1"))) { local.entity.shooter = local.inflictor }
+		if(local.entity.driver != NIL && local.entity.driver.dmteam == local.inflictor.dmteam) { local.entity.nodamage = 1; local.entity nodamage }
+		end
+	}
 
 //-----------------------------------------------------------------------------
 
