@@ -1,4 +1,4 @@
-*Current Version: 7.981 - Updated: 2/9/2025*
+*Current Version: 7.985 - Updated: 3/18/2025*
 
 ### Table of Contents
 
@@ -127,6 +127,35 @@ BASEBUILDER CONSOLE COMMANDS:
 	alx_timedown 120           // decrease build time limit by 120 seconds, or any # of seconds.
 	alx_objectlimitboost 200   // increase basebuild object limit by 200, or any # of objects.
 	alx_objectlimitdown 200    // decrease basebuild object limit by 200, or any # of objects.
+
+	alx_removeall [27 or Searingwolfe]	// remove everything placed by $player[27] or by Searingwolfe). Using players' names only works in MOHAA Reborn 1.12.
+	alx_removeobjects [27 or Searingwolfe]	// remove all static objects placed by $player[27] or by Searingwolfe).
+	alx_removeturrets [27 or Searingwolfe]	// remove all TurretGun objects placed by $player[27] or by Searingwolfe).
+	alx_removelifts [27 or Searingwolfe]	// remove all lifts placed by $player[27] or by Searingwolfe).
+	alx_removeteles [27 or Searingwolfe]	// remove all teles placed by $player[27] or by Searingwolfe).
+
+	When placing down objects, hold the FIRE button to hold still the nonsolid object, and let go of FIRE to place down the object.
+	If holding FIRE for 3+ seconds while placing down an object, placement will be cancelled (laser will turn green). Press FIRE again to uncancel (place down now).
+
+	While holding object + holding USE(e) key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.
+	While holding an object or lift: hold FIRE, then hold USE(e) to remove it.
+	While holding a tele: hold USE(e), then hold FIRE to remove it.
+
+	Hold Right-Click to change build-laser from green to blue; this activates "Trimming Mode" for the object being held (works for Reborn only).
+	In trimming mode, players can lean left/right to slowly adjust roll-angles (x,y,z angles = pitch,yaw,roll).
+	In trimming mode, players can crouch to rotate the object's yaw-angle by 90 degrees, flipping the lean left/right angles to adjust pitch-angles (but still looks like adjusting roll-angles from player's point of view).
+	In trimming mode, players can walk (not run) forward/backward to increase/decrease their build-laser's distance between them and their object being held.
+	When a new object is picked up, their build-laser's distance is automatically reset back to "level.basebuild_laserdist" (default = 350).
+
+	Hold USE(e) + Lean left/right to activate a yellow "Builder Remover Laser".
+	Hold USE(e) + hold FIRE at an object, lift, or tele that you placed to pick it up again (laser will turn red while picking it up).
+	Players can only pick up their own objects, unless logged in as admin (isadmin = 1).
+
+	When placing lifts and after first setting the start-position, the builder laser will turn red if the lift is below its start-position + 25 units (cannot be placed).
+	Hold USE(e) to hold the lift's angle in its current position, and hold the build-laser's current length.
+
+	Basebuilder script automatically lowers "objectlimit" count to avoid going beyond 1024 maxentities.
+	Mini-flak88 objects act as flamethrowers, killing players within 5 hits. 
 
 	While holding object & holding USE key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.
 
@@ -529,7 +558,7 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 
 - For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn (Reborn only), Lean Right = turn on/off headlights, only if "noheadlights" parameter != 1 (Reborn only).
 - For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
-- For drivable boats: Hold FIRE = look behind. Press JUMP = exit.
+- For drivable boats: Hold FIRE = look behind. Press JUMP = exit, Lean Left/Right = close/open higgins door.
 - For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade (Non-Reborn: FIRE + USE(e) = throw grenade), Press JUMP = exit,
 Lean Left/Right (while not moving) = look behind (Reborn only), Lean Left/Right (while moving) = aim up/down the tank shell's trajectory (Reborn only).
 
@@ -583,7 +612,7 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1, M4L2, M4L3.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1, M4L2, M4L3, M5L1A.
 
 ---------------
 
@@ -1011,39 +1040,127 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+- M5L1A fully modded. 4 vehicles, 1 flak88, 2 nebelwerfers, 8 extra throwing knives added to the map.
+- Invisible higginsxtrahull.tik script_models added below the map's yellow dirt road to solidify it for vehicles to drive over, otherwise they would fall through.
+
+- Airstrikes occur at random times across any X-Y-axis direction on one half of the map (which half is randomized too), being split between the central origin ( -576 0 0 ) instead of ( 0 0 0 ).
+- 6 bangalore wall-bombs at the entrances of all buildings with visible interior and windows.
+- 2 vehicle teles: one at Allies spawn to cross the two metal gates, and one at the wooden gates to cross from the lower yellow dirt road to the upper stone road.
+
+- The wooden gates between the Allies and Axis spawns can be opened/closed by pressing USE(e) near the center of them.
+
+- The building above the wooden gates can be blown up with rockets or other large explosives (not including grenades), spawning rubble and smoke emitters around the wooden gates street path.
+- These smoke emitters slowly decrease in scale over 180 seconds, until they disappear completely.
+
+- Numerous red and green lasers outline invisible floors, walls, roofs, and staircases.
+- Map areas reclaimed: Allies spawn corner building, and several floors within the tall Axis spawn buildings. Tall tower window and Allies building attic window are accessible via red teles.
+- 3 bonfire triggers will burn players for a few seconds if they get too close to the fires. Smoke emitters also added for each fire.
+- 6 cabinet switches can open/close cabinets.
+
+---------------
+
 - All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
 
 # Updates & Bug Fixes
 
-v7.981 (2-9-2025):
-- Drivers' viewangles while driving vehicles/boats now fully matches the vehicle/boat's angles when looking forward, backwards (rear-view mirror), left (A key while not moving), or right (D key while not moving).
-	- Fixed vehicles/tanks not resetting when they get flooded by Light Bombs.
-	- Changed smoke emitters for destroyed/flooded vehicles to a slower, more billowing smoke. Added smoke for opeltruckgreen_d destroyed vehicle models.
+v7.985 (3-18-2025):
+- Reworked Base-Builder script again (alienx/basebuilder.scr) to fix more lift & tele bugs, added more building features, and added more CVARs:
+ 
+- New basebuilder cvars added for admins (alienx/alienxcvars.scr):
+	- alx_removeall [27 or Searingwolfe] (remove everything placed by $player[27] or by Searingwolfe). Using players' names only works in MOHAA Reborn 1.12.
+	- alx_removeobjects [27 or Searingwolfe] (remove all static objects placed by $player[27] or by Searingwolfe).
+	- alx_removeturrets [27 or Searingwolfe] (remove all TurretGun objects placed by $player[27] or by Searingwolfe).
+	- alx_removelifts [27 or Searingwolfe] (remove all lifts placed by $player[27] or by Searingwolfe).
+	- alx_removeteles [27 or Searingwolfe] (remove all teles placed by $player[27] or by Searingwolfe).
 
-- Improved ladders (spawnladder.scr) to more-closely resemble func_ladders: Fixed some ladder angles that prevented players from climbing down from the top (should work for any ladder angle now).
-	- Players can now re-grab the ladder much faster after climbing/jumping off ("istouching ladder" condition replaced with "self.legs_state_using_ladder" which = 0 as soon as players get off any ladder).
-	- Players can now grab nearby ladders by pressing USE(e) while falling.
-	- Fixed players being unable to grab ladders while walking forward silently (possible game bug, where self getmovement = "standing" only if walking forward, when it should = "walking"), by using "self.legs_state_walkforward" from nangle_aa_legs.st.
-	- Players can no longer grab ladders unless they're specifically running/walking forward (not strafing left/right).
-	- Players can also press USE(e) to attach if facing the ladder, regardless how the player is looking up/down (ignores self.viewangles[0]).
+- Hold USE(e) + Lean left/right to activate a yellow "Builder Remover Laser".
+- Hold USE(e) + hold FIRE at an object, lift, or tele that you placed to pick it up again (laser will turn red while picking it up).
+	- Players can only pick up their own objects, unless logged in as admin (isadmin = 1).
+ 
+- While holding an object or lift: hold FIRE, then hold USE(e) to remove it.
+- While holding a tele: hold USE(e), then hold FIRE to remove it.
 
-- Dogs now look better when climbing ladders: dogs' angles become vertical when climbing, and perform walking anims only while moving up/down the ladder.
-	- Dogs' angles gradually rotate from vertical to horizontal When climbing off the ladder from the very top or bottom.
-	- Dogs can also bite players while climbing ladders.
+- When placing lifts and after first setting the start-position, the builder laser will turn red if the lift is below its start-position + 25 units (cannot be placed).
+	- While setting the destination-position, the lift's angle will now match the player's current angle.
+	- Hold USE(e) to hold the lift's angle in its current position, and hold the build-laser's current length.
 
-- global/respawn_stuck_fix.scr reworked again: now checks if players' "getposition = offground" instead of "getmovement = falling" (players weren't always falling) when spawning inside of a wall/object.
-	- If newly spawned players are stuck falling for 3+ seconds but their origins remain the same, they will get auto-respawned (the spawn point's origin likely needs to be moved).
-	- If somehow the player respawned at the same stuck-in-wall spawn point, then the player's origin will be moved 25 units forward times the number of attempts, after getting respawned again (this works even if there's only 1 spawn point).
+- Players can no longer place objects on top of any basebuilder triggers.
+- Fixed bugs that caused MG42 guns to be angled vertically when switching between MG42 and other objects.
+- While in Trimming Mode (holding FIRE(zoom) in Reborn 1.12 only; blue builder laser), walking while moving forward/backward will now maintain the builder laser's length for new objects.
+- Other basebuilder cvars, such as alx_timeboost & alx_objectlimitboost, will now print corresponding changes to the server's console window.
 
-- Fixed deathcams ("g_deathcam" cvar) by preventing them from viewing killers that are dead, and forcing players to respawn if they're somehow viewing their killer for longer than 8 seconds.
+---------------
 
-- Guided Missiles can now be shot down with bullets (damage trigger was not aligned with missile's origin), and will no longer deal damage to teammates. Explosion damage reduced from 600 to 500.
+- The CVAR hack detection script in cvars/adminstuff.scr will no longer kick all other players if one player has 1+ CVAR hacks in their .userinfo string.
+- The hacker will also be kicked 3 seconds after detection, to avoid "ihuddraw NULL player" errors printing to console.
 
-- Potentially fixed false positives in cvars/adminstuff.scr's "check_player_stufftexts" thread that kicked players for hacking, even though their names were able to be stufftexted (only occurs if repeatedly changing maps too quickly).
+- global/bomberplane_nospline.scr more accurately randomizes starting and ending points for the airstrike planes' path. Planes' angles also sway slightly left/right & up/down while moving.
+	- In a map's "airstrikes_alternate" thread, level.bomberplane_map_setsize1 and 2 values are alternated, allowing airstrikes to bomb different regions of the map (particularly if those regions have different map heights).
+	- Added 2 more level variables to control airstrikes, adding to 5 total:
+		- level.bomberplane_health = 200; these are defaults set inside global/bomberplane_nospline.scr
+		- level.bomberplane_bombspeed = 0.25; speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
+		- level.bomberplane_bombgravity = 2; higher = bombs drop faster vertically & closer to plane's splinepath
+		- level.bomberplane_bombspawntime = 0.2; time between spawning bombs; lower = bombs spawn less often.
+		- level.bomberplane_speed = 2350; lower = planes move slower.
 
-- Giant Bombs' time until impact reduced from 2.15 seconds to 1.95 seconds.
-- Victory podium's intermission camera lowered by 40 units (camera was too high and wasn't showing some podium crates).
-- Fixed missing sound aliases in M1L2A and M1L3C.
-- Added more ambience volumes in obj/obj_team1 (The Hunt) and M3L3 for the central small buildings that are tilted 30 degrees (not along X-Y axis).
+- All UBER triggers' setsizes reduced to avoid players triggering them up through some walls.
+- All UBER triggers that can be picked up/dropped by players will droptofloor when the player dies, without going through entities.
+- Giant Bombs & Light Bombs will now speed up to 6500 velocity if they somehow don't reach their ground-target destination before their level.bomb_time variable expires.
+
+- global/vehicle_tele.scr now has 2 additional parameters (height_1 & height_2) only if "align" parameter = 0 or 1, for teleporting vehicles/tanks upwards in one direction, and/or downwards in the other direction.
+
+- Player deathcams (killcams) from global/deathcam.scr will now stay at their killer's dead body's origin if the killer died while player deathcams were following him.
+	- Dead players will be force-respawned if their deathcam somehow waited longer than 5 seconds, instead of 8 seconds.
+	- The "g_deathcam" cvar will now maintain its value (either 1 or 0) between maps that running & not running UBER gametypes (cyb, snd, ft).
+	- The console will print "NOTE: The cvar for deathcams mod is: g_deathcam" if admins attempt to use the incorrect g_deathcams cvar.
+
+- The "findent" cvar will now print the entity's scale if it doesn't equal 1.
+- Mini-Flak88 flamethrowers' fire projectiles no longer have gravity (fly in straight lines).
+- Combined all TDM and FFA spawns in singleplayer maps into one thread.
+- Changed guided missile damageflags to deal rocket damage if directly impact a player (for printing "took [player]'s rocket in the kisser" kill messages), or otherwise deal regular explosion damage.
+- Changed maps/gen_mapscripts/bonfire.scr damageflags to deal lava/fire damage.
+- Added water landing and metal landing sounds for Cluster Mine killstreaks.
+
+- "self thread waittill_touch local" placed before numerous "waittill touch" script lines, particularly the airstrike scripts.
+	- Entities can sometimes fall outside the map. If they do, they will never touch anything. If they're forcibly removed after a time duration, "waittill touch" and its accompanying thread will still never finish.
+	- In the "waittill_touch" threads, "if(vector_length(self.origin) > 12000)" ensures that entities are removed if they go too far outside the map.
+	- Also in the "waittill_touch" threads, "local.thread remove" fully ends the "local" threads that contain "waittill_touch".
+	- Some scripts' projectiles/bombs that are waiting to touch something (or velocity == ( 0 0 0 )) will stop moving and explode/get removed if they touch any "level.water_volumes".
+	- Ensured that flying planes, plane bomb drops, and guided missiles properly make water explosions when touching any "level.water_volumes".
+
+- Crashing flyable planes' angles will point more vertically downward if players eject while facing downward.
+	- Crashing flyable planes's angles now exactly match their current velocity's trajectory (plane.angles = vector_toangles(plane.velocity)).
+	- If rockets from flyable planes directly impact a player, the rockets will deal "rocket" damage instead of generic "explosion" damage (for printing "took [player]'s rocket in the kisser" kill messages).
+	- Players that crash their own planes will now "blow themselves up" instead of "blowing up", causing the game to subtract 1 kill from their score.
+
+---------------
+
+- Drivable vehicles/boats/flak88s/nebelwerfers now have 1 or 2 additional glued triggers for further ensuring that kills/scorepoints are given to players when killing drivers (these triggers only exist when a player is driving).
+	- For flak88s & nebelwerfers, these triggers also prevent teammates from sniping and destroying them (teammates would not die from the explosion), however this feature only works in Reborn 1.12.
+	- For vehicles & boats, these triggers now allow players to shoot & kill drivers or passengers by aiming at their heads (even though they are currently notsolid).
+	- However for jeeps on steep sloped terrain, shooting at the driver's head may still not work since the driver model is only a dummy model.
+
+- Improved vehicle/boat death fire & smoke emitter locations based on dead vehicle/boat's angles.
+- Fixed players switching teams in drivable vehicles/boats not fully respawning (they would respawn back above the vehicle/boat).
+- Fixed vehicles/tanks that were instantly resetting if they get flooded first by a Light Bomb, then blown up before their reset-time duration finishes.
+- Passengers' viewangles will now match their vehicle/boat's viewangles, similar to the driver's viewangles.
+- Drivable sdkfz halftracks now have sdkfz_shield notsolid models on top of them. Jeep 30 Cal turrets on sdkfz halftracks also moved slightly down to be directly on the roof.
+- Added static/corona_util.tik to mark the endpoint of the drivable uboat's aiming laser (lean left/right while moving to adjust turret's aim).
+
+- Anytime a vehicle/boat/tank respawns, it will now tele players onto the top of them, instead of players getting stuck inside them.
+- Dogs can now bite and kill drivers or passengers riding in vehicles/boats.
+
+- Fixed driver cameras for jeep, jeep_bench, opeltruck, opeltruckgreen, & opeltruckgreen_canopy vehicles, since for some reason .tik file "seatoffset" does not work for these models (new "driver_seat" entity for these models, for drivers to be glued onto).
+	- All drivers and passengers are now glued to a vehicle/boat's spawned attachmodel, keeping their origins exactly in place, and matching their body's angles (as opposed to their viewangles) exactly with the vehicle/boat's angles (attachmodel despawns when driver/passenger exits the vehicle/boat).
+	- Increased max passenger seats for the following vehicles from 5 seats to 7 seats: opeltruck, opeltruckgreen, opeltruckgreen_canopy, m3, gmctruck.
+
+- Drivers in opeltrucks or gmctrucks can now see behind them when holding FIRE for rear-view mirror (player briefly unglues from driver_seat attachmodel and glues onto rear_view attachmodel).
+- Drivers in higgins boats can now open/close their higginsdoor model by leaning right/left respectively. When open, the solid door acts as a ramp for players to more easily get into the boat. Players touching the open doors will also not be auto-respawned if touching any "ocean" or similar triggers.
+
+---------------
+
+- Potentially fixed rare Runtime errors that freeze/crash the server when switching maps (errors from "intermisison" threads would be the last lines printed to qconsole.log):
+	- Removed "intermission" threads from global/victory_podium.scr & cvars/adminstuff.scr, and combined them into one isolated script: global/intermission_serverautoreopen.scr, to avoid loading both at the same time.
+	- MOHAA_server_auto-reopen_Windows.bat (only available in xNULL website's download for UBER MODS) now checks for any errors coming from global/intermission_serverautoreopen.scr, indicating Runtime errors.
