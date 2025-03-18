@@ -134,6 +134,8 @@ BASEBUILDER CONSOLE COMMANDS:
 	alx_removelifts [27 or Searingwolfe]	// remove all lifts placed by $player[27] or by Searingwolfe).
 	alx_removeteles [27 or Searingwolfe]	// remove all teles placed by $player[27] or by Searingwolfe).
 
+ADDITIONAL FEATURES:
+
 	When placing down objects, hold the FIRE button to hold still the nonsolid object, and let go of FIRE to place down the object.
 	If holding FIRE for 3+ seconds while placing down an object, placement will be cancelled (laser will turn green). Press FIRE again to uncancel (place down now).
 
