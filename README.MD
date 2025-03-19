@@ -1,4 +1,4 @@
-*Current Version: 7.985 - Updated: 3/18/2025*
+*Current Version: 7.985 - Updated: 3/19/2025*
 
 ### Table of Contents
 
@@ -558,11 +558,17 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 - Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All):
 - 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats, 5 for uboats.
 
-- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn (Reborn only), Lean Right = turn on/off headlights, only if "noheadlights" parameter != 1 (Reborn only).
-- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
-- For drivable boats: Hold FIRE = look behind. Press JUMP = exit, Lean Left/Right = close/open higgins door.
-- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade (Non-Reborn: FIRE + USE(e) = throw grenade), Press JUMP = exit,
-Lean Left/Right (while not moving) = look behind (Reborn only), Lean Left/Right (while moving) = aim up/down the tank shell's trajectory (Reborn only).
+For Reborn:
+	- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights, only if "noheadlights" parameter != 1.
+	- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
+	- For drivable boats: Hold FIRE = look behind. Press JUMP = exit, Lean Left/Right = close/open higgins door.
+	- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Press JUMP = exit, Lean Left/Right (while not moving) = look behind, Lean Left/Right (while moving) = aim up/down the tank shell's trajectory.
+
+For AA-SH-BT:
+	- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, press A (left key) = honk horn, press R (right key) = turn on/off headlights, only if "noheadlights" parameter != 1.
+	- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
+	- For drivable boats: Hold FIRE = look behind. Press JUMP = exit, press A - D (left-right keys) = close/open higgins door.
+	- For drivable uboats: Primary FIRE = shoot tank shell, FIRE + USE(e) = throw grenade, Press JUMP = exit, press A - D (left-right keys) = aim up/down the tank shell's trajectory.
 
 - Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
 - Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
@@ -1067,7 +1073,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.985 (3-18-2025):
+v7.985 (3-19-2025):
 - Reworked Base-Builder script again (alienx/basebuilder.scr) to fix more lift & tele bugs, added more building features, and added more CVARs:
  
 - New basebuilder cvars added for admins (alienx/alienxcvars.scr):
