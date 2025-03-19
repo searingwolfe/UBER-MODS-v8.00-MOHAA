@@ -344,9 +344,9 @@ playergetin:
 	self.driver hide
 	self.driver nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
 	self.driver notsolid
-	if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn, Lean Right = turn on/off headlights.") }
-	if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("Lean Right = turn on/off headlights.") }
-	if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("Lean Left = honk horn.") }
+	if(self.noheadlights != 1 && self.nohorn != 1) { self.driver iprint ("press A (left key) = honk horn, press D (right key) = turn on/off headlights.") }
+	if(self.noheadlights != 1 && self.nohorn == 1) { self.driver iprint ("press D (right key) = turn on/off headlights.") }
+	if(self.noheadlights == 1 && self.nohorn != 1) { self.driver iprint ("press A (left key) = honk horn.") }
 	self.driver iprint ("JUMP = exit vehicle, hold FIRE = look behind.")
 	self.driver.driving_state_jump = 0
 
@@ -377,20 +377,7 @@ playergetin:
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1)
-		{
-			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] * -1 + 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
-			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] * -1 - 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
-			else { self.driver.viewangles = ( (self.angles[2] * -1 + 10) (self.angles[1] + 90) (self.angles[0]) ) }
-		}
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1)
-		{
-			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] - 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
-			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] + 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
-			else { self.driver.viewangles = ( (self.angles[2] + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
-			
-		}
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
+		self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] )
 
 		if(self.driver.driving_state_jump == 1 || self.flooded == 1) // Press JUMP to exit, or force-exit if vehicle gets flooded by a Light Bomb exploding on it.
 		{
@@ -414,19 +401,19 @@ playergetin:
 			}
 			else if(local.firehelding == 1) { self waitthread rearview_adjust 0 }
 	
-			if((self.driver getcontrollerangles 0)[2] > 15 && local.toggle != 1 && self.nohorn != 1) // lean left to honk horn
+			if(self.driver.driving_state_left == 1 && local.toggle != 1 && self.nohorn != 1) // press A (left key) to honk horn
 			{
 				self.driver iprint "Honking the horn."
 				self playsound truckhorn
 				local.toggle = 1
 			}
-			if((self.driver getcontrollerangles 0)[2] < -15 && local.toggle != 1 && self.noheadlights != 1) // lean right to turn on/off headlights
+			if(self.driver.driving_state_right == 1 && local.toggle != 1 && self.noheadlights != 1) // press D (right key) to turn on/off headlights
 			{
 				if(self.corona != 1 && local.toggle2 != 1) { self thread headlights; local.toggle2 = 1 }
 				if(self.corona == 1 && local.toggle2 != 1) { self thread headlights; local.toggle2 = 1 }
 				local.toggle = 1
 			}
-			if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] >= -15) { local.toggle = 0; local.toggle2 = 0 }
+			if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { local.toggle = 0; local.toggle2 = 0 }
 		}
 
 		if(self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 + (self.angles[0] - 360)) self.driver.viewangles[1] self.driver.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).

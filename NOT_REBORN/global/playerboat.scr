@@ -298,10 +298,10 @@ playergetin:
 	self.driver.driving_state_jump = 0
 	if(self.model == "models/vehicles/uboat.tik")
 	{
-		//self.driver iprint ("Lean Left/Right = aim turret down/up. Lean Left/Right (while not moving) = look behind.")
+		self.driver iprint ("press A - D (left-right keys) = aim turret down/up.")
 		self.driver iprint ("JUMP = exit boat. FIRE = shoot rockets. FIRE + USE(e) = throw grenades.")
 	}
-	else { self.driver iprint ("JUMP = exit boat. Hold FIRE = look behind. Lean Left/Right = close/open door.") }
+	else { self.driver iprint ("JUMP = exit boat. hold FIRE = look behind. press A - D (left-right keys) = close/open door.") }
 
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
@@ -331,20 +331,7 @@ playergetin:
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1)
-		{
-			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] * -1 + 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
-			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] * -1 - 360 + 10) (self.angles[1] + 90) (self.angles[0] * -1) ) }
-			else { self.driver.viewangles = ( (self.angles[2] * -1 + 10) (self.angles[1] + 90) (self.angles[0]) ) }
-		}
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1)
-		{
-			if(self.angles[2] > 180) { self.driver.viewangles = ( (self.angles[2] - 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
-			else if(self.angles[2] < -180) { self.driver.viewangles = ( (self.angles[2] + 360 + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
-			else { self.driver.viewangles = ( (self.angles[2] + 10) (self.angles[1] - 90) (self.angles[0] * -1) ) }
-			
-		}
-		if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
+		self.driver.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] )
 
 		if(self.driver.driving_state_jump == 1) // Press JUMP to exit.
 		{
@@ -374,23 +361,22 @@ playergetin:
 				else { self thread firesecondary }
 			}
 
-			if(self.driver.fireheld != 1 && (self.driver getcontrollerangles 0)[2] > 15 || (self.driver getcontrollerangles 0)[2] < -15)
+			if(self.driver.fireheld != 1 && self.driver.driving_state_left == 1 || self.driver.driving_state_right == 1)
 			{
-				if(self.velocity == ( 0 0 0 )) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) }
-				else if(self.turretlaser != NIL && self.turretlaser != NULL)
+				if(self.turretlaser != NIL && self.turretlaser != NULL)
 				{
-					if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] < -15)
+					if(self.driver.driving_state_left != 1 && self.driver.driving_state_right == 1)
 					{
 						if(self.turretlaser_offset > -15) { self.turretlaser activate; self.turretlaser_point show; self.turretlaser_offset -= .25 }
 						else { self.turretlaser deactivate; self.turretlaser_point hide; self.turretlaser_offset = -15 }
 					}
 
-					if((self.driver getcontrollerangles 0)[2] > 15 && (self.driver getcontrollerangles 0)[2] >= -15)
+					if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1)
 					{
 						if(self.turretlaser_offset < 3) { self.turretlaser activate; self.turretlaser_point show; self.turretlaser_offset += .25 }
 						else { self.turretlaser deactivate; self.turretlaser_point hide; self.turretlaser_offset = 3 }
 					}
-					if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] >= -15) { self.turretlaser deactivate; self.turretlaser_point hide }
+					if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { self.turretlaser deactivate; self.turretlaser_point hide }
 				}
 			}
 			else { self.turretlaser deactivate; self.turretlaser_point hide }
@@ -399,7 +385,7 @@ playergetin:
 		{
 			if(self.driver.fireheld == 1) { self.driver.viewangles = ( (10 + self.angles[0] * -1) (self.angles[1] + 180) (self.angles[2] * -1) ) }
 
-			if((self.driver getcontrollerangles 0)[2] > 15 && local.toggle != 1 && self.door_open == 1 && self.door_count >= 20) // lean left to close higgins door
+			if(self.driver.driving_state_left == 1 && local.toggle != 1 && self.door_open == 1 && self.door_count >= 20) // press A (left key) to close higgins door
 			{
 				//self.driver iprint "Closing the higgins door."
 				self.doorclip playsound higgins_door_close
@@ -408,7 +394,7 @@ playergetin:
 				self.door_open = 0
 				local.toggle = 1
 			}
-			if((self.driver getcontrollerangles 0)[2] < -15 && local.toggle != 1 && self.door_open != 1 && self.door_count >= 20) // lean right to open higgins door
+			if(self.driver.driving_state_right == 1 && local.toggle != 1 && self.door_open != 1 && self.door_count >= 20) // press D (right key) to open higgins door
 			{
 				//self.driver iprint "Opening the higgins door."
 				self.doorclip playsound higgins_door_open
@@ -417,7 +403,7 @@ playergetin:
 				self.door_open = 1
 				local.toggle = 1
 			}
-			if((self.driver getcontrollerangles 0)[2] <= 15 && (self.driver getcontrollerangles 0)[2] >= -15) { local.toggle = 0; local.toggle2 = 0 }
+			if(self.driver.driving_state_left != 1 && self.driver.driving_state_right != 1) { local.toggle = 0; local.toggle2 = 0 }
 		}
 
 		if(self.driver.viewangles[0] > 180) { self.driver.viewangles = ( (10 + (self.angles[0] - 360)) self.driver.viewangles[1] self.driver.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
