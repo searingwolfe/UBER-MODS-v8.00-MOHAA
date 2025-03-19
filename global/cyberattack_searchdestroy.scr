@@ -33,7 +33,6 @@ main:
 
 	level.mef_weaponclasses = waitthread global/get_player_weaponclass.scr::setup_weapon_classes
 	level.round_starttime_init = level.round_starttime
-	level.maxplayers = int(getcvar "sv_maxclients")
 
 	thread scores
 	thread initialize
@@ -87,31 +86,29 @@ players_alive_status:
 
   while(level.round_starttime > 0) // waiting until the round begins
   {
-	for(local.i = 0; local.i < level.maxplayers; local.i++)
+	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
-		local.entity = getentity(local.i)
-		if(local.entity != NULL)
+		if($player[local.i] != NULL)
 		{
-			local.entity thread player_mef_weaponclass
+			$player[local.i] thread player_mef_weaponclass
 
-			if(local.entity.dmteam == "spectator" || local.entity getconnstate == 1) // lost connection mid-round, CS_ZOMBIE
+			if($player[local.i].dmteam == "spectator")
 			{
-				level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL
-				level.allies_total[local.i] = NIL; level.axis_total[local.i] = NIL
+				level.allies_count[$player[local.i].entnum] = NIL; level.axis_count[$player[local.i].entnum] = NIL
+				level.allies_total[$player[local.i].entnum] = NIL; level.axis_total[$player[local.i].entnum] = NIL
 
-				local.entity thread player_fromspectator
-				if(local.entity getconnstate == 1 && local.entity.dmteam != "spectator") { local.entity stufftext "spectator" } // force zombie players into spectator.
+				$player[local.i] thread player_fromspectator
+				if($player[local.i] getconnstate == 1 && $player[local.i].dmteam != "spectator") { $player[local.i] stufftext "spectator" } // force zombie players into spectator.
 			}
 		}
 	}
 	waitframe
   }
-  for(local.i = 0; local.i < level.maxplayers; local.i++) // make spectators auto join teams once round starts, off by default.
+  for(local.i = 1; local.i <= $player.size; local.i++) // make spectators auto join teams once round starts, off by default.
   {
-	local.entity = getentity(local.i)
-	if(local.entity != NULL && local.entity.dmteam == "spectator" && level.spectators_jointeams == 1)
+	if($player[local.i] != NULL && $player[local.i].dmteam == "spectator" && level.spectators_jointeams == 1)
 	{
-		local.entity primarydmweapon mg; local.entity auto_join_team // could also be primarydmweapon rifle
+		$player[local.i] primarydmweapon mg; $player[local.i] auto_join_team // could also be primarydmweapon rifle
 	}
   }
 
@@ -122,50 +119,49 @@ players_alive_status:
 
   while(level.change_team_score != 1)  // round has now started
   {
-	for(local.i = 0; local.i < level.maxplayers; local.i++) // must use players' entnums, not their $player[clientnums].
+	for(local.i = 1; local.i <= $player.size; local.i++)	// must use players' entnums, not their $player[clientnums].
 	{							// players that leave can cause other players' clientnums to change, causing the arrays to become inaccurate.
-		local.entity = getentity(local.i)		// getentity must be used to obtain entnums for NULL players (simpler than doing $player[local.i].entnum with mismatching local.i & entnum).
-		if(local.entity == NULL)
+		if($player[local.i] == NULL)
 		{										// if any variable in an array becomes NIL, the size is decreased by 1. for example:
-			level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL	// test[1] = 1, test[2] = 0, test[3] = 1, test[4] = 0 test.size = 4;
-			level.allies_total[local.i] = NIL; level.axis_total[local.i] = NIL	// test[1] = 1, test[2] = 0, test[3] = NIL, test[4] = 0 test.size = 3.
+			level.allies_count[$player[local.i].entnum] = NIL; level.axis_count[$player[local.i].entnum] = NIL	// test[1] = 1, test[2] = 0, test[3] = 1, test[4] = 0 test.size = 4;
+			level.allies_total[$player[local.i].entnum] = NIL; level.axis_total[$player[local.i].entnum] = NIL	// test[1] = 1, test[2] = 0, test[3] = NIL, test[4] = 0 test.size = 3.
 		}
 
-		if(local.entity != NULL && local.entity.fromspecthread != 1) // spectators are often assigned to a team before their weapons are chosen. wait until they're fully alive and carrying weapons first.
+		if($player[local.i] != NULL && $player[local.i].fromspecthread != 1) // spectators are often assigned to a team before their weapons are chosen. wait until they're fully alive and carrying weapons first.
 		{
-			local.entity thread player_mef_weaponclass
+			$player[local.i] thread player_mef_weaponclass
 
-			if(local.entity.dmteam == "allies")
+			if($player[local.i].dmteam == "allies")
 			{
-				level.allies_total[local.i] = 1; level.axis_total[local.i] = NIL
+				level.allies_total[$player[local.i].entnum] = 1; level.axis_total[$player[local.i].entnum] = NIL
 			}	
-			if(local.entity.dmteam == "axis")
+			if($player[local.i].dmteam == "axis")
 			{
-				level.allies_total[local.i] = NIL; level.axis_total[local.i] = 1
+				level.allies_total[$player[local.i].entnum] = NIL; level.axis_total[$player[local.i].entnum] = 1
 			}
 
-			if(local.entity.dmteam == "spectator" || local.entity getconnstate == 1) // lost connection mid-round, CS_ZOMBIE
+			if($player[local.i].dmteam == "spectator" || $player[local.i] getconnstate == 1) // lost connection mid-round, CS_ZOMBIE
 			{
-				level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL
-				level.allies_total[local.i] = NIL; level.axis_total[local.i] = NIL
+				level.allies_count[$player[local.i].entnum] = NIL; level.axis_count[$player[local.i].entnum] = NIL
+				level.allies_total[$player[local.i].entnum] = NIL; level.axis_total[$player[local.i].entnum] = NIL
 
-				local.entity thread player_fromspectator
-				if(local.entity getconnstate == 1 && local.entity.dmteam != "spectator") { local.entity stufftext "spectator" } // force zombie players into spectator.
+				$player[local.i] thread player_fromspectator
+				if($player[local.i] getconnstate == 1 && $player[local.i].dmteam != "spectator") { $player[local.i] stufftext "spectator" } // force zombie players into spectator.
 			}
-			if(local.entity.dead != 1 && local.entity.dmteam != "spectator" && local.entity getconnstate != 1) // fully alive, not in team-spectating mode.
+			if($player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && $player[local.i] getconnstate != 1) // fully alive, not in team-spectating mode.
 			{
-				if(isalive local.entity)
+				if(isalive $player[local.i])
 				{
-					if(local.entity.dmteam == "allies") { level.allies_count[local.i] = 1; level.axis_count[local.i] = NIL }
-					if(local.entity.dmteam == "axis") { level.allies_count[local.i] = NIL; level.axis_count[local.i] = 1 }
+					if($player[local.i].dmteam == "allies") { level.allies_count[$player[local.i].entnum] = 1; level.axis_count[$player[local.i].entnum] = NIL }
+					if($player[local.i].dmteam == "axis") { level.allies_count[$player[local.i].entnum] = NIL; level.axis_count[$player[local.i].entnum] = 1 }
 				}
 				else
 				{
-					level.allies_count[local.i] = NIL; level.axis_count[local.i] = NIL
+					level.allies_count[$player[local.i].entnum] = NIL; level.axis_count[$player[local.i].entnum] = NIL
 
 					level.allow_teams_to_win = 1
-					local.entity thread frozen_player local.entity.mef_weaponclass
-					local.entity.dead = 1
+					$player[local.i] thread frozen_player $player[local.i].mef_weaponclass
+					$player[local.i].dead = 1
 				}				
 			}
 		}
@@ -256,15 +252,13 @@ player_fromspectator:
 	{
 		self.fromspecthread = 0
 
-		if(level.round_starttime <= 0 && (self.dmteam == "allies" || self.dmteam == "axis") && local.teamcount > 0 && local.teamcount2 > 0)
+		if(level.round_starttime <= 0 && (self.dmteam == "allies" || self.dmteam == "axis") && local.teamcount > 0 && local.teamcount2 > 0 && self.fromspecthread_init == 1)
 		{
 			self waitthread player_mef_weaponclass	// weaponclass will not be assigned if the player dies too quickly.
 
 			killent self.entnum 			// if players try to join a team while a round is in progress, and when both teams have at least 1 player, kill the team-switcher immediately.
 
 			self iprint ("Please wait. Round is currently in progress.")
-			self iprint ("Removing one death from your score... Switching to team-spectator...")
-			self adddeaths -1
 
 			if(level.newgametype == "snd") { self iprint ("You will respawn when this current round ends.") }
 			else { self iprint ("You will respawn when someone melts your frozen body.") }
@@ -273,6 +267,7 @@ player_fromspectator:
 		{
 			self thread player_mef_weaponclass
 		}
+		self.fromspecthread_init = 1
 	}
 end
 
