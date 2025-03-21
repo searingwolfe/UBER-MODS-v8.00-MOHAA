@@ -1,4 +1,4 @@
-*Current Version: 7.985 - Updated: 3/19/2025*
+*Current Version: 7.985 - Updated: 3/21/2025*
 
 ### Table of Contents
 
@@ -1073,7 +1073,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.985 (3-19-2025):
+v7.985 (3-21-2025):
 - Reworked Base-Builder script again (alienx/basebuilder.scr) to fix more lift & tele bugs, added more building features, and added more CVARs:
  
 - New basebuilder cvars added for admins (alienx/alienxcvars.scr):
@@ -1142,6 +1142,9 @@ v7.985 (3-19-2025):
 	- Crashing flyable planes's angles now exactly match their current velocity's trajectory (plane.angles = vector_toangles(plane.velocity)).
 	- If rockets from flyable planes directly impact a player, the rockets will deal "rocket" damage instead of generic "explosion" damage (for printing "took [player]'s rocket in the kisser" kill messages).
 	- Players that crash their own planes will now "blow themselves up" instead of "blowing up", causing the game to subtract 1 kill from their score.
+
+- global/cyberattack_searchdestroy.scr: added more HUD at the bottom left of the screen for each team's total player count and their living players count.
+	- Fixed total player count not decreasing when a player leaves during a round.
 
 ---------------
 
