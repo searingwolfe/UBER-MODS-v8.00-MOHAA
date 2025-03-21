@@ -34,8 +34,9 @@ main:
 	level.mef_weaponclasses = waitthread global/get_player_weaponclass.scr::setup_weapon_classes
 	level.round_starttime_init = level.round_starttime
 
-	thread scores
 	thread initialize
+	thread scores
+	thread players_hud
 	thread new_player_hud
 	thread players_alive_status
 	thread players_perteam_status
@@ -94,9 +95,6 @@ players_alive_status:
 
 			if($player[local.i].dmteam == "spectator")
 			{
-				level.allies_count[$player[local.i].entnum] = NIL; level.axis_count[$player[local.i].entnum] = NIL
-				level.allies_total[$player[local.i].entnum] = NIL; level.axis_total[$player[local.i].entnum] = NIL
-
 				$player[local.i] thread player_fromspectator
 				if($player[local.i] getconnstate == 1 && $player[local.i].dmteam != "spectator") { $player[local.i] stufftext "spectator" } // force zombie players into spectator.
 			}
@@ -119,14 +117,17 @@ players_alive_status:
 
   while(level.change_team_score != 1)  // round has now started
   {
-	for(local.i = 1; local.i <= $player.size; local.i++)	// must use players' entnums, not their $player[clientnums].
-	{							// players that leave can cause other players' clientnums to change, causing the arrays to become inaccurate.
-		if($player[local.i] == NULL)
-		{										// if any variable in an array becomes NIL, the size is decreased by 1. for example:
-			level.allies_count[$player[local.i].entnum] = NIL; level.axis_count[$player[local.i].entnum] = NIL	// test[1] = 1, test[2] = 0, test[3] = 1, test[4] = 0 test.size = 4;
-			level.allies_total[$player[local.i].entnum] = NIL; level.axis_total[$player[local.i].entnum] = NIL	// test[1] = 1, test[2] = 0, test[3] = NIL, test[4] = 0 test.size = 3.
-		}
+  	level.allies_count = NIL	// test[1] = 1, test[2] = 0, test[3] = 1, test[4] = 0 test.size = 4;
+  	level.axis_count = NIL		// test[1] = 1, test[2] = 0, test[3] = NIL, test[4] = 0 test.size = 3.
+  	level.axis_total = NIL
+  	level.allies_total = NIL
+  	level.allies_count[0] = NIL
+  	level.axis_count[0] = NIL
+  	level.allies_total[0] = NIL
+  	level.axis_total[0] = NIL
 
+	for(local.i = 1; local.i <= $player.size; local.i++)	// must use players' entnums, not their $player[clientnums]. players that leave can cause other players' clientnums to change, causing the arrays to become inaccurate.
+	{
 		if($player[local.i] != NULL && $player[local.i].fromspecthread != 1) // spectators are often assigned to a team before their weapons are chosen. wait until they're fully alive and carrying weapons first.
 		{
 			$player[local.i] thread player_mef_weaponclass
@@ -401,13 +402,17 @@ frozen_player local.mef_weaponclass:
 					if(level.axisplanted == 1 && level.allies_count.size <= 0) { local.ent thread kill_frozen_players; local.ent.dying = 1; end }
 				}
 			}
-		}		   
+			local.entnum = local.ent.entnum
+			local.team = local.ent.team
+		}
 	}
 
-	if($("revivetrig" + local.ent.entnum) != NULL) { $("revivetrig" + local.ent.entnum) remove }
-	if(self == NULL || (self != NULL && self.dmteam != local.ent.team))
+	while(local.ent != NULL && local.ent.revived != 1) { waitframe }
+
+	if($("revivetrig" + local.entnum) != NULL) { $("revivetrig" + local.entnum) remove }
+	if(self == NULL || (self != NULL && self.dmteam != local.team))
 	{
-		if($("beams" + local.ent.entnum) != NULL) { $("beams" + local.ent.entnum) remove }
+		if($("beams" + local.entnum) != NULL) { $("beams" + local.entnum) remove }
 		if(local.ent != NULL) { local.ent remove }
 	}
 end
@@ -714,6 +719,8 @@ melt_frozen_player local.ent local.mef_weaponclass:
 			}
 		}
 	}
+
+	local.ent.revived = 1
 	wait 0.1
 	if($("revivetrig" + local.ent.entnum) != NULL) { $("revivetrig" + local.ent.entnum) remove }
 	local.ent remove
@@ -763,6 +770,7 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 
 	local.bombtrig = spawn trigger_use targetname "bombexplosive"
 	if(local.norotate == 1) { $bombexplosive.norotate = 1 }		// if local.norotate = 1, keep bombs from rotating and instead use the local.angleallies, angleaxis, anglecentral parameters.
+	else { $bombexplosive.norotate = 0 }
 
 	if(level.newgametype == "snd") 
 	{ 
@@ -1165,8 +1173,15 @@ dummyavatar:
 	local.avatar alpha 0.80
 	local.avatar activate
 
-	local.team = self.team
-	while(self != NULL && self.team == local.team && level.bombisdead != 1) { waitframe }
+	while(self != NULL)
+	{
+		if(level.bombisdead == 1) { local.avatar deactivate }
+		else { local.avatar activate }
+
+		if(self.team == "allies") { local.avatar shader ("textures/hud/allies_headicon") }
+		if(self.team == "axis") { local.avatar shader ("textures/hud/axis_headicon") }
+		waitframe
+	}
 	local.avatar remove
 end
 
@@ -1476,6 +1491,7 @@ camera local.i local.r:
 	local.camera.origin = $("bombsitetrig_" + local.i).origin + ( local.cos local.sin 55 )
 	local.camera.angles = $("bombsite_" + local.i).angles + ( 20 180 0 )
 	local.camera targetname bombcam
+
 	drawhud 0
 	freezeplayer
 	$player nodamage
@@ -1483,8 +1499,11 @@ camera local.i local.r:
 	cuecamera $bombcam
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
+		$player[local.i].temp_cuecamera_origin = $player[local.i].origin
+
 		if($player[local.i].dog != NIL && $player[local.i].dog != NULL) { $player[local.i].dog hide } 	// without first classifying ".dog" as an object, the game assumes it's a variable that doesn't exist.
 	}									   				// therefore check for NIL first, before checking for NULL.
+	$player tele local.camera.origin
 
 	wait (6.0000 + local.r)
 	local.camera remove
@@ -1492,6 +1511,12 @@ camera local.i local.r:
 	$player takedamage
 	$player show
 	drawhud 1
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		$player[local.i] tele $player[local.i].temp_cuecamera_origin
+		$player[local.i].temp_cuecamera_origin = NIL
+	}
 end
 
 //-----------------------------------------------------------------------------
@@ -1750,12 +1775,16 @@ scores:
   			}
 		}
 
-		if(level.POINTS[allies] >= level.rounds_towin || level.POINTS[axis] >= level.rounds_towin) { setcvar "timelimit" "1" } // end the game
+		if(level.POINTS[allies] >= level.rounds_towin || level.POINTS[axis] >= level.rounds_towin) // end the game
+		{
+			if(level.VP_scriptmaster == 1) { exec global/victory_podium.scr::map_ended $victory_podium[1].origin $victory_podium[1].angle 5 } 
+			else { setcvar "timelimit" "1" }
+		}
 		
 		level.round_starttime = level.round_starttime - 0.1
 		if(level.round_starttime <= 0) { level.round_starttime = 0 }
 		wait 0.1
-	} 
+	}
 end
 
 //-----------------------------------------------------------------------------
@@ -1770,6 +1799,7 @@ new_player_hud:
 			if($player[local.i].HUDcybsnd != 1 && $player[local.i] getconnstate != 1)
 			{
 				$player[local.i] thread huddraw
+				$player[local.i] thread huddraw_players
 				$player[local.i].HUDcybsnd = 1
 			}
 			if($player[local.i] getconnstate == 1) { $player[local.i].huddraw = 0 }
@@ -1782,70 +1812,192 @@ end
 huddraw: // using huddraw_ in a server must not be continuously called in a loop. minimize calling them as much as possible (avoid CGM buffer is full for client [player]).
 
 	waitframe
-	ihuddraw_align  self 206 right top
-	ihuddraw_alpha  self 206 1.0
-	ihuddraw_font   self 206 "courier-15"
-	ihuddraw_rect   self 206 -166 55 50 14
-	if(level.newgametype == "cyb") { ihuddraw_string self 206 ("= Cyber Attack = ") }
-	if(level.newgametype == "snd") { ihuddraw_string self 206 ("= Search & Destroy = ") }
-	if(level.newgametype == "ft") { ihuddraw_string self 206 ("= Freeze Tag = ") }
+	huddraw_align  206 right top
+	huddraw_alpha  206 1.0
+	huddraw_font   206 "facfont-20"
+	huddraw_rect   206 -171 66 50 14
+	if(level.newgametype == "cyb") { huddraw_string 206 ("= Cyber Attack = ") }
+	if(level.newgametype == "snd") { huddraw_string 206 ("= Search & Destroy = ") }
+	if(level.newgametype == "ft") { huddraw_string 206 ("= Freeze Tag = ") }
 
-	ihuddraw_shader self 205 ("textures/hud/allies")
-	ihuddraw_align  self 205 right top
-	ihuddraw_alpha  self 205 1.0
-	ihuddraw_rect   self 205 -170 77 15 15
+	huddraw_shader 205 ("textures/hud/allies")
+	huddraw_align  205 right top
+	huddraw_alpha  205 1.0
+	huddraw_rect   205 -175 88 15 15
 
-	ihuddraw_align  self 202 right top // allies points
-	ihuddraw_alpha  self 202 1.0
-	ihuddraw_font   self 202 "courier-15"
-	ihuddraw_rect   self 202 -150 77 50 14
-	ihuddraw_color  self 202 1.0 1.0 1.0
-	ihuddraw_string self 202 ("Allies: " + level.POINTS[allies])
+	huddraw_align  202 right top // allies points
+	huddraw_alpha  202 1.0
+	huddraw_font   202 "facfont-20"
+	huddraw_rect   202 -155 88 50 14
+	huddraw_color  202 1.0 1.0 1.0
+	huddraw_string 202 ("Allies: " + level.POINTS[allies])
 
-	ihuddraw_shader self 203 ("textures/hud/axis")
-	ihuddraw_align  self 203 right top
-	ihuddraw_alpha  self 203 1.0
-	ihuddraw_rect   self 203 -170 99 15 15
+	huddraw_shader 203 ("textures/hud/axis")
+	huddraw_align  203 right top
+	huddraw_alpha  203 1.0
+	huddraw_rect   203 -175 110 15 15
 	
-	ihuddraw_align  self 204 right top // axis points
-	ihuddraw_alpha  self 204 1.0
-	ihuddraw_font   self 204 "courier-15"
-	ihuddraw_rect   self 204 -150 99 50 14
-	ihuddraw_color  self 204 1.0 1.0 1.0
-	ihuddraw_string self 204 ("Axis: " + level.POINTS[axis])
+	huddraw_align  204 right top // axis points
+	huddraw_alpha  204 1.0
+	huddraw_font   204 "facfont-20"
+	huddraw_rect   204 -155 110 50 14
+	huddraw_color  204 1.0 1.0 1.0
+	huddraw_string 204 ("Axis: " + level.POINTS[axis])
 
-	ihuddraw_align  self 207 right top // time until round begins
-	ihuddraw_alpha  self 207 1.0
-	ihuddraw_font   self 207 "courier-15"
-	ihuddraw_rect   self 207 -166 121 50 14
+	huddraw_align  207 right top // time until round begins
+	huddraw_alpha  207 1.0
+	huddraw_font   207 "facfont-20"
+	huddraw_rect   207 -171 132 50 14
 
 	if(level.round_starttime > 0) 
 	{
-		ihuddraw_string self 207 ("Round Starting Shortly..."); ihuddraw_color self 207 1.0 1.0 1.0
+		huddraw_string 207 ("Round Starting Shortly..."); huddraw_color 207 1.0 1.0 1.0
 	}
 	if(level.round_starttime <= 0 && level.bomb_set != 1 && level.finalbombtick != 1 && level.bombisdead != 1 && level.allies_defusedbomb != 1 && level.axis_defusedbomb != 1)
 	{
-		if(level.newgametype == "cyb") { ihuddraw_string self 207 ("Find & Plant Bomb") }
-		if(level.newgametype == "snd" && level.changesides != 1) { ihuddraw_string self 207 ("Plant Team: Allies") }
-		if(level.newgametype == "snd" && level.changesides == 1) { ihuddraw_string self 207 ("Plant Team: Axis") }
-  		if(level.newgametype == "ft") { ihuddraw_string self 207 ("Kill All Enemy Players") }
-		ihuddraw_color self 207 1.0 1.0 1.0
+		if(level.newgametype == "cyb") { huddraw_string 207 ("Find & Plant Bomb") }
+		if(level.newgametype == "snd" && level.changesides != 1) { huddraw_string 207 ("Plant Team: Allies") }
+		if(level.newgametype == "snd" && level.changesides == 1) { huddraw_string 207 ("Plant Team: Axis") }
+  		if(level.newgametype == "ft") { huddraw_string 207 ("Kill All Enemy Players") }
+		huddraw_color 207 1.0 1.0 1.0
 	}
 	if(level.bomb_set == 1 && level.finalbombtick != 1 && level.bombisdead != 1 && level.allies_defusedbomb != 1 && level.axis_defusedbomb != 1) 
 	{
-		ihuddraw_string self 207 ("Bomb Planted!"); ihuddraw_color self 207 1.0 1.0 1.0 // white
+		huddraw_string 207 ("Bomb Planted!"); huddraw_color 207 1.0 1.0 1.0 // white
 	}
 	if(level.bomb_set != 1 && level.finalbombtick == 1 && level.bombisdead != 1 && level.allies_defusedbomb != 1 && level.axis_defusedbomb != 1)
 	{
-		ihuddraw_string self 207 ("Bomb Planted!"); ihuddraw_color self 207 1.0 1.0 0.0 // yellow
+		huddraw_string 207 ("Bomb Planted!"); huddraw_color 207 1.0 1.0 0.0 // yellow
 	}
 	if(level.bomb_set != 1 && level.finalbombtick != 1 && level.bombisdead == 1 && level.allies_defusedbomb != 1 && level.axis_defusedbomb != 1)
 	{
-		ihuddraw_string self 207 ("Target Destroyed."); ihuddraw_color self 207 1.0 0.0 0.0
+		huddraw_string 207 ("Target Destroyed."); huddraw_color 207 1.0 0.0 0.0
 	}
 	if(level.bomb_set != 1 && level.finalbombtick != 1 && level.bombisdead != 1 && (level.allies_defusedbomb == 1 || level.axis_defusedbomb == 1)) 
 	{
-		ihuddraw_string self 207 ("Bomb Defused."); ihuddraw_color self 207 1.0 0.0 0.0
+		huddraw_string 207 ("Bomb Defused."); huddraw_color 207 1.0 0.0 0.0
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+huddraw_players:
+
+	waitframe
+	huddraw_shader 208 ("textures/hud/allies")
+	huddraw_align  208 left bottom
+	huddraw_alpha  208 1.0
+	huddraw_rect   208 12 -148 25 25
+
+	huddraw_align  209 left bottom
+	huddraw_alpha  209 1.0
+	huddraw_font   209 "facfont-20"
+	huddraw_rect   209 46 -143 55 19
+	huddraw_color  209 1.0 1.0 1.0
+	huddraw_string 209 (level.allies_count.size + " / " + level.allies_total.size)
+
+	huddraw_shader 210 ("textures/hud/axis")
+	huddraw_align  210 left bottom
+	huddraw_alpha  210 1.0
+	huddraw_rect   210 12 -118 25 25
+	
+	huddraw_align  211 left bottom // axis points
+	huddraw_alpha  211 1.0
+	huddraw_font   211 "facfont-20"
+	huddraw_rect   211 46 -113 55 19
+	huddraw_color  211 1.0 1.0 1.0
+	huddraw_string 211 (level.axis_count.size + " / " + level.axis_total.size)
+end
+
+players_hud:
+
+	local.allies_count = level.allies_count.size
+	local.axis_count = level.axis_count.size
+	local.allies_total = level.allies_total.size
+	local.axis_total = level.axis_total.size
+
+	while(1)
+	{
+		if(level.allies_count.size != local.allies_count || level.allies_total.size != local.allies_total)
+		{
+			huddraw_string 209 (level.allies_count.size + " / " + level.allies_total.size)
+			thread players_hud_color allies local.allies_count local.allies_total
+		}
+		if(level.axis_count.size != local.axis_count || level.axis_total.size != local.axis_total)
+		{
+			huddraw_string 211 (level.axis_count.size + " / " + level.axis_total.size)
+			thread players_hud_color axis local.axis_count local.axis_total
+		}
+
+		local.allies_count = level.allies_count.size
+		local.axis_count = level.axis_count.size
+		local.allies_total = level.allies_total.size
+		local.axis_total = level.axis_total.size
+		waitframe
+	}
+end
+
+players_hud_color local.team local.count local.total:
+
+	if(level.change_team_score == 1 || local.total == 0) { end }
+
+	if(local.team == "allies")
+	{
+		local.num = 209
+		if(level.allies_count.size < local.count) { huddraw_color local.num 0.4 0.4 1.0; local.color = blue }
+		if(level.allies_count.size > local.count) { huddraw_color local.num 0.4 1.0 1.0; local.color = teal }
+	}
+	if(local.team == "axis")
+	{
+		local.num = 211
+		if(level.axis_count.size < local.count) { huddraw_color local.num 1.0 0.4 0.4; local.color = red }
+		if(level.axis_count.size > local.count) { huddraw_color local.num 1.0 1.0 0.4; local.color = yellow }
+	}
+
+	local.allies_count = level.allies_count.size
+	local.axis_count = level.axis_count.size
+	local.allies_total = level.allies_total.size
+	local.axis_total = level.axis_total.size
+
+	local.c = 0
+	while(1)
+	{
+		if(local.team == "allies" && (level.allies_count.size != local.allies_count || level.allies_total.size != local.allies_total)) { end }
+		if(local.team == "axis" && (level.axis_count.size != local.axis_count || level.axis_total.size != local.axis_total)) { end }
+
+		local.c++
+		if(local.c == 1)
+		{
+			if(local.color == blue) { huddraw_rect 208 	16 -143 16 16 } // 12 -148: X + 4, Y + 5
+			if(local.color == teal) { huddraw_rect 208 	8 -153 34 34 } // 12 -148: X - 4, Y - 5
+			if(local.color == red) { huddraw_rect 210 	16 -113 16 16 } // 12 -118: X + 4, Y + 5
+			if(local.color == yellow) { huddraw_rect 210 	8 -123 34 34 } // 12 -118: X - 4, Y - 5
+		}
+
+		if(local.c == 3)
+		{
+			if(local.color == blue) { huddraw_rect 208 	14 -145 19 19 }
+			if(local.color == teal) { huddraw_rect 208 	10 -151 31 31 }
+			if(local.color == red) { huddraw_rect 210 	14 -115 19 19 }
+			if(local.color == yellow) { huddraw_rect 210 	10 -121 31 31 }
+		}
+		if(local.c == 5)
+		{
+			if(local.color == blue) { huddraw_rect 208 	13 -147 22 22 }
+			if(local.color == teal) { huddraw_rect 208 	11 -149 28 28 }
+			if(local.color == red) { huddraw_rect 210 	13 -117 22 22 }
+			if(local.color == yellow) { huddraw_rect 210 	11 -119 28 28 }
+		}
+		if(local.c == 7)
+		{
+			if(local.color == blue) { huddraw_rect 208 	12 -148 25 25 }
+			if(local.color == teal) { huddraw_rect 208 	12 -148 25 25 }
+			if(local.color == red) { huddraw_rect 210 	12 -118 25 25 }
+			if(local.color == yellow) { huddraw_rect 210 	12 -118 25 25 }
+		}
+
+		if(local.c >= 40) { huddraw_color local.num 1.0 1.0 1.0; end }
+		waitframe
 	}
 end
 
