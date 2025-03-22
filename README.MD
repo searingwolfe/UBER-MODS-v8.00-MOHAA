@@ -1,4 +1,4 @@
-*Current Version: 7.985 - Updated: 3/21/2025*
+*Current Version: 7.985 - Updated: 3/22/2025*
 
 ### Table of Contents
 
@@ -1151,7 +1151,7 @@ v7.985 (3-21-2025):
 - Drivable vehicles/boats/flak88s/nebelwerfers now have 1 or 2 additional glued triggers for further ensuring that kills/scorepoints are given to players when killing drivers (these triggers only exist when a player is driving).
 	- For flak88s & nebelwerfers, these triggers also prevent teammates from sniping and destroying them (teammates would not die from the explosion), however this feature only works in Reborn 1.12.
 	- For vehicles & boats, these triggers now allow players to shoot & kill drivers or passengers by aiming at their heads (even though they are currently notsolid).
-	- However for jeeps on steep sloped terrain, shooting at the driver's head may still not work since the driver model is only a dummy model.
+	- However for vehicles on steep sloped terrain, shooting at the driver's head may still not work since the driver's model is glued to their seat, not the driver's actual hitbox.
 
 - Improved vehicle/boat death fire & smoke emitter locations based on dead vehicle/boat's angles.
 - Fixed players switching teams in drivable vehicles/boats not fully respawning (they would respawn back above the vehicle/boat).
