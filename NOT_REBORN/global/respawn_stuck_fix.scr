@@ -25,6 +25,9 @@ respawn_stuck_check:
 
 	self.respawn_stuck_check = 1
 	local.team = self.dmteam
+
+	while(self != NULL && self.dmteam == local.team && (!isalive self || self.fellundermap == 1 || self.respawn_stuck_check == NIL || self.respawn_stuck_check == 0)) { waitframe }
+
 	local.c = 0
 	local.alivetime = 0
 	local.spawn_fwd_vec = angles_toforward( 0 self.angles[1] 0 ) // the player's initial angle will be the same as the spawn's angle.
@@ -57,5 +60,8 @@ respawn_stuck_check:
 		{
 			self.origin += local.spawn_fwd_vec * 25 * self.respawn_stuck_check_attempts
 		}
+
+		if(local.respawned != 1) { wait 3 }
+		if(self != NULL) { self.respawn_stuck_check = 0 }
 	}
 end
