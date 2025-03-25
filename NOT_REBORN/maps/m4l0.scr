@@ -102,6 +102,15 @@ if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 	thread random_explode_anywhere 256 600
 }
 
+if(getcvar("g_ubermods") == "1")
+{
+	exec map_triggers/player_spotlight.scr ( 4516 207 996 ) ( 1 1 1 ) s0 700 180 0 0 1		// white
+	exec map_triggers/player_spotlight.scr ( -1796 2851 148 ) ( 1 0 0 ) s1 700 -90 0 0 1		// red
+	exec map_triggers/player_spotlight.scr ( -549 -3291 1036 ) ( 0 0 1 ) s2 700 -90 0 0 1		// blue
+
+	exec map_triggers/spotlight_colorswitch.scr ( 4808 453 880 ) ( 0 0 0 ) s0 slowrainbow
+}
+
 if(getcvar("g_ubermods") == "2")
 {
 	exec map_triggers/joint.scr ( -551 -3124 1308 )
@@ -115,15 +124,6 @@ exec map_triggers/health.scr ( -6996 -6364 -29 ) ( -5069 -884 86 ) ( -2040 -6726
 
 exec map_triggers/led_trap.scr ( 5115 185 536 ) led1 1
 
-if(getcvar("g_ubergametype") != "bb")
-{
-	exec map_triggers/player_spotlight.scr ( 4516 207 996 ) ( 1 1 1 ) s0 700 180 0 0 1		// white
-	exec map_triggers/player_spotlight.scr ( -1796 2851 148 ) ( 1 0 0 ) s1 700 -90 0 0 1		// red
-	exec map_triggers/player_spotlight.scr ( -549 -3291 1036 ) ( 0 0 1 ) s2 700 -90 0 0 1		// blue
-
-	exec map_triggers/spotlight_colorswitch.scr ( 4808 453 880 ) ( 0 0 0 ) s0 slowrainbow
-}
-
 // Available playervehicle models:
 // bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
 // gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
@@ -131,25 +131,25 @@ if(getcvar("g_ubergametype") != "bb")
 // Vehicle speeds: trucks/boats = 250, jeeps/euro_vehicles/mercedes = 400, bikes = 500, halftracks/uboats = 40
 //
 local.r1 = randomint(3); local.r2 = randomint(3)
-local.euroorigin1 = ( 5065.5 1584 500 ); local.euroangles1 = ( 0 -90 0 )
-local.euroorigin2 = ( 1579 -5245 10 ); local.euroangles2 = ( 0 10 0 )
-if(local.r1 == 0) { exec global/playervehicle.scr eurocar vehicles/european_car_grey.tik local.euroorigin1 local.euroangles1 250 400 45 1 }
-if(local.r1 == 1) { exec global/playervehicle.scr eurocar vehicles/european_car_silver.tik local.euroorigin1 local.euroangles1 250 400 45 1 }
-if(local.r1 == 2) { exec global/playervehicle.scr eurocar vehicles/european_car_tan.tik local.euroorigin1 local.euroangles1 250 400 45 1 }
+local.euroorigin1 = ( 1579 -5245 10 ); local.euroangles1 = ( 0 10 0 )
+local.euroorigin2 = ( 5065.5 1584 500 ); local.euroangles2 = ( 0 -90 0 )
+//if(local.r1 == 0) { exec global/playervehicle.scr eurocar vehicles/european_car_grey.tik local.euroorigin1 local.euroangles1 250 400 45 1 }
+//if(local.r1 == 1) { exec global/playervehicle.scr eurocar vehicles/european_car_silver.tik local.euroorigin1 local.euroangles1 250 400 45 1 }
+//if(local.r1 == 2) { exec global/playervehicle.scr eurocar vehicles/european_car_tan.tik local.euroorigin1 local.euroangles1 250 400 45 1 }
 if(local.r2 == 0) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_green.tik local.euroorigin2 local.euroangles2 250 400 45 1 }
 if(local.r2 == 1) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_grey.tik local.euroorigin2 local.euroangles2 250 400 45 1 }
 if(local.r2 == 2) { exec global/playervehicle.scr eurotruck vehicles/european_delivery_truck_red3.tik local.euroorigin2 local.euroangles2 250 400 45 1 }
 exec global/playervehicle.scr bmwbike1 vehicles/bmwbike.tik ( -4781 5539 0 ) ( 358 270 358 ) 250 500 45 1 // health, speed, reset time, headlights on (0 or 1), no headlights (0 or 1)
 exec global/playervehicle.scr jeep1 vehicles/jeep.tik ( -2606 6388 0 ) ( 0 300 353 ) 250 400 45 1
-exec global/playervehicle.scr bmwbike2 vehicles/bmwbike.tik ( -3279 -6803 0 ) ( 13 342 356 ) 250 500 45 1
-exec global/playervehicle.scr jeep2 vehicles/jeep.tik ( -5447 -2051.5 100 ) ( 0 0 0 ) 250 400 45 1
+exec global/playervehicle.scr bmwbike2 vehicles/mercedes.tik ( -3279 -6803 0 ) ( 13 342 356 ) 250 500 45 1
+exec global/playervehicle.scr jeep2 vehicles/shermantank.tik ( -5447 -2051.5 100 ) ( 0 0 0 ) 250 400 45 1
 
 // Available playertank models:
 // kingtank, panzer_tank, panzer_tank_europe.
 //
 exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -998 -2542 500 ) ( 0 -90 0 ) 1000 45	// allies side
 exec global/playertank.scr tank02 vehicles/panzer_tank.tik ( -2302 1480 300 ) ( 0 0 0 ) 1000 45	// axis side
-exec global/playertank.scr tank03 vehicles/kingtank.tik ( 5424 -626 600 ) ( 0 180 0 ) 1000 45		// middle
+//exec global/playertank.scr tank03 vehicles/kingtank.tik ( 5424 -626 600 ) ( 0 180 0 ) 1000 45		// middle
 
 exec global/playerflak88.scr NIL 200 45 ( 4203 2431 470 ) ( 0 -155 0 ) 0 ( 0 45 0 )
 exec global/playerflak88.scr NIL 200 45 ( 6214 616 1008 ) ( 0 180 0 ) 0 ( 0 45 0 )
@@ -184,6 +184,8 @@ local.name2[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb6 ( 6143
 exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 6035 1923 753 ) ( 0 180 0 ) local.name2 60 450 2
 
 exec guidedmissile/trigger.scr ( 4307 1609 426 )
+exec guidedmissile/trigger.scr ( -2956 -3874 -64 )
+exec guidedmissile/trigger.scr ( -4125 4781 -211 )
 
 	thread vehicles_undermap
 

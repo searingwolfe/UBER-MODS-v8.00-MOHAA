@@ -64,8 +64,9 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 		cache models/emitters/fancyfire.tik; cache models/emitters/thin_black_short.tik
 		cache models/emitters/mortar_higgins.tik
 		cache models/emitters/mortar_dirt_nosound.tik
-		cache models/static/corona_util.tik
-		if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik") { cache models/vehicles/higginsdoor.tik; cache models/vehicles/mercedes.tik }
+		cache models/static/jug.tik
+		if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik") { cache models/vehicles/higginsdoor.tik; cache models/vehicles/mercedes.tik; cache models/animate/fx_water_spray.tik }
+		else { cache models/static/corona_util.tik }
 		thread scriptmaster local.vehicle.model
 		level.vehiclescriptmaster[local.vehicle.model] = 1
 		level.vehiclescriptmaster[local.model] = 1
@@ -74,24 +75,18 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	if(local.vehicle.model == "models/vehicles/uboat.tik")
 	{
 		local.vehicle turnrate 1; local.vehicle.turningrate = 1.000
-		local.vehicle attachmodel models/emitters/fancyfire.tik "Box01" 1 (local.name + "_tag_barrel") 1 -1 -1 -1 -1 ( 0 211 565 ) //( +left -right, +up -down, +forward -backward )
-		$(local.name + "_tag_barrel") notsolid
-		$(local.name + "_tag_barrel") hide
-		local.vehicle.gun = $(local.name + "_tag_barrel")
-
 		local.vehicle thread boatstuck_inwall_fix
-		local.vehicle thread turret_laser local.name
 	}
 	if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik")
 	{
-		local.vehicle attachmodel models/static/corona_util.tik "Box01" 1 (local.name + "_doorglue") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+		local.vehicle attachmodel models/static/jug.tik "Box01" 1 (local.name + "_doorglue") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
 		$(local.name + "_doorglue") notsolid
 		local.vehicle.doorglue = $(local.name + "_doorglue")
-		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box01" 1 (local.name + "_doorclosed") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (local.name + "_doorclosed") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
 		$(local.name + "_doorclosed").angles = ( 90 0 0 )
 		$(local.name + "_doorclosed") notsolid
 		local.vehicle.doorclosed = $(local.name + "_doorclosed")
-		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box01" 1 (local.name + "_dooropen") 1 -1 -1 -1 -1 ( 309 0 -225 ) //( +up -down, +left -right, -forward +backward )
+		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (local.name + "_dooropen") 1 -1 -1 -1 -1 ( 309 0 -225 ) //( +up -down, +left -right, -forward +backward )
 		$(local.name + "_dooropen").angles = ( 0 180 180 )
 		$(local.name + "_dooropen") notsolid
 		local.vehicle.dooropen = $(local.name + "_dooropen")
@@ -300,8 +295,24 @@ playergetin:
 	{
 		self.driver iprint ("press A - D (left-right keys) = aim turret down/up.")
 		self.driver iprint ("JUMP = exit boat. FIRE = shoot rockets. FIRE + USE(e) = throw grenades.")
+
+		self attachmodel models/emitters/fancyfire.tik "Box01" 1 (self.name + "_tag_barrel") 1 -1 -1 -1 -1 ( 0 211 565 ) //( +left -right, +up -down, +forward -backward )
+		$(self.name + "_tag_barrel") notsolid
+		$(self.name + "_tag_barrel") hide
+		self.gun = $(self.name + "_tag_barrel")
+		self thread turret_laser self.name
 	}
 	else { self.driver iprint ("JUMP = exit boat. hold FIRE = look behind. press A - D (left-right keys) = close/open door.") }
+
+	local.spray1 = spawn script_model targetname (self.name + "_sprayleft") // only spawn these when a driver enters a boat, to reduce entity count.
+	local.spray1 model "animate/fx_water_spray.tik"
+	local.spray1 notsolid
+	self.sprayleft = local.spray1
+	local.spray2 = spawn script_model targetname (self.name + "_sprayright")
+	local.spray2 model "animate/fx_water_spray.tik"
+	local.spray2 notsolid
+	self.sprayright = local.spray2
+	self thread keep_at_boat local.spray1 local.spray2
 
 	self attachdriverslot 0 self.driver
 	self thread dummyavatar
@@ -599,6 +610,28 @@ vehicledeath:
 	local.desvehicle model self.desmodel
 	local.desvehicle loopsound vehicledeathfire
 
+	local.died_touching_water = 0
+	local.waterheight = -9999
+	if(level.water_volumes != NIL && level.water_volumes != 0)
+	{
+		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+		{
+			local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+			local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+			local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+			local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+			local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+			local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+			local.origin = local.desvehicle.origin
+	
+			if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+			{
+				local.died_touching_water = 1
+				local.waterheight = local.Z_max[local.v]
+			}
+		}
+	}
+
 	if(self.model != "models/vehicles/uboat.tik") { local.distance = -100 }
 	else { local.distance = 355; local.distance2 = 675 }
 
@@ -646,26 +679,65 @@ vehicledeath:
 		local.smoke2.scale = 3.5 * local.desvehicle.scale
 		local.smoke2 anim start
 		local.smoke2 notsolid
+
+		local.spray1 = spawn script_model
+		local.spray1 model animate/fx_water_spray.tik
+		local.spray1.origin = local.desvehicle.origin + local.desvehicle.forwardvector * 100 + local.desvehicle.upvector * 20
+		local.spray1 anim start
+		local.spray2 = spawn script_model
+		local.spray2 model animate/fx_water_spray.tik
+		local.spray2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * -650 + local.desvehicle.upvector * 20
+		local.spray2 anim start
 	}
 	else
 	{
 		local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
 
+		local.desvehicle attachmodel models/static/jug.tik "Box01" 1 (self.targetname + "_d_doorglue") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+		$(self.targetname + "_d_doorglue") notsolid
+
+		if(self.door_open == 1)
+		{
+			$(self.targetname + "_d_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (self.targetname + "_d_dooropen") 1 -1 -1 -1 -1 ( 309 0 -225 ) //( +up -down, +left -right, -forward +backward )
+			$(self.targetname + "_d_dooropen").angles = ( 0 180 180 )
+			$(self.targetname + "_d_dooropen") notsolid
+		}
+		else
+		{
+			$(self.targetname + "_d_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (self.targetname + "_d_doorclosed") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+			$(self.targetname + "_d_doorclosed").angles = ( 90 0 0 )
+			$(self.targetname + "_d_doorclosed") notsolid
+		}
+
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
-		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 42
+		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 60
 		local.fire.angles = ( 0 0 0 )
 		local.fire.scale = 1
 		local.fire anim start
 		local.fire notsolid
 		local.smoke = spawn script_model
 		local.smoke model "models/emitters/thin_black_short.tik"
-		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 42
+		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 70
 		local.smoke.angles = ( 0 0 0 )
 		local.smoke.scale = .7
 		local.smoke anim start
 		local.smoke notsolid
+
+		local.spray1 = spawn script_model
+		local.spray1 model animate/fx_water_spray.tik
+		local.spray1.origin = local.desvehicle.origin + local.desvehicle.forwardvector * 225 + local.desvehicle.leftvector * 100 + local.desvehicle.upvector * 20
+		local.spray1 anim start
+		local.spray2 = spawn script_model
+		local.spray2 model animate/fx_water_spray.tik
+		local.spray2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * 225 + local.desvehicle.leftvector * -100 + local.desvehicle.upvector * 20
+		local.spray2 anim start
 	}
+	local.spray1.origin = ( local.spray1.origin[0] local.spray1.origin[1] local.waterheight )
+	local.spray2.origin = ( local.spray2.origin[0] local.spray2.origin[1] local.waterheight )
+
+	if(local.died_touching_water == 1) { local.desvehicle thread deathrotate local.one local.distance local.fire local.smoke local.fire2 local.smoke2 local.distance2 }
+	local.desvehicle thread waterspray local.spray1 local.spray2 local.died_touching_water
 
 	self thread driverreset 1								// local.status = 1
 	self thread mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2	// waiting self.resettime seconds until a new vehicle is spawned in
@@ -724,7 +796,7 @@ vehicledeath:
 	local.boom.origin = local.desvehicle.origin + ( 0 0 25 )
 	local.boom.angles = ( 0 -90 0 ) + ( 260 0 0 )
 	if(local.desvehicle.model == "models/vehicles/uboat.tik") { local.boom.scale = 2.5 }
-	else { local.boom.scale = 1 }
+	else { local.boom.scale = 1; local.boom.origin += local.desvehicle.forwardvector * -150 }
 	local.boom anim start
 	local.boom notsolid
 
@@ -732,7 +804,7 @@ vehicledeath:
 	local.debris model "emitters/mortar_dirt_nosound.tik" 
 	local.debris.origin = local.desvehicle.origin + ( 0 0 25 )
 	if(local.desvehicle.model == "models/vehicles/uboat.tik") { local.debris.scale = 2.0 }
-	else { local.debris.scale = .8 }
+	else { local.debris.scale = .8; local.debris.origin += local.desvehicle.forwardvector * -150 }
 	local.debris anim start
 	local.debris notsolid
 	waitframe
@@ -798,6 +870,59 @@ mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2:
 	if(local.smoke2 != NIL && local.smoke2 != NULL) { local.smoke2 remove }
 	local.desvehicle remove
 	thread main local.name local.model level.boat_initorigin[local.name] level.boat_initangles[local.name] local.health local.vehiclespeed local.resettime local.scale
+end
+
+////////////////////////////////////////////////////////////////////////
+
+waterspray local.spray1 local.spray2 local.died_touching_water:
+
+	local.c = 0
+	while(self != NULL && local.c <= 100 && local.died_touching_water == 1)
+	{
+		local.c++
+		wait .1
+	}
+	local.spray1 remove
+	local.spray2 remove
+end
+
+deathrotate local.one local.distance local.fire local.smoke local.fire2 local.smoke2 local.distance2:
+
+	self thread firesmoke_hold local.one local.distance local.fire local.smoke local.fire2 local.smoke2 local.distance2
+
+	local.r = randomint(2)
+	self time 20
+	if(local.one == 1) { self rotatezup 22 }
+	if(local.one == -1) { self rotatezdown 22 }
+	if(local.distance2 != NIL)
+	{
+		//if(local.r == 0) { self rotatexdown 11 }
+		//if(local.r == 1) { self rotatexup 11 }
+	}
+	else { self rotatexdown 22 }
+	self movedown 250
+	self movenorth 150
+	self waitmove
+end
+
+firesmoke_hold local.one local.distance local.fire local.smoke local.fire2 local.smoke2 local.distance2:
+
+	while(self != NULL)
+	{
+		if(local.fire2 != NIL && local.smoke2 != NIL)
+		{
+			local.fire.origin = self.origin + self.forwardvector * local.distance + angles_toup self.angles * 150 * self.scale
+			local.smoke.origin = self.origin + self.forwardvector * local.distance + angles_toup self.angles * 150 * self.scale
+			local.fire2.origin = self.origin + self.forwardvector * local.distance2 * -1 + angles_toup self.angles * 150 * self.scale
+			local.smoke2.origin = self.origin + self.forwardvector * local.distance2 * -1 + angles_toup self.angles * 150 * self.scale
+		}
+		else
+		{
+			local.fire.origin = self.origin + self.forwardvector * local.distance + angles_toup self.angles * 60
+			local.smoke.origin = self.origin + self.forwardvector * local.distance + angles_toup self.angles * 70
+		}
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1164,6 +1289,7 @@ turret_laser local.name:
 	local.point.origin = $(local.name + "_tag_barrel").origin
 	//local.point light 1 0 0 250
 	local.point hide
+	local.point notsolid
 	self.turretlaser_point = local.point
 
 	while(self != NULL) { waitframe }
@@ -1409,13 +1535,88 @@ keep_at_door local.doorclip local.door_open:
 		if(self.movingbackward == 1) { local.direction = -1 }
 		else { local.direction = 1 }
 
-		local.doorclip.origin = self.origin + self.leftvector * 0 + self.forwardvector * local.dist + self.upvector * local.height + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
+		local.doorclip.origin = self.origin + self.forwardvector * local.dist + self.upvector * local.height + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
 		local.doorclip.angles = ( (self.angles[2] * -1) self.angles[1] self.angles[0] ) + ( 0 90 local.angle )
 
 		local.door_open = self.door_open
 		waitframe
 	}
 	local.doorclip remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+keep_at_boat local.spray1 local.spray2:
+
+	local.angle_old = self.angles[1]
+	while(self != NULL)
+	{
+		local.touching_water = 0
+		local.waterheight = -9999
+		if(level.water_volumes != NIL && level.water_volumes != 0)
+		{
+			for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+			{
+				local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0]
+				local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0]
+				local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1]
+				local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1]
+				local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2]
+				local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2]
+				local.origin = self.origin
+	
+				if(int(local.origin[0]) >= local.X_min[local.v] && int(local.origin[0]) <= local.X_max[local.v] && int(local.origin[1]) >= local.Y_min[local.v] && int(local.origin[1]) <= local.Y_max[local.v] && int(local.origin[2]) >= local.Z_min[local.v] && int(local.origin[2]) <= local.Z_max[local.v])
+				{
+					local.touching_water = 1
+					local.waterheight = local.Z_max[local.v]
+				}
+			}
+		}
+
+		if(local.touching_water == 1)
+		{
+			if(self.angles[1] != local.angle_old)
+			{
+				if(self.model == "models/vehicles/uboat.tik") { self.sprayleft anim start; self.sprayright anim start }
+				else
+				{
+					if(self.movingbackward == 1)
+					{
+						if(self.angles[1] < local.angle_old) { self.sprayleft anim stop; self.sprayright anim start }
+						if(self.angles[1] > local.angle_old) { self.sprayleft anim start; self.sprayright anim stop }
+					}
+					else
+					{
+						if(self.angles[1] > local.angle_old) { self.sprayleft anim stop; self.sprayright anim start }
+						if(self.angles[1] < local.angle_old) { self.sprayleft anim start; self.sprayright anim stop }
+					}
+				}
+			}
+			else { self.sprayleft anim stop; self.sprayright anim stop }
+		}
+		else { self.sprayleft anim stop; self.sprayright anim stop }
+
+		if(self.movingbackward == 1) { local.direction = -1 }
+		else { local.direction = 1 }
+
+		if(self.model == "models/vehicles/uboat.tik")
+		{
+			self.sprayleft.origin = self.origin + self.forwardvector * -2150 + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
+			self.sprayright.origin = self.origin + self.forwardvector * 1970 + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
+		}
+		else
+		{
+			self.sprayleft.origin = self.origin + self.leftvector * 100 + self.forwardvector * 300 * local.direction + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
+			self.sprayright.origin = self.origin + self.leftvector * -100 + self.forwardvector * 300 * local.direction + self.forwardvector * self.vehiclespeed * 0.075 * local.direction
+		}
+		self.sprayleft.origin = ( self.sprayleft.origin[0] self.sprayleft.origin[1] local.waterheight )
+		self.sprayright.origin = ( self.sprayright.origin[0] self.sprayright.origin[1] local.waterheight )
+
+		local.angle_old = self.angles[1]
+		waitframe
+	}
+	local.spray1 remove
+	local.spray2 remove	
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1492,6 +1693,14 @@ if(level.boatscriptmaster2 != 1 && local.model == "models/vehicles/uboat.tik")
 	level.boatscriptmaster2 = 1
 }
 
+if(level.boatscriptmaster3 != 1 && local.model == "models/vehicles/higginsxtrahull.tik")
+{
+	local.master aliascache higgins_door_open sound/mechanics/DoorHatchOpen_02.wav soundparms 1.5 0.0 1.0 0.0 160 1600 item loaded maps level.mapname
+	local.master aliascache higgins_door_close1 sound/mechanics/DoorMetalClose_stop1.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+	local.master aliascache higgins_door_close2 sound/mechanics/DoorMetalClose_stop3.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+	level.boatscriptmaster3 = 1
+}
+
 local.soundtype = 2
 if(level.vehiclescriptmaster[local.soundtype] != NIL) { end }
 level.vehiclescriptmaster[local.soundtype] = 1
@@ -1552,15 +1761,7 @@ if(level.vehiclescriptmaster3 != 1)
 	local.master aliascache vehicledeathwater sound/mechanics/Mec_WaterLoop_03.wav soundparms 1.2 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
 }
 
-if(level.vehiclescriptmaster4 != 1)
-{
-	local.master aliascache higgins_door_open sound/mechanics/DoorHatchOpen_02.wav soundparms 1.5 0.0 1.0 0.0 160 1600 item loaded maps level.mapname
-	local.master aliascache higgins_door_close sound/mechanics/DoorMetalClose_stop1.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
-	local.master aliascache higgins_door_close sound/mechanics/DoorMetalClose_stop3.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
-}
-
 level.boatscriptmaster = 1
 level.vehiclescriptmaster2 = 1
 level.vehiclescriptmaster3 = 1
-level.vehiclescriptmaster4 = 1
 end

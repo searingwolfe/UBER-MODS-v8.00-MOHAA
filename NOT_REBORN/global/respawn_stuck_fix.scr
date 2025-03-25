@@ -27,18 +27,15 @@ respawn_stuck_check:
 	local.team = self.dmteam
 
 	while(self != NULL && self.dmteam == local.team && (!isalive self || self.fellundermap == 1 || self.respawn_stuck_check == NIL || self.respawn_stuck_check == 0)) { waitframe }
+	if(self == NULL) { end }
 
 	local.c = 0
 	local.alivetime = 0
-	local.spawn_fwd_vec = angles_toforward( 0 self.angles[1] 0 ) // the player's initial angle will be the same as the spawn's angle.
+	local.origin = self.origin
 
-	if(self.respawn_stuck_check_attempts == NIL) { self.respawn_stuck_check_attempts = 0 }
-	if(self.respawn_stuck_check_origin != NIL && self.respawn_stuck_check_origin == self.origin) { self.respawn_stuck_check_attempts++ } // if player respawned at the same spawn, make the next respawn push the player forward 25 units.
-	self.respawn_stuck_check_origin = self.origin
-
-	while(isalive self && self.dmteam != "spectator" && self.dmteam == local.team && self.dead != 1 && local.c < 30 && local.alivetime < 30 && self.origin == self.respawn_stuck_check_origin && self.wallstuck_fixing != 1)
+	while(isalive self && self.dmteam != "spectator" && self.dmteam == local.team && self.dead != 1 && local.c < 30 && local.alivetime < 30 && self.origin == local.origin && self.wallstuck_fixing != 1)
 	{
-		if(self getposition == "offground") { local.c++ } // getmovement = "standing" even if stuck.
+		if(self getposition == "offground") { local.c++ }
 		else { local.c = 0; local.alivetime++ }
 		wait 0.1
 	}
@@ -50,15 +47,20 @@ respawn_stuck_check:
 			self iprint "Stuck for 3+ seconds. Respawning..."
 			//if(self.admin_name_priority == 1 || self isadmin == 1) { self iprint "This can be disabled in global/dmprecache.scr." }
 
-			self respawn
-			self.respawn_stuck_check_attempts++
+			if(self.dmteam == "allies" && $allied_spawn != NULL && $allied_spawn.size >= 1)
+			{
+				local.r = randomint($allied_spawn.size - 1) + 1
+				self tele ($allied_spawn[local.r].origin + ( 0 0 10 ))		// use this instead of "respawn" in singleplayer maps, since some spawns may cause the player to be shifted too far in a random direction.
+				self.viewangles = $allied_spawn[local.r].angles
+			}
+			if(self.dmteam == "axis" && $axis_spawn != NULL && $axis_spawn.size >= 1)
+			{
+				local.r = randomint($axis_spawn.size - 1) + 1
+				self tele ($axis_spawn[local.r].origin + ( 0 0 10 ))
+				self.viewangles = $axis_spawn[local.r].angles
+			}
+			if($allied_spawn == NULL || $axis_spawn == NULL) { self respawn }
 			local.respawned = 1
-		}
-		if(local.alivetime >= 30) { self.respawn_stuck_check_attempts = 0 }
-
-		if(local.respawned == 1 && self.respawn_stuck_check_attempts != NIL && self.respawn_stuck_check_attempts >= 1) // give the player a push forward 25 units if still stuck.
-		{
-			self.origin += local.spawn_fwd_vec * 25 * self.respawn_stuck_check_attempts
 		}
 
 		if(local.respawned != 1) { wait 3 }

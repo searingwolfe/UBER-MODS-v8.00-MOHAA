@@ -36,14 +36,14 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	{
 		if(level.vehiclescriptmaster[local.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik }
 	}
-	if(local.model == "models/vehicles/european_car_grey.tik" || local.model == "models/vehicles/european_car_silver.tik") { local.desmodel = models/static/vehicle_car_rusted.tik }
-	if(local.model == "models/vehicles/european_car_tan.tik") { local.desmodel = models/static/vehicle_car_burnt.tik }
-	if(local.model == "models/vehicles/european_delivery_truck_green.tik" || local.model == "models/vehicles/european_delivery_truck_grey.tik") { local.desmodel = models/static/vehicle_dtruck_burnt.tik }
-	if(local.model == "models/vehicles/european_delivery_truck_red3.tik") { local.desmodel = models/static/vehicle_dtruck_rusted.tik }
-	if(local.model == "models/vehicles/opeltruckgreen.tik" || local.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.desmodel = models/vehicles/opeltruckgreen_d.tik }
-	if(local.model == "models/vehicles/shermantank.tik") { local.desmodel = models/vehicles/shermantank_damaged.tik }
+	if(local.model == "models/vehicles/european_car_grey.tik" || local.model == "models/vehicles/european_car_silver.tik") { local.desmodel = models/static/vehicle_car_rusted.tik; local.spawndeathfire = 1 }
+	if(local.model == "models/vehicles/european_car_tan.tik") { local.desmodel = models/static/vehicle_car_burnt.tik; local.spawndeathfire = 1 }
+	if(local.model == "models/vehicles/european_delivery_truck_green.tik" || local.model == "models/vehicles/european_delivery_truck_grey.tik") { local.desmodel = models/static/vehicle_dtruck_burnt.tik; local.spawndeathfire = 1 }
+	if(local.model == "models/vehicles/european_delivery_truck_red3.tik") { local.desmodel = models/static/vehicle_dtruck_rusted.tik; local.spawndeathfire = 1 }
+	if(local.model == "models/vehicles/opeltruckgreen.tik" || local.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.desmodel = models/vehicles/opeltruckgreen_d.tik; local.spawndeathfire = 1 }
+	if(local.model == "models/vehicles/shermantank.tik") { local.desmodel = models/vehicles/shermantank_damaged.tik; local.spawndeathfire = 1 }
 	if(local.model == "models/vehicles/opeltruck.tik") { local.desmodel = models/vehicles/opeltruck_d.tik }
-	if(local.model == "models/vehicles/bmwbike.tik") { local.desmodel = models/vehicles/bmwbike_d.tik }
+	if(local.model == "models/vehicles/bmwbike.tik") { local.desmodel = models/vehicles/bmwbike_d.tik; local.spawndeathfire = 1 }
 	// if model == jeep, jeep_bench, mercedes, or gmctruck, keep desmodel = current model
 
 	local.vehicle = spawn local.model targetname (local.name) // scriptmasters are already added in ubersound.scr
@@ -57,6 +57,7 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	local.vehicle.resettime = local.resettime
 	local.vehicle.headlights = local.headlights
 	local.vehicle.noheadlights = local.noheadlights
+	local.vehicle.spawndeathfire = local.spawndeathfire
 
 	if(local.vehicle.classname != "DrivableVehicle") { local.vehicle remove; wait 1; println("----- ERROR playervehicle.scr: .tik model is not a DrivableVehicle."); end }
 
@@ -713,7 +714,7 @@ vehicledeath:
 		local.desvehicle model self.desmodel
 		local.desvehicle.angles = self.angles
 	}
-	if(self.desmodel == NIL || self.desmodel == models/vehicles/bmwbike_d.tik || self.desmodel == models/vehicles/opeltruckgreen_d.tik)
+	if(self.desmodel == NIL || self.spawndeathfire == 1)
 	{
 		if(self.angles[2] > 5 && self.angles[2] < 180) { local.one = 1 }
 		if(self.angles[2] > 180 && self.angles[2] < 355) { local.one = -1 }
@@ -723,7 +724,7 @@ vehicledeath:
 			if(local.r == 0) { local.one = 1 }
 			if(local.r == 1) { local.one = -1 }
 		}
-		if(self.desmodel != models/vehicles/bmwbike_d.tik && self.desmodel != models/vehicles/opeltruckgreen_d.tik)
+		if(self.spawndeathfire != 1)
 		{
 			local.desvehicle model self.model
 			local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
@@ -734,7 +735,9 @@ vehicledeath:
 		else if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
 		else if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
 		else if(self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.distance = 120 }
-		else { local.distance = 25 } // bmwbikes
+		else if(self.model == "models/vehicles/shermantank.tik") { local.distance = 0 }
+		else if(self.model == "models/vehicles/bmwbike.tik") { local.distance = 25 }
+		else { local.distance = 50 } // euro cars & trucks
 
 		local.fire = spawn script_model
 		local.fire model "models/emitters/fancyfire.tik"
