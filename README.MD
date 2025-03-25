@@ -1,4 +1,4 @@
-*Current Version: 7.985 - Updated: 3/22/2025*
+*Current Version: 7.986 - Updated: 3/24/2025*
 
 ### Table of Contents
 
@@ -1177,3 +1177,21 @@ v7.985 (3-21-2025):
 - Potentially fixed rare Runtime errors that freeze/crash the server when switching maps (errors from "intermisison" threads would be the last lines printed to qconsole.log):
 	- Removed "intermission" threads from global/victory_podium.scr & cvars/adminstuff.scr, and combined them into one isolated script: global/intermission_serverautoreopen.scr, to avoid loading both at the same time.
 	- MOHAA_server_auto-reopen_Windows.bat now checks for any errors coming from global/intermission_serverautoreopen.scr, indicating Runtime errors.
+
+---------------
+
+---------------
+
+v7.986 (3-24-2025):
+- When driving boats and turning left/right, water spray emitters will appear next to the boat (or at the hull tips for uboats).
+- Drivable boats that explode will now sink underwater, only if touching a "level.water_volumes". Water spray emitters also appear for 10 seconds after the boat explodes.
+- The water spray emitters, along with uboats' turret laser & laser point entities, will only spawn when a player is driving the boats (reducing entity count).
+- Destroyed higgins boats will now spawn a higgins door either opened or closed, depending on where the door was before the boat exploded.
+
+- All remaining destroyed vehicles whose dead models do not have fire & smoke will now spawn fire & smoke emitters.
+
+- Fixed global/respawn_stuck_fix.scr again to guarantee respawning any player that gets stuck inside a wall (getposition == "offground") at any time, but cannot move anywhere.
+- If the map has $allied_spawn or $axis_spawn points (info_player_[team] entities), the auto-respawn script will teleport the player to a spawn's origin, instead of doing "respawn" (sometimes moves the player away from the origin).
+- Players using the "noclip2" cvar will no longer be affected by global/respawn_stuck_fix.scr, fixed by adding: $player[local.i] moveposflags "standing" to the cvar script (in cvars/adminstuff.scr).
+
+- Fixed M2L2A, M2L2B, M2L2C spamming console errors to console due to their "vehicles_undermap" threads having an array error.
