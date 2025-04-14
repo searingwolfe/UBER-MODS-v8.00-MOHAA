@@ -1,4 +1,4 @@
-*Current Version: 7.986 - Updated: 3/24/2025*
+	*Current Version: 7.987 - Updated: 4/13/2025*
 
 ### Table of Contents
 
@@ -227,7 +227,22 @@ ADDITIONAL FEATURES:
 | exec cvars/cybsnd.scr      | "cybsnd_score 1" | print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won). |
 |       | "cybsnd_info 1" | print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance. |
 |       | "cybsnd_debug 1" | print once per second the Allies/Axis team count (living players) and Allies/Axis team total. If these values are inaccurate, then the mod has broken somehow (wait for the next the round, or reload the map). |
-| exec cvars/coord_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console). Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places and write to "coords.txt". Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). |
+| exec cvars/coord_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console). Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places and write to "coords.txt". Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). 
+
+| exec cvars/entity_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the entity's info (entity must be solid): origin, angles, classname, model, entnum, targetname, target, health. scale, attached guns. Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). 
+
+
+
+
+
+
+- cvars/entity_pointer.scr: New UBER cvar added. The entity pointer's laser shoots out an invisible projectile, hitting the nearest entity (waittill touch; local.hitthing = parm.other). 
+- This avoids using Reborn's "getentity" function to check if the laser istouching local.ent, so this cvar can be used in normal AA-SH-BT.
+- When touched, the entity's origin, angles, classname, entnum, model, targetname, target, health, scale, and any attached guns are iprinted to the player.
+- Sadly, these entities must be
+
+
+
 | exec cvars/ubergametype.scr      | "g_ubergametype bb" | "g_ubergametype bb" = Base-Builder gametype. |
 |       | "g_ubergametype cyb" | Cyber Attack gametype. |
 |       | "g_ubergametype snd" | Search & Destroy gametype. |
@@ -1067,131 +1082,67 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
+- M5L1B fully modded. 4 vehicles ("g_ubermods 2" only), 3 flak88, 3 nebelwerfers, 8 extra throwing knives added to the map.
+
+- Airstrikes occur at random times across any X-Y-axis direction on the map.
+- The wooden door at the Allies spawn building can be opened/closed.
+
+- 3 bonfire triggers will burn players for a few seconds if they get too close to the fires. Smoke emitters and sound entities also added for each fire.
+
+- The church's bell can continuously ring by turning on an electrical switch above the church bell's pedestal.
+- The frequency of ringing is randomized between 0.5 and 1.5 seconds each time the switch is turned on/off.
+
+- Since this map is very large, some mods are enabled/disabled only if the cvar "g_ubermods 1" or "g_ubermods 2" is set.
+- For "g_ubermods 2":
+	- Invisible higginsxtrahull.tik script_models added below the map's yellow dirt road to solidify it for vehicles to drive over, otherwise they would fall through.
+	- Church's bell tower is solidified with single solid clip.
+	- 2 notsolid houses near Allies spawn is blocked off with a solid clip.
+	- Grassy road behind church is blocked off with an "out of bounds" teleporter.
+
+	- 4 structures can be blown up with rockets or other large explosives (not including grenades), spawning rubble and smoke emitters around the wooden gates street path:
+	- Allies spawn building, stone wall in Allies spawn, 3-story building at Allies spawn, stone wall in middle of map (between 2 	dirt roads).
+	- These smoke emitters quickly decrease in scale over a few seconds, until they disappear completely.
+
+- For "g_ubermods 1":
+	- Church bell tower's brushes are all solidified: 2 pedestals, 6 support columns, 1 roof, 1 dome on top.
+	- 2 notsolid houses are solified: flat roof, sloped roof, pyramid-shaped roof, lasers outlining the inside of adjacent building's roof.
+	- Grassy road behind church has various cliffs and walls solidified, with teles to cross between invisible walls.
+	- 2 laser walls added to outline the 2 invisible walls on the grassy road behind church. These laser walls will briefly flash white if shot at.
+
+	- 7 cabinet switches can open/close cabinets.
+	- 2 spotlights added. 2 spotlight color switches added. 2 additional LED Trap triggers added.
+	- 10 bangalore wallbombs added to the entrances of various buildings.
+	- Numerous red and green lasers outline invisible floors, walls, and roofs.
+
+---------------
 
 #
 
 # Updates & Bug Fixes
 
-v7.985 (3-21-2025):
-- Reworked Base-Builder script again (alienx/basebuilder.scr) to fix more lift & tele bugs, added more building features, and added more CVARs:
- 
-- New basebuilder cvars added for admins (alienx/alienxcvars.scr):
-	- alx_removeall [27 or Searingwolfe] (remove everything placed by $player[27] or by Searingwolfe). Using players' names only works in MOHAA Reborn 1.12.
-	- alx_removeobjects [27 or Searingwolfe] (remove all static objects placed by $player[27] or by Searingwolfe).
-	- alx_removeturrets [27 or Searingwolfe] (remove all TurretGun objects placed by $player[27] or by Searingwolfe).
-	- alx_removelifts [27 or Searingwolfe] (remove all lifts placed by $player[27] or by Searingwolfe).
-	- alx_removeteles [27 or Searingwolfe] (remove all teles placed by $player[27] or by Searingwolfe).
+v7.987 (4-13-2025):
 
-- Hold USE(e) + Lean left/right to activate a yellow "Builder Remover Laser".
-- Hold USE(e) + hold FIRE at an object, lift, or tele that you placed to pick it up again (laser will turn red while picking it up).
-	- Players can only pick up their own objects, unless logged in as admin (isadmin = 1).
- 
-- While holding an object or lift: hold FIRE, then hold USE(e) to remove it.
-- While holding a tele: hold USE(e), then hold FIRE to remove it.
+- Assisted suicides feature added into "killstreaks/damagehandler.scr".
+	- If players shoot at others that are falling, or within 1.5 seconds before they begin falling, the shooter will get +1 kills/score when the falling player dies/craters.
+	- Players can kill others using meansofdeath = 7 (death by falling) for the "damage" function, but it's never used in the game.
+	- In global/localization.txt, The following pink text is changed to this: { "was pushed over the edge by" "'s suicide was assisted by" }.
 
-- When placing lifts and after first setting the start-position, the builder laser will turn red if the lift is below its start-position + 25 units (cannot be placed).
-	- While setting the destination-position, the lift's angle will now match the player's current angle.
-	- Hold USE(e) to hold the lift's angle in its current position, and hold the build-laser's current length.
+	- To activate assisted suicides mod: add "exec killstreaks/damagehandler.scr::assisted_suicide" into the "global/dmprecache.scr" file, or remove the line to disable the mod.
 
-- Players can no longer place objects on top of any basebuilder triggers.
-- Fixed bugs that caused MG42 guns to be angled vertically when switching between MG42 and other objects.
-- While in Trimming Mode (holding FIRE(zoom) in Reborn 1.12 only; blue builder laser), walking while moving forward/backward will now maintain the builder laser's length for new objects.
-- Other basebuilder cvars, such as alx_timeboost & alx_objectlimitboost, will now print corresponding changes to the server's console window.
+- cvars/entity_pointer.scr: New UBER cvar added.
+	-The entity pointer's laser shoots out an invisible projectile, hitting the nearest entity (waittill touch; local.hitthing = parm.other). 
+	- This avoids using Reborn's "getentity" function to check if the laser istouching local.ent, so this cvar can be used in normal AA-SH-BT.
+	- When touched, the entity's origin, angles, classname, entnum, model, targetname, target, health, scale, and any attached guns are iprinted to the player.
+	- Sadly, these entities must be solid for this to work, but it can still be useful (i.e. the "spawn" command will still spawn solid vehicles: "rcon spawn models/vehicles/jeep.tik").
 
----------------
+- Ensured that all Giant Bomb & Light Bomb's radiusdamages give kills/score to the player that launched them (rarely it wouldn't work).
+- UBER cvars that are loaded at the top of each map script are now found in the "cvars/cvars.scr" file, executed at the top of each map script instead. Details for each UBER cvar are also in this file.
 
-- The CVAR hack detection script in cvars/adminstuff.scr will no longer kick all other players if one player has 1+ CVAR hacks in their .userinfo string.
-- The hacker will also be kicked 3 seconds after detection, to avoid "ihuddraw NULL player" errors printing to console.
+- Drivable bmwbikes can now honk horns. Trucks make normal horn sounds. Cars make higher pitched horn sounds. Bmwbikes make the highest pitched horns sounds.
+- Destroyed drivable boats will now make various water wave & water splash sounds while they are sinking.
+	- These sinking boat sounds are also added for the "higgins_death" thread in M3L1A.
 
-- global/bomberplane_nospline.scr more accurately randomizes starting and ending points for the airstrike planes' path. Planes' angles also sway slightly left/right & up/down while moving.
-	- In a map's "airstrikes_alternate" thread, level.bomberplane_map_setsize1 and 2 values are alternated, allowing airstrikes to bomb different regions of the map (particularly if those regions have different map heights).
-	- Added 2 more level variables to control airstrikes, adding to 5 total:
-		- level.bomberplane_health = 200; these are defaults set inside global/bomberplane_nospline.scr
-		- level.bomberplane_bombspeed = 0.25; speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
-		- level.bomberplane_bombgravity = 2; higher = bombs drop faster vertically & closer to plane's splinepath
-		- level.bomberplane_bombspawntime = 0.2; time between spawning bombs; lower = bombs spawn less often.
-		- level.bomberplane_speed = 2350; lower = planes move slower.
+- global/deathcam.scr mod updated to prevent dead players that are spectating their killers from respawning too quickly if they/their killer switches teams, or if their killer leaves the game.
 
-- All UBER triggers' setsizes reduced to avoid players triggering them up through some walls.
-- All UBER triggers that can be picked up/dropped by players will droptofloor when the player dies, without going through entities.
-- Giant Bombs & Light Bombs will now speed up to 6500 velocity if they somehow don't reach their ground-target destination before their level.bomb_time variable expires.
 
-- global/vehicle_tele.scr now has 2 additional parameters (height_1 & height_2) only if "align" parameter = 0 or 1, for teleporting vehicles/tanks upwards in one direction, and/or downwards in the other direction.
 
-- Player deathcams (killcams) from global/deathcam.scr will now stay at their killer's dead body's origin if the killer died while player deathcams were following him.
-	- Dead players will be force-respawned if their deathcam somehow waited longer than 5 seconds, instead of 8 seconds.
-	- The "g_deathcam" cvar will now maintain its value (either 1 or 0) between maps that running & not running UBER gametypes (cyb, snd, ft).
-	- The console will print "NOTE: The cvar for deathcams mod is: g_deathcam" if admins attempt to use the incorrect g_deathcams cvar.
-
-- The "findent" cvar will now print the entity's scale if it doesn't equal 1.
-- Mini-Flak88 flamethrowers' fire projectiles no longer have gravity (fly in straight lines).
-- Combined all TDM and FFA spawns in singleplayer maps into one thread.
-- Changed guided missile damageflags to deal rocket damage if directly impact a player (for printing "took [player]'s rocket in the kisser" kill messages), or otherwise deal regular explosion damage.
-- Changed maps/gen_mapscripts/bonfire.scr damageflags to deal lava/fire damage.
-- Added water landing and metal landing sounds for Cluster Mine killstreaks.
-
-- "self thread waittill_touch local" placed before numerous "waittill touch" script lines, particularly the airstrike scripts.
-	- Entities can sometimes fall outside the map. If they do, they will never touch anything. If they're forcibly removed after a time duration, "waittill touch" and its accompanying thread will still never finish.
-	- In the "waittill_touch" threads, "if(vector_length(self.origin) > 12000)" ensures that entities are removed if they go too far outside the map.
-	- Also in the "waittill_touch" threads, "local.thread remove" fully ends the "local" threads that contain "waittill_touch".
-	- Some scripts' projectiles/bombs that are waiting to touch something (or velocity == ( 0 0 0 )) will stop moving and explode/get removed if they touch any "level.water_volumes".
-	- Ensured that flying planes, plane bomb drops, and guided missiles properly make water explosions when touching any "level.water_volumes".
-
-- Crashing flyable planes' angles will point more vertically downward if players eject while facing downward.
-	- Crashing flyable planes's angles now exactly match their current velocity's trajectory (plane.angles = vector_toangles(plane.velocity)).
-	- If rockets from flyable planes directly impact a player, the rockets will deal "rocket" damage instead of generic "explosion" damage (for printing "took [player]'s rocket in the kisser" kill messages).
-	- Players that crash their own planes will now "blow themselves up" instead of "blowing up", causing the game to subtract 1 kill from their score.
-
-- global/cyberattack_searchdestroy.scr: added more HUD at the bottom left of the screen for each team's total player count and their living players count.
-	- Fixed total player count not decreasing when a player leaves during a round.
-
----------------
-
-- Drivable vehicles/boats/flak88s/nebelwerfers now have 1 or 2 additional glued triggers for further ensuring that kills/scorepoints are given to players when killing drivers (these triggers only exist when a player is driving).
-	- For flak88s & nebelwerfers, these triggers also prevent teammates from sniping and destroying them (teammates would not die from the explosion), however this feature only works in Reborn 1.12.
-	- For vehicles & boats, these triggers now allow players to shoot & kill drivers or passengers by aiming at their heads (even though they are currently notsolid).
-	- However for vehicles on steep sloped terrain, shooting at the driver's head may still not work since the driver's model is glued to their seat, not the driver's actual hitbox.
-
-- Improved vehicle/boat death fire & smoke emitter locations based on dead vehicle/boat's angles.
-- Fixed players switching teams in drivable vehicles/boats not fully respawning (they would respawn back above the vehicle/boat).
-- Fixed vehicles/tanks that were instantly resetting if they get flooded first by a Light Bomb, then blown up before their reset-time duration finishes.
-- Passengers' viewangles will now match their vehicle/boat's viewangles, similar to the driver's viewangles.
-- Drivable sdkfz halftracks now have sdkfz_shield notsolid models on top of them. Jeep 30 Cal turrets on sdkfz halftracks also moved slightly down to be directly on the roof.
-- Added static/corona_util.tik to mark the endpoint of the drivable uboat's aiming laser (lean left/right while moving to adjust turret's aim).
-
-- Anytime a vehicle/boat/tank respawns, it will now tele players onto the top of them, instead of players getting stuck inside them.
-- Dogs can now bite and kill drivers or passengers riding in vehicles/boats.
-
-- Fixed driver cameras for jeep, jeep_bench, opeltruck, opeltruckgreen, & opeltruckgreen_canopy vehicles, since for some reason .tik file "seatoffset" does not work for these models (new "driver_seat" entity for these models, for drivers to be glued onto).
-	- All drivers and passengers are now glued to a vehicle/boat's spawned attachmodel, keeping their origins exactly in place, and matching their body's angles (as opposed to their viewangles) exactly with the vehicle/boat's angles (attachmodel despawns when driver/passenger exits the vehicle/boat).
-	- Increased max passenger seats for the following vehicles from 5 seats to 7 seats: opeltruck, opeltruckgreen, opeltruckgreen_canopy, m3, gmctruck.
-
-- Drivers in opeltrucks or gmctrucks can now see behind them when holding FIRE for rear-view mirror (player briefly unglues from driver_seat attachmodel and glues onto rear_view attachmodel).
-- Drivers in higgins boats can now open/close their higginsdoor model by leaning right/left respectively. When open, the solid door acts as a ramp for players to more easily get into the boat. Players touching the open doors will also not be auto-respawned if touching any "ocean" or similar triggers.
-
-- For AA-SH-BT (non-Reborn): drivers in vehicles/boats now have horn, headlights, uboat aiming laser, and higgins door assigned to the A - D keys (left-right keys).
-
----------------
-
-- Potentially fixed rare Runtime errors that freeze/crash the server when switching maps (errors from "intermisison" threads would be the last lines printed to qconsole.log):
-	- Removed "intermission" threads from global/victory_podium.scr & cvars/adminstuff.scr, and combined them into one isolated script: global/intermission_serverautoreopen.scr, to avoid loading both at the same time.
-	- MOHAA_server_auto-reopen_Windows.bat now checks for any errors coming from global/intermission_serverautoreopen.scr, indicating Runtime errors.
-
----------------
-
----------------
-
-v7.986 (3-24-2025):
-- When driving boats and turning left/right, water spray emitters will appear next to the boat (or at the hull tips for uboats).
-- Drivable boats that explode will now sink underwater, only if touching a "level.water_volumes". Water spray emitters also appear for 10 seconds after the boat explodes.
-- The water spray emitters, along with uboats' turret laser & laser point entities, will only spawn when a player is driving the boats (reducing entity count).
-- Destroyed higgins boats will now spawn a higgins door either opened or closed, depending on where the door was before the boat exploded.
-
-- All remaining destroyed vehicles whose dead models do not have fire & smoke will now spawn fire & smoke emitters.
-
-- Fixed global/respawn_stuck_fix.scr again to guarantee respawning any player that gets stuck inside a wall (getposition == "offground") at any time, but cannot move anywhere.
-- If the map has $allied_spawn or $axis_spawn points (info_player_[team] entities), the auto-respawn script will teleport the player to a spawn's origin, instead of doing "respawn" (sometimes moves the player away from the origin).
-- Players using the "noclip2" cvar will no longer be affected by global/respawn_stuck_fix.scr, fixed by adding: $player[local.i] moveposflags "standing" to the cvar script (in cvars/adminstuff.scr).
-
-- Fixed M2L2A, M2L2B, M2L2C spamming console errors to console due to their "vehicles_undermap" threads having an array error.
