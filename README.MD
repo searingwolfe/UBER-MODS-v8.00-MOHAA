@@ -228,21 +228,7 @@ ADDITIONAL FEATURES:
 |       | "cybsnd_info 1" | print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance. |
 |       | "cybsnd_debug 1" | print once per second the Allies/Axis team count (living players) and Allies/Axis team total. If these values are inaccurate, then the mod has broken somehow (wait for the next the round, or reload the map). |
 | exec cvars/coord_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console). Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places and write to "coords.txt". Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). 
-
 | exec cvars/entity_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the entity's info (entity must be solid): origin, angles, classname, model, entnum, targetname, target, health. scale, attached guns. Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). 
-
-
-
-
-
-
-- cvars/entity_pointer.scr: New UBER cvar added. The entity pointer's laser shoots out an invisible projectile, hitting the nearest entity (waittill touch; local.hitthing = parm.other). 
-- This avoids using Reborn's "getentity" function to check if the laser istouching local.ent, so this cvar can be used in normal AA-SH-BT.
-- When touched, the entity's origin, angles, classname, entnum, model, targetname, target, health, scale, and any attached guns are iprinted to the player.
-- Sadly, these entities must be
-
-
-
 | exec cvars/ubergametype.scr      | "g_ubergametype bb" | "g_ubergametype bb" = Base-Builder gametype. |
 |       | "g_ubergametype cyb" | Cyber Attack gametype. |
 |       | "g_ubergametype snd" | Search & Destroy gametype. |
