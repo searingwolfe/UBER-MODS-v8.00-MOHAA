@@ -1,0 +1,74 @@
+// UBER MODS cvars for Non-Reborn/Non-Nightfall (regular AA-SH-BT).
+
+main:
+				//		         maxentities = 869 in code, but players may crash joining Reborn servers (singleplayer maps) if current entities = 725+, or 140+ remaining entities.
+exec cvars/playercount.scr	// "players" cvar.  	"players 1" = print to console the # of players in-game (type these into the server's console window).
+				//	       		"players 2" = print to console the # of players in-game & their entnums.
+exec cvars/track.scr		// "track" cvar.    	"track 1" = iprint each players' coords & angle to their own screens. 
+				//			"track 2" = iprint and print to console each players' coords & angles once every 3 seconds.
+				//			"track 0" = turn off tracking.
+exec cvars/check.scr		// "check_[trigger]" cvar. "check_giantbomb 1" "check_giantbomb 2" "check_lightbomb 1" "check_lightbomb 2" (giantbomb, lightbomb, health, grenade, rocket, snowball)
+				// 			"1" = teleports all spectators to each of the ("giantbomb", "health", "rocket", etc) trigger's randomized origins every 3 seconds.
+				// 			"2" = spawn in a dummy model at each of the trigger's origins (only works once).
+				// 			"0" = stop teleporting, delete the dummy models.
+				// 			"check 0" = make all "check_[trigger]" cvars "0".
+				//
+exec cvars/find.scr		// "find [targetname without $]" cvar. "find truckclip", "find endtrigger", "find aispawn", or multiple ents with the same targetname: "find barrel[1]", "find barrel[2]",
+				// 			to teleport all players on the map to the entity's coords (also printing: coords, angles, entnum, and target).
+				//
+exec cvars/drawpath.scr		// "drawpath [1st ent's targetname without $ in a path]" cvar. "drawpath bomberpath", "drawpath spotpath1_1", "drawpath latertruckpath", or multiple paths with the same targetname: "drawpath
+				// exploderchunk[1]", "drawpath exploderchunk[12]", to spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node.
+				//
+exec cvars/cybsnd.scr		// "cybsnd_score 1" cvar, to print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won).
+				// "cybsnd_info 1" cvar, to print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular
+				// spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance.
+				// "cybsnd_debug 1" cvar, to print once per second the Allies/Axis team count (living players) and Allies/Axis team total.
+				//
+exec cvars/coord_pointer.scr	// "coord_pointer" cvar.	"coord_pointer 1" = give/take a coord pointer to $player[1].
+				//				Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console).
+				//				Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places and write to "coords.txt"
+				//				Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt").
+				//
+exec cvars/entity_pointer.scr	// "entity_pointer" cvar.	"entity_pointer 1" = give/take an entity pointer to $player[1].
+				//				Hold USE(e) to aim the laser at a solid entity, and press FIRE to iprint & print to console the entity's info: origin, angles, classname, model, targetname, entnum, etc.
+				//				Double click the same entity to print origin + angles in 6 decimal places.
+				//				Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt").
+				//
+exec cvars/ubergametype.scr	// "g_ubergametype" cvar. 	"g_ubergametype bb" = Base-Builder gametype.
+				//				"g_ubergametype cyb" = Cyber Attack gametype.
+				//				"g_ubergametype snd" = Search & Destroy gametype.
+				//				"g_ubergametype ft" = Freeze-Tag gametype.
+				//				"g_ubergametype 0" or "" = none, regular TDM or FFA (based on g_gametype).
+				// "g_ubermods" cvar.		"g_ubermods 2" = default, all UBER mods enabled.
+				//				"g_ubermods 1" = No crates or teles, fewer triggers for multiplayer maps. Crates & teles, but no extra mods for singleplayer maps.
+				//				"g_ubermods 0" = all UBER mods disabled.
+				// "g_throwingknives" cvar.	"g_throwingknives 1" = all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map.
+				//				"g_throwingknives 0" = no throwing knives.
+				// "g_uberhardcode" cvar.	"g_uberhardcode 1" = force all maps to use the g_ubergametypes found in "global/uberversion.scr", and disable "g_ubergametype" cvar.
+				//				"g_uberhardcode 0" = re-enable the "g_ubergametype" cvar.
+				// "g_deathcam" cvar.		"g_deathcam 1" = enable deathcams; players will spectate their killers for a few seconds.
+				//				"g_deathcam 0" = disable deathcams; players will stay at their dead bodies as normal.
+				// "time" cvar.			"time 1" = print the map's time remaining (in minutes:seconds format).
+				// "score" cvar.		"score 1" = print each player's kills and deaths, along with their $player[client num] and netname.
+				// "teams" cvar.		"teams 1" = print each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num] and netname,
+				//				and then print the total number of players on each team.
+				//
+exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 1" = continuously kill $player[1].
+				//				"hacker_takeall 1" = continuously take all their weapons.
+				//				"spectator 1" = continuously force them into spectator.
+				//
+				// "noclip2" cvar.		"noclip2 1" = noclip around the map; still works if "cheats" = "0"; $player[1] client num = 1.
+				//				other hidden CVARS: "nodamage 1", "takedamage ", "show ", "hide ", "wuss2 " ("hide" makes a player invisible to wallhacks).
+				//
+				// "addkills" cvar.		"addkills 1" = add one kill to $player[1].
+				// "adddeaths" cvar.		"adddeaths 1" = add one death to $player[1].
+				// "subtractkills" cvar.	"subtractkills 1" = subtract one kill from $player[1].
+				// "subtractdeaths" cvar.	"subtractdeaths 1" = subtract one death from $player[1].
+				//
+				// "coord2" cvar.		print $player[1]'s coords & angles to a "main/cvars/coords.txt" file (must create this file for CVAR to work).
+				//				"coord2 entity" or "coord2 1" = print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line.
+				//				"coord2 trigger" = print "( 0 0 0 ) " coords format on the same line.
+				//				"coord2 spawn" = print ""0 0 0" "angle" "0"" coords format on a new line.
+				//
+				// for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
+end

@@ -399,7 +399,7 @@ playergetin:
 			if(self.driver.driving_state_left == 1 && local.toggle != 1 && self.door_open == 1 && self.door_count >= 20) // press A (left key) to close higgins door
 			{
 				//self.driver iprint "Closing the higgins door."
-				self.doorclip playsound higgins_door_close
+				self.doorclip playsound higginsdoor_close
 				self.dooropen hide
 				self.doorclosed show
 				self.door_open = 0
@@ -408,7 +408,7 @@ playergetin:
 			if(self.driver.driving_state_right == 1 && local.toggle != 1 && self.door_open != 1 && self.door_count >= 20) // press D (right key) to open higgins door
 			{
 				//self.driver iprint "Opening the higgins door."
-				self.doorclip playsound higgins_door_open
+				self.doorclip playsound higginsdoor_open
 				self.dooropen show
 				self.doorclosed hide
 				self.door_open = 1
@@ -608,7 +608,7 @@ vehicledeath:
 	local.desvehicle.origin = self.origin + ( 0 0 -25 )
 	local.desvehicle.scale = self.scale
 	local.desvehicle model self.desmodel
-	local.desvehicle loopsound vehicledeathfire
+	local.desvehicle playsound boatsinkwave
 
 	local.died_touching_water = 0
 	local.waterheight = -9999
@@ -658,6 +658,7 @@ vehicledeath:
 		local.fire.scale = 5 * local.desvehicle.scale
 		local.fire anim start
 		local.fire notsolid
+		local.fire loopsound vehicledeathfire
 		local.smoke = spawn script_model
 		local.smoke model "models/emitters/thin_black_short.tik"
 		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
@@ -672,6 +673,7 @@ vehicledeath:
 		local.fire2.scale = 5 * local.desvehicle.scale
 		local.fire2 anim start
 		local.fire2 notsolid
+		local.fire2 loopsound vehicledeathfire
 		local.smoke2 = spawn script_model
 		local.smoke2 model "models/emitters/thin_black_short.tik"
 		local.smoke2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance2 * -1 + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
@@ -684,10 +686,12 @@ vehicledeath:
 		local.spray1 model animate/fx_water_spray.tik
 		local.spray1.origin = local.desvehicle.origin + local.desvehicle.forwardvector * 100 + local.desvehicle.upvector * 20
 		local.spray1 anim start
+		local.spray1 loopsound boatsinking
 		local.spray2 = spawn script_model
 		local.spray2 model animate/fx_water_spray.tik
 		local.spray2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * -650 + local.desvehicle.upvector * 20
 		local.spray2 anim start
+		local.spray2 loopsound boatsinking
 	}
 	else
 	{
@@ -716,6 +720,7 @@ vehicledeath:
 		local.fire.scale = 1
 		local.fire anim start
 		local.fire notsolid
+		local.fire loopsound vehicledeathfire
 		local.smoke = spawn script_model
 		local.smoke model "models/emitters/thin_black_short.tik"
 		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 70
@@ -728,10 +733,12 @@ vehicledeath:
 		local.spray1 model animate/fx_water_spray.tik
 		local.spray1.origin = local.desvehicle.origin + local.desvehicle.forwardvector * 225 + local.desvehicle.leftvector * 100 + local.desvehicle.upvector * 20
 		local.spray1 anim start
+		local.spray1 loopsound boatsinking
 		local.spray2 = spawn script_model
 		local.spray2 model animate/fx_water_spray.tik
 		local.spray2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * 225 + local.desvehicle.leftvector * -100 + local.desvehicle.upvector * 20
 		local.spray2 anim start
+		local.spray2 loopsound boatsinking
 	}
 	local.spray1.origin = ( local.spray1.origin[0] local.spray1.origin[1] local.waterheight )
 	local.spray2.origin = ( local.spray2.origin[0] local.spray2.origin[1] local.waterheight )
@@ -881,6 +888,18 @@ waterspray local.spray1 local.spray2 local.died_touching_water:
 	{
 		local.c++
 		wait .1
+	}
+	local.spray1 anim stop
+	local.spray2 anim stop
+	local.spray1 stoploopsound
+	local.spray2 stoploopsound
+
+	if(local.died_touching_water == 1)
+	{
+		local.spray1 loopsound boatsunk
+		local.spray2 loopsound boatsunk
+
+		while(self != NULL) { waitframe }
 	}
 	local.spray1 remove
 	local.spray2 remove
@@ -1677,6 +1696,13 @@ if(level.boatscriptmaster != 1)
 	local.master aliascache wavelaps sound/amb/Wave_Laps1.wav soundparms 1 0 1 0 200 4000 auto loaded maps level.mapname
 	local.master aliascache riverdrive sound/amb/Amb_River.wav soundparms 2.0 0 1 0 200 4000 auto loaded maps level.mapname
 	local.master aliascache impact_leavewater sound/null.wav soundparms .7 .4 1 .5 100 1600 auto loaded maps level.mapname
+
+	local.master aliascache boatsinking sound/amb/Amb_RainPuddle_01.wav soundparms 1.5 0.0 1.0 0.0 250 1600 auto loaded maps level.mapname
+	local.master aliascache boatsunk sound/amb/Amb_BasementWater.wav soundparms 0.75 0.0 1.0 0.0 200 1600 auto loaded maps level.mapname
+	local.master aliascache boatsinkwave1 sound/amb/Amb_Wave_01.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
+	local.master aliascache boatsinkwave2 sound/amb/Amb_Wave_02.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
+	local.master aliascache boatsinkwave3 sound/amb/Amb_Wave_03.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
+	local.master aliascache boatsinkwave4 sound/amb/Amb_Wave_04.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
 }
 
 if(level.boatscriptmaster2 != 1 && local.model == "models/vehicles/uboat.tik")
@@ -1695,9 +1721,9 @@ if(level.boatscriptmaster2 != 1 && local.model == "models/vehicles/uboat.tik")
 
 if(level.boatscriptmaster3 != 1 && local.model == "models/vehicles/higginsxtrahull.tik")
 {
-	local.master aliascache higgins_door_open sound/mechanics/DoorHatchOpen_02.wav soundparms 1.5 0.0 1.0 0.0 160 1600 item loaded maps level.mapname
-	local.master aliascache higgins_door_close1 sound/mechanics/DoorMetalClose_stop1.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
-	local.master aliascache higgins_door_close2 sound/mechanics/DoorMetalClose_stop3.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+	local.master aliascache higginsdoor_open sound/mechanics/DoorHatchOpen_02.wav soundparms 1.5 0.0 1.0 0.0 160 1600 item loaded maps level.mapname
+	local.master aliascache higginsdoor_close1 sound/mechanics/DoorMetalClose_stop1.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+	local.master aliascache higginsdoor_close2 sound/mechanics/DoorMetalClose_stop3.wav soundparms 1.5 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
 	level.boatscriptmaster3 = 1
 }
 

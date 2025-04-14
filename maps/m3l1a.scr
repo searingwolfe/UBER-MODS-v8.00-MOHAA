@@ -1,19 +1,5 @@
 main:
-
-exec cvars/playercount.scr
-exec cvars/entitycount.scr
-exec cvars/track.scr
-exec cvars/check.scr
-exec cvars/find.scr
-exec cvars/findent.scr
-exec cvars/findclass.scr
-exec cvars/findmodel.scr
-exec cvars/drawpath.scr
-exec cvars/cybsnd.scr
-exec cvars/playerspawns.scr
-exec cvars/coord_pointer.scr
-exec cvars/ubergametype.scr
-exec cvars/adminstuff.scr
+exec cvars/cvars.scr // <><><> UBER MODS <><><>
 
 setcvar "g_obj_alliedtext1" "m3l1a"
 setcvar "g_obj_axistext1" ""
@@ -209,9 +195,9 @@ end
 
 explodesounds: // this thread prevents duplicate aliases from playervehicle, playerboat.
 
+	local.master = spawn scriptmaster
 	if(level.vehiclescriptmaster2 != 1)
 	{
-		local.master = spawn scriptmaster
 		local.master aliascache explode_truck1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
 		local.master aliascache explode_truck2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
 		local.master aliascache explode_truck3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 .2 .8 .2 1500 8000 weapon loaded maps level.mapname
@@ -221,6 +207,15 @@ explodesounds: // this thread prevents duplicate aliases from playervehicle, pla
 	if(level.vehiclescriptmaster[2] != 1)
 	{
 		local.master aliascache sdkfz_snd_off sound/vehicle/veh_track_off.wav soundparms 1 0 1 0 800 4000 auto loaded maps level.mapname
+	}
+	if(level.boatscriptmaster != 1)
+	{
+		local.master aliascache boatsinking sound/amb/Amb_RainPuddle_01.wav soundparms 1.5 0.0 1.0 0.0 250 1600 auto loaded maps level.mapname
+		local.master aliascache boatsunk sound/amb/Amb_BasementWater.wav soundparms 0.75 0.0 1.0 0.0 200 1600 auto loaded maps level.mapname
+		local.master aliascache boatsinkwave1 sound/amb/Amb_Wave_01.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
+		local.master aliascache boatsinkwave2 sound/amb/Amb_Wave_02.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
+		local.master aliascache boatsinkwave3 sound/amb/Amb_Wave_03.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
+		local.master aliascache boatsinkwave4 sound/amb/Amb_Wave_04.wav soundparms 2.0 0.0 1.0 0.0 500 4000 auto loaded maps level.mapname
 	}
 end
 
@@ -1167,6 +1162,9 @@ higgins_death local.health:
 
 	$(self.targetname + "_spray_left") anim start
 	$(self.targetname + "_spray_right") anim start
+	$(self.targetname + "_spray_left") loopsound boatsinking
+	$(self.targetname + "_spray_right") loopsound boatsinking
+	self thread waterspray $(self.targetname + "_spray_left") $(self.targetname + "_spray_right")
 
 	self.origin += ( 0 0 -22 )
 	self playsound higginsexplosion
@@ -1186,15 +1184,16 @@ higgins_death local.health:
 	local.fire.scale = 1
 	local.fire anim start
 	local.fire notsolid
+	local.fire loopsound vehicledeathfire
 	self thread bind_emitter local.fire
 	local.smoke = spawn script_model
 	local.smoke model "models/emitters/thin_black_short.tik"
 	local.smoke.origin = $(self.targetname + "_model").origin + ( 0 0 42 )
-
 	local.smoke.angles = ( 270 0 0 )
 	local.smoke.scale = .7
 	local.smoke anim start
 	local.smoke notsolid
+	local.smoke playsound boatsinkwave
 	self thread bind_emitter local.smoke
 
 	if(self.landed == 1) { exec global/earthquake.scr .35 2 0 0 }
@@ -1299,6 +1298,29 @@ bind_emitter local.emitter:
 		local.emitter.origin = self.origin + ( local.cos local.sin (42 - local.offset) )
 		waitframe
 	}
+end
+
+waterspray local.spray1 local.spray2:
+
+	waitframe
+	wait .6
+
+	local.c = 0
+	while(self != NULL && local.c <= 100)
+	{
+		local.c++
+		wait .1
+	}
+	local.spray1 anim stop
+	local.spray2 anim stop
+	local.spray1 stoploopsound
+	local.spray2 stoploopsound
+	local.spray1 loopsound boatsunk
+	local.spray2 loopsound boatsunk
+
+	while(self != NULL && self.dead == 1) { waitframe }
+	local.spray1 stoploopsound
+	local.spray2 stoploopsound
 end
 
 ////////////////////////////////////////////////////////////////////////

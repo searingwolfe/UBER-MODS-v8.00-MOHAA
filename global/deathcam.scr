@@ -81,6 +81,7 @@ spectate_killer:
 	self hide
 	self noclip
 	self physics_off
+	local.deathcam_killer_origin = self.deathcam_killer.origin
 
 	while(self != NULL && self.dmteam == local.team && self.deathcam_killer != NIL && self.deathcam_killer != NULL)
 	{
@@ -120,16 +121,27 @@ spectate_killer:
 
 		if((local.respawnable == 1 || local.auto_respawn_time > 5) && (self.fireheld == 1 || level.deathcam_respawn == 1)) { break } // force respawn if dead player somehow waited longer than 5 seconds.
 
+		local.deathcam_killer_origin = self.deathcam_killer.origin
 		local.auto_respawn_time += 0.05 // each waitframe = 0.05 seconds.
 		waitframe
 	}
 	if(self != NULL)
 	{
-		self.dead = 0
-		self respawn
-		self takedamage
-		self solid
 		self physics_on
+		while(self != NULL && self.dmteam == local.team && local.auto_respawn_time <= 5)
+		{
+			local.specorg = local.deathcam_killer_origin + ( 0 0 100 )
+			self.origin = (trace local.specorg (local.specorg + ( 0 0 0 ) + ((angles_toforward self.viewangles) * -50)) 1) - ( 0 0 82.125 )
+
+			local.auto_respawn_time += 0.05
+			waitframe
+		}
+		if(self == NULL) { end }
+
+		self.dead = 0
+		if(self.dmteam == local.team) { self respawn }
+		self takedamage
+		if(self.dmteam != "spectator") { self solid }
 		self.spectating_killer = 0
 		self.deathcam_killer = NIL
 	}

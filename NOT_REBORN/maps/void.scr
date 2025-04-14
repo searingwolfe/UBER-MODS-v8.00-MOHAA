@@ -1,88 +1,92 @@
 
 main:
+exec cvars/cvars.scr // <><><> UBER MODS <><><>
 
-// set scoreboard messages
-setcvar "g_obj_alliedtext1" "Void"
-setcvar "g_obj_alliedtext3" ""
-setcvar "g_obj_axistext1" "Created by:"
-setcvar "g_obj_axistext2" "Searingwolfe"
-setcvar "g_obj_axistext3" ""
+setcvar "g_obj_alliedtext1" "void"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
 
 setcvar "g_scoreboardpic" "void"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-setcvar "maxentities" "5000"
-
 setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
+setcvar "maxentities" "2000"
 
-//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+setcvar "cheats" "1"
+setcvar "thereisnomonkey" "1"
 
-if((getcvar("g_gametype") == "2"))
-{
-	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
-	setcvar "g_gametypestring" "Team-Match UBER"
-	setcvar "g_gametype" "2"
+setcvar "dmrespawning" "1" 
+setcvar "dmroundlimit" "20" 
+setcvar "level.clockside" "kills"
+local.v = exec global/uberversion.scr
+
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
+
+if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1"; thread ffa_spawns }
+if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"; thread tdm_spawns
+						spawn info_player_deathmatch "origin"
+						spawn info_player_deathmatch "origin"
+						spawn info_player_deathmatch "origin"
 }
-else
-{
-	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
-	setcvar "g_gametypestring" "Free-For-All UBER"
-	setcvar "g_gametype" "1"
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread freezetag }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+//level.basebuild_laserdist = 700
 }
 
-//--------------------------------------------
-//	Axis spawn points
-//--------------------------------------------
-
-spawn info_player_axis "origin" "-101 112 790" "angle" "58" "targetname" "ax_1"
-spawn info_player_axis "origin" "-101 82 790" "angle" "30" "targetname" "ax_2"
-spawn info_player_axis "origin" "-101 52 790" "angle" "7" "targetname" "ax_3"
-spawn info_player_axis "origin" "-101 22 790" "angle" "99" "targetname" "ax_4"
-spawn info_player_axis "origin" "-101 -2 790" "angle" "3" "targetname" "ax_5"
-spawn info_player_axis "origin" "-101 -32 790" "angle" "3" "targetname" "ax_6"
-spawn info_player_axis "origin" "-101 -62 790" "angle" "3" "targetname" "ax_7"
-spawn info_player_axis "origin" "-101 -92 790" "angle" "3" "targetname" "ax_8"
-
-//------------------------------------------------
-//	Allied spawn points
-//------------------------------------------------
-
-spawn info_player_allied "origin" "101 -92 790" "angle" "-179" "targetname" "Al_1"
-spawn info_player_allied "origin" "101 -62 790" "angle" "158" "targetname" "Al_2"
-spawn info_player_allied "origin" "101 -32 790" "angle" "143" "targetname" "Al_3"
-spawn info_player_allied "origin" "101 -2 790" "angle" "119" "targetname" "Al_4"
-spawn info_player_allied "origin" "101 22 790" "angle" "130" "targetname" "Al_5"
-spawn info_player_allied "origin" "101 52 790" "angle" "130" "targetname" "Al_6"
-spawn info_player_allied "origin" "101 82 790" "angle" "130" "targetname" "Al_7"
-spawn info_player_allied "origin" "101 112 790" "angle" "130" "targetname" "Al_8"
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr airstrikes
+exec global/aliascache_triggersounds.scr explode_building_small
+exec global/aliascache_triggersounds.scr explode_building_large
+exec global/aliascache_triggersounds.scr explode_wood_small
+}
+exec global/aliascache_triggersounds.scr arty_exp_sand
 
 level waittill prespawn
-
-//exec alienx/basebuild.scr::basebuild ( -80 -82 608 ) "static/heat_crate.tik" 1 1 0 0 90 .3 0 0 1
-//exec alienx/basebuild.scr::basebuild ( -80 82 615 ) "statweapons/mg42_gun.tik" 1 0 1 0 90 .3 0 0 1
-//exec alienx/basebuild.scr::basebuild ( 80 82 615 ) "static/bodies_tarp.tik" 1 0 0 1 90 .7 0 1 1
-//exec alienx/basebuild.scr::basebuild ( 80 -82 608 ) "static/static_naziflag1.tik" 1 1 1 0 90 .3 0 0 1
 
 	exec global/DMprecache.scr
 	exec alienx/hud.scr
 	exec ui/fix.scr
-	level.script = maps/void.scr
+	level.dmrespawning = 1
 
-	setcvar "r_fastsky" "1"
+	level.script = maps/void.scr	// change these too
+	exec global/ambient.scr void
+	exec global/door_locked.scr
+	exec global/exploder.scr
+	//exec global/barrel.scr::explosive_barrel
+
+	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
 	$world farplane 150000
 	$world farplane_color ( 0 0 0 )
 
-exec map_triggers/joint.scr ( 113 113 860 )
-exec global/dog.scr ( -71 -71 608 ) ( 0 45 0 ) 15 10
+exec global/victory_podium.scr ( 113 0 608 ) 180 ( -113 0 635 ) ( -15 0 0 ) 5
 
-thread music
-thread itemspawns
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( -71 -71 608 ) ( 0 45 0 ) 15 10
+	exec map_triggers/joint.scr ( 113 113 860 )
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+
+	thread UBER_mapextras
+	thread UBER_teleporters
+}
 
 level waittill spawn
 
+	thread music
 end
+
+////////////////////////////////////////////////////////////////////////
 
 music:
 
@@ -102,41 +106,95 @@ music:
 	}
 end
 
-itemspawns:
+////////////////////////////////////////////////////////////////////////
 
-local.fix1 = spawn script_model
-local.fix1 model "static/widepainting.tik"
-local.fix1.origin = ( 160 16 608 )
-local.fix1.angles = ( 270 0 0 )
-local.fix1.scale = 25.0
+tdm_spawns:
 
-local.fix2 = spawn script_model
-local.fix2 model "static/widepainting.tik"
-local.fix2.origin = ( 125 0 570 )
-local.fix2.angles = ( 0 180 0 )
-local.fix2.scale = 25.0
+	local.team1 = "allied" // do not use "allies"
+	local.team2 = "axis"
+	thread player_spawns local.team1 local.team2
+end
 
-local.fix3 = spawn script_model
-local.fix3 model "static/widepainting.tik"
-local.fix3.origin = ( 0 -125 570 )
-local.fix3.angles = ( 0 90 0 )
-local.fix3.scale = 25.0
+ffa_spawns:
 
-local.fix4 = spawn script_model
-local.fix4 model "static/widepainting.tik"
-local.fix4.origin = ( -125 0 570 )
-local.fix4.angles = ( 0 0 0 )
-local.fix4.scale = 25.0
+	local.team1 = "deathmatch"
+	local.team2 = "deathmatch"
+	thread player_spawns local.team1 local.team2
+end
 
-local.fix5 = spawn script_model
-local.fix5 model "static/widepainting.tik"
-local.fix5.origin = ( 0 125 570 )
-local.fix5.angles = ( 0 270 0 )
-local.fix5.scale = 25.0
+player_spawns local.team1 local.team2:
 
-local.fix6 = spawn script_model
-local.fix6 model "static/widepainting.tik"
-local.fix6.origin = ( -160 16 895 )
-local.fix6.angles = ( 90 0 0 )
-local.fix6.scale = 25.0
+	spawn ("info_player_" + local.team2) "origin" "-101 112 790" "angle" "58" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-101 82 790" "angle" "30" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-101 52 790" "angle" "7" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-101 22 790" "angle" "99" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-101 -2 790" "angle" "3" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-101 -32 790" "angle" "3" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-101 -62 790" "angle" "3" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-101 -92 790" "angle" "3" "targetname" (local.team2 + "_spawn")
+
+	spawn ("info_player_" + local.team1) "origin" "101 -92 790" "angle" "-179" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "101 -62 790" "angle" "158" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "101 -32 790" "angle" "143" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "101 -2 790" "angle" "119" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "101 22 790" "angle" "130" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "101 52 790" "angle" "130" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "101 82 790" "angle" "130" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "101 112 790" "angle" "130" "targetname" (local.team1 + "_spawn")
+end
+
+////////////////////////////////////////////////////////////////////////
+
+UBER_teleporters:
+
+	exec map_triggers/undermap.scr ( 0 0 0 ) ( -8200 -8200 -300 ) ( 8200 8200 1 ) undermap_tele
+end
+
+UBER_mapextras:
+
+	cache models/static/widepainting.tik
+	thread cratesstuff static/widepainting.tik ( 160 16 608 ) ( 270 0 0 ) 0 25
+	thread cratesstuff static/widepainting.tik ( 125 0 570 ) ( 0 180 0 ) 0 25
+	thread cratesstuff static/widepainting.tik ( 0 -125 570 ) ( 0 90 0 ) 0 25
+	thread cratesstuff static/widepainting.tik ( -125 0 570 ) ( 0 0 0 ) 0 25
+	thread cratesstuff static/widepainting.tik ( 0 125 570 ) ( 0 270 0 ) 0 25
+	thread cratesstuff static/widepainting.tik ( -160 16 895 ) ( 90 0 0 ) 0 25
+end
+
+cratesstuff local.model local.origin local.angles local.hide local.scale local.targetname:
+
+	local.ent = spawn script_model
+	local.ent model local.model
+	local.ent.origin = local.origin
+	if(local.angles[2] != NIL) { local.ent.angles = local.angles }
+	if(local.hide == 1) { local.ent hide }
+	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
+	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+freezetag:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+
+	exec global/cyberattack_searchdestroy.scr
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+exec alienx/basebuild.scr::basebuild ( -80 -82 608 ) "static/heat_crate.tik" 1 1 0 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( -80 82 615 ) "statweapons/mg42_gun.tik" 1 0 1 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( 80 82 615 ) "static/bodies_tarp.tik" 1 0 0 1 90 .7 0 1 1
+exec alienx/basebuild.scr::basebuild ( 80 -82 608 ) "static/static_naziflag1.tik" 1 1 1 0 90 .3 0 0 1
+end
+
+clickitem_fail:
 end

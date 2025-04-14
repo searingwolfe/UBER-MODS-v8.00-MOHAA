@@ -66,7 +66,7 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	else { local.vehicle turnrate 10; local.vehicle.turningrate = 10.000 }
 
 	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik") { local.vehicle.noheadlights = 1 }
-	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/shermantank.tik" || local.vehicle.model == "models/vehicles/bmwbike.tik") { local.vehicle.nohorn = 1 }
+	if(local.vehicle.model == "models/vehicles/sdkfz.tik" || local.vehicle.model == "models/vehicles/sdkfz_afrika.tik" || local.vehicle.model == "models/vehicles/m3.tik" || local.vehicle.model == "models/vehicles/shermantank.tik") { local.vehicle.nohorn = 1 }
 
 	if(local.gotout == 1)
 	{
@@ -459,7 +459,12 @@ playergetin:
 			if(self.driver.leanleftheld == 1 && local.toggle != 1 && self.nohorn != 1) // lean left to honk horn
 			{
 				self.driver iprint "Honking the horn."
-				self playsound truckhorn
+				if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik" || self.model == "models/vehicles/gmctruck.tik")
+				{
+					self playsound horntruck
+				}
+				else if(self.model == "models/vehicles/bmwbike.tik") { self playsound hornbike }
+				else { self playsound horncar }
 				local.toggle = 1
 			}
 			if(self.driver.leanrightheld == 1 && local.toggle != 1 && self.noheadlights != 1) // lean right to turn on/off headlights
@@ -730,7 +735,7 @@ vehicledeath:
 			local.desvehicle.angles = self.angles + ( 0 0 ((randomint(30) + 5) * local.one) )
 		}
 
-		if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.distance = 70 }
+		if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.distance = 80 }
 		else if(self.model == "models/vehicles/mercedes.tik") { local.distance = 80 }
 		else if(self.model == "models/vehicles/m3.tik") { local.distance = 95 }
 		else if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 140 }
@@ -1983,9 +1988,11 @@ if(level.vehiclescriptmaster2 != 1 && level.mapname != "m5l1a" && level.mapname 
 	local.master aliascache damage_vehicle1 sound/null.wav soundparms .7 .4 .9 .2 160 1600 auto loaded maps level.mapname
 }
 
-if(level.vehiclescriptmaster2 != 1 && level.scriptmaster[truck_sounds] != 1 && local.soundtype != 2)
+if(level.vehiclescriptmaster2 != 1 && local.soundtype != 2)
 {	
-	local.master aliascache truckhorn sound/vehicle/horn.wav soundparms 1.5 0 1 0 800 6000 auto loaded maps level.mapname
+	local.master aliascache horntruck sound/vehicle/horn.wav soundparms 1.5 0 1 0 800 6000 auto loaded maps level.mapname
+	local.master aliascache horncar sound/vehicle/horn.wav soundparms 1.25 0 1.35 0 800 6000 auto loaded maps level.mapname
+	local.master aliascache hornbike sound/vehicle/horn.wav soundparms 1 0 1.9 0 800 6000 auto loaded maps level.mapname
 }
 
 if(level.vehiclescriptmaster2 != 1 && level.scriptmaster[truck_sounds] != 1 && level.scriptmaster[light_switch] != 1 && local.soundtype != 2)

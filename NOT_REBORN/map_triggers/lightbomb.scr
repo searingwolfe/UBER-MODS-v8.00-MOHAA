@@ -325,6 +325,7 @@ boomerweenie_explode local.laser21 local.laser22 local.laser23 local.groundtarge
 		}
 	}
 
+	waitframe
 	local.Exp21 = spawn "fx/300damage.tik" // also does 10 radiusdamage
 	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
 	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
@@ -352,7 +353,6 @@ boomerweenie_explode local.laser21 local.laser22 local.laser23 local.groundtarge
 	local.Exp23 anim start
 
 exec global/earthquake.scr .25 1 0 0
-wait 0.05
 local.Exp21 playsound artyexp_water
 //local.Exp22 playsound grenade_exp_water2
 local.random2 = randomint(2)
@@ -447,7 +447,6 @@ itemnotattached_fix: // only fixes "isfiredboomerweenie" after player dies or ch
 	while(isalive self && self.dmteam == local.team && self.dmteam != "spectator") { wait 0.1 }
 
 	if(self == NULL) { end }
-	ihuddraw_string self 101 ""
 	self.isfiredboomerweenie = 0
 	self.whileloop = 0
 end

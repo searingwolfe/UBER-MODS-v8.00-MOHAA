@@ -1,0 +1,263 @@
+// A simple laser pointer for iprinting & console-printing origin + angles (in integer form), model, targetname, etc of the pointed target entity (must be a solid entity).
+// Double-click the same exact entity to print "origin + angle" in 6 decimal places.
+//
+// Type "entity_pointer [player number or player name]" into console to give/take an entity pointer.
+// i.e. "entity_pointer 1". Giving $player[1] an entity_pointer.
+//
+// Run "exec cvars/entity_pointer.scr" in any map script.
+
+main:
+
+	cache models/emitters/lanternflame.tik
+	cache models/fx/dummy.tik
+	thread entity_pointer
+end
+
+entity_pointer:
+
+	while(getcvar("entity_pointer") == "0" || getcvar("entity_pointer") == "") { waitframe }
+
+	local.cvar = getcvar("entity_pointer")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		{
+			if($player[local.i].entity_pointer_given != 1)
+			{
+				$player[local.i] iprint ("----- You've acquired the entity pointer.")
+				$player[local.i] iprint ("----- Hold USE(e) to aim at an entity. Press FIRE to iprint entity's info.")
+				println("----- Giving $player[" + local.i + "] an entity pointer.")
+
+				$player[local.i] thread give_player_pointer
+			}
+			else
+			{
+				$player[local.i] iprint ("----- Your entity pointer has been taken away.")
+				println("----- Taking $player[" + local.i + "]'s entity pointer.")
+				$player[local.i].entity_pointer_given = 0			
+			}
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+	}
+
+	if(getcvar("entity_pointer") != "0") { setcvar "entity_pointer" "0" }
+	thread entity_pointer
+end
+
+give_player_pointer:
+
+	self.entity_pointer_given = 1
+	self.entity_pointer_c = 0
+
+	local.pointer = spawn script_model
+	local.pointer model emitters/lanternflame.tik
+	local.pointer.origin = self.origin
+	local.pointer.angle = self.angle
+	local.pointer.scale = 1
+	local.pointer notsolid
+	local.pointer anim stop
+
+	local.laser = thread spawnlaser self.origin self.origin ( 0 1 1 ) 0.1
+
+	while(self != NULL && self.entity_pointer_given == 1)
+	{
+		if(self.useheld == 1)
+		{
+			local.pointing_target = (trace (self gettagposition "eyes bone") (self gettagposition "eyes bone" + (angles_toforward self.viewangles) * 10248) 0)
+			local.pointer anim start
+
+			if(self.entity_pointer_aimed != 1 || local.angles == NIL) { local.angles = ( 0 self.angle 0 ) }
+			self.entity_pointer_aimed = 1
+
+			if(self.fireheld == 1)
+			{
+				if(self.entity_pointer_printed != 1)
+				{
+					if((self getcontrollerangles 0)[2] > 15 || (self getcontrollerangles 0)[2] < -15)
+					{
+						self tele local.pointing_target
+						local.string = ("( " + int(local.pointer.origin[0]) + " " + int(local.pointer.origin[1]) + " " + int(local.pointer.origin[2]) + " ) " + int(local.angles[1]))
+						self iprint ("Teleporting to: " + local.string)
+					}
+					else { self thread projectile }
+
+					self.entity_pointer_printed = 1
+					local.origin_old = local.pointer.origin
+				}
+				if(self.entity_pointer_hitthing != NIL && self.entity_pointer_hitthing != NULL && local.pointer istouching self.entity_pointer_hitthing)
+				{
+					local.laser color ( 1 0 0 )
+					if(self.entity_pointer_c >= 40)
+					{
+						self iprint ("----- Removed entity: [" + self.entity_pointer_hitthing.entnum + "]")
+						println("----- Removed entity: [" + self.entity_pointer_hitthing.entnum + "]")
+						self.entity_pointer_hitthing remove
+					}
+					else { self.entity_pointer_c++ }
+				}
+				else
+				{
+					local.laser color ( 0 1 1 )
+					self.entity_pointer_c = 0
+				}
+			}
+			else
+			{
+				local.laser color ( 0 1 1 )
+				self.entity_pointer_c = 0
+			}
+			if(self.fireheld != 1 && self.entity_pointer_printed == 1) { self.entity_pointer_printed = 0 }
+		}
+		else
+		{
+			self.entity_pointer_aimed = 0
+			self.entity_pointer_c = 0
+			local.pointing_target = self gettagposition "eyes bone"
+			local.pointer anim stop
+			local.laser color ( 0 1 1 )
+		}
+
+		local.laser.origin = self gettagposition "eyes bone"
+		local.laser endpoint local.pointing_target
+		local.pointer.origin = local.pointing_target
+		waitframe
+	}
+
+	if(self != NULL)
+	{
+		self.entity_pointer_aimed = 0
+		self.entity_pointer_printed = 0
+		self.entity_pointer_given = 0
+		self.entity_pointer_hitthing = NIL
+		self.entity_pointer_c = 0
+	}
+	local.laser remove
+	local.pointer remove
+end
+
+spawnlaser local.origin local.endpoint local.color local.scale:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
+
+////////////////////////////////////////////////////////////////////////
+
+projectile:
+
+	if(self.entity_pointer_shotprojectile == 1) { end }
+	self.entity_pointer_shotprojectile = 1
+
+	local.ent = spawn script_model
+	local.ent model "fx/dummy.tik"
+	local.ent.origin = self gettagposition "eyes bone"
+	local.ent.angles = self.viewangles
+	local.ent notsolid
+	local.ent physics_on
+	local.ent gravity 0
+	local.ent.velocity = angles_toforward(self.viewangles) * 6500
+
+	local.ent thread waittill_touch local self local.ent
+	local.hitthing = self
+	while(local.hitthing == self)
+	{
+		local.ent waittill touch
+		local.hitthing = parm.other
+	}
+	local.ent.velocity = ( 0 0 0 )
+
+	local.ostring = "( " + int(local.hitthing.origin[0]) + " " + int(local.hitthing.origin[1]) + " " + int(local.hitthing.origin[2]) + " )"
+	local.astring = "( " + int(local.hitthing.angles[0]) + " " + int(local.hitthing.angles[1]) + " " + int(local.hitthing.angles[2]) + " )"
+
+	if(self.entity_pointer_hitthing != NIL && self.entity_pointer_hitthing != NULL && local.hitthing == self.entity_pointer_hitthing) { local.decimals = 1 } // if player selected the same entity twice, print more decimals.
+
+	println("----- Entity number: " + local.hitthing.entnum)
+	if(local.decimals != 1)
+	{
+		println("----- [" + local.hitthing.entnum + "].origin = " + local.ostring)
+		println("----- [" + local.hitthing.entnum + "].angles = " + local.astring)
+	}
+	else
+	{
+		println("----- [" + local.hitthing.entnum + "].origin = " + local.hitthing.origin)
+		println("----- [" + local.hitthing.entnum + "].angles = " + local.hitthing.angles)
+	}
+	println("----- [" + local.hitthing.entnum + "].classname = " + local.hitthing.classname)
+	if(local.hitthing.model != NIL) { println("----- [" + local.hitthing.entnum + "].model = " + local.hitthing.model) }
+	if(local.hitthing.targetname != "") { println("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname) }
+	if(local.hitthing.target != "") { println("----- [" + local.hitthing.entnum + "].target = " + local.hitthing.target) }
+	if(local.hitthing.health != 0) { println("----- [" + local.hitthing.entnum + "].health = " + local.hitthing.health) }
+	if(local.hitthing.scale != 1) { println("----- [" + local.hitthing.entnum + "].scale = " + local.hitthing.scale) }
+
+	if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname == "") { println("----- [" + local.hitthing.entnum + "].gun = entity " + local.hitthing.gun.entnum) }
+	if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname != "") { println("----- [" + local.hitthing.entnum + "].gun = " + local.hitthing.gun) }
+	if(local.hitthing.gun2 != NIL && local.hitthing.gun2 != NULL && local.hitthing.gun2.targetname == "") { println("----- [" + local.hitthing.entnum + "].gun2 = entity " + local.hitthing.gun2.entnum) }
+	if(local.hitthing.gun2 != NIL && local.hitthing.gun2 != NULL && local.hitthing.gun2.targetname != "") { println("----- [" + local.hitthing.entnum + "].gun2 = " + local.hitthing.gun2) }
+
+	if(self != NULL)
+	{
+		self iprint ("----- Entity number: " + local.hitthing.entnum)
+		if(local.decimals != 1)
+		{
+			self iprint ("----- [" + local.hitthing.entnum + "].origin = " + local.ostring)
+			self iprint ("----- [" + local.hitthing.entnum + "].angles = " + local.astring)
+		}
+		else
+		{
+			self iprint ("----- [" + local.hitthing.entnum + "].origin = " + local.hitthing.origin)
+			self iprint ("----- [" + local.hitthing.entnum + "].angles = " + local.hitthing.angles)
+		}
+		self iprint ("----- [" + local.hitthing.entnum + "].classname = " + local.hitthing.classname)
+		if(local.hitthing.model != NIL) { self iprint ("----- [" + local.hitthing.entnum + "].model = " + local.hitthing.model) }
+		if(local.hitthing.targetname != "") { self iprint ("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname) }
+		if(local.hitthing.target != "") { self iprint ("----- [" + local.hitthing.entnum + "].target = " + local.hitthing.target) }
+		if(local.hitthing.health != 0) { self iprint ("----- [" + local.hitthing.entnum + "].health = " + local.hitthing.health) }
+		if(local.hitthing.scale != 1) { self iprint ("----- [" + local.hitthing.entnum + "].scale = " + local.hitthing.scale) }
+
+		if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname == "") { self iprint ("----- [" + local.hitthing.entnum + "].gun = entity " + local.hitthing.gun.entnum) }
+		if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname != "") { self iprint ("----- [" + local.hitthing.entnum + "].gun = " + local.hitthing.gun) }
+		if(local.hitthing.gun2 != NIL && local.hitthing.gun2 != NULL && local.hitthing.gun2.targetname == "") { self iprint ("----- [" + local.hitthing.entnum + "].gun2 = entity " + local.hitthing.gun2.entnum) }
+		if(local.hitthing.gun2 != NIL && local.hitthing.gun2 != NULL && local.hitthing.gun2.targetname != "") { self iprint ("----- [" + local.hitthing.entnum + "].gun2 = " + local.hitthing.gun2) }
+
+		self.entity_pointer_shotprojectile = 0
+		self.entity_pointer_hitthing = local.hitthing
+	}
+	local.ent remove
+end
+
+waittill_touch local.thread local.player local.ent:
+
+	while(1)
+	{
+		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
+		{
+			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
+			if(self != NULL) { self remove }
+			break
+		}
+
+		if(self.velocity == ( 0 0 0 )) { break } // waittill touch already ended, so end the while-loop too.
+		waitframe
+	}
+	if(local.player != NULL) { local.player.entity_pointer_shotprojectile = 0 }
+	if(local.ent != NULL) { local.ent remove }
+end

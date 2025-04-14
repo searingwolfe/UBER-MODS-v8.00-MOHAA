@@ -1,4 +1,4 @@
-main local.origin local.setsize1 local.setsize2 local.targetname:
+main local.origin local.setsize1 local.setsize2 local.targetname local.outside local.kill:
 
 	local.trig = spawn trigger_multiple
 	local.trig.origin = local.origin
@@ -9,14 +9,16 @@ main local.origin local.setsize1 local.setsize2 local.targetname:
 	local.player = parm.other
 	if(local.player.driving != 1 && local.player.passenger != 1 && local.player.flying != 1)
 	{
-		local.player iprint "You fell under the map."
-		local.player iprint "Teleporting to the surface."
-		local.player respawn	// local.player kill
+		if(local.outside == 1) { local.player iprint "You went outside the map."; local.player iprint "Teleporting to a new place." }
+		else { local.player iprint "You fell under the map."; local.player iprint "Teleporting to the surface." }
+
+		if(local.kill == 1) { killent local.player }
+		else { local.player respawn }
 	
 		local.player thread fellundermap // don't need this if "local.player kill" is used instead.
 	}
 	local.trig remove
-	thread main local.origin local.setsize1 local.setsize2 local.targetname
+	thread main local.origin local.setsize1 local.setsize2 local.targetname local.outside local.kill
 end
 
 fellundermap:
