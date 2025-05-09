@@ -57,12 +57,12 @@ To make an expanded "sv_maplist" in server.cfg (beyond 256 characters), make oth
 	seta sv_maplist3 "training m1l1 m1l2a m1l2b m1l3a m1l3b m1l3c m2l1 m2l2a m2l2b m2l2c m2l3 m3l1a m3l1b m3l2 m3l3 m4l0 m4l1 m4l2 m4l3"
 	seta sv_maplist4 "m5l1a m5l1b m5l2a m5l2b m5l3 m6l1a m6l1b m6l1c m6l2a m6l2b m6l3a m6l3b m6l3c m6l3d m6l3e void"
 
-Add "exec global/sv_maplists.scr" to global/dmprecache.scr to use the lists above.
-Do not use "sv_maplist0"; it is keeping memory of the original "sv_maplist".
-Do not have 2+ lists ending with the same map name, otherwise the script will keep copying the list after the first one with said map name.
-Do not have the same map name in 2 different lists (only in the same list).
-If using the map example below, do not add more than 1 maplist, since this script may not follow the correct sequence:
-Maplist example: dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm3 dm/mohdm6
+- Add "exec global/sv_maplists.scr" to global/dmprecache.scr to use the lists above.
+- Do not use "sv_maplist0"; it is keeping memory of the original "sv_maplist".
+- Do not have 2+ lists ending with the same map name, otherwise the script will keep copying the list after the first one with said map name.
+- Do not have the same map name in 2 different lists (only in the same list).
+- If using the map example below, do not add more than 1 maplist, since this script may not follow the correct sequence:
+- Maplist example: dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm3 dm/mohdm6
 
 	seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will not work as intended;
 	seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
