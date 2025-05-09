@@ -1221,3 +1221,7 @@ Other bug fixes & additions
 
 	- global/victory_podium.scr now shows "1st place", "2nd place", "3rd place" player name text in gold, silver, bronze respectively when each map ends.
 	- Fixed potential spamming NULL "local.entity.driver" errors in killstreaks/damagehandler.scr.
+
+New map modded: m5l2a
+
+	(Singleplayer Map Mods)(#Singleplayer Maps Mods)
