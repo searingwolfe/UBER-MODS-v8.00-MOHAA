@@ -64,8 +64,8 @@ To make an expanded "sv_maplist" in server.cfg (beyond 256 characters), make oth
 - If using the map example below, do not add more than 1 maplist, since this script may not follow the correct sequence:
 - Maplist example: dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm3 dm/mohdm6
 
-	seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will not work as intended;
-	seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
+		seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will not work as intended;
+		seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
 
 #
 
