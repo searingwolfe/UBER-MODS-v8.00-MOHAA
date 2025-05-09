@@ -1,4 +1,4 @@
-	*Current Version: 7.987 - Updated: 4/13/2025*
+	*Current Version: 7.988 - Updated: 5/9/2025*
 
 ### Table of Contents
 
@@ -49,6 +49,23 @@ To switch to any of the "obj/" maps from an FFA or TDM game mode map (such as "d
 	g_gametype 4; map obj/obj_team2
 	g_gametype 4; map obj/obj_team3
 	g_gametype 4; map obj/obj_team4
+
+To make an expanded "sv_maplist" in server.cfg (beyond 256 characters), make other lists similar to the example below (2nd list can also start at "sv_maplist1"):
+
+	seta sv_maplist "dm/mohdm1 dm/mohdm2 dm/mohdm3 dm/mohdm4 dm/mohdm5 dm/mohdm6 dm/mohdm7"
+	seta sv_maplist2 "obj/obj_team1 obj/obj_team2 obj/obj_team3 obj/obj_team4"
+	seta sv_maplist3 "training m1l1 m1l2a m1l2b m1l3a m1l3b m1l3c m2l1 m2l2a m2l2b m2l2c m2l3 m3l1a m3l1b m3l2 m3l3 m4l0 m4l1 m4l2 m4l3"
+	seta sv_maplist4 "m5l1a m5l1b m5l2a m5l2b m5l3 m6l1a m6l1b m6l1c m6l2a m6l2b m6l3a m6l3b m6l3c m6l3d m6l3e void"
+
+Add "exec global/sv_maplists.scr" to global/dmprecache.scr to use the lists above.
+Do not use "sv_maplist0"; it is keeping memory of the original "sv_maplist".
+Do not have 2+ lists ending with the same map name, otherwise the script will keep copying the list after the first one with said map name.
+Do not have the same map name in 2 different lists (only in the same list).
+If using the map example below, do not add more than 1 maplist, since this script may not follow the correct sequence:
+Maplist example: dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm3 dm/mohdm6
+
+	seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will not work as intended;
+	seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
 
 #
 
@@ -206,6 +223,8 @@ ADDITIONAL FEATURES:
 |       | "check_snowball 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
 |       | "check_snowball 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
 |       | "check 0" | make all "check_[trigger]" cvars "0". |
+| exec cvars/playerspawns.scr      | "playerspawns 1" | spawn dummy models at all Allies/Axis or FFA spawns (only works in singleplayer maps, not including Training). |
+|       | "playerspawns 0" | remove the dummy models. |
 | exec cvars/find.scr      | "find truckclip" | teleport all players to $truckclip's coords (also printing: coords, angles, entnum, and target). |
 |       | "find endtrigger" | teleport all players to $endtrigger's coords (also printing: coords, angles, entnum, and target). |
 |       | "find barrel[1]" | teleport all players to $barrel[1]'s coords (also printing: coords, angles, entnum, and target). |
@@ -220,6 +239,9 @@ ADDITIONAL FEATURES:
 | exec cvars/findmodel.scr      | "findmodel models/static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
 |       | "findmodel static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
 |       | "findmodel static/indycrate" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
+| exec cvars/findset.scr      | "findset 7" | print all entnums and their targetnames in the map with .set = 7 (exploder-related entities). |
+|       | "findset 20" | print all entnums and their targetnames in the map with .set = 20 (exploder-related entities). |
+|       | "findset all" | print all entnums and their ".set" values, then prints total number of entities for each ".set" value. |
 | exec cvars/drawpath.scr      | "drawpath bomberpath" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
 |       | "drawpath spotpath1_1" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
 |       | "drawpath exploderchunk[1]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
@@ -265,8 +287,6 @@ ADDITIONAL FEATURES:
 |       | "coord2 entity" | print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line. |
 |       | "coord2 trigger" | print "( 0 0 0 ) " coords format on the same line. |
 |       | "coord2 spawn" | print ""0 0 0" "angle" "0"" coords format on a new line. |
-| exec cvars/playerspawns.scr      | "playerspawns 1" | spawn dummy models at all Allies/Axis or FFA spawns (only works in singleplayer maps, not including Training). |
-|       | "playerspawns 0" | remove the dummy models. |
 
 - For "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
 
@@ -1102,33 +1122,102 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+- M5L2A fully modded.
+
+- Airstrikes occur at random times across any X-Y-axis direction on the map.
+- One mortar dirt explosion will occur randomly on the map after a random short amount of time.
+
+- Since this map has 27 exploders (and several more exploder-related entities), some mods are enabled/disabled only if the cvar "g_ubermods 1" or "g_ubermods 2" is set.
+- For "g_ubermods 2":
+	- 4 vehicles, 2 tanks, 4 flyable plane triggers, 2 flak88, 2 nebelwerfers added to the map.
+	- 27 structures can be blown up with rockets/tanks or other large explosives (not including grenades). These exploders are removed if "g_ubergametype bb" is set (base-builder).
+	- Only a few red teleporters are added.
+	- 3 telephone poles can be run over and flattened by tanks.
+
+- For "g_ubermods 1":
+	- 8 extra throwing knives ("g_ubermods 1" only) added.
+	- All 27 exploders are disabled, and related entities are removed except for the buildings' original forms.
+	- All red teleporters, crates, and banquet tables are added.
+	- UBER map_triggers that are usually exclusive to "g_ubermods 2" are also available in this map.
+	- Spotlights, LED Trap triggers, and 11 bangalore wallbombs are added (one is a detonator within Axis spawn buildings, instead of an alarmswitch).
+	- 10 bangalore wallbombs added to the entrances of various buildings.
+
+---------------
+
 #
 
 # Updates & Bug Fixes
 
-v7.987 (4-13-2025):
+v7.988 (5-9-2025):
 
-- Assisted suicides feature added into "killstreaks/damagehandler.scr".
-	- If players shoot at others that are falling, or within 1.5 seconds before they begin falling, the shooter will get +1 kills/score when the falling player dies/craters.
-	- Players can kill others using meansofdeath = 7 (death by falling) for the "damage" function, but it's never used in the game.
-	- In global/localization.txt, The following pink text is changed to this: { "was pushed over the edge by" "'s suicide was assisted by" }.
+New mod added: Multiple "sv_maplist" cvars
 
-	- To activate assisted suicides mod: add "exec killstreaks/damagehandler.scr::assisted_suicide" into the "global/dmprecache.scr" file, or remove the line to disable the mod.
+	- UBER MODS now allows for multiple "sv_maplist" cvars in server.cfg, bypassing the 256 character limit for one "sv_maplist" (the cvar also cannot be 0 characters or "").
+	- Add "exec global/sv_maplists.scr" to global/dmprecache.scr.
 
-- cvars/entity_pointer.scr: New UBER cvar added.
-	-The entity pointer's laser shoots out an invisible projectile, hitting the nearest entity (waittill touch; local.hitthing = parm.other). 
-	- This avoids using Reborn's "getentity" function to check if the laser istouching local.ent, so this cvar can be used in normal AA-SH-BT.
-	- When touched, the entity's origin, angles, classname, entnum, model, targetname, target, health, scale, and any attached guns are iprinted to the player.
-	- Sadly, these entities must be solid for this to work, but it can still be useful (i.e. the "spawn" command will still spawn solid vehicles: "rcon spawn models/vehicles/jeep.tik").
+	- "global/sv_maplists.scr" will search up to 999 maplists to see if the current map is also the last map in the list (lowest list iteration).
+	- If it's the last map in "sv_maplist4" for example, "sv_maplist5" will be copied to "sv_maplist", and the next map will be the first map in "sv_maplist5".
+	- Manually switching maps to a map from a different maplist than "sv_maplist" will auto-copy the new maplist to "sv_maplist".
 
-- Ensured that all Giant Bomb & Light Bomb's radiusdamages give kills/score to the player that launched them (rarely it wouldn't work).
-- UBER cvars that are loaded at the top of each map script are now found in the "cvars/cvars.scr" file, executed at the top of each map script instead. Details for each UBER cvar are also in this file.
+	- Do not use "sv_maplist0"; it is keeping memory of the original "sv_maplist".
+	- Do not have 2+ lists ending with the same map name, otherwise the script will keep copying the list after the first one with said map name.
+	- Do not have the same map name in 2 different lists (only in the same list).
 
-- Drivable bmwbikes can now honk horns. Trucks make normal horn sounds. Cars make higher pitched horn sounds. Bmwbikes make the highest pitched horns sounds.
-- Destroyed drivable boats will now make various water wave & water splash sounds while they are sinking.
-	- These sinking boat sounds are also added for the "higgins_death" thread in M3L1A.
+	- Examples in server.cfg (the 2nd list can also start at "sv_maplist1"):
 
-- global/deathcam.scr mod updated to prevent dead players that are spectating their killers from respawning too quickly if they/their killer switches teams, or if their killer leaves the game.
+			seta sv_maplist "dm/mohdm1 dm/mohdm2 dm/mohdm3 dm/mohdm4 dm/mohdm5 dm/mohdm6 dm/mohdm7"
+			seta sv_maplist2 "obj/obj_team1 obj/obj_team2 obj/obj_team3 obj/obj_team4"
+			seta sv_maplist3 "training m1l1 m1l2a m1l2b m1l3a m1l3b m1l3c m2l1 m2l2a m2l2b m2l2c m2l3 m3l1a m3l1b m3l2 m3l3 m4l0 m4l1 m4l2 m4l3"
+			seta sv_maplist4 "m5l1a m5l1b m5l2a m5l2b m5l3 m6l1a m6l1b m6l1c m6l2a m6l2b m6l3a m6l3b m6l3c m6l3d m6l3e void"
 
+	- If using the map example below, do not add more than 1 maplist, since this script may not follow the correct sequence:
+	- Maplist example: dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm3 dm/mohdm6
 
+			seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will work as intended;
+			seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
 
+New cvar added: Find Set
+
+	- New UBER Cvar added: "findset [set number]" or "findset all". This cvar will find any/all scripted exploders on the map, from global/exploder.scr.
+	- Typing "findset 15" will print to console any exploder-related entities' entnums & targetnames that have the #set 15 (.set = 15).
+	- Typing "findset all" will print to console all the #set entities it can find, and prints how many entities that each #set has.
+
+New global/exploder.scr features
+
+	- The console will now print on one line how many entities there are for each $exploder, $explodersmashed, $exploderchunk, $exploderfire, $explodertrigger, instead of printing numerous lines.
+	- Improved global/exploder.scr script by adding threads to fully remove exploders or killing exploders, and reducing as many entities as possible afterwards.
+
+	- "thread global/exploder.scr::remove #" (# being the #set value of the exploder) can be added to remove the #set exploder's entities that are no longer needed,
+	- but keeps the remaining "explodersmashed" entities, unless "exploder.scr::remove # 1" is run instead; "exploder" and "exploderfire" entities are not removed until all other exploders have exploded.
+	- Add the line above after running "exec global/exploder.scr::explode #".
+
+	- "thread global/exploder.scr::kill_exploders" can be added to destroy all exploders and remove their chunks' .target entities.
+	- This keeps the remaining "explodersmashed" entities, unless "exploder.scr::kill_exploders 1" is run instead.
+
+	- "thread global/exploder.scr::remove_exploders" can be added to remove all exploder-related entities and keep their original forms.
+	- This keeps the original "exploder" entities, unless "exploder.scr::remove_exploders 1" is run instead.
+
+Other bug fixes & additions
+
+	- Moved some scripts into an "ubermods" folder to simplify some server settings, and to fix spamming errors caused by "sv_maplist" cvar (from server.cfg).
+	- If "sv_maplist" = "", or "sv_maplist" = [any string > 256 characters], the console will spam "Update of script position - This is not an error."
+
+	- Exploder threads in M5L2A and M5L1B revamped (all other maps coming soon) to reduce entity count.
+	- Instead of using mini Tiger Tanks as non-grenade explosion triggers, 2 triggers are placed around each exploder (one for explosions, another for projectiles).
+	- If a $world explosion occurs near the triggers, or a Player-weapon explosion occurs after a rocket/tank projectile is detected, the exploder blows up.
+	- One exploder triggered by Players' projectiles will not trigger other nearby exploders. Only a $world explosion's with a large enough radius can trigger 2+ exploders simultaneously.
+	- Once exploded, the exploder will spawn 2 nearby radiusdamages, a higgins explosion, a bombwall debris emitter, and 2 sherman smoke emitters that linger for a few seconds.
+
+	- The "find [targetname]" cvar will now print as much entity info as the "findent [entnum]" cvar.
+	- These cvars will also print origin & angles in simplified decimals (for example: 0.0000 now prints 0, 1.2300 now prints 1.23, 10.0100 now prints 10.01).
+	- Added "simplify_decimal" thread to global/math.scr, outputting the simplified decimal as a string. For example: local.string = waitthread global/math.scr::simplify_decimal 10.0100.
+
+	- Server-side "cheats" can now be enabled/disabled without restarting the map, simply by typing "cheats 1" or "thereisnomonkey 1" into the console, either one will auto-set the other to "1" (set to "0" to disable cheats).
+
+	- Players can no longer enter vehicles/tanks/boats/flak88s/nebelwerfers if they are leaning left/right, and also cannot enter flak88s/nebelwerfers if they are crouching.
+	- This allows players to grab triggers, throwing knives, etc that are next to these drivable entities.
+	- Players that are currently entering vehicles/tanks/boats (gun is holstering) can also cancel entering by leaning left/right.
+	- Added "self.driver exit" to drivable entity scripts to ensure that players have fully exited when getting out/dying/switching teams/etc (may be unnecessary, but doesn't negatively affect scripts).
+
+	- global/victory_podium.scr now shows "1st place", "2nd place", "3rd place" player name text in gold, silver, bronze respectively when each map ends.
+	- Fixed potential spamming NULL "local.entity.driver" errors in killstreaks/damagehandler.scr.

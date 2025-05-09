@@ -31,8 +31,8 @@ main local.target local.inflictor local.damage local.position local.direction lo
 	// give score to players who destroy nebelwerfers or flak88s with players using them, using explosives of various types (or shotgun-blasting & destroying them).
 	if((local.entity.targetname == "flak88_healthtrig" || local.entity.targetname == "nebelwerfer_healthtrig") && local.inflictor != NULL) 
 	{
-		if(local.entity.driver == NIL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1"))) { local.entity.shooter = local.inflictor }
-		if(local.entity.driver != NIL && local.entity.driver.dmteam == local.inflictor.dmteam) { local.entity.nodamage = 1; local.entity nodamage }
+		if(local.entity.driver == NIL || local.entity.driver == NULL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1"))) { local.entity.shooter = local.inflictor }
+		if(local.entity.driver != NIL && local.entity.driver != NULL && local.entity.driver.dmteam == local.inflictor.dmteam) { local.entity.nodamage = 1; local.entity nodamage }
 		end
 	}
 
@@ -42,7 +42,7 @@ main local.target local.inflictor local.damage local.position local.direction lo
 	if(local.entity.classname == Player && local.entity.turretingent != NIL && local.inflictor == local.entity.turretingent) { local.entity nodamage }
 
 	// give score to players who destroy vehicles/tanks with players riding in them, using explosives of various types.
-	if((local.entity.classname == DrivableVehicle || local.entity.classname == VehicleTank) && local.inflictor != NULL && (local.entity.driver == NIL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1"))))
+	if((local.entity.classname == DrivableVehicle || local.entity.classname == VehicleTank) && local.inflictor != NULL && (local.entity.driver == NIL || local.entity.driver == NULL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1"))))
 	{
 		if((local.inflictor.classname == DrivableVehicle || local.inflictor.classname == VehicleTank) && local.inflictor.shooter != NIL && local.inflictor.shooter != NULL)
 		{

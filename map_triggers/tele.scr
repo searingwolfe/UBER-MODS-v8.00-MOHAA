@@ -1,21 +1,22 @@
-main local.origin local.destination local.teletype local.setsize1 local.setsize2 local.model local.scale:
+main local.origin local.destination local.teletype local.setsize1 local.setsize2 local.model local.scale local.targetname:
 
 	local.trig = spawn trigger_use
 	local.trig.origin = local.origin + ( 0 0 10 )
 	local.trig.destination = local.destination
-	if(local.model == NIL) 				   	   { local.trig model "fx/corona_red.tik" }
-	if(local.model != NIL) 				   	   { local.trig model local.model }
-	if(local.setsize1 == NIL || local.setsize2 == NIL) { local.trig setsize ( -10 -10 -10 ) ( 10 10 0 ) }
-	if(local.setsize1 != NIL && local.setsize2 != NIL) { local.trig setsize local.setsize1 local.setsize2 }
-	if(local.scale == NIL) 				   	   { local.trig.scale = 1.5 }
-	if(local.scale != NIL) 				   	   { local.trig.scale = local.scale }
+	if(local.model == NIL)					{ local.trig model "fx/corona_red.tik" }
+	if(local.model != NIL)					{ local.trig model local.model }
+	if(local.setsize1 == NIL || local.setsize2 == NIL)	{ local.trig setsize ( -10 -10 -10 ) ( 10 10 0 ) }
+	if(local.setsize1 != NIL && local.setsize2 != NIL)	{ local.trig setsize local.setsize1 local.setsize2 }
+	if(local.scale == NIL)					{ local.trig.scale = 1.5 }
+	if(local.scale != NIL)					{ local.trig.scale = local.scale }
+	if(local.targetname != NIL)				{ local.trig.targetname = local.targetname }
 	local.trig notsolid
 	local.trig show
 	local.trig setthread tele
 
 	if(local.teletype == 1)
 	{
-		thread main local.destination local.origin 0 local.setsize1 local.setsize2 local.model local.scale
+		thread main local.destination local.origin 0 local.setsize1 local.setsize2 local.model local.scale local.targetname
 	}
 end
 

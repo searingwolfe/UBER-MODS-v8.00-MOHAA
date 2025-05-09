@@ -1,3 +1,4 @@
+
 main local.name local.model local.origin local.angles local.health local.resettime local.gotout local.groundtarget:
 
 	if(local.model == NIL) { wait 1; println("----- ERROR playertank.scr: 'model' parameter is missing!"); end }
@@ -197,7 +198,7 @@ end
 triggered:
 
 	local.player = parm.other
-	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.dead == 1) { end }
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL || (local.player getcontrollerangles 0)[2] > 15 || (local.player getcontrollerangles 0)[2] < -15) { end }
 
 	if(self.tank != NULL)
 	{
@@ -224,9 +225,16 @@ playergetin:
 	local.player.mef_weaponclass = thread global/get_player_weaponclass.scr::main local.player // thread instead of waitthread, but mef_weaponclass should still update in time.
 	local.player safeholster 1
 	wait 1
-	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL)
 	{
 		if(self != NULL) { self.attachingdriver = 0 }
+		end
+	}
+	if((local.player getcontrollerangles 0)[2] > 15 || (local.player getcontrollerangles 0)[2] < -15)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		local.player safeholster 0
+		local.player iprint "You canceled entering tank by leaning left/right."
 		end
 	}
 

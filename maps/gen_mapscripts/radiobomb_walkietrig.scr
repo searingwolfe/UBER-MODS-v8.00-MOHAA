@@ -262,12 +262,6 @@ scan_player local.name:
   	{
 		level.bombstill_at1storigin[local.name] = 0 // as soon as a player picks up a radiobomb from its 1st origin, make this 0.
 
-   		if(self.dmteam != local.team || !isalive self || self.dmteam == spectator)
-   		{
-			if(self.dmteam == spectator || isalive self) { level.rbomb_spectator[local.name] = 1 }
-    			end local.result
-   		}
-
 		if(self.isdog == 1 && local.dog != 1)
 		{
 			if($("rbomb1_1" + local.name) != NULL) { $("rbomb1_1" + local.name) remove }
@@ -299,6 +293,13 @@ scan_player local.name:
 			local.planttimer++
 			wait 0.1
 		}
+
+   		if(self.dmteam != local.team || !isalive self || self.dmteam == spectator)
+   		{
+			if(self.dmteam == spectator || isalive self) { level.rbomb_spectator[local.name] = 1 }
+    			end local.result
+   		}
+
 		self stopwatch 0
 		if(local.planttimer > 0) { ihuddraw_string self 102 ("Radio Bomb:   " + local.name) }
 
@@ -444,12 +445,6 @@ scan_player2 local.name:
   	}
   	else
   	{
-   		if(self.dmteam != local.team || !isalive self || self.dmteam == spectator)
-   		{
-			if(self.dmteam == spectator || isalive self) { level.talkie_spectator[local.name] = 1 }
-    			end local.result
-   		}
-
 		if(self.isdog == 1 && local.dog != 1)
 		{
 			if($("rwalkie1_1" + local.name) != NULL) { $("rwalkie1_1" + local.name) remove }
@@ -496,6 +491,13 @@ scan_player2 local.name:
 			local.detonatetimer++
 			wait 0.1
 		}
+
+   		if(self.dmteam != local.team || !isalive self || self.dmteam == spectator)
+   		{
+			if(self.dmteam == spectator || isalive self) { level.talkie_spectator[local.name] = 1 }
+    			end local.result
+   		}
+
 		self stopwatch 0
 		if(local.detonatetimer > 0) { ihuddraw_string self 102 ("Walkie Talkie:   " + local.name) }
   	}

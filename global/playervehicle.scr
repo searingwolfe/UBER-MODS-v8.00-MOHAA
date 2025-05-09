@@ -295,7 +295,7 @@ end
 triggered:
 
 	local.player = parm.other
-	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.dead == 1) { end }
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL || local.player.leanleftheld == 1 || local.player.leanrightheld == 1) { end }
 
 	if(self.vehicle != NULL)
 	{
@@ -333,9 +333,16 @@ playergetin:
 
 	local.player safeholster 1
 	wait 1
-	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.flying == 1)
+	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL)
 	{
 		if(self != NULL) { self.attachingdriver = 0 }
+		end
+	}
+	if(local.player.leanleftheld == 1 || local.player.leanrightheld == 1)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		local.player safeholster 0
+		local.player iprint "You canceled entering vehicle by leaning left/right."
 		end
 	}
 
@@ -636,6 +643,7 @@ driverreset local.status:
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
 	if($("driver_seat_" + self.entnum) != NULL) { self.driver unglue }
+	self.driver exit	// not needed, but added as a redundancy.
 
 	if(local.status != 2)
 	{

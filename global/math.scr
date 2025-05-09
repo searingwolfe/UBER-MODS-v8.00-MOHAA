@@ -238,4 +238,40 @@ end local.degrees_new
 
 
 
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 
+
+
+// Input any decimal number (1234, 1234.5, 1234.56000, 1234.00056, etc.) to simplify by removing any 0s and/or the decimal point at the end of the number.
+// The number is outputted as a string.
+// For example, 1234.56000 will be simplified to 1234.56
+
+simplify_decimal local.number:
+
+	local.string = string(local.number)
+	local.string_new = ""
+	local.c = 0
+
+	for(local.n = 0; local.n < local.string.size; local.n++)
+	{
+		if(local.string[local.n] == ".") { local.decimal = 1 }
+	}
+	if(local.decimal != 1) { end local.string }
+
+	for(local.n = local.string.size - 1; local.n >= 0; local.n--)
+	{
+		if(local.string[local.n] != "0") { break } // stop adding decimals to remove if not a 0.
+		local.c++
+	}
+	
+	for(local.m = 0; local.m < local.string.size - local.c; local.m++)
+	{
+		if(local.m == local.string.size - local.c - 1 && local.string[local.m] == ".") { break } // don't add the decimal point if it's the last character in the number string.
+
+		local.string_new += local.string[local.m] // create the new simplified number string, or make it "0" if empty.
+	}
+
+	if(local.string_new == "") { local.string_new = "0" }
+end local.string_new

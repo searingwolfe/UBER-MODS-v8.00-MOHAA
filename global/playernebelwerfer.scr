@@ -160,14 +160,12 @@ end
 playergetin_nebel:
 
 	local.player = parm.other
-	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { self triggerable; end }
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL || local.player.leanleftheld == 1 || local.player.leanrightheld == 1 || local.player getposition == "crouching") { end }
 	if(local.player.isdog == 1)
 	{
 		local.player iprint ("Dogs cannot use nebelwerfers.") // set other exceptions here
-		self triggerable
 		end
 	}
-	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	self nottriggerable
 	self.nebelwerfer.trigshot.driver = parm.other
@@ -243,6 +241,7 @@ playergetin_nebel:
 			self.nebelwerfer.wplayer stoploopsound
 			self.nebelwerfer.wplayer.driving = 0
 			self.nebelwerfer.wplayer.drivingent = NIL
+			self.nebelwerfer.wplayer exit
 			self.nebelwerfer.wplayer forcetorsostate STAND
 			self.nebelwerfer.wplayer = NIL
 			self.nebelwerfer thread ResetNebel
@@ -284,6 +283,7 @@ playergetin_nebel:
 			self.nebelwerfer.wplayer takedamage
 			ihuddraw_string self.nebelwerfer.wplayer 77 ""
 			self.nebelwerfer.wplayer stoploopsound
+			self.nebelwerfer.wplayer exit
 			self.nebelwerfer.wplayer forcetorsostate STAND
 			self.nebelwerfer.wplayer = NIL
 			self.nebelwerfer thread ResetNebel
@@ -321,6 +321,7 @@ playergetin_nebel:
 			}
 
 			self.nebelwerfer.wplayer stoploopsound
+			self.nebelwerfer.wplayer exit
 			self.nebelwerfer.wplayer forcetorsostate STAND
 			self.nebelwerfer.wplayer = NIL
 			if(self.nebelwerfer.dead != 1)

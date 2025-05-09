@@ -26,13 +26,24 @@ main: // findent.scr. Run "exec global/findent.scr" in any map script to use the
 		}
 		if(local.entity != NULL)
 		{
+			local.x = waitthread global/math.scr::simplify_decimal local.entity.origin[0]
+			local.y = waitthread global/math.scr::simplify_decimal local.entity.origin[1]
+			local.z = waitthread global/math.scr::simplify_decimal local.entity.origin[2]
+			local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal local.entity.angles[0]
+			local.y = waitthread global/math.scr::simplify_decimal local.entity.angles[1]
+			local.z = waitthread global/math.scr::simplify_decimal local.entity.angles[2]
+			local.angles = "( " + local.x + " " + local.y + " " + local.z + " )"
+
 			println("----- Teleporting to entity number: " + local.entnum)
-			println("----- [" + local.entnum + "].origin = " + local.entity.origin)
-			println("----- [" + local.entnum + "].angles = " + local.entity.angles)
+			println("----- [" + local.entnum + "].origin = " + local.origin)
+			println("----- [" + local.entnum + "].angles = " + local.angles)
 			println("----- [" + local.entnum + "].classname = " + local.entity.classname)
 			if(local.entity.model != NIL) { println("----- [" + local.entnum + "].model = " + local.entity.model) }
 			if(local.entity.targetname != "") { println("----- [" + local.entnum + "].targetname = " + local.entity.targetname) }
-			if(local.entity.target != "") { println("----- [" + local.entnum + "].target = " + local.entity.target) }
+			if(local.entity.target != "" && $(local.entity.target) != NULL) { println("----- [" + local.entnum + "].target = " + local.entity.target) }
+			if(local.entity.target != "" && $(local.entity.target) == NULL) { println("----- [" + local.entnum + "].target = " + local.entity.target + " (NULL)") }
+			if(local.entity.set != NIL) { println("----- [" + local.entnum + "].set = " + local.entity.set) }
 			if(local.entity.health != 0) { println("----- [" + local.entnum + "].health = " + local.entity.health) }
 			if(local.entity.scale != 1) { println("----- [" + local.entnum + "].scale = " + local.entity.scale) }
 
@@ -44,12 +55,14 @@ main: // findent.scr. Run "exec global/findent.scr" in any map script to use the
 			if($player.size >= 1)
 			{
 				$player iprint ("----- Teleporting to entity number: " + local.entnum)
-				$player iprint ("----- [" + local.entnum + "].origin = " + local.entity.origin)
-				$player iprint ("----- [" + local.entnum + "].angles = " + local.entity.angles)
+				$player iprint ("----- [" + local.entnum + "].origin = " + local.origin)
+				$player iprint ("----- [" + local.entnum + "].angles = " + local.angles)
 				$player iprint ("----- [" + local.entnum + "].classname = " + local.entity.classname)
 				if(local.entity.model != NIL) { $player iprint ("----- [" + local.entnum + "].model = " + local.entity.model) }
 				if(local.entity.targetname != "") { $player iprint ("----- [" + local.entnum + "].targetname = " + local.entity.targetname) }
-				if(local.entity.target != "") { $player iprint ("----- [" + local.entnum + "].target = " + local.entity.target) }
+				if(local.entity.target != "" && $(local.entity.target) != NULL) { $player iprint ("----- [" + local.entnum + "].target = " + local.entity.target) }
+				if(local.entity.target != "" && $(local.entity.target) == NULL) { $player iprint ("----- [" + local.entnum + "].target = " + local.entity.target + " (NULL)") }
+				if(local.entity.set != NIL) { $player iprint ("----- [" + local.entnum + "].set = " + local.entity.set) }
 				if(local.entity.health != 0) { $player iprint ("----- [" + local.entnum + "].health = " + local.entity.health) }
 				if(local.entity.scale != 1) { $player iprint ("----- [" + local.entnum + "].scale = " + local.entity.scale) }
 

@@ -16,10 +16,10 @@ echo -----------------------------------------
 echo(
 echo Please make sure no space bars exist within your filepaths, or shortcuts to MOHAA_server.exe.
 echo(
-set "MOHAA=C:\Users\USERNAME\Desktop\Shortcut_MOHAA_server.exe.lnk"
-set "LOGFILE=C:\Users\USERNAME\Desktop\MOHAA_1.12_server\main\qconsole.log"
-set "Destination=C:\Users\USERNAME\Desktop"
-set "SERVER_EXE=C:\Users\USERNAME\Desktop\MOHAA_1.12_server\MOHAA_server.exe"
+set "MOHAA=C:\Users\Wolfe\Desktop\Shortcut_MOHAA_server.exe.lnk"
+set "LOGFILE=C:\Users\Wolfe\Desktop\MOHAA_1.12_server\main\qconsole.log"
+set "Destination=C:\Users\Wolfe\Desktop"
+set "SERVER_EXE=C:\Users\Wolfe\Desktop\MOHAA_1.12_server\MOHAA_server.exe"
 set "SERVER_PROCESS=MOHAA_server.exe"
 
 echo Server shortcut path:      !MOHAA!
@@ -99,8 +99,8 @@ if %errorlevel% equ 0 (
 	copy %LOGFILE% "%Destination%\%Filename%(%a%).log"
 	@echo Copied: %date% %time%
 
-	:: Wait 1 seconds before restarting.
-	timeout /t 1 /nobreak >nul
+	:: Wait 2 seconds before restarting.
+	timeout /t 2 /nobreak >nul
 
 	:: Restart the MOHAA Server.
 	echo Restarting !SERVER_PROCESS!...
@@ -123,8 +123,8 @@ if %errorlevel% neq 0 (
 	copy %LOGFILE% "%Destination%\%Filename%(%a%).log"
 	@echo Copied: %date% %time%
 
-	:: Wait 1 seconds before restarting.
-	timeout /t 1 /nobreak >nul
+	:: Wait 2 seconds before restarting.
+	timeout /t 2 /nobreak >nul
 
 	:: Restart the MOHAA Server.
 	echo Restarting !SERVER_PROCESS!...

@@ -1,6 +1,6 @@
 // parameters:
 // origin1 = start, origin2 = endpoint, depth = distance vertically downward, width = width on both sides from center, ...
-// ... width_neg = -negative side width (towards left), width_pos = +positive side width (towards right).
+// ... width_neg = -negative side width (towards left), width_pos = +positive side width (towards right), length to extend beyond origin2 (in case solidifying curved walls did not fill all spaces).
 // if using "width_neg" & "width_pos", "width" parameter is ignored (can be 0 or NIL).
 //
 // examples:
@@ -9,7 +9,7 @@
 // exec global/mapwall.scr ( 435 270 -46 ) ( 100 270 100 ) 10 0 0 400 // sloped ramp/rooftop of +width 400 (origins started on -edge of ramp/rooftop), extending 10 units down.
 // exec global/mapwall.scr ( 435 270 -46 ) ( 100 270 100 ) 10 0 400 0 // sloped ramp/rooftop of -width 400 (origins started on +edge of ramp/rooftop), extending 10 units down.
 
-mapwall local.origin1 local.origin2 local.depth local.width local.width_neg local.width_pos:
+mapwall local.origin1 local.origin2 local.depth local.width local.width_neg local.width_pos local.extendlength:
 
 	if(local.origin1 == NIL) { wait 1; println("ERROR mapwall.scr: missing 'origin1' parameter."); end }
 	if(local.origin2 == NIL) { wait 1; println("ERROR mapwall.scr: missing 'origin2' parameter."); end }
@@ -30,6 +30,8 @@ mapwall local.origin1 local.origin2 local.depth local.width local.width_neg loca
 
 	local.dist = sqrt ((local.origin2[0] - local.origin1[0]) * (local.origin2[0] - local.origin1[0]) + (local.origin2[1] - local.origin1[1]) * (local.origin2[1] - local.origin1[1]) + (local.origin2[2] - local.origin1[2]) * (local.origin2[2] - local.origin1[2]))
 
+	if(local.extendlength != NIL && local.extendlength > 0) { local.dist += local.extendlength }
+
 	local.wall setsize ( 0 (local.width * -1) (local.depth * -1) ) ( local.dist local.width 0 )
 	if(local.width_pos != NIL) { local.wall setsize ( 0 (local.width_neg * -1) (local.depth * -1) ) ( local.dist local.width_pos 0 ) }
-end
+end local.wall

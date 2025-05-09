@@ -199,14 +199,12 @@ end local.product
 playergetin_flak:
 
 	local.player = parm.other
-	if(local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1) { self triggerable; end }
+	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL || local.player.leanleftheld == 1 || local.player.leanrightheld == 1 || local.player getposition == "crouching") { end }
 	if(local.player.isdog == 1)
 	{
 		local.player iprint ("Dogs cannot use flak88s.") // set other exceptions here
-		self triggerable
 		end
 	}
-	if(!isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
 	self nottriggerable
 	if(self.groundtarget != NIL && self.groundtarget != NULL) { self.groundtarget remove }
@@ -275,6 +273,7 @@ playergetin_flak:
 			//self.flak88.fplayer safeholster 0
 			self.flak88.fplayer.driving = 0
 			self.flak88.fplayer.drivingent = NIL
+			self.flak88.fplayer exit
 			self.flak88.fplayer forcetorsostate STAND
 			self.flak88.fplayer = NIL
 			self.flak88 thread ResetFlak local.groundtarget
@@ -312,6 +311,7 @@ playergetin_flak:
 			if(self.flak88.fplayer.dmteam != spectator) { self.flak88.fplayer solid; self.flak88.fplayer show }
 			self.flak88 stoploopsound
 			self.flak88.fplayer takedamage
+			self.flak88.fplayer exit
 			self.flak88.fplayer forcetorsostate STAND
 			self.flak88.fplayer = NIL
 			self.flak88 thread ResetFlak local.groundtarget
@@ -344,6 +344,7 @@ playergetin_flak:
 				else { killent self.flak88.fplayer.entnum }
 			}
 	
+			self.flak88.fplayer exit
 			self.flak88.fplayer forcetorsostate STAND
 			self.flak88.fplayer = NIL
 			if(self.flak88.dead != 1)

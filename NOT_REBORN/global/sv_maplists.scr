@@ -1,0 +1,116 @@
+// This script allows for multiple "sv_maplist" cvars in server.cfg, since "sv_maplist" can only contain 256 characters (also it cannot be 0 characters or "").
+// Add "exec global/sv_maplists.scr" to global/dmprecache.scr.
+//
+// The script will search up to 999 maplists to see if the current map is also the last map in the list (lowest list iteration).
+// If it's the last map in "sv_maplist4" for example, "sv_maplist5" will be copied to "sv_maplist", and the next map will be the first map in "sv_maplist5".
+// Manually switching maps to a map from a different maplist than "sv_maplist" will auto-copy the new maplist to "sv_maplist".
+//
+// Do not use "sv_maplist0"; it is keeping memory of the original "sv_maplist".
+// Do not have 2+ lists ending with the same map name, otherwise the script will keep copying the list after the first one with said map name.
+// Do not have the same map name in 2 different lists (only in the same list).
+//
+// Examples in server.cfg (the 2nd list can also start at "sv_maplist1"):
+//
+//	seta sv_maplist "dm/mohdm1 dm/mohdm2 dm/mohdm3 dm/mohdm4 dm/mohdm5 dm/mohdm6 dm/mohdm7"
+//	seta sv_maplist2 "obj/obj_team1 obj/obj_team2 obj/obj_team3 obj/obj_team4"
+//	seta sv_maplist3 "training m1l1 m1l2a m1l2b m1l3a m1l3b m1l3c m2l1 m2l2a m2l2b m2l2c m2l3 m3l1a m3l1b m3l2 m3l3 m4l0 m4l1 m4l2 m4l3"
+//	seta sv_maplist4 "m5l1a m5l1b m5l2a m5l2b m5l3 m6l1a m6l1b m6l1c m6l2a m6l2b m6l3a m6l3b m6l3c m6l3d m6l3e void"
+//
+// If using the map example below, do not add more than 1 maplist, since this script may not follow the correct sequence:
+// Maplist example: dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm3 dm/mohdm6
+//
+//	seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will not work as intended;
+//	seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
+
+main local.debug:
+
+	level.mapname = getcvar "mapname"
+	if(getcvar "sv_maplist0" == "") { setcvar "sv_maplist0" (getcvar "sv_maplist") } 	// keep memory of the 1st maplist, since "sv_mapist" will be overwritten.
+	if(getcvar "sv_maplist1" == "" && getcvar "sv_maplist2" != "") { local.skip = 1 } 	// after "sv_maplist", allow either "sv_maplist1" or "sv_maplist2".
+	if(getcvar "sv_maplist0" != getcvar "sv_maplist") { local.search = 1 }			// if maplist != maplist0, search maplist0's string instead of maplist.
+
+	for(local.c = 0; local.c <= 999; local.c++)
+	{
+		if(local.c == 1 && local.skip == 1) { local.c = 2 }
+		if(local.c == 0)
+		{
+			if(local.search == 1) { local.maplist = getcvar "sv_maplist0" }
+			else { local.maplist = getcvar "sv_maplist" }
+		}
+		else { local.maplist = getcvar ("sv_maplist" + local.c) }
+		if(local.maplist == "") { break }
+
+		for(local.s = 0; local.s < local.maplist.size; local.s++)			// if manually switched maps to one not in "sv_maplist", find the new maplist.
+		{
+			if(local.maplist[local.s] == level.mapname[0]) 				// simulate a strstr() function to see if one string exists inside of another.
+			{
+				local.mapfound = 1
+				for(local.v = 0; local.v < level.mapname.size; local.v++) 	// check both maplist and mapname strings from first-to-last.
+				{
+					if(local.s + local.v >= local.maplist.size || local.maplist[local.s + local.v] != level.mapname[local.v])
+					{
+						local.mapfound = 0
+						break
+					}
+				}
+			}
+			if(local.mapfound == 1) { break }
+		}
+		if(local.mapfound == 1) { break }
+	}
+
+	local.lastmap = ""
+	for(local.s = 0; local.s < local.maplist.size; local.s++)				// find the last map in the maplist containing the current mapname.
+	{
+		if(local.maplist[local.s] != " ")						// in the list, ignore any spaces before the first map and after the last map.
+		{
+			if(local.toggle == 1) { local.lastmap = ""; local.toggle = 0 }		// keep overwriting local.lastmap until iterating the list is finished.
+			local.lastmap += local.maplist[local.s]
+		}
+		else { local.toggle = 1 }
+	}
+
+	if(local.mapfound == 1)
+	{
+		if(level.mapname == local.lastmap)						// if the current map is the last map in the list, copy the next maplist to "sv_maplist".
+		{
+			if(local.c == 0)
+			{
+				if(local.skip != 1) { setcvar "sv_maplist" (getcvar "sv_maplist1") }
+				else { setcvar "sv_maplist" (getcvar "sv_maplist2") }
+			}
+			else
+			{
+				local.c += 1
+				if(getcvar ("sv_maplist" + local.c) != "") { setcvar "sv_maplist" (getcvar ("sv_maplist" + local.c)) }
+				else { setcvar "sv_maplist" (getcvar "sv_maplist0") }
+			}
+		}
+		else { setcvar "sv_maplist" (getcvar ("sv_maplist" + local.c)) }		// otherwise, copy the lowest list containing the current mapname to "sv_maplist".
+	}
+
+	if(local.debug == 1) { thread debug local.skip }
+end
+
+debug local.skip:
+
+	wait 5
+	println("")
+	for(local.c = 0; local.c <= 999; local.c++)
+	{
+		if(local.c == 1 && local.skip == 1) { local.c = 2 }
+		if(local.c == 0) { local.maplist = getcvar "sv_maplist0" }
+		else { local.maplist = getcvar ("sv_maplist" + local.c) }
+		if(local.maplist == "") { break }
+
+		if(local.c == 0) { println("sv_maplist = " + local.maplist) }
+		else { println("sv_maplist" + local.c + " = " + local.maplist) }
+		println("")
+	}
+	println("-----")
+	println("")
+	println("sv_maplist0 = " + getcvar("sv_maplist0"))
+	println("")
+	println("-----")
+	println("")
+end

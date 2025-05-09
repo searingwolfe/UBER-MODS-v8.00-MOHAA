@@ -1,6 +1,11 @@
 main:
-exec cvars/cvars.scr // <><><> UBER MODS <><><>
 
+exec cvars/cvars.scr			// <><><> UBER MODS <><><>
+exec ubermods/runspeed.scr 350 		// set the server's player run speed here (default = 250).
+exec ubermods/hardcode_list.scr		// set the "g_ubergametype" for each map in "hardcode_list.scr" (only if "g_uberhardcode 1" cvar is set, default = "0").
+					
+//setcvar "g_ubergametype" "0"		// "cyb", "snd", "bb", "ft", "0" (normal TDM or FFA, based on "g_gametype" being "2" or "1" respectively).
+					// cyber attack, search & destroy, base-builder, freze tag, none (this cvar is usually placed in server.cfg).
 setcvar "g_obj_alliedtext1" "m5l1b"
 setcvar "g_obj_axistext1" ""
 setcvar "g_obj_axistext2" ""
@@ -18,7 +23,7 @@ setcvar "thereisnomonkey" "0"
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
-local.v = exec global/uberversion.scr
+local.v = exec ubermods/uberversion.scr
 
 if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
 if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
@@ -396,6 +401,7 @@ setup:
 
 	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
 	{
+		/*
 		$exploderfire remove
 		$explodersmashed remove
 		$exploderchunk remove
@@ -404,6 +410,8 @@ setup:
 		$t1297 remove; $t1293a remove; $t1294 remove; $t1296 remove; $t1295 remove								// exploder[2]
 		$t1288 remove; $t1289 remove; $t1290 remove; $t1291 remove; $t1292asdf remove; $t1292 remove; $t1293 remove				// exploder[3]
 		$t1969 remove; $t1356 remove; $t1357 remove; $t1358 remove; $t1359 remove; $t1360 remove; $t1970 remove; $t1950 remove; $t1971 remove	// exploder[4]
+		*/
+		thread global/exploder.scr::remove_exploders // also removes their chunks' ScriptOrigin entities, keeps original non-exploded $exploder entities (unless "exploder.scr::remove_exploders 1").
 
 		$intro_door time 1
 		$intro_door rotateydown 85
@@ -442,7 +450,7 @@ setup:
 			exec map_triggers/gen_switches/cabinetswitch.scr ( -1567 -1250 484 ) ( 0 180 0 ) 3 1
 			exec map_triggers/gen_switches/cabinetswitch.scr ( 2507 1020 674 ) ( 0 0 0 ) 2 1
 
-			thread blowup_exploders // also removes their chunks' ScriptOrigin entities.
+			thread global/exploder.scr::kill_exploders // also removes their chunks' ScriptOrigin entities, keeps remaining $explodersmashed entities (unless "exploder.scr::killexploders 1").
 
 			// optional map-related stuff (some removed due to high entity count).
 			//
@@ -636,74 +644,55 @@ wall_explode local.inc local.health local.damage local.radius:
 	if($exploder == NULL || $exploderfire == NULL || $exploderchunk == NULL || $explodersmashed == NULL) { end }
 	if($exploder[local.inc] == NULL) { end }
 
-	local.array = makeArray // tank1 origin, tank1 angle, tank2 origin, tank2 angle, radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, smoke1 origin, smoke2 origin. [1] - [10] columns.
-		( -2121 -5683 624 ) 0 ( -2121 -5719 624 ) 180 ( -2121 -5633 517 ) ( -2121 -5769 517 ) ( -2080 -5712 320 ) ( -2080 -5705 767 ) ( -2194 -5712 320 ) ( -1984 -5712 320 )
-		( -964 -5579 93 ) 315 ( -1057 -5682 135 ) 135 ( -1063 -5683 250 ) ( -1007 -5634 250 ) ( -1041 -5668 108 ) ( -1034 -5659 210 ) ( -1113 -5594 108 ) ( -988 -5721 104 )
-		( -79 -5910 166 ) 270 ( -216 -5888 350 ) 270 ( -250 -5893 228 ) ( -150 -5893 228 ) ( -191 -5893 168 ) ( -200 -5848 430 ) ( -191 -5956 168 ) ( -191 -5780 168 )
-		( -1230 -1103 363 ) 210 ( -1288 -1048 370 ) 30 ( -1253 -1016 461 ) ( -1212 -1095 461 ) ( -1234 -1052 389 ) ( -1234 -1052 461 ) ( -1296 -1094 376 ) ( -1172 -1011 367 ) // -207 -5883 289
+ 	// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2 (trig origin = $exploder[local.inc] origin), ::explode set number. [1] - [10] columns.
+	local.array = makeArray
+		( -250 -5893 228 ) ( -150 -5893 228 )		( -191 -5893 168 ) ( -200 -5848 430 ) 0		( -191 -5956 168 ) ( -191 -5780 168 )		( -167 -300 -512 ) ( 0 300 0 ) 3	// exploder[1].origin = ( -116 -5856 434 )
+		( -1063 -5683 250 ) ( -1007 -5634 250 )		( -1041 -5668 108 ) ( -1034 -5659 210 ) 0	( -1113 -5594 108 ) ( -988 -5721 104 )		( 0 0 -220 ) ( 162 107 55 ) 2		// exploder[2].origin = ( -1129 -5682 159 )
+		( -2121 -5633 517 ) ( -2121 -5769 517 )		( -2080 -5712 320 ) ( -2080 -5705 767 ) 0	( -2194 -5712 320 ) ( -1984 -5712 320 )		( -351 -75 -240 ) ( 561 75 240 ) 1	// exploder[3].origin = ( -2112 -5702 544 )
+		( -1253 -1016 461 ) ( -1212 -1095 461 )		( -1234 -1052 389 ) ( -1234 -1052 461 ) 0	( -1296 -1094 376 ) ( -1172 -1011 367 )		( -217 -132 -126 ) ( 214 250 63 ) 5	// exploder[4].origin = ( -1318 -1097 398 )
 	endArray
 
-	local.tank = spawn "vehicles/tigertank.tik" // tank entity serves as a trigger sensor (there's not enough spawnflags) for only detecting rocket explosions & radiusdamage explosions (stuff that only kills tanks).
-	local.tank.origin = local.array[local.inc][1]
-	local.tank.angles = ( 0 local.array[local.inc][2] 0 )
-	local.tank.health = local.health
-	local.tank.scale = 0.1
-	local.tank notsolid // still has a tiny 1x1 solid box in the center; cannot make the .tik file's setsizes 0 0 0, otherwise explosions cannot touch it.
-	local.tank hide
-
-	local.tank2 = spawn "vehicles/tigertank.tik"
-	local.tank2.origin = local.array[local.inc][3]
-	local.tank2.angles = ( 0 local.array[local.inc][4] 0 )
-	local.tank2.health = local.health
-	local.tank2.scale = 0.1
-	local.tank2 notsolid
-	local.tank2 hide
-
-	if(local.inc == 1)
+	for(local.s = 1; local.s <= $exploder.size; local.s++)
 	{
-		local.tank3 = spawn "vehicles/tigertank.tik"
-		local.tank3.origin = local.array[local.inc][1] + ( 0 0 -130 )
-		local.tank3.angles = ( 0 local.array[local.inc][2] 0 )
-		local.tank3.health = local.health
-		local.tank3.scale = 0.1
-		local.tank3 notsolid
-		local.tank3 hide
-
-		local.tank4 = spawn "vehicles/tigertank.tik"
-		local.tank4.origin = local.array[local.inc][3] + ( 0 0 -130 )
-		local.tank4.angles = ( 0 local.array[local.inc][4] 0 )
-		local.tank4.health = local.health
-		local.tank4.scale = 0.1
-		local.tank4 notsolid
-		local.tank4 hide
-
-		while(local.tank != NULL && local.tank2 != NULL && local.tank3 != NULL && local.tank4 != NULL) { waitframe }
-	}
-	else
-	{
-		while(local.tank != NULL && local.tank2 != NULL) { waitframe }
+		if($exploder[local.s].set == local.array[local.inc][10]) { local.exploder = $exploder[local.s] }
 	}
 
-	if(local.inc == 1) { println("----- Blowing up the 3 story building.");		$exploder[3] playsound explode_building_large }
-	if(local.inc == 2) { println("----- Blowing up the Allies-side stone wall.");	$exploder[2] playsound explode_building_large }
-	if(local.inc == 3) { println("----- Blowing up the Allies spawn building.");	$exploder[1] playsound explode_building_large }
-	if(local.inc == 4) { println("----- Blowing up the middle stone wall.");	$exploder[4] playsound explode_building_large }
-	if(local.tank != NULL) { local.tank remove }
-	if(local.tank2 != NULL) { local.tank2 remove }
-	if(local.tank3 != NIL && local.tank3 != NULL) { local.tank3 remove }
-	if(local.tank4 != NIL && local.tank4 != NULL) { local.tank4 remove }
+	local.trigshot = spawn trigger_multiple spawnflags 128 targetname "wall_explode_trigshot" // triggers when any radiusdamage explosion (grenades, rockets, bombs, world, not bullets) hits it.
+	local.trigshot.origin = $exploder[local.inc].origin
+	local.trigshot setsize local.array[local.inc][8] local.array[local.inc][9]
+	local.trigshot setthread trigshot_exploder
+	local.trigshot.set = local.array[local.inc][10]
 
-	local.explode = thread emitterstuff "animate//fx_mortar_higgins.tik" local.array[local.inc][7] ( 0 180 0 ) 1 start ("exploder_" + local.inc + "_explode")
-	local.debris = thread emitterstuff "animate/explosion_bombwall.tik" local.array[local.inc][8] ( 0 180 0 ) 1 start ("exploder_" + local.inc + "_debris")
-	local.dirt = thread emitterstuff "emitters/mortar_dirt_dustcloud.tik" local.array[local.inc][7] ( 0 0 0 ) 1 start ("exploder_" + local.inc + "_dirt")
+	local.trigproj = spawn trigger_multiple spawnflags 20 targetname "wall_explode_trigproj" // triggers when any projectiles hit or go through it (not players' bullets).
+	local.trigproj.origin = $exploder[local.inc].origin
+	local.trigproj setsize local.array[local.inc][8] local.array[local.inc][9]
+	local.trigproj setthread trigproj_exploder
+	local.trigproj.trigshot = local.trigshot
 
-	//$exploder[local.inc] playsound explode_building_large
-	if(local.inc == 4) { thread global/exploder.scr::explode 5 } // there is no ::explode 4.
-	else { thread global/exploder.scr::explode local.inc }
+	while(local.trigshot.dead != 1 && local.exploder != NIL && local.exploder != NULL) { waitframe }
+
+	if($wall_explode_trigshot != NULL) { $wall_explode_trigshot nottriggerable } // prevent one exploder's radiusdamage from blowing up other nearby exploders.
+	if($wall_explode_trigproj != NULL) { $wall_explode_trigproj nottriggerable }
+
+	local.trigshot remove
+	local.trigproj remove
+	if(local.exploder == NIL || local.exploder == NULL) { end }
+
+	if(local.inc == 1) { println("----- Blowing up the Allies spawn building.") }
+	if(local.inc == 2) { println("----- Blowing up the Allies-side stone wall.") }
+	if(local.inc == 3) { println("----- Blowing up the 3 story building.") }
+	if(local.inc == 4) { println("----- Blowing up the middle stone wall.") }
+
+	local.explode = thread emitterstuff "animate//fx_mortar_higgins.tik" local.array[local.inc][3] ( 260 -90 0 ) 1 start ("exploder_" + local.inc + "_explode")
+	local.debris = thread emitterstuff "animate/explosion_bombwall.tik" local.array[local.inc][4] ( 0 0 0 ) 1 start ("exploder_" + local.inc + "_debris")
+	local.dirt = thread emitterstuff "emitters/mortar_dirt_dustcloud.tik" local.array[local.inc][3] ( 0 0 0 ) 1 start ("exploder_" + local.inc + "_dirt")
+
+	thread global/exploder.scr::explode local.array[local.inc][10]
+	$exploder[local.inc] playsound explode_building_large
 	thread jitter_large local.inc
 
-	radiusdamage local.array[local.inc][5] local.damage local.radius
-	radiusdamage local.array[local.inc][6] local.damage local.radius
+	radiusdamage local.array[local.inc][1] local.damage local.radius
+	radiusdamage local.array[local.inc][2] local.damage local.radius
 
 	waitframe
 	//local.explode remove // for some mysterious reason, these 3 lines do not remove the emitters, and instead print NIL errors to console (must remove them via targetnames instead).
@@ -713,15 +702,15 @@ wall_explode local.inc local.health local.damage local.radius:
 	$("exploder_" + local.inc + "_debris") remove
 	$("exploder_" + local.inc + "_dirt") remove
 
-	if(local.inc == 1) { $t1279 remove; $t1280 remove; $t1281 remove; $t1282 remove; $t1283 remove; $t1284 remove; $t1285 remove; $t1286 remove; $t1287 remove }
-	if(local.inc == 2) { $t1297 remove; $t1293a remove; $t1294 remove; $t1296 remove; $t1295 remove }
-	if(local.inc == 3) { $t1288 remove; $t1289 remove; $t1290 remove; $t1291 remove; $t1292asdf remove; $t1292 remove; $t1293 remove }
-	if(local.inc == 4) { $t1969 remove; $t1356 remove; $t1357 remove; $t1358 remove; $t1359 remove; $t1360 remove; $t1970 remove; $t1950 remove; $t1971 remove }
+	if($wall_explode_trigshot != NULL) { $wall_explode_trigshot triggerable }
+	if($wall_explode_trigproj != NULL) { $wall_explode_trigproj triggerable }
 
-	local.smoke1 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][9] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke1")
-	local.smoke2 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][10] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke2")
+	thread global/exploder.scr::remove local.array[local.inc][10] // remove exploder-related entities that are no longer needed (including their .target ScriptOrigins).
 
-	local.dec = 0.01 // waitframe = 0.05 seconds. 0.05 / (5 seconds duration) = 0.01 increments.
+	local.smoke1 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][6] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke1")
+	local.smoke2 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][7] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke2")
+
+	local.dec = 0.01	// waitframe = 0.05 seconds. 0.05 / (5 seconds duration) = 0.01 increments.
 	while($("exploder_" + local.inc + "_smoke1").scale > 0)
 	{
 		$("exploder_" + local.inc + "_smoke1").scale -= local.dec
@@ -730,6 +719,22 @@ wall_explode local.inc local.health local.damage local.radius:
 	}
 	$("exploder_" + local.inc + "_smoke1") remove
 	$("exploder_" + local.inc + "_smoke2") remove
+end
+
+trigshot_exploder:
+
+	local.damager = parm.other
+	if(local.damager == $world || self.projectile == 1) { self.dead = 1 }
+	if(self.projectile == 1) { self.projectile = 0 }
+end
+
+trigproj_exploder:
+
+	local.projectile = parm.other
+	if(local.projectile.model == "models/projectiles/bazookashell_dm.tik" || local.projectile.model == "models/projectiles/bazookashell.tik" || local.projectile.model == "models/projectiles/panzerschreckshell.tik" || local.projectile.model == "models/projectiles/tigercannonshell.tik")
+	{
+		self.trigshot.projectile = 1
+	}
 end
 
 jitter_large local.inc:
@@ -747,32 +752,6 @@ jitter_large local.inc:
 		waitexec global/earthquake.scr 1 1 0 0
 		waitexec global/earthquake.scr 1.25 .3 0 1
 	}
-end
-
-////////////////////////////////////////////////////////////////////////
-
-blowup_exploders:
-
-	level waittill spawn // need this before running exploder threads.
-
-	thread global/exploder.scr::explode 1
-	thread global/exploder.scr::explode 2
-	thread global/exploder.scr::explode 3
-	thread global/exploder.scr::explode 5
-	level.exploders_blewup = 1
-
-	wait 5 // minimum time needed after exploders blow up, before removing exploder stuff.
-
-	$exploderfire remove
-	//$explodersmashed remove
-	$exploderchunk remove
-	$exploder remove
-
-	$t1279 remove; $t1280 remove; $t1281 remove; $t1282 remove; $t1283 remove; $t1284 remove; $t1285 remove; $t1286 remove; $t1287 remove	// exploder[1]
-	$t1297 remove; $t1293a remove; $t1294 remove; $t1296 remove; $t1295 remove								// exploder[2]
-	$t1288 remove; $t1289 remove; $t1290 remove; $t1291 remove; $t1292asdf remove; $t1292 remove; $t1293 remove				// exploder[3]
-	$t1969 remove; $t1356 remove; $t1357 remove; $t1358 remove; $t1359 remove; $t1360 remove; $t1970 remove; $t1950 remove; $t1971 remove	// exploder[4]
-
 end
 
 ////////////////////////////////////////////////////////////////////////

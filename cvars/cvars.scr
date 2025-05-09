@@ -5,6 +5,7 @@ main:
 exec cvars/playercount.scr	// "players" cvar.  	"players 1" = print to console the # of players in-game (type these into the server's console window).
 				//	       		"players 2" = print to console the # of players in-game & their usernames.
 				//	       		"players 3" = see which players in $player array are NULL.
+				//
 exec cvars/entitycount.scr 	// "entities" cvar.	"entities 1" = wait 4 seconds to print # of entities & remaining entities until maxentities (1024) is reached.
 				//	       		"entities 2" = print all entities & their targetnames (or NULL) from 1 to maxentities.
 				//	       		"entities 3" = print all entities & their targetnames, but print slower.
@@ -12,14 +13,20 @@ exec cvars/entitycount.scr 	// "entities" cvar.	"entities 1" = wait 4 seconds to
 				//			"entities 5" = print only non-NULL entities that have targetnames.
 				//			"entities 6" = print only non-NULL entities that do not have targetnames (targetnames = "").
 				//			"entities 7" = print only non-NULL entities, and print their classnames.
+				//			"entities 8" = print only non-NULL entities, and print only if they have a ".target" entity specified (simple ents like pathnodes are NULL/don't exist in the game).
+				//
 exec cvars/track.scr		// "track" cvar.    	"track 1" = iprint each players' coords & angle to their own screens. 
 				//			"track 2" = iprint and print to console each players' coords & angles once every 3 seconds.
 				//			"track 0" = turn off tracking.
+				//
 exec cvars/check.scr		// "check_[trigger]" cvar. "check_giantbomb 1" "check_giantbomb 2" "check_lightbomb 1" "check_lightbomb 2" (giantbomb, lightbomb, health, grenade, rocket, snowball)
 				// 			"1" = teleports all spectators to each of the ("giantbomb", "health", "rocket", etc) trigger's randomized origins every 3 seconds.
 				// 			"2" = spawn in a dummy model at each of the trigger's origins (only works once).
 				// 			"0" = stop teleporting, delete the dummy models.
 				// 			"check 0" = make all "check_[trigger]" cvars "0".
+				//
+exec cvars/playerspawns.scr	// "playerspawns" cvar. "playerspawns 1" = spawn dummy models at all "info_player_[allied, axis, deathmatch]" spawn points, only if their targetnames = "allied_spawn", "axis_spawn", "deathmatch_spawn".
+				//			"playerspawns 0" = remove all dummy models at player spawn points.
 				//
 exec cvars/find.scr		// "find [targetname without $]" cvar. "find truckclip", "find endtrigger", "find aispawn", or multiple ents with the same targetname: "find barrel[1]", "find barrel[2]",
 				// 			to teleport all players on the map to the entity's coords (also printing: coords, angles, entnum, and target).
@@ -32,8 +39,12 @@ exec cvars/findclass.scr	// "findclass [classname, case-specific]" cvar. "findcl
 exec cvars/findmodel.scr	// "findmodel [models/...tik]" cvar. "findmodel models/static/indycrate.tik", "findmodel static/indycrate.tik", or any other model to print all entnums and
 				// their targetnames in the map with that model name.
 				//
+exec cvars/findset.scr		// "findset [#set]" cvar. "findset 7", "findmodel 20", or any other set number (for each $exploder in a map) to print all entnums and their targetnames in the map with that ".set" value.
+				// "findset all" cvar prints all entnums and their ".set" values, then prints total number of entities for each ".set" value.
+				//
 exec cvars/drawpath.scr		// "drawpath [1st ent's targetname without $ in a path]" cvar. "drawpath bomberpath", "drawpath spotpath1_1", "drawpath latertruckpath", or multiple paths with the same targetname: "drawpath
 				// exploderchunk[1]", "drawpath exploderchunk[12]", to spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node.
+				// "drawpath 0" cvar deletes all nodes & lasers drawn by drawpath.
 				//
 exec cvars/cybsnd.scr		// "cybsnd_score 1" cvar, to print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won).
 				// "cybsnd_info 1" cvar, to print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular

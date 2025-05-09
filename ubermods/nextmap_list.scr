@@ -1,0 +1,65 @@
+// Set an expanded "sv_maplist" here (since the cvar can only hold 256 characters). This script will ignore any other "sv_maplists".
+// NOTE: if "sv_maplist" is > 256 characters or "" (no characters), the server will spam "Update of script position - This is not an error." to the console!
+
+main: // by default, this script is not used for any maps (replaced by global/sv_maplists.scr).
+
+	if(getcvar("sv_maplist") != "") { end }	// if "sv_maplist" is set inside server.cfg, end this script.
+	else { setcvar "sv_maplist" "void" }	// prevent console from spamming errors if currently on a map that's not listed below (no "nextmap" established) and when the server has no other maps in "sv_maplist" to switch to.
+
+	level.mapname = getcvar "mapname"
+	switch(level.mapname)
+	{
+		case "dm/mohdm1": setcvar "nextmap" "dm/mohdm2"; break
+		case "dm/mohdm2": setcvar "nextmap" "dm/mohdm3"; break
+		case "dm/mohdm3": setcvar "nextmap" "dm/mohdm4"; break
+		case "dm/mohdm4": setcvar "nextmap" "dm/mohdm5"; break
+		case "dm/mohdm5": setcvar "nextmap" "dm/mohdm6"; break
+		case "dm/mohdm6": setcvar "nextmap" "dm/mohdm7"; break
+		case "dm/mohdm7": setcvar "nextmap" "obj_obj_team1"; break
+
+		case "obj/obj_team1": setcvar "nextmap" "obj/obj_team2"; break
+		case "obj/obj_team2": setcvar "nextmap" "obj/obj_team3"; break
+		case "obj/obj_team3": setcvar "nextmap" "obj/obj_team4"; break
+		case "obj/obj_team4": setcvar "nextmap" "training"; break
+
+		case "training": setcvar "nextmap" "m1l1"; break
+
+		case "m1l1": setcvar "nextmap" "m1l2a"; break
+		case "m1l2a": setcvar "nextmap" "m1l2b"; break
+		case "m1l2b": setcvar "nextmap" "m1l3a"; break
+		case "m1l3a": setcvar "nextmap" "m1l3b"; break
+		case "m1l3b": setcvar "nextmap" "m1l3c"; break
+		case "m1l3c": setcvar "nextmap" "m2l1"; break
+		case "m2l1": setcvar "nextmap" "m2l2a"; break
+		case "m2l2a": setcvar "nextmap" "m2l2b"; break
+		case "m2l2b": setcvar "nextmap" "m2l2c"; break
+		case "m2l2c": setcvar "nextmap" "m2l3"; break
+		case "m2l3": setcvar "nextmap" "m3l1a"; break
+		case "m3l1a": setcvar "nextmap" "m3l1b"; break
+		case "m3l1b": setcvar "nextmap" "m3l2"; break
+		case "m3l2": setcvar "nextmap" "m3l3"; break
+		case "m3l3": setcvar "nextmap" "m4l0"; break
+		case "m4l0": setcvar "nextmap" "m4l1"; break
+		case "m4l1": setcvar "nextmap" "m4l2"; break
+		case "m4l2": setcvar "nextmap" "m4l3"; break
+		case "m4l3": setcvar "nextmap" "m5l1a"; break
+		case "m5l1a": setcvar "nextmap" "m5l1b"; break
+		case "m5l1b": setcvar "nextmap" "m5l2a"; break
+		case "m5l2a": setcvar "nextmap" "m5l2b"; break
+		case "m5l2b": setcvar "nextmap" "m5l3"; break
+		case "m5l3": setcvar "nextmap" "m6l1a"; break
+		case "m6l1a": setcvar "nextmap" "m6l1b"; break
+		case "m6l1b": setcvar "nextmap" "m6l1c"; break
+		case "m6l1c": setcvar "nextmap" "m6l2a"; break
+		case "m6l2a": setcvar "nextmap" "m6l2b"; break
+		case "m6l2b": setcvar "nextmap" "m6l3a"; break
+		case "m6l3a": setcvar "nextmap" "m6l3b"; break
+		case "m6l3b": setcvar "nextmap" "m6l3c"; break
+		case "m6l3c": setcvar "nextmap" "m6l3d"; break
+		case "m6l3d": setcvar "nextmap" "m6l3e"; break
+		case "m6l3e": setcvar "nextmap" "void"; break
+		case "void": setcvar "nextmap" "dm/mohdm1"; break
+
+		default: setcvar "nextmap" "dm/mohdm6"; break
+	}
+end

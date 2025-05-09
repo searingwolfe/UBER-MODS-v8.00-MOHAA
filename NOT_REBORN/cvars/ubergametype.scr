@@ -13,6 +13,8 @@ main:
 
 	thread time
 	thread teams
+	thread timelimit
+	thread cheats
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -146,6 +148,26 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+timelimit:
+
+	local.cvar = getcvar("timelimit")
+	while(getcvar("timelimit") == local.cvar) { waitframe }
+
+	local.time = int(getcvar("timelimit")) * 60.000 - level.time
+	local.minutes = int(local.time) / 60
+	local.seconds = int(local.time) % 60
+
+	if(local.minutes < 0) { local.minutes = 0 }
+	if(local.seconds < 0) { local.seconds = 0 }
+
+	if(local.seconds < 10) { local.tens = 0 }
+	else { local.tens = "" }
+
+	println("Time remaining = " + local.minutes + ":" + local.tens + local.seconds)
+
+	thread timelimit
+end
+
 time:
 
 	local.cvar = getcvar("time")
@@ -154,7 +176,14 @@ time:
 	local.time = int(getcvar("timelimit")) * 60.000 - level.time
 	local.minutes = int(local.time) / 60
 	local.seconds = int(local.time) % 60
-	println("Time remaining = " + local.minutes + ":" + local.seconds)
+
+	if(local.minutes < 0) { local.minutes = 0 }
+	if(local.seconds < 0) { local.seconds = 0 }
+
+	if(local.seconds < 10) { local.tens = 0 }
+	else { local.tens = "" }
+
+	println("Time remaining = " + local.minutes + ":" + local.tens + local.seconds)
 
 	setcvar "time" "0"
 	thread time
@@ -194,4 +223,30 @@ teams:
 
 	setcvar "teams" "0"
 	thread teams
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cheats:
+
+	thread cheats_cvar
+	level waittill spawn
+	wait 1
+	if(getcvar("cheats") == "1") { println("NOTE: 'cheats' are currently enabled.") }
+end
+
+cheats_cvar:
+
+	local.cvar1 = getcvar("cheats")
+	local.cvar2 = getcvar("thereisnomonkey")
+
+	while(getcvar("cheats") == local.cvar1 && getcvar("thereisnomonkey") == local.cvar2) { waitframe }
+
+	//if(getcvar("thereisnomonkey") != local.cvar2) { println("cheats will be changed upon restarting.") }
+
+	if(getcvar("cheats") == "1" && getcvar("thereisnomonkey") == local.cvar2) { setcvar "thereisnomonkey" "1";	println("----- 'cheats' are now ENABLED. Map restart not required.") }
+	else if(getcvar("cheats") == local.cvar1 && getcvar("thereisnomonkey") == "1") { setcvar "cheats" "1";		println("----- 'cheats' are now ENABLED. Map restart not required.") }
+	else if(getcvar("cheats") == "0" && getcvar("thereisnomonkey") == local.cvar2) { setcvar "thereisnomonkey" "0";	println("----- 'cheats' are now DISABLED. Map restart not required.") }
+	else if(getcvar("cheats") == local.cvar1 && getcvar("thereisnomonkey") == "0") { setcvar "cheats" "0";		println("----- 'cheats' are now DISABLED. Map restart not required.") }
+	thread cheats_cvar
 end

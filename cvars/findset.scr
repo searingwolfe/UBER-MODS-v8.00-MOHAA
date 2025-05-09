@@ -1,0 +1,50 @@
+main: // findset.scr. Run "exec global/findset.scr" in any map script to use the "findset [#set]" cvar and "findset all" cvar.
+
+	while(string(getcvar("findset")) == "") { waitframe }
+
+	if(string(getcvar("findset")) == "all") { local.set = "all" }
+	else { local.set = int(getcvar("findset")) }
+	local.entcount = 0
+	local.array[0] = NIL
+	local.highest = 0
+
+	for(local.i = 0; local.i <= 868; local.i++)
+	{
+		if(local.i % 14 == 0) { waitframe }
+
+		local.entity = getentity(local.i) // $player[1] = entity 0		
+		if(local.i == 0) { println("----- Note: This can only count up to 869 entities (0 to 868).") }
+		if(local.i == 0) { println("----- Counting entities. Please wait...") }
+
+		if(local.set == "all")
+		{
+			if(local.entity != NULL && local.entity.set != NIL)
+			{
+				local.array[local.entity.set][local.array[local.entity.set].size] = local.entity
+
+				if(local.highest < local.entity.set) { local.highest = local.entity.set }
+				println(local.i + ": " + local.entity.set); local.entcount++
+			}
+		}
+		else
+		{
+			if(local.entity != NULL && local.entity.set == local.set) { println(local.i + ": " + local.entity.targetname); local.entcount++ }
+		}
+	}
+	if(local.entcount == 0) { println("----- ERROR. There are no entities with '.set = " + local.set + "'") }
+	if(local.entcount > 0)
+	{
+		if(local.set == "all")
+		{
+			for(local.a = 0; local.a <= local.highest; local.a++)
+			{
+				if(local.array[local.a].size > 0) { println("----- #set " + local.a + " entities found: " + local.array[local.a].size) }
+			}
+			println("----- entities with #sets found: " + local.entcount)
+		}
+		else { println("----- '.set = " + local.set + "' entities found: " + local.entcount) }
+	}
+
+	if(local.classname != "") { setcvar "findset" "" }
+  	thread main
+end
