@@ -114,7 +114,6 @@ exec map_triggers/health.scr ( -831 -2272 -109 ) ( -6559 -980 312 ) ( -5088 4535
 	exec map_triggers/led_trap.scr ( -3256 527 280 ) led2 1
 	exec map_triggers/led_trap.scr ( -6969 -4417 677 ) led3 2
 
-/*
 	if(getcvar("g_ubergametype") != "bb") // if players' games keep crashing during base builder, more mods will have to be removed/commented out.
 	{
 	//exec map_triggers/player_spotlight.scr ( -5760 1247 1023 ) ( 1 0 0 ) s0 700 0 0 0 1		// red
@@ -129,6 +128,7 @@ exec map_triggers/health.scr ( -831 -2272 -109 ) ( -6559 -980 312 ) ( -5088 4535
 	exec map_triggers/spotlight_colorswitch.scr ( 92 5200 171 ) ( 0 0 0 ) s7 slowrainbow
 	exec map_triggers/spotlight_colorswitch.scr ( 176 5132 171 ) ( 0 90 0 ) s7 rainbow
 
+/*
 	//exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( -5744 364 64 ) ( 60 -90 0 ) 100 0
 	//exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( -5472 391 28 ) ( 0 180 0 ) bb1 60 450 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
 	//exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( -5360 335 64 ) ( 60 -90 0 ) 100 0
@@ -151,8 +151,9 @@ exec map_triggers/health.scr ( -831 -2272 -109 ) ( -6559 -980 312 ) ( -5088 4535
 	local.name1[4] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb12 ( 2760 -2008 -46 ) ( 60 -90 0 ) 100 0
 	local.name1[5] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb13 ( 2920 -1496 -46 ) ( 60 0 0 ) 100 0
 	exec map_triggers/map_switches/training_detonator_gunrange.scr ( 2562 -1411 -15 ) ( 0 0 0 ) local.name1 60 450 2 // local.name[1] = bb1, local.name[2] = bb2, etc.
+*/
 	}
-
+/*
 // Available playervehicle models:
 // bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
 // gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
@@ -231,9 +232,8 @@ exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie3 ( 2558 -995 -15 ) 
 	exec global/vehicle_tele.scr ( -7336 -1588 552 ) ( -472 -22 -662 ) ( 472 22 0 ) local.lasers2 1 50 //25 1 0 50
 }
 
-//thread airstrikes_alternate	// removed due to too many explosions causing players' games to crash.
+thread airstrikes_alternate
 
-	thread consoleprint
 	thread ambience
 	thread water_volumes
 	exec global/water_wade_sounds.scr 1
@@ -606,7 +606,8 @@ exploders local.damage local.radius:
 
 		if(local.test == 1)
 		{
-			exec global/exploder_killer.scr local.array[local.e][1] local.array[local.e][2] local.array[local.e][3] local.array[local.e][4] local.array[local.e][5] local.array[local.e][6] local.array[local.e][7] local.array[local.e][8] local.array[local.e][9] local.array[local.e][10] local.damage local.radius local.smaller local.array[local.e][3] local.test }
+			exec global/exploder_killer.scr local.array[local.e][1] local.array[local.e][2] local.array[local.e][3] local.array[local.e][4] local.array[local.e][5] local.array[local.e][6] local.array[local.e][7] local.array[local.e][8] local.array[local.e][9] local.array[local.e][10] local.damage local.radius local.smaller local.array[local.e][3] local.test
+		}
 		else
 		{
 			exec global/exploder_killer.scr local.array[local.e][1] local.array[local.e][2] local.array[local.e][3] local.array[local.e][4] local.array[local.e][5] local.array[local.e][6] local.array[local.e][7] local.array[local.e][8] local.array[local.e][9] local.array[local.e][10] local.damage local.radius local.smaller
@@ -723,7 +724,7 @@ tower_explode local.spotlight: // $tower[1] = ladder rungs, $tower[2] = main woo
 	{
 		if($player[local.i] istouching $tower[2] && $player[local.i] istouching local.trigcrush)
 		{
-			$player[local.i] damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 2 0
+			$player[local.i] damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 7 0 // 2nd to last parameter: use "7" for "cratered" death.
 		}
 	}
 	for(local.i = 1; local.i <= $explodersmashed.size; local.i++) // make the smashed wooden pieces appear sooner.
@@ -972,7 +973,6 @@ ffa_spawns:
 end
 
 player_spawns local.team1 local.team2:
-
 
 	spawn ("info_player_" + local.team2) "origin" "111.125 5254.873 136.125" "angle" "-29" "targetname" (local.team2 + "_spawn")
 	spawn ("info_player_" + local.team2) "origin" "240.872 5254.875 136.125" "angle" "-127" "targetname" (local.team2 + "_spawn")
