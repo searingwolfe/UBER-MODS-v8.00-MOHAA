@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -50,6 +47,7 @@ exec global/aliascache_triggersounds.scr airstrikes
 exec global/aliascache_triggersounds.scr explode_building_small
 exec global/aliascache_triggersounds.scr explode_building_large
 exec global/aliascache_triggersounds.scr explode_wood_small
+exec global/aliascache_triggersounds.scr woodcreak
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 
@@ -134,13 +132,13 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/spotlight_colorswitch.scr ( -644 1824 -180 ) ( 0 90 0 ) s0 rainbow
 }
 
-	thread spotlight_colorswitch_auto ( 2950 2275 185 ) ( 0 180 0 )
-	thread spotlight_colorswitch_auto ( 2946 2205 185 ) ( 0 180 0 ) slower
+	exec map_triggers/spotlight_colorswitch.scr ( 2950 2275 185 ) ( 0 180 0 ) all rainbow
+	exec map_triggers/spotlight_colorswitch.scr ( 2946 2205 185 ) ( 0 180 0 ) all slowrainbow
 
 // if for some reason players cannot join the server (stuck in PRIMED state or timed out), remove some drivable vehicles and/or tanks to reduce # of sound aliascaches.
 //
 if($truck01 == NULL) { exec global/playervehicle.scr truck01 vehicles/opeltruck.tik ( -1742.53 3010.20 -255.88 ) ( 0 -74 0 ) 250 250 45 1 }
-if($truck02 == NULL) { exec global/playervehicle.scr truck02 vehicles/opeltruckgreen_canopy.tik ( 1220 452 -255 ) ( 0 358 0 ) 250 250 45 1 }
+if($truck02 == NULL) { exec global/playervehicle.scr truck02 vehicles/opeltruckgreen_canopy.tik ( 1040 452 -255 ) ( 0 358 0 ) 250 250 45 1 }
 if($jeep == NULL) { exec global/playervehicle.scr jeep vehicles/jeep.tik ( -3733.31 2210.42 -255.88 ) ( 0 0 0 ) 250 400 45 1 }
 
 //exec maps/gen_mapscripts/truckstuff_trig.scr $truck01 1 1 500 //$truckclip // targetname, horn, headlights, health, name2nd (optional collision entity targetname)
@@ -177,11 +175,7 @@ exec maps/gen_mapscripts/radios_musictrig.scr ( 2015 -2737 -144 ) ( 0 225 0 ) mi
 exec maps/gen_mapscripts/radios_musictrig.scr ( 1955.86 -3746.17 -148 ) ( 0 97 0 ) animate/military_radio.tik 0.01
 exec maps/gen_mapscripts/radios_musictrig.scr ( 1602.86 -2911.17 -143 ) ( 0 97 0 ) animate/military_radio.tik 0.01
 
-	thread mapedge ( .3608 .6627 .0016 )
-	thread ammoboxes_explode 100 500 600
-	thread tank04_explode 1000 500 750
-	thread opelhoodopen_wires_horns
-	thread vehicle_tele ( 1 0 0 ) ( 0 1 0 ) 300  
+	thread vehicle_tele ( 1 0 0 ) ( 0 1 0 ) 300
 	thread vehicles_undermap
 
 	thread splinepath
@@ -271,15 +265,15 @@ setup:
 
 	$tank04.gun = $tank04 QueryTurretSlotEntity 0
 	$tank04.gun remove // $t4gun remove
-	local.tank = spawn vehicles/tigertankdsrt.tik targetname tank044 // tigertank's cannon is already removed in tigertank.tik
+	local.tank = spawn vehicles/tigertankdsrt.tik targetname "tank044" // tigertank's cannon is already removed in tigertank.tik
 	local.tank.origin = ( 1578 -1339 -256 )
 	local.tank setsize ( -140 -90 0 ) ( 175 90 95 )
 	local.tank.angle = 90
-	local.tank.health = 1000
+	local.tank.health = 9999999 // 1000
 	local.tank.scale = 1
 	local.tank.gun = local.tank QueryTurretSlotEntity 0
 	local.tank.gun remove
-	local.turret = spawn script_model targetname t44gun
+	local.turret = spawn script_model targetname "t44gun"
 	local.turret model vehicles/tigercannon.tik
 	local.turret.origin = ( 1580.61 -1344.80 -70 )
 	local.turret setsize ( -140 -90 0 ) ( 175 90 95 )
@@ -287,68 +281,103 @@ setup:
 	local.turret.scale = 1
 	local.turret notsolid
 
-if(getcvar("g_ubermods") == "2")
-{
-	$truckclip remove
-	$tankclip remove
-	$tank01.gun = $tank01 QueryTurretSlotEntity 0 // when removing tanks, make sure to remove their turrets first (otherwise they will respawn at coords: 0 0 0)
-	$tank02.gun = $tank02 QueryTurretSlotEntity 0
-	$tank03.gun = $tank03 QueryTurretSlotEntity 0
-	$tank01.gun remove
-	$tank02.gun remove
-	$tank03.gun remove
-	$tank01 remove
-	$tank02 remove
-	$tank03 remove
-	$tank04 remove
-	$panzermap remove // panzer tanks collision entity
-	$jeep.gun = $jeep QueryTurretSlotEntity 0
-	$jeep.gun remove
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
+	{
+		$ammocrate remove
+		$ammoboxes remove // 12 entities
+		$explosion05_damage remove
+		//$exploder remove
+	}
 
-	$jeep remove	// uncomment these 2 if using drivable vehicles
-	$truck01 remove
+	if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+	{
+		thread tower_woodcreak ( 2784 2239 136 )
+		thread tower_woodcreak ( 2159 -927 136 )
+		thread tower_woodcreak ( 576 -1839 136 )
+		thread tower_woodcreak ( 3535 -3032 80 )
+	}
 
-	local.endtruck = spawn script_model targetname statictruck
-	local.endtruck model vehicles/opeltruck.tik
-	local.endtruck.origin = ( 2944 -4017 -328 )
-	local.endtruck.angles = ( 0 90 0 )
-	local.endtruck anim idlenolights
-	local.endtruck.scale = 0.99
-}
-if(getcvar("g_ubermods") != "2")
-{
-	$spotsearch remove // ScriptOrigins already removed
-	$wire01 remove; $wire02 remove; $wire03 remove
-	$cutwire01 show; $cutwire02 show; $cutwire03 show
-	//$opentruck01 remove; $opentruck02 remove; $opentruck03 remove
+	if(getcvar("g_ubermods") == "2")
+	{
+		$truckclip remove
+		$tankclip remove
+		$tank01.gun = $tank01 QueryTurretSlotEntity 0 // when removing tanks, make sure to remove their turrets first (otherwise they will respawn at coords: 0 0 0)
+		$tank02.gun = $tank02 QueryTurretSlotEntity 0
+		$tank03.gun = $tank03 QueryTurretSlotEntity 0
+		$tank01.gun remove
+		$tank02.gun remove
+		$tank03.gun remove
+		$tank01 remove
+		$tank02 remove
+		$tank03 remove
+		$tank04 remove
+		$panzermap remove // panzer tanks collision entity
+		$jeep.gun = $jeep QueryTurretSlotEntity 0
+		$jeep.gun remove
 
-	$spotpath1_1 remove; $t181 remove; $t154 remove; $t155 remove; $asdasd remove; $t148 remove; $t149 remove; $t150 remove
-	$spotpath2_2 remove; $t183 remove; $t161 remove; $t182 remove; $t163 remove; $t165 remove; $t156 remove; $asdf1 remove; $t158 remove // removeclass SplinePath
-	$spotpath2_3 remove; $123aa remove; $t172 remove; $t167 remove; $t184 remove; $t166 remove; $t168 remove; $t169 remove
-	$spotpath4_4 remove; $t192 remove; $t187 remove; $t188 remove; $t196 remove; $t195 remove; $t190 remove; $t193 remove
-	$spotlight remove
+		$jeep remove	// uncomment these 2 if using drivable vehicles
+		$truck01 remove
 
-	spawn models/vehicles/opeltruckgreen_canopy.tik origin ( 1100 452 -255 ) angles ( 0 358 0 ) targetname truck02 anim idlenolights // uncomment these 3 if not using any drivable vehicles (only tanks)
-	$truck01.origin = ( -1056 2136 -224 ); $truck01.angle = 40; $truck01.scale = 1; $truck01 anim idlenolights
-	$jeep.origin = ( -2541 2297 -255 ); $jeep.angles = ( 0 40 0 ); $jeep.scale = 1
+		local.endtruck = spawn script_model targetname statictruck
+		local.endtruck model vehicles/opeltruck.tik
+		local.endtruck.origin = ( 2944 -4017 -328 )
+		local.endtruck.angles = ( 0 90 0 )
+		local.endtruck anim idlenolights
+		local.endtruck.scale = 0.99
 
-	$tank01.health = 9999999
-	$tank02.health = 9999999
-	$tank03.health = 9999999
-	$tank01.gun = $tank01 QueryTurretSlotEntity 0 // need to fix tigertank cannon scale, since these tanks are used as trigger sensors in UBER mods (register all explosions except grenade explosions).
-	$tank02.gun = $tank02 QueryTurretSlotEntity 0
-	$tank03.gun = $tank03 QueryTurretSlotEntity 0
-	$tank01.gun.scale = 1
-	$tank02.gun.scale = 1
-	$tank03.gun.scale = 1
-}
-if(getcvar("g_ubermods") == "0" || getcvar("g_ubermods") == "")
-{
-	$ammocrate remove
-	$ammoboxes remove // 12 entities
-	$explosion05_damage remove
-	//$exploder remove
-}
+		//local.test = 1
+ 		// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2, ::explode set number, ... 
+		// ... damage, radius, smaller (1 = smaller earthquake), trig origin (default = explosion origin), test (1 = spawn lasers around trigger box & emitters at all the origins).
+		//
+		// Example template: exec global/exploder_killer.scr ( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 0 	( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 1 500 600 0 	( 0 0 0 ) local.test
+		//
+		// Parameters after "set number" are optional, and will auto-default if left blank.
+		//
+		//$exploder.origin = ( 1120 772 -156 )
+		//$tank044.origin = ( 1578 -1339 -257.375 )
+		level.exploder_killer_noprint = 1 // applies to all exploders.
+		$exploder[1].grenades = 1
+
+		local.exploder2 = spawn script_origin targetname "exploder" // need a 2nd "exploder" for exploder_killer.scr to work properly (for blowing up the tank with its turret on a crane).
+		local.exploder2.origin = ( 1578 -1339 -257 )
+		local.exploder2.set = 5
+
+		exec global/exploder_killer.scr ( 1120 722 -155 ) ( 1120 822 -155 ) ( 1120 772 -255 ) ( 1120 772 -62 ) 90 ( 998 772 -255 ) ( 1217 772 -255 ) ( -200 -200 0 ) ( 200 107 189 ) 1 500 600 0 ( 1120 772 -255 ) local.test
+		exec global/exploder_killer.scr ( 1578 -1089 -157 ) ( 1578 -1589 -157 ) ( 1578 -1339 -257 ) ( 1578 -1339 -28 ) 270 ( 1578 -1205 -257 ) ( 1578 -1445 -257 ) ( -165 -225 0 ) ( 165 225 307 ) 5 500 600 0 ( 1578 -1339 -257 ) local.test
+		thread ammoboxes_explode
+		thread tank04_explode 1000 500 750
+
+		thread mapedge ( .3608 .6627 .0016 )
+		thread opelhoodopen_wires_horns
+	}
+
+	if(getcvar("g_ubermods") == "1")
+	{
+		$spotsearch remove // ScriptOrigins already removed
+		$wire01 remove; $wire02 remove; $wire03 remove
+		$cutwire01 show; $cutwire02 show; $cutwire03 show
+		//$opentruck01 remove; $opentruck02 remove; $opentruck03 remove
+
+		$spotpath1_1 remove; $t181 remove; $t154 remove; $t155 remove; $asdasd remove; $t148 remove; $t149 remove; $t150 remove
+		$spotpath2_2 remove; $t183 remove; $t161 remove; $t182 remove; $t163 remove; $t165 remove; $t156 remove; $asdf1 remove; $t158 remove // removeclass SplinePath
+		$spotpath2_3 remove; $123aa remove; $t172 remove; $t167 remove; $t184 remove; $t166 remove; $t168 remove; $t169 remove
+		$spotpath4_4 remove; $t192 remove; $t187 remove; $t188 remove; $t196 remove; $t195 remove; $t190 remove; $t193 remove
+		$spotlight remove
+
+		spawn models/vehicles/opeltruckgreen_canopy.tik origin ( 1100 452 -255 ) angles ( 0 358 0 ) targetname truck02 anim idlenolights // uncomment these 3 if not using any drivable vehicles (only tanks)
+		$truck01.origin = ( -1056 2136 -224 ); $truck01.angle = 40; $truck01.scale = 1; $truck01 anim idlenolights
+		$jeep.origin = ( -2541 2297 -255 ); $jeep.angles = ( 0 40 0 ); $jeep.scale = 1
+
+		$tank01.health = 9999999
+		$tank02.health = 9999999
+		$tank03.health = 9999999
+		$tank01.gun = $tank01 QueryTurretSlotEntity 0 // need to fix tigertank cannon scale, since these tanks are used as trigger sensors in UBER mods (register all explosions except grenade explosions).
+		$tank02.gun = $tank02 QueryTurretSlotEntity 0
+		$tank03.gun = $tank03 QueryTurretSlotEntity 0
+		$tank01.gun.scale = 1
+		$tank02.gun.scale = 1
+		$tank03.gun.scale = 1
+	}
 
 	exec global/doorlocked.scr ( 2938 -4620 -255 ) garagedoor
 	exec global/doorlocked.scr ( 2415 -4620 -255 ) garagedoor
@@ -606,8 +635,8 @@ end
 disabletruck:
 
 	self nottriggerable
-	self.wire remove
-	self.horntrig remove
+	if(self.wire != NIL && self.wire != NULL) { self.wire remove }
+	if(self.horntrig != NIL && self.horntrig != NULL) { self.horntrig remove }
 	self.cutwire show
 	self.engine stoploopsound
 	self.engine playsound m1l2b_disabletruck
@@ -659,7 +688,7 @@ mapedge local.color:
 	local.laser3 maxoffset 0.0
 	local.laser3 numsegments 1
 	local.laser3 life 0
-	local.laser3 color local.color
+	local.laser3 color ( 1 0 0 )
 	local.laser3 alpha 0.4
 	local.laser3 alwaysdraw
 	local.laser3 activate	
@@ -684,31 +713,44 @@ end
 
 tank04_explode local.health local.damage local.radius:
 
+	cache models emitters/mortar_dirt_nosound.tik
+	cache models fx/fx_flak88_explosion.tik
+
+	level waittill spawn
+
 	if($tank044 == NULL || $t44gun == NULL) { end }
 
 	local.origin = $tank044.origin
 	local.angles = $tank044.angles
-	while($tank044 != NULL) { waitframe }
+
+	for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++)
+	{
+		if($exploder_trigshot[local.e].set == 5) { local.explodertrig = $exploder_trigshot[local.e]; break }
+	}
+
+	while($tank044 != NULL && local.explodertrig != NIL && local.explodertrig != NULL && local.explodertrig.dead != 1) { waitframe }
 
 	local.desmodel = spawn script_model
 	local.desmodel model "vehicles/tigertank_wot_d.tik"
 	local.desmodel.origin = local.origin
 	local.desmodel.angles = local.angles
 	local.desmodel.scale = 1
-	
-	local.explode = spawn script_model
-	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
-	local.explode.origin = local.origin
-	local.explode.scale = 1.5
-	local.explode anim start
 
-	local.debris = spawn script_model
-	local.debris model "emitters/mortar_dirt_nosound.tik" 
-	local.debris.origin = local.origin
-	local.debris notsolid
-	local.debris.scale = 1.25
-	local.debris anim start
+	local.debris = thread emitterstuff "emitters/mortar_dirt_nosound.tik" local.origin ( 0 0 0 ) 1.25 start
 
+	println("----- Blowing up the crane tank.")
+	waitframe
+	local.debris remove
+
+	wait ((randomint(100) / 100.000) + 0.25)
+	local.origin = $t44gun.origin
+	$t44gun remove
+	if($tank044 != NULL) { $tank044 remove }
+
+	local.explode = thread emitterstuff "fx/fx_flak88_explosion.tik" local.origin ( 0 0 0 ) 1.5 start
+
+	exec global/earthquake.scr .35 2 0 0
+	radiusdamage local.origin local.damage local.radius
 	local.r = randomint(5)
 	if(local.r == 0) { local.explode playsound explode_building_large3 } // all metal explosion sounds
 	if(local.r == 1) { local.explode playsound explode_building_small4 }
@@ -716,172 +758,58 @@ tank04_explode local.health local.damage local.radius:
 	if(local.r == 3) { local.explode playsound explode_building_large4 }
 	if(local.r == 4) { local.explode playsound explode_building_small3 }
 
-	local.r2 = randomint(2)
-	if(local.r2 == 0) { local.debris playsound explode_wood_small1 }
-	if(local.r2 == 1) { local.debris playsound explode_wood_small2 }
-	
-	exec global/earthquake.scr .35 2 0 0
-	radiusdamage local.origin local.damage local.radius
-	println("----- Blowing up the crane tank.")
-	waitframe
-	local.explode remove
-	local.debris remove
-
-	wait ((randomint(100) / 100.000) + 0.25)
-	local.origin = $t44gun.origin
-	$t44gun remove
-	local.explode = spawn script_model
-	local.explode model "fx/fx_flak88_explosion.tik"
-	local.explode.origin = local.origin
-	local.explode.scale = 1.5
-	local.explode anim start
-
-	exec global/earthquake.scr .35 2 0 0
-	radiusdamage local.origin local.damage local.radius
 	waitframe
 	local.explode remove
 end
 
 ////////////////////////////////////////////////////////////////////////
 
-ammoboxes_explode local.health local.damage local.radius:
+ammoboxes_explode:
+
+	cache models emitters/fireandsmoke.tik
+	cache models emitters/explosion_mine.tik
+
+	level waittill spawn
 
 	if($ammoboxes == NULL || $ammocrate == NULL) { end }
 
-	local.mine = spawn trigger_multiple spawnflags 128
-	local.mine.origin = ( 1114 712 -256 )
-	local.mine setsize ( -40 -40 -40 ) ( 40 40 40 )
-	local.mine.health = local.health
-	local.mine thread trig_healthboost
+	for(local.s = 1; local.s <= $explodersmashed.size; local.s++)
+	{
+		if($explodersmashed[local.s].set == 1) { $explodersmashed[local.s].nosound = 1 } // turns off global/exploder.scr's explosion sound, since one exists in this thread already.
+	}
 
-	local.fire = spawn script_model
-	local.fire model "emitters/fireandsmoke.tik"
-	local.fire.origin = ( 1114 712 -256 )
-	local.fire.scale = 0.9
-	local.fire notsolid
-	local.fire hide
+	for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++)
+	{
+		if($exploder_trigshot[local.e].set == 1) { local.explodertrig = $exploder_trigshot[local.e]; break }
+	}
 
-	while(local.mine.health > 0) { waitframe }
-	
-	local.explode = spawn script_model
-	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
-	local.explode.origin = ( 1114 712 -256 )
-	local.explode.scale = 1
-	local.explode anim start
+	while(local.explodertrig != NIL && local.explodertrig != NULL && local.explodertrig.dead != 1) { waitframe }
 
-	local.debris = spawn script_model
-	local.debris model "emitters/explosion_mine.tik" //"emitters/mortar_dirt_nosound.tik" 
-	local.debris.origin = ( 1114 712 -256 )
-	local.debris notsolid
-	local.debris.scale = 1.0 //1.25
-	local.debris anim start
+	local.fire = thread emitterstuff emitters/fireandsmoke.tik ( 1114 712 -256 ) ( 0 0 0 ) 0.6 idle
+	local.debris = thread emitterstuff emitters/explosion_mine.tik ( 1114 712 -256 ) ( 0 0 0 ) 1 start
 
 	local.r = randomint(5)
-	if(local.r == 0) { local.explode playsound explode_building_large3 } // all metal explosion sounds
-	if(local.r == 1) { local.explode playsound explode_building_small4 }
-	if(local.r == 2) { local.explode playsound explode_building_small5 }
-	if(local.r == 3) { local.explode playsound explode_building_large4 }
-	if(local.r == 4) { local.explode playsound explode_building_small3 }
+	if(local.r == 0) { local.fire playsound explode_building_large3 } // all metal explosion sounds
+	if(local.r == 1) { local.fire playsound explode_building_small4 }
+	if(local.r == 2) { local.fire playsound explode_building_small5 }
+	if(local.r == 3) { local.fire playsound explode_building_large4 }
+	if(local.r == 4) { local.fire playsound explode_building_small3 }
 
 	local.r2 = randomint(2)
 	if(local.r2 == 0) { local.debris playsound explode_wood_small1 }
 	if(local.r2 == 1) { local.debris playsound explode_wood_small2 }
-	
-	exec global/earthquake.scr .35 2 0 0
-	radiusdamage ($ammocrate.origin + ( 0 0 25 )) local.damage local.radius
-	thread global/exploder.scr::explode 001			// Swap in damaged shelf
+
 	$ammoboxes remove
-	$ammocrate remove
+	//$ammocrate remove
 	println("----- Blowing up the Ammo Crates.")
 
 	waitframe
-	local.mine remove
-	local.explode remove
 	local.debris remove
 	local.fire show
 	local.fire anim start
 
 	wait 60
 	local.fire remove
-end
-
-trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
-
-	local.health = self.health
-	while(self != NULL && self.health > 0) // prevent regular bullets from killing trigger (i.e. if 250 health, trigger can still be killed by 2 grenades or a shotgun blast)
-	{
-		self.health = local.health
-		waitframe
-	}
-end
-
-////////////////////////////////////////////////////////////////////////
-
-spotlight_colorswitch_auto local.origin local.angles local.type:
-
-	local.switch = spawn script_model
-	local.switch model "animate/alarmswitch.tik"
-	local.switch.origin = local.origin
-	local.switch.angles = local.angles
-	local.switch notsolid
-
-	local.switchtrig = spawn trigger_use
-	local.switchtrig.origin = local.switch.origin
-	local.switchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
-
-	local.switchtrig waittill trigger
-	local.switchtrig nottriggerable
-	local.switch playsound alarmswitch
-	local.switch anim turnon
-
-	if(local.type == NIL || local.type != "slower")
-	{
-		level.spotlight_rainbow[s_auto0] = 1
-		level.spotlight_rainbow[s_auto1] = 1
-		level.spotlight_rainbow[s_auto2] = 1
-		level.spotlight_rainbow[s_auto3] = 1
-		local.switchtrig message ("*** Rainbow auto_spotlight colors turned ON. ***")
-	}
-	if(local.type == "slower")
-	{
-		local.switchtrig message ("*** Slower rainbow auto_spotlight colors turned ON. ***")
-		local.switch thread slow_rainbowcolor_spotlight s_auto0
-		local.switch thread slow_rainbowcolor_spotlight s_auto1
-		local.switch thread slow_rainbowcolor_spotlight s_auto2
-		local.switch thread slow_rainbowcolor_spotlight s_auto3
-	}
-
-	local.player = parm.other
-	local.switchtrig triggerable
-
-	local.switchtrig waittill trigger
-	if(local.type == NIL || local.type != "slower") { local.switchtrig message ("*** Rainbow auto_spotlight colors turned OFF. ***") }
-	if(local.type == "slower") { local.switchtrig message ("*** Slower rainbow auto_spotlight colors turned OFF. ***") }
-	local.switchtrig nottriggerable
-
-	local.switch playsound alarmswitch
-	local.switch anim turnoff
-	level.spotlight_rainbow[s_auto0] = 0
-	level.spotlight_rainbow[s_auto1] = 0
-	level.spotlight_rainbow[s_auto2] = 0
-	wait 1
-
-	local.switch remove
-	local.switchtrig remove
-
-	thread spotlight_colorswitch_auto local.origin local.angles local.type
-end
-
-slow_rainbowcolor_spotlight local.name:
-
-	while(self != NULL)
-	{
-		level.spotlight_rainbow[local.name] = 2
-		wait (randomint(100) / 100.0000)
-		if(self != NULL) { level.spotlight_rainbow[local.name] = 1 }
-		waitframe
-	}
-	level.spotlight_rainbow[local.name] = 0
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -987,6 +915,26 @@ otherswitch_animonly local.name local.anim:
 		$("twoswitchtrig_" + local.name) triggerable
 		$("twoswitch_" + local.name) anim turnoff
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1616,7 +1564,7 @@ player_spawns local.team1 local.team2:
 	spawn ("info_player_" + local.team1) "origin" "-3099.58 4068.28 -255.88" "angle" "-42" "targetname" (local.team1 + "_spawn")
 	spawn ("info_player_" + local.team1) "origin" "-3090.31 3632.04 -255.88" "angle" "-9" "targetname" (local.team1 + "_spawn")
 	spawn ("info_player_" + local.team1) "origin" "-3128.12 3122.16 -255.88" "angle" "-39" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "-2670.05 2341.77 -255.88" "angle" "65" "targetname" (local.team1 + "_spawn")	
+	spawn ("info_player_" + local.team1) "origin" "-2670.05 2341.77 -255.88" "angle" "65" "targetname" (local.team1 + "_spawn")
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1699,7 +1647,7 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/tele.scr ( 3330 -4384 -255 ) ( 3300 -4383 5 ) 0
 	exec map_triggers/tele.scr ( 3811 -3696 -327 ) ( 3810 -3789 40 ) 0
 	exec map_triggers/tele.scr ( 3392 -3303 -327 ) ( 3418 -3077 80 ) 1
-	exec map_triggers/tele.scr ( 3776 -3303 -327 ) ( 3887 -3187 -53 ) 0
+	exec map_triggers/tele.scr ( 3776 -3303 -327 ) ( 3909 -3121 -26 ) 0
 
 	exec map_triggers/tele.scr ( 276 3103 -255 ) ( 339 3103 -255 ) 1
 	exec map_triggers/tele.scr ( 360 2504 -255 ) ( 360 2567 -255 ) 1
@@ -1877,6 +1825,19 @@ cratesstuff local.model local.origin local.angles local.hide local.scale local.t
 	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
 	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
 end
+
+emitterstuff local.model local.origin local.angles local.scale local.anim local.targetname:
+
+	local.emitter = spawn script_model
+	local.emitter model local.model
+	if(local.emitter.model == "models/emitters/inferno.tik") { local.emitter.origin = local.origin + ( 0 0 50 ) }
+	else { local.emitter.origin = local.origin }
+	if(local.angles[2] != NIL) { local.emitter.angles = local.angles }
+	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
+	if(local.anim != NIL) { local.emitter anim local.anim }
+	if(local.targetname != NIL) { local.emitter.targetname = local.targetname }
+	local.emitter notsolid
+end local.emitter
 
 solidclip local.origin local.setsize1 local.setsize2 local.angle:
 

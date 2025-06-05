@@ -86,11 +86,11 @@ if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 	thread UBER_mapextras_2
 	thread UBER_teleporters_2
 
-	if(getcvar("g_ubermods") == "1" || $explodersmashed == NULL)
-	{
+	//if(getcvar("g_ubermods") == "1" || $explodersmashed == NULL)
+	//{
 		thread UBER_mapextras
 		thread UBER_teleporters
-	}
+	//}
 
 	thread random_explode_setup 256 275 // damage, radius
 	thread random_explode_anywhere 256 600
@@ -154,6 +154,10 @@ if(getcvar("g_ubermods") == "1")
 	local.name3[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb16 ( 3344 2552 464 ) ( 60 90 0 ) 100 0
 	local.name3[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb17 ( 3344 2744 464 ) ( 60 90 0 ) 100 0
 	exec map_triggers/map_switches/training_detonator_gunrange.scr ( -6007 2199.5 240 ) ( 0 0 0 ) local.name3 60 450 2
+
+	exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( -5760 2538 233 ) ( 0 -90 0 ) ( -5760 2180 227 ) ( 0 180 0 ) 500 1 1 8
+	exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 1053 -255 190 ) ( 0 -90 0 ) ( 1053 -561 203 ) ( 0 180 0 ) 500 1 1 8
+	exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie3 ( 1932 4929 288 ) ( 0 180 0 ) ( 1932 4735 288 ) ( 0 -90 0 ) 500 1 1 8
 }
 
 if(getcvar("g_ubermods") == "2")
@@ -172,19 +176,19 @@ exec global/playervehicle.scr bmwbike2 vehicles/bmwbike.tik ( -3818 5653 300 ) (
 // Available playertank models:
 // kingtank, panzer_tank, panzer_tank_europe.
 //
-exec global/playertank.scr tank01 vehicles/kingtank.tik ( -4594 2303 218 ) ( 0 -77 0 ) 1000 45 // health, reset time
+exec global/playertank.scr tank01 vehicles/kingtank.tik ( -4644 3635 237 ) ( 0 -94 0 ) 1000 45 // health, reset time
 exec global/playertank.scr tank02 vehicles/kingtank.tik ( 2433 -2019 188 ) ( 0 125 0 ) 1000 45
 //exec global/playertank.scr tank03 vehicles/kingtank.tik ( 5703 3667 212 ) ( 0 -170 0 ) 1000 45
 
-exec global/playernebelwerfer.scr NIL 200 45 ( 202 4053 244 ) ( 11 357 0 )
-exec global/playernebelwerfer.scr NIL 200 45 ( 1684 8 170 ) ( 358 9 0 )
+//exec global/playernebelwerfer.scr NIL 200 45 ( 202 4053 244 ) ( 11 357 0 )
+//exec global/playernebelwerfer.scr NIL 200 45 ( 1684 8 170 ) ( 358 9 0 )
 exec global/playerflak88.scr NIL 200 45 ( -5608 2304 224 ) ( 0 -34 0 ) 1 // 0 ( 0 45 0 )
 exec global/playerflak88.scr NIL 200 45 ( 5180 4216 200 ) ( 0 -108 0 ) 1 // 0 ( 0 45 0 )
 
 exec server_planes/trigger.scr ( 3105 -2791 184 ) "allies" 1 0 ( 3105 -2791 1000 )	// team (only 1 per modelpair), flying plane scale, modelpair, starting origin (default = origin + 500)
 exec server_planes/trigger.scr ( -4935 1512 245 ) "axis" 1 0 ( -4935 1512 1000 )	// Allies/Axis modelpair: 0 = p47/fockwulf, 1 = stuka_dsrt/stuka, 2 = c47 for both teams
 exec server_planes/trigger.scr ( -4461 6608 200 ) "axis" 1 1 ( -4461 6608 1000 )
-exec server_planes/trigger.scr ( 7372 7426 216 ) "allies" 1 2 ( 7372 7426 1000 )
+exec server_planes/trigger.scr ( 7415 7300 216 ) "allies" 1 2 ( 7372 7426 1000 )
 
 exec jetpack/trigger.scr ( 2314 -728 205 ) // allies
 exec jetpack/trigger.scr ( 564 2510 285 ) // middle
@@ -193,11 +197,18 @@ exec jetpack/trigger.scr ( -5570 2939 226 ) // axis
 exec guidedmissile/trigger.scr ( 2557 -1456 246 )
 exec guidedmissile/trigger.scr ( -4026 4485 252 )
 
-exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( -5760 2538 233 ) ( 0 -90 0 ) ( -5760 2180 227 ) ( 0 180 0 ) 500 1 1 8
-exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 1053 -255 190 ) ( 0 -90 0 ) ( 1053 -561 203 ) ( 0 180 0 ) 500 1 1 8
-exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie3 ( 1932 4929 288 ) ( 0 180 0 ) ( 1932 4735 288 ) ( 0 -90 0 ) 500 1 1 8
-
 	thread vehicles_undermap
+
+	//local.lasers[1] = thread global/vehicle_tele.scr::spawnlaser ( 2648 -4600 712 ) ( 2648 -4600 -120 ) ( 1 0 0 ) 3	// origin, endpoint, initial color, scale
+	//local.lasers[2] = thread global/vehicle_tele.scr::spawnlaser ( 2648 -4600 712 ) ( 3528 -4600 712 ) ( 1 0 0 ) 3
+	//local.lasers[3] = thread global/vehicle_tele.scr::spawnlaser ( 3528 -4600 712 ) ( 3528 -4600 -120 ) ( 1 0 0 ) 3
+	//local.lasers[4] = thread global/vehicle_tele.scr::spawnlaser ( 2648 -4664 712 ) ( 2648 -4664 -120 ) ( 1 0 0 ) 3
+	//local.lasers[5] = thread global/vehicle_tele.scr::spawnlaser ( 2648 -4664 712 ) ( 3528 -4664 712 ) ( 1 0 0 ) 3
+	//local.lasers[6] = thread global/vehicle_tele.scr::spawnlaser ( 3528 -4664 712 ) ( 3528 -4664 -120 ) ( 1 0 0 ) 3
+	exec global/vehicle_tele.scr ( 3088 -4632 712 ) ( -440 -50 -832 ) ( 440 50 0 ) local.lasers 1 50
+	// local.lasers (NIL = none), teleporting alignment (NIL = none, 0 = 0-180 axis, 1 = 90-270 axis), height after teleporting, teleporting speed (default/NIL = 25, max = 300), spawn solid floor (0 or NIL = no, 1 = yes), ...
+	// ... height_1 after teleporting if facing 0 or 90 degrees (only if alignment = 0 or 1), height_2 after teleporting if facing 180 or 270 degrees (only if alignment = 0 or 1, ignores "height" parameter).
+	// if spawning solid floor, make sure that tele's origin is <= the height of the floors at both ends, otherwise solid floor may get in the way of players/vehicles going through/across it.
 }
 
 thread airstrikes_alternate
@@ -233,10 +244,10 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 
 	level.spawnamb = makeArray
 		( 1031 120 663 ) ( -103 0 -256 ) ( 0 359 0 ) local.interior
-		( 1031 120 663 ) ( -103 -112 -256 ) ( 0 0 0 ) local.interior
-		( 1031 120 663 ) ( 0 -112 -256 ) ( 297 359 0 ) local.interior
-		( 1207 112 407 ) ( -279 0 -357 ) ( 121 367 0 ) local.interior
-		( 1207 112 407 ) ( -279 -104 -357 ) ( 0 0 0 ) local.interior // amb[5]
+		( 1031 120 663 ) ( -103 -112 -256 ) ( 0 0 0 ) local.interior 12
+		( 1031 120 663 ) ( 0 -112 -256 ) ( 297 359 0 ) local.interior 12
+		( 1207 112 407 ) ( -279 0 -357 ) ( 121 367 0 ) local.interior 12
+		( 1207 112 407 ) ( -279 -104 -357 ) ( 0 0 0 ) local.interior 12 // amb[5]
 
 		( 2128 1519 407 ) ( 0 -364 -357 ) ( 115 0 0 ) local.interior
 		( 2128 1519 407 ) ( 0 -190 -357 ) ( 230 0 0 ) local.interior
@@ -245,71 +256,71 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 		( 2735 1219 407 ) ( -50 0 -357 ) ( 0 300 0 ) local.interior // amb[10]
 		( 2735 1219 407 ) ( -95 0 -357 ) ( 0 231 0 ) local.interior
 
-		( 4055 -479 367 ) ( 0 0 -317 ) ( 162 199 0 ) local.interior
+		( 4055 -479 367 ) ( 0 0 -317 ) ( 162 199 0 ) local.interior 11
 
-		( 3600 984 447 ) ( 0 0 -397 ) ( 239 293 0 ) local.interior
+		( 3600 984 447 ) ( 0 0 -397 ) ( 239 293 0 ) local.interior 8
 
-		( 4800 80 468 ) ( 0 0 -418 ) ( 527 303 0 ) local.interior
-		( 5056 80 774 ) ( 0 0 -49 ) ( 125 303 0 ) local.interior // amb[15]
-		( 5056 80 724 ) ( 0 0 -13 ) ( 250 303 0 ) local.interior
-		( 5056 80 710 ) ( 0 0 -242 ) ( 271 303 0 ) local.interior
+		( 4800 80 468 ) ( 0 0 -418 ) ( 527 303 0 ) local.interior 15
+		( 5056 80 774 ) ( 0 0 -49 ) ( 125 303 0 ) local.interior 15 // amb[15]
+		( 5056 80 724 ) ( 0 0 -13 ) ( 250 303 0 ) local.interior 15
+		( 5056 80 710 ) ( 0 0 -242 ) ( 271 303 0 ) local.interior 15
 
-		( 4880 636 722 ) ( 0 -50 -49 ) ( 223 50 0 ) local.interior
-		( 4880 636 672 ) ( 0 -100 -49 ) ( 223 100 0 ) local.interior
-		( 4880 636 622 ) ( 0 -150 -49 ) ( 223 150 0 ) local.interior // amb[20]
-		( 4880 636 572 ) ( 0 -196 -522 ) ( 223 196 0 ) local.interior
+		( 4880 636 722 ) ( 0 -50 -49 ) ( 223 50 0 ) local.interior 16
+		( 4880 636 672 ) ( 0 -100 -49 ) ( 223 100 0 ) local.interior 16
+		( 4880 636 622 ) ( 0 -150 -49 ) ( 223 150 0 ) local.interior 16 // amb[20]
+		( 4880 636 572 ) ( 0 -196 -522 ) ( 223 196 0 ) local.interior 16
 
-		( 5103 848 622 ) ( -110 0 -49 ) ( 0 239 0 ) local.interior
-		( 5103 848 572 ) ( -220 0 -35 ) ( 0 239 0 ) local.interior
-		( 5103 848 537 ) ( -271 0 -487 ) ( 0 239 0 ) local.interior
+		( 5103 848 622 ) ( -110 0 -49 ) ( 0 239 0 ) local.interior 17
+		( 5103 848 572 ) ( -220 0 -35 ) ( 0 239 0 ) local.interior 17
+		( 5103 848 537 ) ( -271 0 -487 ) ( 0 239 0 ) local.interior 17
 
-		( 5103 1104 572 ) ( -110 0 -49 ) ( 0 367 0 ) local.interior // amb[25]
-		( 5103 1104 522 ) ( -220 0 -11 ) ( 0 367 0 ) local.interior
-		( 5103 1104 511 ) ( -235 0 -487 ) ( 0 367 0 ) local.interior
+		( 5103 1104 572 ) ( -110 0 -49 ) ( 0 367 0 ) local.interior 18 // amb[25]
+		( 5103 1104 522 ) ( -220 0 -11 ) ( 0 367 0 ) local.interior 18
+		( 5103 1104 511 ) ( -235 0 -487 ) ( 0 367 0 ) local.interior 18
 
-		( 5103 1488 654 ) ( -110 0 -49 ) ( 0 319 0 ) local.interior
-		( 5103 1488 604 ) ( -220 0 -35 ) ( 0 319 0 ) local.interior
-		( 5103 1488 569 ) ( -271 0 -487 ) ( 0 319 0 ) local.interior // amb[30]
+		( 5103 1488 654 ) ( -110 0 -49 ) ( 0 319 0 ) local.interior 19
+		( 5103 1488 604 ) ( -220 0 -35 ) ( 0 319 0 ) local.interior 19
+		( 5103 1488 569 ) ( -271 0 -487 ) ( 0 319 0 ) local.interior 19 // amb[30]
 
-		( 3040 4848 559 ) ( 0 0 -509 ) ( 351 415 0 ) local.interior
+		( 3040 4848 559 ) ( 0 0 -509 ) ( 351 415 0 ) local.interior 12
 
-		( 2656 4704 468 ) ( 0 0 -418 ) ( 303 527 0 ) local.interior
-		( 2656 4959 774 ) ( 0 0 -49 ) ( 303 125 0 ) local.interior
-		( 2656 4959 724 ) ( 0 0 -13 ) ( 303 250 0 ) local.interior
-		( 2656 4959 710 ) ( 0 0 -242 ) ( 303 271 0 ) local.interior // amb[35]
+		( 2656 4704 468 ) ( 0 0 -418 ) ( 303 527 0 ) local.interior 13
+		( 2656 4959 774 ) ( 0 0 -49 ) ( 303 125 0 ) local.interior 13
+		( 2656 4959 724 ) ( 0 0 -13 ) ( 303 250 0 ) local.interior 13
+		( 2656 4959 710 ) ( 0 0 -242 ) ( 303 271 0 ) local.interior 13 // amb[35]
 
-		( 2404 4784 754 ) ( -50 0 -49 ) ( 50 159 0 ) local.interior
-		( 2404 4784 704 ) ( -100 0 -49 ) ( 100 159 0 ) local.interior
-		( 2404 4784 654 ) ( -150 0 -49 ) ( 150 159 0 ) local.interior
-		( 2404 4784 604 ) ( -196 0 -522 ) ( 196 159 0 ) local.interior
+		( 2404 4784 754 ) ( -50 0 -49 ) ( 50 159 0 ) local.interior 20
+		( 2404 4784 704 ) ( -100 0 -49 ) ( 100 159 0 ) local.interior 20
+		( 2404 4784 654 ) ( -150 0 -49 ) ( 150 159 0 ) local.interior 20
+		( 2404 4784 604 ) ( -196 0 -522 ) ( 196 159 0 ) local.interior 20
 
-		( 1952 4943 652 ) ( 0 -110 -49 ) ( 239 0 0 ) local.interior // amb[40]
-		( 1952 4943 602 ) ( 0 -220 -35 ) ( 239 0 0 ) local.interior
-		( 1952 4943 567 ) ( 0 -271 -487 ) ( 239 0 0 ) local.interior
+		( 1952 4943 652 ) ( 0 -110 -49 ) ( 239 0 0 ) local.interior 22 // amb[40]
+		( 1952 4943 602 ) ( 0 -220 -35 ) ( 239 0 0 ) local.interior 22
+		( 1952 4943 567 ) ( 0 -271 -487 ) ( 239 0 0 ) local.interior 22
 
-		( 1568 4943 602 ) ( 0 -110 -49 ) ( 367 0 0 ) local.interior
-		( 1568 4943 552 ) ( 0 -220 -11 ) ( 367 0 0 ) local.interior
-		( 1568 4943 541 ) ( 0 -235 -487 ) ( 367 0 0 ) local.interior // amb[45]
+		( 1568 4943 602 ) ( 0 -110 -49 ) ( 367 0 0 ) local.interior 23
+		( 1568 4943 552 ) ( 0 -220 -11 ) ( 367 0 0 ) local.interior 23
+		( 1568 4943 541 ) ( 0 -235 -487 ) ( 367 0 0 ) local.interior 23 // amb[45]
 
-		( 1232 4943 684 ) ( 0 -110 -49 ) ( 319 0 0 ) local.interior
-		( 1232 4943 634 ) ( 0 -220 -35 ) ( 319 0 0 ) local.interior
-		( 1232 4943 599 ) ( 0 -271 -487 ) ( 319 0 0 ) local.interior
+		( 1232 4943 684 ) ( 0 -110 -49 ) ( 319 0 0 ) local.interior 24
+		( 1232 4943 634 ) ( 0 -220 -35 ) ( 319 0 0 ) local.interior 24
+		( 1232 4943 599 ) ( 0 -271 -487 ) ( 319 0 0 ) local.interior 24
 
 		( 1488 2248 702 ) ( -80 0 -49 ) ( 80 159 0 ) local.interior
 		( 1488 2248 652 ) ( -160 0 -28 ) ( 160 159 0 ) local.interior // amb[50]
 		( 1488 2248 624 ) ( -175 0 -574 ) ( 175 159 0 ) local.interior
 
-		( -6031 2560 590 ) ( 0 0 -49 ) ( 110 239 0 ) local.interior
-		( -6031 2560 540 ) ( 0 0 -35 ) ( 220 239 0 ) local.interior
-		( -6031 2560 505 ) ( 0 0 -487 ) ( 271 239 0 ) local.interior
+		( -6031 2560 590 ) ( 0 0 -49 ) ( 110 239 0 ) local.interior 29
+		( -6031 2560 540 ) ( 0 0 -35 ) ( 220 239 0 ) local.interior 29
+		( -6031 2560 505 ) ( 0 0 -487 ) ( 271 239 0 ) local.interior 29
 
-		( -6031 2176 540 ) ( 0 0 -49 ) ( 110 367 0 ) local.interior // amb[55]
-		( -6031 2176 490 ) ( 0 0 -11 ) ( 220 367 0 ) local.interior
-		( -6031 2176 479 ) ( 0 0 -487 ) ( 235 367 0 ) local.interior
+		( -6031 2176 540 ) ( 0 0 -49 ) ( 110 367 0 ) local.interior 28 // amb[55]
+		( -6031 2176 490 ) ( 0 0 -11 ) ( 220 367 0 ) local.interior 28
+		( -6031 2176 479 ) ( 0 0 -487 ) ( 235 367 0 ) local.interior 28
 
-		( -6031 1840 622 ) ( 0 0 -49 ) ( 110 319 0 ) local.interior
-		( -6031 1840 572 ) ( 0 0 -35 ) ( 220 319 0 ) local.interior
-		( -6031 1840 537 ) ( 0 0 -487 ) ( 271 319 0 ) local.interior // amb[60]
+		( -6031 1840 622 ) ( 0 0 -49 ) ( 110 319 0 ) local.interior 27
+		( -6031 1840 572 ) ( 0 0 -35 ) ( 220 319 0 ) local.interior 27
+		( -6031 1840 537 ) ( 0 0 -487 ) ( 271 319 0 ) local.interior 27 // amb[60]
 	endArray
 
 	exec global/ambience_mp.scr local.exterior 1 // 0 = no, 1 = keep players' music volume at max.
@@ -361,13 +372,6 @@ setup:
 
 	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
 	{
-		/*
-		$exploderfire remove
-		$explodersmashed remove
-		$exploderchunk remove
-		//$explodertrigger remove
-		removeclass ScriptOrigin // path nodes for exploderchunks.
-		*/
 		thread global/exploder.scr::remove_exploders // also removes their chunks' ScriptOrigin entities, keeps original non-exploded $exploder entities (unless "exploder.scr::remove_exploders 1").
 	}
 	else
@@ -386,13 +390,29 @@ setup:
 			{
 				//thread global/exploder.scr::kill_exploders // also removes their chunks' ScriptOrigin entities, keeps remaining $explodersmashed entities (unless "exploder.scr::kill_exploders 1").
 
-				for(local.w = 1; local.w <= 27; local.w++) { thread wall_explode local.w 100 500 600 } // exploder[number], health, damage, radius
+				waitthread changeset 		// change 1 exploder's set within #set 12 to a new empty set (#set 9).
+				thread exploders 500 600
 			}
-			//thread exploder_test
 		}
 	}
 
 	//thread player_ceiling 5000 -3500 // prevents players' games from crashing if they spectate/noclip too high up or too low down away from the map (crashes if $world farplane > 4500).
+
+	exec global/doorlocked.scr ( -5736 1937 223 ) wood 1 // these do not add any entities.
+	exec global/doorlocked.scr ( -5768 2321 229 ) wood 1 // origin, door type (wood, metal, gateiron, gatelarge, gatemetal, garagedoor), extra sounds (0 or 1), set number (gets removed when exploder #set explodes).
+	exec global/doorlocked.scr ( -5736 2657 235 ) wood 1
+	exec global/doorlocked.scr ( 2512 4760 339 ) wood 1
+	exec global/doorlocked.scr ( 2801 4680 312 ) wood 1
+	exec global/doorlocked.scr ( 3648 4632 356 ) wood 1
+	exec global/doorlocked.scr ( 4848 528 287 ) wood 1
+	exec global/doorlocked.scr ( 4776 238 282 ) wood 1
+	exec global/doorlocked.scr ( 4808 992 306 ) wood 1 17
+	exec global/doorlocked.scr ( 4840 1328 259 ) wood 1 18
+	exec global/doorlocked.scr ( 4808 1709 272 ) wood 1 19
+	exec global/doorlocked.scr ( 3316 4824 353 ) wood 1 9
+	exec global/doorlocked.scr ( 2049 4648 285 ) wood 1 22
+	exec global/doorlocked.scr ( 1713 4680 290 ) wood 1 23
+	exec global/doorlocked.scr ( 1328 4648 309 ) wood 1 24
 
 	level.springfield = 1								
 	level.bar = 1								
@@ -457,41 +477,6 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-exploder_test:
-
-	local.detonator = spawn script_model
-	local.detonator model "miscobj/detonator.tik"
-	local.detonator.origin = ( 3573 3348 187 )
-	local.detonator.angles = ( 0 0 0 )
-
-	local.detonator anim idle
-	local.detonator notsolid
-
-	local.detonatortrig = spawn trigger_use
-	local.detonatortrig.origin = local.detonator.origin
-	local.detonatortrig setsize ( -20 -20 -20 ) ( 20 20 20 )
-
-	local.detonatortrig waittill trigger
-	local.detonatortrig nottriggerable
-	local.detonator anim fire
-	local.detonator playsound plungersound
-
- 	local.player = parm.other
- 	local.player iprint ("*** Firing the detonator. ***")
-	wait 2
-
-	local.set = 29
-	//thread global/exploder.scr::explode local.set // blow up an exploder.
-
-	for(local.c = 1; local.c <= $wall_explode_trigshot.size; local.c++)
-	{
-		if($wall_explode_trigshot[local.c].set == local.set) { $wall_explode_trigshot[local.c].dead = 1 } // kill the exploder's trigger, to begin the "wall_explode" thread for that exploder.
-	}
-
-end
-
-////////////////////////////////////////////////////////////////////////
-
 // for these linear-wall exploders: explosion, debris, smoke1, smoke2 are lined up along one axis; radiusdamage1, radiusdamage2 are along the other axis.
 // radiusdamage1, radiusdamage2 are 100 units off the ground, and 100 units in opposite directions away from explosion origin (covering both sides of a wall).
 // debris height is 1 unit below the ceiling of the highest floor (or highest frame of a window, top of a destructible wall, etc), and must not be inside of any walls/chunks after exploding.
@@ -515,143 +500,84 @@ end
 // step 5: ( 1648 4723 364 ) ( 1648 4923 364 ) ( 1648 4823 264 ) ( 1648 4823 526 ) 180 ( 1540 4823 264 ) ( 1815 4823 264 )	( -160 -50 0 ) ( 160 50 0 ) 19	// blow up exploder. find debris height. find smokes' X-axis, height.
 // step 6: ( 1648 4723 364 ) ( 1648 4923 364 ) ( 1648 4823 264 ) ( 1648 4823 526 ) 180 ( 1540 4823 264 ) ( 1815 4823 264 )	( -160 -50 0 ) ( 160 50 303 ) 19 // adjust exploder height if inside a chunk. find setsizes' heights (using exploder's origin).
 
-wall_explode local.inc local.health local.damage local.radius:
+exploders local.damage local.radius:
 
-	if($exploder == NULL || $exploderfire == NULL || $exploderchunk == NULL || $explodersmashed == NULL) { end }
-	if($exploder[local.inc] == NULL) { end }
+	// #set 10 does not have an $explodersmashed (optionally, just comment out $exploder[24]'s row in the local.array below.
+	// #set 12 had 2 exploders, but this set is split in 2 by the "changeset" thread (#set 12 with 1 exploder, and a new #set 9 with 1 exploder).
+
+	//level.exploder_killer_onlyprojectiles = 1 // this prevents too many exploders from blowing up simultaneously.
 
 	local.p = 50		// general trigger thickness
 	local.n = local.p * -1	// NOTE: $exploder[23] is a ceiling exploder, so it doesn't use local.p or local.n,
 				// and $exploder[24] with .set = 10 does not have any $explodersmashed chunks.
 
- 	// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2 (trig origin = explosion origin), ::explode set number. [1] - [10] columns.
+ // radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2 (trig origin = explosion origin), ::explode set number. [1] - [10] columns.
 	local.array = makeArray
-		( -5684 2360 330 ) ( -5884 2360 330 )	( -5784 2360 352 ) ( -5784 2360 462 ) 180	( -5784 2272 352 ) ( -5784 2415 352 )	( local.n -184 -119 ) ( local.p 184 127 ) 28	// exploder[1].origin = ( -5908 2360 480 )
-		( -5652 2000 330 ) ( -5852 2000 330 )	( -5752 2000 357 ) ( -5752 2000 352 ) 180	( -5752 1904 384 ) ( -5752 2084 384 )	( local.n -160 -131 ) ( local.p 160 178 ) 27	// exploder[2].origin = ( -5892 2000 520 )
+		( -5684 2360 330 ) ( -5884 2360 330 )	( -5784 2360 352 ) ( -5784 2360 460 ) 180	( -5784 2272 352 ) ( -5784 2415 352 )	( -230 -184 -119 ) ( local.p 184 293 ) 28	// exploder[1].origin = ( -5908 2360 480 )
+		( -5652 2000 330 ) ( -5852 2000 330 )	( -5752 2000 357 ) ( -5752 2000 352 ) 180	( -5752 1904 384 ) ( -5752 2084 384 )	( -212 -160 -131 ) ( local.p 160 343 ) 27	// exploder[2].origin = ( -5892 2000 520 )
 		( 1392 4564 396 ) ( 1392 4764 396 )	( 1392 4664 324 ) ( 1392 4664 582 ) 90		( 1295 4664 364 ) ( 1499 4664 324 )	( -160 local.n -28 ) ( 160 local.p 276 ) 24	// exploder[3].origin = ( 1392 4663 420 )
 		( 1752 4596 390 ) ( 1752 4796 390 )	( 1752 4696 290 ) ( 1752 4696 526 ) 90		( 1675 4696 290 ) ( 1812 4696 324 )	( -184 local.n 0 ) ( 184 local.p 253 ) 23	// exploder[4].origin = ( 1752 4695 392 )
-		( 2072 4564 390 ) ( 2072 4764 390 )	( 2072 4664 290 ) ( 2072 4664 551 ) 90		( 2020 4664 294 ) ( 2131 4664 383 )	( -120 local.n 0 ) ( 120 local.p 279 ) 22	// exploder[5].origin = ( 2072 4804 488 )
-		( 2404 4675 350 ) ( 2404 4875 350 )	( 2404 4775 376 ) ( 2404 4775 602 ) 90		( 2287 4775 376 ) ( 2407 4775 376 )	( -196 local.n -42 ) ( 196 local.p 227 ) 20	// exploder[6].origin = ( 2404 4768 490 )
-		( 4723 1648 364 ) ( 4923 1648 364 )	( 4823 1648 264 ) ( 4823 1648 526 ) 0		( 4823 1540 264 ) ( 4900 1815 264 )	( local.n -160 0 ) ( local.p 160 303 ) 19	// exploder[7].origin = ( 4960 1656 476 )
-		( 4755 1288 340 ) ( 4955 1288 340 )	( 4855 1288 240 ) ( 4855 1288 494 ) 0		( 4855 1231 288 ) ( 4855 1374 251 )	( local.n -184 0 ) ( local.p 184 271 ) 18	// exploder[8].origin = ( 4980 1288 420 )
-		( 4723 968 421 ) ( 4923 968 421 )	( 4823 968 321 ) ( 4823 968 518 ) 0		( 4823 937 309 ) ( 4823 1028 312 )	( local.n -120 -22 ) ( local.p 120 216 ) 17	// exploder[9].origin = ( 4964 968 464 )
-		( 4772 636 396 ) ( 4972 636 396 )	( 4872 636 344 ) ( 4872 636 570 ) 0		( 4872 703 344 ) ( 4872 519 416 )	( local.n -196 -48 ) ( local.p 196 227 ) 16	// exploder[10].origin = ( 4864 636 458 )
-		( 4691 232 396 ) ( 4891 232 396 )	( 4791 232 384 ) ( 4791 232 703 ) 0		( 4791 315 384 ) ( 4791 191 384 )	( local.n -152 -88 ) ( local.p 152 319 ) 15	// exploder[11].origin = ( 4836 232 548 )
-		( 3672 4546 390 ) ( 3672 4746 390 )	( 3672 4646 416 ) ( 3672 4646 697 ) 90		( 3711 4646 544 ) ( 3791 4646 416 )	( -120 local.n -126 ) ( 120 local.p 281 ) 14	// exploder[12].origin = ( 3680 4784 560 )
-		( 2808 4595 430 ) ( 2808 4795 430 )	( 2808 4695 447 ) ( 2808 4695 766 ) 90		( 2705 4695 511 ) ( 2957 4695 401 )	( -152 local.n -152 ) ( 152 local.p 320 ) 13	// exploder[13].origin = ( 2816 4960 568 )
-		( 3215 4740 450 ) ( 3215 4940 450 )	( 3215 4840 350 ) ( 3215 4840 558 ) 90		( 3088 4840 375 ) ( 3342 4840 359 )	( -176 local.n 0 ) ( 176 local.p 226 ) 12	// exploder[14].origin = ( 3215 5054 440 )
-		( 4004 -167 282 ) ( 4004 -367 282 )	( 4004 -267 182 ) ( 4004 -267 790 ) 270		( 4055 -267 182 ) ( 3782 -422 256 )	( -204 local.n 0 ) ( 204 local.p 698 ) 11	// exploder[15].origin = ( 3884 -530 504 )
-		( 1388 -407 290 ) ( 1388 -407 290 )	( 1388 -407 190 ) ( 1388 -407 522 ) 180		( 1388 -507 228 ) ( 1388 -247 214 )	( local.n -157 0 ) ( local.p 157 332 ) 6	// exploder[16].origin = ( 1209 -407 443 )
-		( 2432 803 270 ) ( 2432 1003 270 )	( 2432 903 170 ) ( 2432 903 630 ) 90		( 2225 903 192 ) ( 2655 903 203 )	( -304 local.n 0 ) ( 304 local.p 542 ) 2	// exploder[17].origin = ( 2444 891 428 )
-		( 3452 837 400 ) ( 3652 837 400 )	( 3552 837 280 ) ( 3552 837 560 ) 90		( 3552 903 382 ) ( 3552 857 282 )	( local.n -98 -50 ) ( local.p 98 428 ) 3	// exploder[18].origin = ( 3552 836 450 )
-		( 2995 1144 358 ) ( 3195 1144 358 )	( 3095 1144 258 ) ( 3095 1144 478 ) 0		( 3095 983 256 ) ( 3095 1179 246 )	( local.n -190 -10 ) ( local.p 190 325 ) 4	// exploder[19].origin = ( 3073 1108 448 )
-		( 3344 852 675 ) ( 3344 1052 675 )	( 3344 952 675 ) ( 3344 952 784 ) 90		( 3400 952 665 ) ( 3224 952 576 )	( -196 local.n -99 ) ( 196 local.p 333 ) 1	// exploder[20].origin = ( 3280 1016 792 )
-		( 2412 -1059 355 ) ( 2412 -1259 355 )	( 2412 -1159 255 ) ( 2412 -1159 430 ) 90	( 2285 -1159 244 ) ( 2535 -1159 368  )	( -212 local.n -10 ) ( 212 local.p 175 ) 5	// exploder[21].origin = ( 2410 -1160 328 )
-		( 1604 -1059 355 ) ( 1604 -1259 355 )	( 1604 -1159 255 ) ( 1604 -1159 430 ) 90	( 1752 -1159 272 ) ( 1511 -1159 380 )	( -212 local.n -10 ) ( 212 local.p 175 ) 7	// exploder[22].origin = ( 1606 -990 328 )
-		( 3720 1375 372 ) ( 3720 901 372 )	( 3720 1184 272 ) ( 3720 1184 446 ) 180		( 3847 985 332 ) ( 3830 1376 347 )	( -120 -200 0 ) ( 120 200 184 ) 8		// exploder[23].origin = ( 3736 1196 324 )
-		( 3107 -535 330 ) ( 3307 -535 330 )	( 3207 -535 230 ) ( 3207 -535 877 ) 180		( 3207 -380 176 ) ( 3207 -806 192 )	( local.n -264 -10 ) ( local.p 264 646 ) 10	// exploder[24].origin = ( 3492 -632 688 )
-		( 1211 244 268 ) ( 1411 244 268 )	( 1311 244 168 ) ( 1311 244 662 ) 180		( 1311 280 182 ) ( 1311 8 177 )		( local.n -236 0 ) ( local.p 236 494 ) 12	// exploder[25].origin = ( 1324 244 424 )
-		( 3500 2294 300 ) ( 3700 2294 300 )	( 3600 2294 200 ) ( 3600 2294 542 ) 180		( 3600 2543 200 ) ( 3600 2098 271 )	( local.n -252 0 ) ( local.p 252 392 ) 21	// exploder[26].origin = ( 3356 2148 416 )
-		( -5751 2680 340 ) ( -5751 2680 340 )	( -5751 2680 352 ) ( -5751 2680 460 ) 180	( -5751 2608 352 ) ( -5751 2758 352 )	( local.n -120 -112 ) ( local.p 120 153 ) 29	// exploder[27].origin = ( -5892 2680 504 )
+		( 2072 4564 390 ) ( 2072 4764 390 )	( 2072 4664 290 ) ( 2072 4664 551 ) 90		( 2020 4664 294 ) ( 2131 4664 383 )	( -120 local.n 0 ) ( 120 166 420 ) 22		// exploder[5].origin = ( 2072 4804 488 )
+		( 2404 4675 476 ) ( 2404 4875 476 )	( 2404 4775 376 ) ( 2404 4775 602 ) 90		( 2287 4775 376 ) ( 2407 4775 376 )	( -196 -100 -42 ) ( 196 local.p 227 ) 20	// exploder[6].origin = ( 2404 4768 490 )
+		( 4723 1648 364 ) ( 4923 1648 364 )	( 4823 1648 264 ) ( 4823 1648 526 ) 0		( 4823 1540 264 ) ( 4900 1815 264 )	( local.n -160 0 ) ( 294 160 506 ) 19		// exploder[7].origin = ( 4960 1656 476 )
+		( 4755 1288 340 ) ( 4955 1288 340 )	( 4855 1288 240 ) ( 4855 1288 494 ) 0		( 4855 1231 288 ) ( 4855 1374 251 )	( local.n -184 0 ) ( 185 184 415 ) 18		// exploder[8].origin = ( 4980 1288 420 )
+		( 4723 968 421 ) ( 4923 968 421 )	( 4823 968 321 ) ( 4823 968 518 ) 0		( 4823 937 309 ) ( 4823 1028 312 )	( local.n -120 -22 ) ( 237 120 389 ) 17		// exploder[9].origin = ( 4964 968 464 )
+		( 4772 636 396 ) ( 4972 636 396 )	( 4872 636 344 ) ( 4872 636 570 ) 0		( 4872 703 344 ) ( 4872 519 416 )	( -100 -196 -48 ) ( local.p 196 227 ) 16	// exploder[10].origin = ( 4864 636 458 )
+		( 4691 232 396 ) ( 4891 232 396 )	( 4791 232 384 ) ( 4791 232 703 ) 0		( 4791 315 384 ) ( 4791 191 384 )	( local.n -152 -120 ) ( local.p 152 370 ) 15	// exploder[11].origin = ( 4836 232 548 )
+		( 3672 4546 516 ) ( 3888 4776 616 )	( 3672 4646 416 ) ( 3672 4646 697 ) 90		( 3711 4646 544 ) ( 3791 4646 416 )	( -120 local.n -126 ) ( 186 297 484 ) 14	// exploder[12].origin = ( 3680 4784 560 )
+		( 2808 4595 430 ) ( 2808 4795 430 )	( 2808 4695 447 ) ( 2808 4695 766 ) 90		( 2705 4695 511 ) ( 2957 4695 401 )	( -152 local.n -165 ) ( 218 195 463 ) 13	// exploder[13].origin = ( 2816 4960 568 )
+		( 3215 4740 450 ) ( 3215 4940 450 )	( 3215 4840 350 ) ( 3215 4840 558 ) 90		( 3088 4840 375 ) ( 3342 4840 359 )	( -176 local.n 0 ) ( 176 155 276 ) 9		// exploder[14].origin = ( 3215 5054 440 )
+		( 4004 -167 350 ) ( 4004 -367 350 )	( 4004 -267 182 ) ( 4004 -267 790 ) 270		( 4055 -267 182 ) ( 3782 -422 256 )	( -287 -283 -50 ) ( 204 local.p 733 ) 11	// exploder[15].origin = ( 3884 -530 504 )
+		( 1288 -407 290 ) ( 1488 -407 290 )	( 1388 -407 190 ) ( 1388 -407 522 ) 180		( 1388 -507 228 ) ( 1388 -247 214 )	( -180 -220 0 ) ( local.p 220 540 ) 6		// exploder[16].origin = ( 1209 -407 443 )
+		( 2432 803 370 ) ( 2432 1003 370 )	( 2432 903 170 ) ( 2432 903 630 ) 90		( 2225 903 192 ) ( 2655 903 203 )	( -304 -100 0 ) ( 304 local.p 550 ) 2		// exploder[17].origin = ( 2444 891 428 )
+		( 3452 837 400 ) ( 3652 837 400 )	( 3552 837 280 ) ( 3552 837 560 ) 90		( 3552 903 382 ) ( 3552 857 282 )	( local.n -150 -70 ) ( local.p 114 478 ) 3	// exploder[18].origin = ( 3552 836 450 )
+		( 2995 1144 358 ) ( 3195 1144 358 )	( 3095 1144 258 ) ( 3095 1144 478 ) 0		( 3095 983 256 ) ( 3095 1179 246 )	( local.n -190 -58 ) ( local.p 190 375 ) 4	// exploder[19].origin = ( 3073 1108 448 )
+		( 3344 852 675 ) ( 3344 1052 675 )	( 3344 952 675 ) ( 3344 952 784 ) 90		( 3400 952 665 ) ( 3224 952 576 )	( -196 local.n -150 ) ( 196 local.p 383 ) 1	// exploder[20].origin = ( 3280 1016 792 )
+		( 2412 -1059 355 ) ( 2412 -1259 355 )	( 2412 -1159 255 ) ( 2412 -1159 430 ) 90	( 2285 -1159 244 ) ( 2535 -1159 368  )	( -265 -100 -60 ) ( 212 100 260 ) 5		// exploder[21].origin = ( 2410 -1160 328 )
+		( 1604 -1059 355 ) ( 1604 -1259 355 )	( 1604 -1159 255 ) ( 1604 -1159 430 ) 90	( 1752 -1159 272 ) ( 1511 -1159 380 )	( -212 -100 -60 ) ( 265 100 260 ) 7		// exploder[22].origin = ( 1606 -990 328 )
+		( 3720 1375 372 ) ( 3720 901 372 )	( 3720 1184 272 ) ( 3720 1184 446 ) 180		( 3847 985 332 ) ( 3830 1376 347 )	( -120 -270 0 ) ( 205 270 238 ) 8		// exploder[23].origin = ( 3736 1196 324 )
+		( 3107 -535 430 ) ( 3307 -535 430 )	( 3207 -535 230 ) ( 3207 -535 877 ) 180		( 3207 -380 176 ) ( 3207 -806 192 )	( local.n -350 -54 ) ( local.p 315 700 ) 10	// exploder[24].origin = ( 3492 -632 688 )
+		( 1211 244 268 ) ( 1411 244 268 )	( 1311 244 168 ) ( 1311 244 662 ) 180		( 1311 280 182 ) ( 1311 8 177 )		( local.n -236 0 ) ( 100 236 543 ) 12		// exploder[25].origin = ( 1324 244 424 )
+		( 3500 2294 300 ) ( 3700 2294 300 )	( 3600 2294 200 ) ( 3600 2294 542 ) 180		( 3600 2543 200 ) ( 3600 2098 271 )	( -100 -350 -50 ) ( 100 320 395 ) 21	// exploder[26].origin = ( 3356 2148 416 )
+		( -5851 2680 340 ) ( -5651 2680 340 )	( -5751 2680 352 ) ( -5751 2680 460 ) 180	( -5751 2608 352 ) ( -5751 2758 352 )	( -170 -120 -112 ) ( local.p 120 298 ) 29	// exploder[27].origin = ( -5892 2680 504 )
 	endArray
 
-	for(local.s = 1; local.s <= $exploder.size; local.s++)
+	for(local.e = 1; local.e <= local.array.size; local.e++)
 	{
-		if($exploder[local.s].set == local.array[local.inc][10]) { local.exploder = $exploder[local.s] }
-	}
+		//if(local.e == 27) { local.test = 1 } 			// spawning test emitters for $exploder[27]'s radiusdamage, explosion, debris, smoke, and trig origin (same as explosion origin for these exploders).
+		//else { local.test = 0 }				// test = 1 also spawns lasers around the $exploder_trigshot trigger for the "local.e" exploder #set.
 
-	local.trigshot = spawn trigger_multiple spawnflags 128 targetname "wall_explode_trigshot" // triggers when any radiusdamage explosion (grenades, rockets, bombs, world, not bullets) hits it.
-	local.trigshot.origin = local.array[local.inc][3]
-	local.trigshot setsize local.array[local.inc][8] local.array[local.inc][9]
-	local.trigshot setthread trigshot_exploder
-	local.trigshot.set = local.array[local.inc][10]
-
-	local.trigproj = spawn trigger_multiple spawnflags 20 targetname "wall_explode_trigproj" // triggers when any projectiles hit or go through it (not players' bullets).
-	local.trigproj.origin = local.array[local.inc][3]
-	local.trigproj setsize local.array[local.inc][8] local.array[local.inc][9]
-	local.trigproj setthread trigproj_exploder
-	local.trigproj.trigshot = local.trigshot
-
-	while(local.trigshot.dead != 1 && local.exploder != NIL && local.exploder != NULL) { waitframe }
-
-	if($wall_explode_trigshot != NULL) { $wall_explode_trigshot nottriggerable } // prevent one exploder's radiusdamage from blowing up other nearby exploders.
-	if($wall_explode_trigproj != NULL) { $wall_explode_trigproj nottriggerable }
-
-	for(local.c = 1; local.c <= $mapwall.size; local.c++)
-	{
-		if($mapwall[local.c].set == local.array[local.inc][10]) { $mapwall[local.c] remove }
-	}
-	for(local.c = 1; local.c <= $red_tele.size; local.c++)
-	{
-		if($red_tele[local.c].set == local.array[local.inc][10]) { $red_tele[local.c] remove }
-	}
-
-	local.trigshot remove
-	local.trigproj remove
-	if(local.exploder == NIL || local.exploder == NULL) { end }
-
-	println("----- Blowing up $exploder[" + local.inc + "] with '.set = " + local.array[local.inc][10] + "'")
-
-	local.explode = thread emitterstuff "animate//fx_mortar_higgins.tik" local.array[local.inc][3] ( 260 -90 0 ) 1 start ("exploder_" + local.inc + "_explode")
-	local.debris = thread emitterstuff "animate/explosion_bombwall.tik" local.array[local.inc][4] ( 0 0 0 ) 1 start ("exploder_" + local.inc + "_debris")
-	local.dirt = thread emitterstuff "emitters/mortar_dirt_dustcloud.tik" local.array[local.inc][3] ( 0 0 0 ) 1 start ("exploder_" + local.inc + "_dirt")
-
-	thread global/exploder.scr::explode local.array[local.inc][10]
-	$exploder[local.inc] playsound explode_building_large
-	thread jitter_large
-
-	radiusdamage local.array[local.inc][1] local.damage local.radius
-	radiusdamage local.array[local.inc][2] local.damage local.radius
-
-	waitframe
-	//local.explode remove // for some mysterious reason, these 3 lines do not remove the emitters, and instead print NIL errors to console (must remove them via targetnames instead).
-	//local.debris remove
-	//local.dirt remove
-	$("exploder_" + local.inc + "_explode") remove
-	$("exploder_" + local.inc + "_debris") remove
-	$("exploder_" + local.inc + "_dirt") remove
-
-	if($wall_explode_trigshot != NULL) { $wall_explode_trigshot triggerable }
-	if($wall_explode_trigproj != NULL) { $wall_explode_trigproj triggerable }
-
-	thread global/exploder.scr::remove local.array[local.inc][10] // remove exploder-related entities that are no longer needed (including their .target ScriptOrigins).
-
-	local.smoke1 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][6] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke1")
-	local.smoke2 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][7] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke2")
-
-	local.dec = 0.01	// waitframe = 0.05 seconds. 0.05 / (5 seconds duration) = 0.01 increments.
-	while($("exploder_" + local.inc + "_smoke1").scale > 0)
-	{
-		$("exploder_" + local.inc + "_smoke1").scale -= local.dec
-		$("exploder_" + local.inc + "_smoke2").scale -= local.dec
-		waitframe
-	}
-	$("exploder_" + local.inc + "_smoke1") remove
-	$("exploder_" + local.inc + "_smoke2") remove
-end
-
-trigshot_exploder:
-
-	local.damager = parm.other
-	if(local.damager == $world || self.projectile == 1) { self.dead = 1 }
-	if(self.projectile == 1) { self.projectile = 0 }
-end
-
-trigproj_exploder:
-
-	local.projectile = parm.other
-	if(local.projectile.model == "models/projectiles/bazookashell_dm.tik" || local.projectile.model == "models/projectiles/bazookashell.tik" || local.projectile.model == "models/projectiles/panzerschreckshell.tik" || local.projectile.model == "models/projectiles/tigercannonshell.tik")
-	{
-		self.trigshot.projectile = 1
+		if(local.test == 1) // if using this, make sure to remove other mods first (besides the exploders above), since there are too many entities already.
+		{
+			exec global/exploder_killer.scr local.array[local.e][1] local.array[local.e][2] local.array[local.e][3] local.array[local.e][4] local.array[local.e][5] local.array[local.e][6] local.array[local.e][7] local.array[local.e][8] local.array[local.e][9] local.array[local.e][10] local.damage local.radius local.smaller local.array[local.e][3] local.test
+		}
+		else
+		{
+			exec global/exploder_killer.scr local.array[local.e][1] local.array[local.e][2] local.array[local.e][3] local.array[local.e][4] local.array[local.e][5] local.array[local.e][6] local.array[local.e][7] local.array[local.e][8] local.array[local.e][9] local.array[local.e][10] local.damage local.radius local.smaller
+		}
 	}
 end
 
-jitter_large local.smaller:
+////////////////////////////////////////////////////////////////////////
 
-	if(local.smaller != 1) { waitexec global/earthquake.scr .35 10 0 0 }
-	waitexec global/earthquake.scr .23 6 0 0
-	waitexec global/earthquake.scr 1 1 0 0
-	waitexec global/earthquake.scr 1.25 .3 0 1
+changeset: // exploder set #12 has 2 exploders, but they should be different sets since these are 2 completely different buildings/walls. Take 1 exploder & its entities and add then to an empty #set 9.
+
+	for(local.e = 1; local.e <= $exploder.size; local.e++)
+	{
+		if($exploder[local.e].set == 12 && $exploder[local.e].origin == ( 3215 5054 440 )) { $exploder[local.e].set = 9 }
+	}
+	for(local.e = 1; local.e <= $exploderchunk.size; local.e++)
+	{
+		if($exploderchunk[local.e].set == 12 && $exploderchunk[local.e].origin == ( 3208 4808 459 ) || $exploderchunk[local.e].origin == ( 3120 4808 436 ) ||  $exploderchunk[local.e].origin == ( 3120 4808 515 ) ||  $exploderchunk[local.e].origin == ( 3312 4808 500 ) ||  $exploderchunk[local.e].origin == ( 3312 4786 430 )) { $exploderchunk[local.e].set = 9 }
+	}
+	for(local.e = 1; local.e <= $explodersmashed.size; local.e++)
+	{
+		if($explodersmashed[local.e].set == 12 && $explodersmashed[local.e].origin == ( 3215 5054 448 )) { $explodersmashed[local.e].set = 9 }
+	}
+	for(local.e = 1; local.e <= $exploderfire.size; local.e++)
+	{
+		if($exploderfire[local.e].set == 12 && $exploderfire[local.e].origin == ( 3267.99 4956.01 536.13 )) { $exploderfire[local.e].set = 9 }
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -688,7 +614,21 @@ pole_falling local.tank:
 	self.angles = ( 0 (local.angles[1] + 90) 0 )
 	self time 1
 	self rotatezdown 85
+	self thread pole_falling_crush
 	self waitmove
+	self.done = 1
+end
+
+pole_falling_crush:
+
+	while(self != NULL && self.done != 1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i] istouching self) { $player[local.i] damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 7 0 } // 2nd to last parameter: use "7" for "cratered" death.
+		}
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -786,7 +726,7 @@ end
 ffa_spawns:
 
 	local.team1 = "deathmatch"
-	local.team2 = "deathmatch"f
+	local.team2 = "deathmatch"
 	thread player_spawns local.team1 local.team2
 end
 
@@ -1012,9 +952,6 @@ UBER_teleporters:
 	exec map_triggers/tele.scr ( 6685 3905 248 ) ( 6831 3698 1050 ) 0
 	exec map_triggers/tele.scr ( 7666 6925 216 ) ( 7907 6756 1050 ) 0
 
-	exec map_triggers/teleface.scr ( 1149 -5661 187 ) ( 7570 7456 219 ) -16 -118
-	exec map_triggers/teleface.scr ( 7194 7365 219 ) ( -7311 5780 241 ) -78 69
-
 if(getcvar("g_ubergametype") != "bb")
 {
 }
@@ -1023,6 +960,9 @@ end
 UBER_teleporters_2:
 
 	exec map_triggers/undermap.scr ( 0 0 64 ) ( -8200 -8200 -300 ) ( 8200 8200 1 ) undermap_tele1
+
+	exec map_triggers/teleface.scr ( 1149 -5661 187 ) ( 7570 7456 219 ) -16 -118
+	exec map_triggers/teleface.scr ( 7194 7365 219 ) ( -7311 5780 241 ) -78 69
 
 	exec map_triggers/tele.scr ( -5768 2320 229 ) ( -5807 2320 240 ) 1 ( -10 -10 -10 ) ( 10 10 0 ) "fx/corona_red.tik" 1.5 "red_tele"
 	//$red_tele[1].set = 28
@@ -1387,13 +1327,13 @@ level waittill spawn
 
 			if(level.changesides == 0)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -5715 2744 235 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite  ( -5384 5634 281 ) 41
 			}
 			if(level.changesides == 1)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4179 -988 220 ) 180
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 3667 -2888 199 ) 187
 			}
 			local.sides = level.changesides
 		}

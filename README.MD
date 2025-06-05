@@ -1,4 +1,4 @@
-	*Current Version: 7.988 - Updated: 5/9/2025*
+	*Current Version: 7.989 - Updated: 6/5/2025*
 
 ### Table of Contents
 
@@ -242,10 +242,14 @@ ADDITIONAL FEATURES:
 | exec cvars/findset.scr      | "findset 7" | print all entnums and their targetnames in the map with .set = 7 (exploder-related entities). |
 |       | "findset 20" | print all entnums and their targetnames in the map with .set = 20 (exploder-related entities). |
 |       | "findset all" | print all entnums and their ".set" values, then prints total number of entities for each ".set" value. |
+|       | "findset exploder" | (or "exploders") print all $exploder origins + set numbers, and print the total number of $exploder entities for each #set. |
 | exec cvars/drawpath.scr      | "drawpath bomberpath" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
 |       | "drawpath spotpath1_1" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
 |       | "drawpath exploderchunk[1]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
 |       | "drawpath exploderchunk[12]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
+|       | "drawpath 0" | delete all nodes & lasers drawn by drawpath. |
+| exec cvars/drawsize.scr      | "drawsize exploder_trigshot[1]" | to spawn lasers around the setsize edges of the trigger/entity. setsizes must be saved to "local.ent.setsize1 = and "local.ent.setsize2", for example: local.ent.setsize1 = ( -100 -100 -50 ) and local.ent.setsize2 = ( 100 100 50 ), in order to use this cvar. Green lasers = setsize2's vertex. Red lasers = setsize1's vertex. |
+|       | "drawsize 0" | delete all lasers drawn by drawsize. |
 | exec cvars/cybsnd.scr      | "cybsnd_score 1" | print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won). |
 |       | "cybsnd_info 1" | print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance. |
 |       | "cybsnd_debug 1" | print once per second the Allies/Axis team count (living players) and Allies/Axis team total. If these values are inaccurate, then the mod has broken somehow (wait for the next the round, or reload the map). |
@@ -1148,80 +1152,115 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.988 (5-9-2025):
+v7.989 (6-5-2025):
 
-New mod added: Multiple "sv_maplist" cvars
+New cvar added: Draw Size
 
-	- UBER MODS now allows for multiple "sv_maplist" cvars in server.cfg, bypassing the 256 character limit for one "sv_maplist" (the cvar also cannot be 0 characters or "").
-	- Add "exec global/sv_maplists.scr" to global/dmprecache.scr.
+	- New cvar added: "drawsize [targetname]" for triggers.
+	- This cvar is used to spawn a cube of lasers around any trigger or entity's setsizes. Green lasers indicate the "setsize2" vertex (highest origin values). Red lasers indicate the "setsize1" vertex (lowest origin values).
+	- The trigger/entity's setsizes must be saved to ".setsize1 = " and ".setsize2 = " for this cvar to work.
+	- For example: "local.trigger.setsize1 = ( -100 -100 -50 )" and "local.trigger.setsize2 = ( 100 100 50 )".
+	- This cvar will only draw entity/trigger setsizes with targetnames since many nameless entities come from BSP, and additional code is required to find that entity, then give it a targetname, then save setsizes to ".setsize1 = " and ".setsize2 = ".
 
-	- "global/sv_maplists.scr" will search up to 999 maplists to see if the current map is also the last map in the list (lowest list iteration).
-	- If it's the last map in "sv_maplist4" for example, "sv_maplist5" will be copied to "sv_maplist", and the next map will be the first map in "sv_maplist5".
-	- Manually switching maps to a map from a different maplist than "sv_maplist" will auto-copy the new maplist to "sv_maplist".
+More cvar options added
 
-	- Do not use "sv_maplist0"; it is keeping memory of the original "sv_maplist".
-	- Do not have 2+ lists ending with the same map name, otherwise the script will keep copying the list after the first one with said map name.
-	- Do not have the same map name in 2 different lists (only in the same list).
+	- Added "findset exploder" (or exploders) for the "findset" cvar, printing all $exploder origins + set numbers, and print the total number of $exploder entities for each #set.
 
-	- Examples in server.cfg (the 2nd list can also start at "sv_maplist1"):
+	- "entities", "findclass", "findmodel", "findset", "entity_pointer" cvars will now print "targetname[array integer]" for all entities instead of just "targetname" (if there's more than one entity with the same targetname),
+	- making it easier for the "find" cvar to find the exact desired entity, instead of manually typing in the array integer each time and checking if its origin matches the desired entity.
 
-			seta sv_maplist "dm/mohdm1 dm/mohdm2 dm/mohdm3 dm/mohdm4 dm/mohdm5 dm/mohdm6 dm/mohdm7"
-			seta sv_maplist2 "obj/obj_team1 obj/obj_team2 obj/obj_team3 obj/obj_team4"
-			seta sv_maplist3 "training m1l1 m1l2a m1l2b m1l3a m1l3b m1l3c m2l1 m2l2a m2l2b m2l2c m2l3 m3l1a m3l1b m3l2 m3l3 m4l0 m4l1 m4l2 m4l3"
-			seta sv_maplist4 "m5l1a m5l1b m5l2a m5l2b m5l3 m6l1a m6l1b m6l1c m6l2a m6l2b m6l3a m6l3b m6l3c m6l3d m6l3e void"
+	- Added a line in global/sv_maplists.scr (which allows "sv_maplist2", "sv_maplist3", etc cvars to be added in server.cfg for extended maplists beyond 256 characters),
+	- for defaulting to the original "sv_maplist" if switching to a map not found in any other maplist cvars.
 
-	- If using the map example below, do not add more than 1 maplist, since this script may not follow the correct sequence:
-	- Maplist example: dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm1 dm/mohdm6 dm/mohdm3 dm/mohdm6
+Improved global/exploder.scr & new threads
 
-			seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will work as intended;
-			seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
+	- For "global/exploder.scr", all $exploderchunk[index].target ScriptOrigin entities are auto-removed after saving their origins to $exploderchunk[index].targetorigin, greatly reducing map's entity count.
+	- In M5L2A, for example, 168 more entities are removed/replaced with more mods since the .target entities are no longer needed.
 
-New cvar added: Find Set
+	- Added "thread global/exploder.scr::reset #" thread (must run after running "exec global/exploder.scr::explode #") for resetting the #set exploder's entities back to their original positions.
+	- This does not work if "thread global/exploder.scr::remove #" already ran, since that thread removes entities needed for resetting.
+	- For "exploder.scr::remove_exploders 0 local.array" and "exploder.scr::kill_exploders 0 local.array", an array of #sets in "local.array" (or just one #set integer) can optionally be added to omit the removal of any entities from those #sets.
+	- Set "$exploder[local.i].nosound = 1" to turn off the explosion sound for the exploder entity.
+	- Set "$explodersmashed[local.i].nosound = 1" to turn off the explosion sound for the explodersmashed entity.
 
-	- New UBER Cvar added: "findset [set number]" or "findset all". This cvar will find any/all scripted exploders on the map, from global/exploder.scr.
-	- Typing "findset 15" will print to console any exploder-related entities' entnums & targetnames that have the #set 15 (.set = 15).
-	- Typing "findset all" will print to console all the #set entities it can find, and prints how many entities that each #set has.
+	- Added "global/exploder_test.scr" script for simple testing of an exploder #set.
+	- This script spawns a detonator at the specified origin. When triggered, the detonator blows up the exploder with "$exploder.set = local.set".
+	- After waiting until the exploder is done, the detonator can be reset to reset the exploder and its chunks.
+	- If the "new" parameter = 1, then the exploder will be set to "dead" ($exploder.dead = 1), forcing any "exploders" threads in a map script to fully blow up the exploder, removing entities in that #set, and preventing any resets.
+	- Parameters: origin, set number, new.
+	- Example: exec global/exploder_test.scr ( 123 456 -78 ) 42
 
-New global/exploder.scr features
+New script for better $exploder explosions: global/exploder_killer.scr
 
-	- The console will now print on one line how many entities there are for each $exploder, $explodersmashed, $exploderchunk, $exploderfire, $explodertrigger, instead of printing numerous lines.
-	- Improved global/exploder.scr script by adding threads to fully remove exploders or killing exploders, and reducing as many entities as possible afterwards.
-
-	- "thread global/exploder.scr::remove #" (# being the #set value of the exploder) can be added to remove the #set exploder's entities that are no longer needed,
-	- but keeps the remaining "explodersmashed" entities, unless "exploder.scr::remove # 1" is run instead; "exploder" and "exploderfire" entities are not removed until all other exploders have exploded.
-	- Add the line above after running "exec global/exploder.scr::explode #".
-
-	- "thread global/exploder.scr::kill_exploders" can be added to destroy all exploders and remove their chunks' .target entities.
-	- This keeps the remaining "explodersmashed" entities, unless "exploder.scr::kill_exploders 1" is run instead.
-
-	- "thread global/exploder.scr::remove_exploders" can be added to remove all exploder-related entities and keep their original forms.
-	- This keeps the original "exploder" entities, unless "exploder.scr::remove_exploders 1" is run instead.
-
-Other bug fixes & additions
-
-	- Moved some scripts into an "ubermods" folder to simplify some server settings, and to fix spamming errors caused by "sv_maplist" cvar (from server.cfg).
-	- If "sv_maplist" = "", or "sv_maplist" = [any string > 256 characters], the console will spam "Update of script position - This is not an error."
-
-	- Exploder threads in M5L2A and M5L1B revamped (all other maps coming soon) to reduce entity count.
-	- Instead of using mini Tiger Tanks as non-grenade explosion triggers, 2 triggers are placed around each exploder (one for explosions, another for projectiles).
+	- "global/exploder_killer.scr": This script utilizes any "exploder" sets found in a map.
+	- 2 triggers are placed around each exploder: one for explosions, another for projectiles.
 	- If a $world explosion occurs near the triggers, or a Player-weapon explosion occurs after a rocket/tank projectile is detected, the exploder blows up.
 	- One exploder triggered by Players' projectiles will not trigger other nearby exploders. Only a $world explosion's with a large enough radius can trigger 2+ exploders simultaneously.
 	- Once exploded, the exploder will spawn 2 nearby radiusdamages, a higgins explosion, a bombwall debris emitter, and 2 sherman smoke emitters that linger for a few seconds.
+	- Any "mapwall", "cratestuff", "red_tele" targetnames with the same #set will also be removed, along with any "level.spawnamb" ambience volumes that have the same #set (index [5] in the spawnamb array, after the music filename).
 
-	- The "find [targetname]" cvar will now print as much entity info as the "findent [entnum]" cvar.
-	- These cvars will also print origin & angles in simplified decimals (for example: 0.0000 now prints 0, 1.2300 now prints 1.23, 10.0100 now prints 10.01).
-	- Added "simplify_decimal" thread to global/math.scr, outputting the simplified decimal as a string. For example: local.string = waitthread global/math.scr::simplify_decimal 10.0100.
+	- First run "exec global/exploder.scr". Then run "exec global/exploder_killer.scr" with the parameters below.
+	- Set any of the origin parameters to "( 0 0 0 )" to not spawn the parameter's corresponding entity.
 
-	- Server-side "cheats" can now be enabled/disabled without restarting the map, simply by typing "cheats 1" or "thereisnomonkey 1" into the console, either one will auto-set the other to "1" (set to "0" to disable cheats).
+	- Parameters: damage origin1, damage origin2, explosion origin, debris origin, debris angle, smoke origin1, smoke origin2, trig setsize1, trig setsize2, ...
+	- ... set number, damage, radius, smaller (if = 1, smaller earthquake effect), trig origin (optional, otherwise default = explosion origin), test (if = 1, spawn test emitters at all origins).
+	- Example: exec global/exploder_killer.scr ( 120 200 10 ) ( 320 200 10 ) ( 220 200 10 ) ( 220 200 150 ) 180 ( 220 150 10 ) ( 220 250 10 ) ( -50 -100 0 ) ( 50 100 140 ) 500 600 0
 
-	- Players can no longer enter vehicles/tanks/boats/flak88s/nebelwerfers if they are leaning left/right, and also cannot enter flak88s/nebelwerfers if they are crouching.
-	- This allows players to grab triggers, throwing knives, etc that are next to these drivable entities.
-	- Players that are currently entering vehicles/tanks/boats (gun is holstering) can also cancel entering by leaning left/right.
-	- Added "self.driver exit" to drivable entity scripts to ensure that players have fully exited when getting out/dying/switching teams/etc (may be unnecessary, but doesn't negatively affect scripts).
+	- For linear-wall exploders along X-Y axis: explosion, debris, smoke1, smoke2 are lined up along one axis; radiusdamage1, radiusdamage2 are along the other axis.
+	- Radiusdamage1, radiusdamage2 are usually 100 units off the ground, and 100 units in opposite directions away from explosion origin (covering both sides of a wall).
+	- Debris height is usually 1 unit below the ceiling of the highest floor (or highest frame of a window, top of a destructible wall, etc), and must not be inside of any walls/chunks after exploding.
+	- Trig setsize2 height is often slightly higher than debris height.
+	- Trig setsizes should extend >= 50 units outside from exploding walls, otherwise projectiles may not be detected.
+	- Debris moves opposite of the debris angle (i.e. if facing 90 degrees towards wall, debris moves 270 degrees out of wall).
 
-	- global/victory_podium.scr now shows "1st place", "2nd place", "3rd place" player name text in gold, silver, bronze respectively when each map ends.
-	- Fixed potential spamming NULL "local.entity.driver" errors in killstreaks/damagehandler.scr.
+	- Some exploder sets (such as set 32 or set 46 in m5l2b) have 2 or even 4 $exploder entities for one set (multiple exploders for 1 building, or group of buildings in 1 area).
+	- In that case, simply add a 2nd (3rd and 4th) "exec global/exploder_killer.scr" with new parameters for the 2nd building's radiusdamages, explosion, debris, smoke, etc,
+	- and make the "set" parameter equal to the 1st "exec global/exploder_killer.scr".
+	- Then, one group of shot/projectile triggers will also trigger the other building's shot/projectile triggers to explode when "exec global/exploder.scr::explode local.set" runs for one of them.
 
-New map modded: m5l2a 
+	- First, run "exec global/exploder_killer.scr" and include all parameters for the multi-exploder set's 1st exploder.
+	- Then, run a second "exec global/exploder_killer.scr" for the 2nd (3rd and 4th) exploder along with new parameter origins (unless you don't want to spawn them, then make them "( 0 0 0 )"),
+	- but set both "trig setsize1" and "trig setsize2" parameters to "( 0 0 0 )".
+	- This will force the script to use the 1st exploder's "exploder_trigshot" and "exploder_trigproj" triggers, instead of spawning 2 new ones, hence both sets of exploder_killer scripts will blow up at the same time.
+
+	- Example:
+			exec global/exploder_killer.scr ( -5373 -1096 170 ) ( -5126 1279 170 ) ( -5373 1096 90 ) ( -5373 1096 334 ) 135	( -5126 1279 39 ) ( -5426 1095 5 ) ( -323 -50 -130 ) ( 297 376 430 ) 12	// $exploder[3].origin = ( -5344 1468 240 )
+			exec global/exploder_killer.scr ( -5373 -1096 170 ) ( -5126 1279 170 ) ( -5373 1096 90 ) ( -5373 1096 334 ) 135	( -5126 1279 39 ) ( -5426 1095 5 ) ( 0 0 0 ) ( 0 0 0 ) 12		// $exploder[12].origin = ( -5394 1280 240 )
+
+	- To prevent $world or other radiusdamage explosions from triggering the triggers (only allow projectiles), add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+			level.exploder_killer_onlyprojectiles = 1
+			$exploder[4].onlyprojectiles = 1 // for only $exploder[4], or other $exploder[index].
+
+	- To also allow grenade projectiles to blow up the exploders, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+ 			level.exploder_killer_grenades = 1
+			$exploder[4].grenades = 1 // for only $exploder[4], or other $exploder[index].
+
+	- To not print any "Blowing up..." mesasges to console, add this: level.exploder_killer_noprint = 1, or $exploder[4].noprint = 1.
+
+Misc map changes & bug fixes
+
+	- Improved headlight illumination for all drivable vehicles (illuminates further, and with a more conical shape).
+
+	- Removed one unused entity for each "player_spotlight.scr" spawned spotlight.
+	- Spotlights will now have all their entities removed if a script removes the spotlight base (typically given targetnames "s0", "s1", "s2", etc).
+
+	- "level waittill spawn" for all maps now runs before most mods are spawned, allowing lower entnums for the newly spawned mods (overwriting NULL entnums that appear when "waitthread setup" is finished).
+	- Removed "cheats" "0" and "thereisnomonkey" "0" for all maps, since "cheats" can now be set as "0" or "1" in the console to immediately turn on/off cheats without map restarting, and saves between maps.
+	- Replaced all exploder threads in all other fully modded maps with new "global/exploder_killer.scr" scripts.
+	- Added some ambience volumes to M5L1B.
+	- Added occasional wooden spotlight tower creaking sounds to all maps with such towers (except Training).
+	- Fixed Search & Destroy bombsites in M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A that moved to origin ( 0 0 0 ) after "changing sides" (every 3 rounds).
+
+	- Reverted tigertank, tigertankdsrt, tigercannon, tigercannondead models back to their original sizes, and fixed their setsizes (global/vehicletank.scr will someday include these 2 tank models as well; turret blocks player's view).
+
+	- For global/cyberattack_searchdestroy.scr, the $bombexplosive will return to its initial origin if somehow it doesn't have an dropped-origin to go to (when dropped by a player, very rarely player's origin = NIL).
+	- More random NIL & NULL errors fixed in global/cyberattack_searchdestroy.scr.
+
+New In-game Menu Skin features (improved map & mp3 menus coming soon)
+
+	- For "zzzIn-game Menu Skin.pk3": New button added to open SCREEN RESOLUTION MENU, showing a large matrix of screen resolutions to easily choose from (some are color coded to the same aspect ratios: 16:9, 4:3, etc).
+	- New button added for accessing Admin Pro Menu, in case the hotkey cannot be found in the keyboard hotkey menu.
+
+New map modded: m5l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)

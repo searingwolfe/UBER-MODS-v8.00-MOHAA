@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -401,6 +398,16 @@ setup:
 		$scene_flak88_base remove // [1] and [2]
 		$cabinet remove
 
+		//local.test = 1
+ 		// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2, ::explode set number, ... 
+		// ... damage, radius, smaller (1 = smaller earthquake), trig origin (default = explosion origin), test (1 = spawn lasers around trigger box & emitters at all the origins).
+		//
+		// Example template: exec global/exploder_killer.scr ( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 0 	( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 1 500 600 0 	( 0 0 0 ) local.test
+		//
+		// Parameters after "set number" are optional, and will auto-default if left blank.
+		//$exploder.origin = ( -4960 -5664 -128 )
+		exec global/exploder_killer.scr ( -4960 -5764 -81 ) ( -4960 -5564 -81 ) ( -4960 -5664 -181 ) ( -4960 -5664 -46 ) 90 ( -5047 -5664 -176 ) ( -4878 -5664 -188 ) ( -150 -50 -20 ) ( 150 50 184 ) 1 500 600 0 ( -4960 -5664 -181 ) local.test
+
 		exec map_triggers/gen_switches/cabinetswitch.scr ( -4212.22021484375 3226.23999023438 0 ) ( 0 0 0 ) 1 1 // dark; origin, angles, model (1 = dark, 2 = tall, 3 = wardrobe), scale (1 = default).
 		exec map_triggers/gen_switches/cabinetswitch.scr ( -4212.22021484375 3504.23999023438 0 ) ( 0 0 0 ) 1 1 // dark
 		exec map_triggers/gen_switches/cabinetswitch.scr ( -3488.76000976563 3380.7900390625 177 ) ( 0 270 0 ) 1 1 // dark
@@ -410,7 +417,6 @@ setup:
 		exec map_triggers/gen_switches/cabinetswitch.scr ( -3944.37 3119.57 176.00 ) ( 0 135 0 ) 2 1 // tall; $cabinet
 		exec map_triggers/gen_switches/cabinetswitch.scr ( -3181.00 3110.00 176.00 ) ( 0 0 0 ) 2 1 // tall; $cabinet
 
-		thread wall_explode 100 500 600 // health, damage, radius
 		thread toilet ( -5246 -5596 -184 )
 		thread toilet ( -4156 3630 176 )
 		thread bathtub ( -4077 3501 177 )
@@ -470,58 +476,6 @@ setup:
 	level.mp44 = 1
 	level.shotgun = 1
 	level.rifle = 1 
-end
-
-////////////////////////////////////////////////////////////////////////
-
-wall_explode local.health local.damage local.radius:
-
-	if($exploder == NULL || $exploderfire == NULL || $exploderchunk == NULL || $explodersmashed == NULL) { end }
-
-	local.tank = spawn "vehicles/tigertank.tik" // tank entity serves as a trigger sensor (there's not enough spawnflags) for only detecting rocket explosions & radiusdamage explosions (stuff that only kills tanks).
-	local.tank.origin = ( -4950 -5534 0 )
-	local.tank.angles = ( 0 0 0 )
-	local.tank.health = local.health
-	local.tank.scale = 0.1
-	local.tank notsolid // still has a tiny 1x1 solid box in the center; cannot make the .tik file's setsizes 0 0 0, otherwise explosions cannot touch it.
-	local.tank hide
-
-	local.tank2 = spawn "vehicles/tigertank.tik"
-	local.tank2.origin = ( -4900 -5764 0 )
-	local.tank2.angles = ( 0 0 0 )
-	local.tank2.health = local.health
-	local.tank2.scale = 0.1
-	local.tank2 notsolid
-	local.tank2 hide
-
-	while(local.tank != NULL && local.tank2 != NULL) { wait 0.1 }
-
-	println("----- Blowing up the farm stone wall.")
-	if(local.tank != NULL) { local.tank remove }
-	if(local.tank2 != NULL) { local.tank2 remove }
-
-	local.explode = spawn script_model
-	local.explode.origin = ( -4960 -5664 -176 )
-	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
-	local.explode.scale = 1.0 //2.5
-	local.explode anim start
-
-	$exploder playsound explode_building_large
-	$exploder thread global/exploder.scr::explode 1	// original game's building chunks exploder script
-	radiusdamage $exploder.origin local.damage local.radius
-	thread jitter_large	
-
-	waitframe
-	local.explode remove
-	//$exploder remove
-end
-
-jitter_large:
-
-	waitexec global/earthquake.scr .35 10 0 0
-	waitexec global/earthquake.scr .23 6 0 0
-	waitexec global/earthquake.scr 1 1 0 0
-	waitexec global/earthquake.scr 1.25 .3 0 1
 end
 
 ////////////////////////////////////////////////////////////////////////

@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -158,8 +155,7 @@ exec maps/training_mapscripts/bangalore_wallbomb.scr bangbomb42 ( -2880 -2577 31
 exec maps/training_mapscripts/bangalore_wallbomb.scr bangbomb43 ( -2578 -2880 319 ) ( 60 270 0 ) 100 0 
 exec maps/training_mapscripts/bangalore_wallbomb.scr bangbomb44 ( -2094 -2880 319 ) ( 60 270 0 ) 100 0
 thread detonatorswitch ( -1980 -2905 26 ) ( 0 270 0 ) 60 500 2
-									  
-	thread ending_ceilingexplode 100 500 600
+
 	thread vehicle_tele 100		// this allows opeltrucks specifically to pass through the vehicle-clip invisible wall at the main entrance near explosive barrels
 	thread vehicle_tele2 100
 
@@ -169,7 +165,6 @@ thread detonatorswitch ( -1980 -2905 26 ) ( 0 270 0 ) 60 500 2
 	thread splinepath_intro
 	thread splinepath_intro2
 	thread splinepath_intro3
-	thread laser_prism ( 0.125 0.0 0.333 )
 
 	thread vehicles_undermap
 }
@@ -257,54 +252,6 @@ setup:
 		if(local.entity != NULL && local.entity.classname == ScriptOrigin && local.entity.targetname == "") { local.entity remove }
 	}
 
-	$newtruckclip hide
-	$newtruckclip notsolid
-
-if(getcvar("g_ubermods") != "2")
-{
-	$temptruck2.origin = ( -3557.82 -974.37 395.01 ) // from truckstuff_trig.scr, this truck is given 3 mini-tanks on 3 sides of the front engine. These mini tanks act as sensors, waiting for rockets or explosions
-	$temptruck2.angles = ( 1 -130 0 )		 // (no bullets, no grenades) to kill a tank
-	$temptruck2.scale = 1 //.1
-	$temptruck2 anim stop_wheels
-	$temptruck2 anim idlenolights
-	$temptruck2 solid
-
-	local.sin = (waitthread global/math.scr::sine $temptruck2.angles[1]) * 18.5 // moving the truck clip 18.5 units forward to realign it with the truck.
-	local.cos = (waitthread global/math.scr::cosine $temptruck2.angles[1]) * 18.5
-
-	// Use concrete Truck clip for above Truck (to climb on etc)
-	$2ndtruckclip.origin = $temptruck2.origin + ( local.cos local.sin 2 )
-	$2ndtruckclip.angles = $temptruck2.angles
-	$2ndtruckclip hide
-
-	// Add an Allied vehicle over other metal clip
-	cache models/vehicles/opeltruckgreen_canopy.tik
-	local.alliestruck = spawn models/vehicles/opeltruckgreen_canopy.tik
-	local.alliestruck.origin = ( -2787.00 -3289.00 58.00 ) + ( -6 -7 0 )
-	local.alliestruck.angles = ( 358.000488 200 0.263672 ) + ( 0 -1 0 )
-	local.alliestruck setsize ( 0 0 0 ) ( 0 0 0 )
-	local.alliestruck.scale = 1
-	local.alliestruck notsolid
-	local.alliestruck anim idlenolights
-
-	local.alliescrate = spawn script_model
-	local.alliescrate model "static/indycrate.tik"
-	local.alliescrate.origin = ( -2607 -3219 60 )
-	local.alliescrate.angles = ( 0 200 0 )
-}
-
-if(getcvar("g_ubermods") == "2")
-{
-	local.master = spawn scriptmaster
-	local.master aliascache opeltruckrun sound/vehicle/veh_truck_move.wav soundparms 1.5 0.0 1.0 0.0 1000 5000 auto loaded maps m1l1
-	local.master aliascache minetrigger sound/weapons/foley/MineTrigger1.wav soundparms 0.7 0.0 1.0 0.0 1000 5000 item loaded maps m1l1
-
-	$temptruck2 remove // uncomment these if using the opeltruck as a drivable vehicle
-	$2ndtruckclip remove
-
-	$newtruckclip.origin = $newtruckclip.origin + ( 0 -100 0 )
-}
-
 	$hahaha remove
 	//$truckclip remove 
 	//$truckclip2 remove 
@@ -354,17 +301,78 @@ if(getcvar("g_ubermods") == "2")
 	$t80 remove
 	$t81 remove
 
-	exec global/doorlocked.scr ( -1825 -3199 32 ) wood 1
-	exec global/doorlocked.scr ( -4464 -31 380 ) wood 1
-	exec global/doorlocked.scr ( -3975 221 376 ) wood 1
-	exec global/doorlocked.scr ( -4353 852 452 ) wood 1
-	exec global/doorlocked.scr ( -5016 544 372 ) wood 1
-	exec global/doorlocked.scr ( -4880 -8 375 ) wood 1
-	exec global/doorlocked.scr ( -5688 95 380 ) wood 1
-	exec global/doorlocked.scr ( -6024 1154 413 ) wood 1
-	exec global/doorlocked.scr ( -6592 1456 600 ) wood 1
-	exec global/doorlocked.scr ( -6406 2568 432 ) wood 1
-	exec global/doorlocked.scr ( -7451 3070 402 ) gateiron 1
+	$newtruckclip hide
+	$newtruckclip notsolid
+
+	$endingexploder.targetname = "exploder"
+
+	for(local.e = 1; local.e <= $exploderfire.size; local.e++)
+	{
+		if($exploderfire[local.e].set != "500") { $exploderfire[local.e] remove; local.e = 1 } // use "500" instead of 500, otherwise some entities may not get removed.
+	}
+
+	if(getcvar("g_ubermods") == "1")
+	{
+		$temptruck2.origin = ( -3557.82 -974.37 395.01 ) // from truckstuff_trig.scr, this truck is given 3 mini-tanks on 3 sides of the front engine. These mini tanks act as sensors, waiting for rockets or explosions
+		$temptruck2.angles = ( 1 -130 0 )		 // (no bullets, no grenades) to kill a tank
+		$temptruck2.scale = 1 //.1
+		$temptruck2 anim stop_wheels
+		$temptruck2 anim idlenolights
+		$temptruck2 solid
+
+		local.sin = (waitthread global/math.scr::sine $temptruck2.angles[1]) * 18.5 // moving the truck clip 18.5 units forward to realign it with the truck.
+		local.cos = (waitthread global/math.scr::cosine $temptruck2.angles[1]) * 18.5
+
+		// Use concrete Truck clip for above Truck (to climb on etc)
+		$2ndtruckclip.origin = $temptruck2.origin + ( local.cos local.sin 2 )
+		$2ndtruckclip.angles = $temptruck2.angles
+		$2ndtruckclip hide
+
+		// Add an Allied vehicle over other metal clip
+		cache models/vehicles/opeltruckgreen_canopy.tik
+		local.alliestruck = spawn models/vehicles/opeltruckgreen_canopy.tik
+		local.alliestruck.origin = ( -2787.00 -3289.00 58.00 ) + ( -6 -7 0 )
+		local.alliestruck.angles = ( 358.000488 200 0.263672 ) + ( 0 -1 0 )
+		local.alliestruck setsize ( 0 0 0 ) ( 0 0 0 )
+		local.alliestruck.scale = 1
+		local.alliestruck notsolid
+		local.alliestruck anim idlenolights
+
+		local.alliescrate = spawn script_model
+		local.alliescrate model "static/indycrate.tik"
+		local.alliescrate.origin = ( -2607 -3219 60 )
+		local.alliescrate.angles = ( 0 200 0 )
+	}
+
+	if(getcvar("g_ubermods") == "2")
+	{
+		local.master = spawn scriptmaster
+		local.master aliascache opeltruckrun sound/vehicle/veh_truck_move.wav soundparms 1.5 0.0 1.0 0.0 1000 5000 auto loaded maps m1l1
+		local.master aliascache minetrigger sound/weapons/foley/MineTrigger1.wav soundparms 0.7 0.0 1.0 0.0 1000 5000 item loaded maps m1l1
+
+		$temptruck2 remove // uncomment these if using the opeltruck as a drivable vehicle
+		$2ndtruckclip remove
+
+		$newtruckclip.origin = $newtruckclip.origin + ( 0 -100 0 )
+
+		thread laser_prism ( 0.125 0.0 0.333 )
+
+		//local.test = 1
+ 		// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2, ::explode set number, ... 
+		// ... damage, radius, smaller (1 = smaller earthquake), trig origin (default = explosion origin), test (1 = spawn lasers around trigger box & emitters at all the origins).
+		//
+		// Example template: exec global/exploder_killer.scr ( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 0 	( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 1 500 600 0 	( 0 0 0 ) local.test
+		//
+		// Parameters after "set number" are optional, and will auto-default if left blank.
+		//
+		//$exploder[1].origin = ( -6296 1552 624 ) // exploder #set 500 has 3 exploders for the same destructible wall (one originally had the targetname: "endingexploder").
+		//$exploder[2].origin = ( -6048 1460 592 )
+		//$endingexploder.origin = ( -6368 1568 628 )
+		level.exploder_killer_noprint = 1 // applies to all exploders.
+
+		exec global/exploder_killer.scr ( -6265 1460 532 ) ( -5920 1460 532 ) ( -6048 1460 432 ) ( -6185 1460 752 ) 0 ( -6190 1495 432 ) ( -6091 1423 432 ) ( -304 -101 0 ) ( 118 100 320 ) 500 500 600 0 ( -6048 1460 432 ) local.test
+		thread ending_ceilingexplode 500 600
+	}
 
 	local.finaldoors = spawn trigger_use
  	local.finaldoors.origin = ( -6991 2304 432 )
@@ -401,6 +409,18 @@ if(getcvar("g_ubermods") == "2")
  	local.barrel2 setsize ( -30 -30 -20 ) ( 30 30 70 )
 	local.barrel2 setthread barrelexplode2
 
+	exec global/doorlocked.scr ( -1825 -3199 32 ) wood 1
+	exec global/doorlocked.scr ( -4464 -31 380 ) wood 1
+	exec global/doorlocked.scr ( -3975 221 376 ) wood 1
+	exec global/doorlocked.scr ( -4353 852 452 ) wood 1
+	exec global/doorlocked.scr ( -5016 544 372 ) wood 1
+	exec global/doorlocked.scr ( -4880 -8 375 ) wood 1
+	exec global/doorlocked.scr ( -5688 95 380 ) wood 1
+	exec global/doorlocked.scr ( -6024 1154 413 ) wood 1
+	exec global/doorlocked.scr ( -6592 1456 600 ) wood 1
+	exec global/doorlocked.scr ( -6406 2568 432 ) wood 1
+	exec global/doorlocked.scr ( -7451 3070 402 ) gateiron 1
+
 	level.springfield = 1 // keep these level weapon variables here, server could randomly crash without them						
 	level.bar = 1								
 	level.bazooka = 1	
@@ -410,61 +430,50 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-ending_ceilingexplode local.health local.damage local.radius:
+ending_ceilingexplode local.damage local.radius:
 
-	local.tank = spawn "vehicles/tigertank.tik" // tank entity serves as a trigger sensor (there's not enough spawnflags) for only detecting rocket explosions & radiusdamage explosions (stuff that only kills tanks).
-	local.tank.origin = ( -6035 1470 435 )
-	local.tank.angles = ( 0 0 0 )
-	local.tank.health = local.health
-	local.tank.scale = 0.1
-	local.tank notsolid // still has a tiny 1x1 solid box in the center; cannot make the .tik file's setsizes 0 0 0, otherwise explosions cannot touch it.
-	local.tank hide
+	level waittill spawn
 
-	local.tank2 = spawn "vehicles/tigertank.tik"
-	local.tank2.origin = ( -6285 1470 435 )
-	local.tank2.angles = ( 0 0 0 )
-	local.tank2.health = local.health
-	local.tank2.scale = 0.1
-	local.tank2 notsolid
-	local.tank2 hide
+	for(local.e = 1; local.e <= $exploder.size; local.e++)
+	{
+		if($exploder[local.e].set == 500) { local.exploder = $exploder[local.e]; break }
+	}
 
-	local.origin = local.tank.origin
-	while(local.tank != NULL && local.tank2 != NULL) { wait 0.1 }
+	if(local.exploder == NIL || local.exploder == NULL) { end }
+
+	for(local.s = 1; local.s <= $explodersmashed.size; local.s++)
+	{
+		if($explodersmashed[local.s].set == 500) { $explodersmashed[local.s].nosound = 1 } // turns off global/exploder.scr's explosion sound, since one exists in this thread already.
+	}
+
+	for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++)
+	{
+		if($exploder_trigshot[local.e].set == 500) { local.explodertrig = $exploder_trigshot[local.e]; break }
+	}
+
+	while(local.explodertrig != NIL && local.explodertrig != NULL && local.explodertrig.dead != 1) { waitframe }
 
 	println("----- Blowing up the Axis-side ceiling")
-	if(local.tank != NULL) { local.tank remove }
-	if(local.tank2 != NULL) { local.tank2 remove }
 
 	local.r = randomint(4)
-	if(local.r == 0) { $endingexploder playsound explode_building_large1 }
-	if(local.r == 1) { $endingexploder playsound explode_building_large2 }
-	if(local.r == 2) { $endingexploder playsound explode_building_large3 }
-	if(local.r == 3) { $endingexploder playsound explode_building_large4 }
+	if(local.r == 0) { $exploder[$exploder.size] playsound explode_building_large1 }
+	if(local.r == 1) { $exploder[$exploder.size] playsound explode_building_large2 }
+	if(local.r == 2) { $exploder[$exploder.size] playsound explode_building_large3 }
+	if(local.r == 3) { $exploder[$exploder.size] playsound explode_building_large4 }
 
-	local.explode = spawn script_model
-	local.explode.origin = local.origin //$endingexploder.origin
-	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
-	local.explode.scale = 1.0 //2.5
-	local.explode anim start
+	radiusdamage ( -6368 1568 628 ) local.damage local.radius
 
-	radiusdamage $endingexploder.origin local.damage local.radius
-	$endingexploder thread global/exploder.scr::explode 500	// original game's building chunks exploder script
-	thread jitter_large
+	local.smoke3 = thread emitterstuff "emitters/shermansmoke.tik" ( -6135 1511 432 ) ( 270 180 0 ) 1 start ("exploder_" + local.s + "_smoke3")
 
-	waitframe
-	local.explode remove
-	$endingexploder remove
+	local.dec = 0.01	// waitframe = 0.05 seconds. 0.05 / (5 seconds duration) = 0.01 increments.
+	while(local.smoke3.scale > 0)
+	{
+		local.smoke3.scale -= local.dec
+		waitframe
+	}
+	local.smoke3 remove
 
-	wait 4
 	exec map_triggers/tele.scr ( -6056 1520 432 ) ( -6264 1422 432 ) 1 // spawn a two-way tele to get around the debris
-end
-
-jitter_large:
-
-	waitexec global/earthquake.scr .35 10 0 0
-	waitexec global/earthquake.scr .23 6 0 0
-	waitexec global/earthquake.scr 1 1 0 0
-	waitexec global/earthquake.scr 1.25 .3 0 1
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -527,7 +536,8 @@ vehicle_convoy local.wait:
 
 		$convoyintro2 thread deadcorona "light left" 
 		$convoyintro2 thread deadcorona "light right" 
-		$convoyintro2 thread illuminate
+		$convoyintro2 thread illuminate "left"
+		$convoyintro2 thread illuminate "right"
 	}
 	if(local.wait == NIL) 
 	{
@@ -550,7 +560,8 @@ vehicle_convoy local.wait:
 
 		$convoyintro thread deadcorona "light left" 
 		$convoyintro thread deadcorona "light right" 
-		$convoyintro thread illuminate
+		$convoyintro thread illuminate "left"
+		$convoyintro thread illuminate "right"
 	}
 	local.vehicle.scale = 1
 	local.vehicle waitmove
@@ -777,28 +788,31 @@ deadcorona local.tag:
 	if(local.flare != NULL) { local.flare remove }
 end
 
-illuminate:
+illuminate local.side:
+
+	local.distance = 325
+	local.height = 57
+	local.radius = 250
 
 	local.light = spawn script_model
 	local.light model "fx/searchlight.tik"
 	local.light.origin = self.origin
 	local.light.scale = 0.001
 	local.light notsolid
-	local.light light 1 1 1 250
-
-	local.PI = 3.14159265359
-	local.distance = 325		// how far away from the vehicle's origin
-
-	while(self != NULL && self.corona == 1)
+	if(local.side == "right")
 	{
-		local.degrees = self.angles[1]
-		if(local.degrees >= 180) { local.degrees = local.degrees - 360 }
-		local.radians = local.degrees * (local.PI / 180)
+		local.light light .5 .5 .5 (local.radius * 2)
+		local.distance += local.radius
+	}
+	else { local.light light 1 1 1 local.radius }
 
-		local.sin = (sin local.radians) * local.distance
-		local.cos = (cos local.radians) * local.distance
-
-		local.light.origin = self.origin + ( local.cos local.sin 50 )
+	local.origin = self.origin
+	while(self != NULL && self.corona == 1) // make sure the illumination stays a certain distance in front of the truck. adding the speed to the distance keeps the entity roughly in the same spot.
+	{
+		local.speed = sqrt ((self.origin[0] - local.origin[0]) * (self.origin[0] - local.origin[0]) + (self.origin[1] - local.origin[1]) * (self.origin[1] - local.origin[1]) + (self.origin[2] - local.origin[2]) * (self.origin[2] - local.origin[2]))
+ 		//local.light.origin = trace (self.origin + ( 0 0 local.height )) (self.origin + ( 0 0 local.height ) + self.forwardvector * (local.distance + (local.speed * 0.55))) 0 // use trace to ensure the light doesn't go into walls when vehicle is facing walls.
+		local.light.origin = self.origin + ( 0 0 local.height ) + self.forwardvector * (local.distance + (local.speed * 0.55))
+		local.origin = self.origin
 		waitframe
 	}
 	if(local.light != NULL) { local.light remove }
@@ -1202,117 +1216,14 @@ laser_prism local.color:
 	local.height = 175
 	local.height2 = 119
 
-	local.laser1 = spawn func_beam targetname "laser1"
-	local.laser1 minoffset 0.0
-	local.laser1 maxoffset 0.0
-	local.laser1 numsegments 1
-	local.laser1 life 0
-	local.laser1 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser1 alpha 0.4
-	local.laser1 alwaysdraw
-	local.laser1 activate
-	local.laser1 scale .5
-	local.laser1.origin = local.origin1
-	local.laser1 endpoint (local.origin1 + ( 0 0 local.height2 ))
-	local.laser1 notsolid
-
-	local.laser2 = spawn func_beam targetname "laser2"
-	local.laser2 minoffset 0.0
-	local.laser2 maxoffset 0.0
-	local.laser2 numsegments 1
-	local.laser2 life 0
-	local.laser2 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser2 alpha 0.4
-	local.laser2 alwaysdraw
-	local.laser2 activate
-	local.laser2 scale .5
-	local.laser2.origin = local.origin2
-	local.laser2 endpoint (local.origin2 + ( 0 0 local.height2 ))
-	local.laser2 notsolid
-
-	local.laser3 = spawn func_beam targetname "laser3"
-	local.laser3 minoffset 0.0
-	local.laser3 maxoffset 0.0
-	local.laser3 numsegments 1
-	local.laser3 life 0
-	local.laser3 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser3 alpha 0.4
-	local.laser3 alwaysdraw
-	local.laser3 activate
-	local.laser3 scale .5
-	local.laser3.origin = local.origin3
-	local.laser3 endpoint (local.origin3 + ( 0 0 local.height ))
-	local.laser3 notsolid
-
-	local.laser4 = spawn func_beam targetname "laser4"
-	local.laser4 minoffset 0.0
-	local.laser4 maxoffset 0.0
-	local.laser4 numsegments 1
-	local.laser4 life 0
-	local.laser4 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser4 alpha 0.4
-	local.laser4 alwaysdraw
-	local.laser4 activate
-	local.laser4 scale .5
-	local.laser4.origin = local.origin4
-	local.laser4 endpoint (local.origin4 + ( 0 0 local.height ))
-	local.laser4 notsolid
-
-	local.laser5 = spawn func_beam targetname "laser5"
-	local.laser5 minoffset 0.0
-	local.laser5 maxoffset 0.0
-	local.laser5 numsegments 1
-	local.laser5 life 0
-	local.laser5 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser5 alpha 0.4
-	local.laser5 alwaysdraw
-	local.laser5 activate
-	local.laser5 scale .5
-	local.laser5.origin = local.origin1 + ( 0 0 local.height2 )
-	local.laser5 endpoint (local.origin2 + ( 0 0 local.height2 ))
-	local.laser5 notsolid
-
-	local.laser6 = spawn func_beam targetname "laser6"
-	local.laser6 minoffset 0.0
-	local.laser6 maxoffset 0.0
-	local.laser6 numsegments 1
-	local.laser6 life 0
-	local.laser6 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser6 alpha 0.4
-	local.laser6 alwaysdraw
-	local.laser6 activate
-	local.laser6 scale .5
-	local.laser6.origin = local.origin2 + ( 0 0 local.height2 )
-	local.laser6 endpoint (local.origin3 + ( 0 0 local.height ))
-	local.laser6 notsolid
-
-	local.laser7 = spawn func_beam targetname "laser7"
-	local.laser7 minoffset 0.0
-	local.laser7 maxoffset 0.0
-	local.laser7 numsegments 1
-	local.laser7 life 0
-	local.laser7 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser7 alpha 0.4
-	local.laser7 alwaysdraw
-	local.laser7 activate
-	local.laser7 scale .5
-	local.laser7.origin = local.origin3 + ( 0 0 local.height )
-	local.laser7 endpoint (local.origin4 + ( 0 0 local.height ))
-	local.laser7 notsolid
-
-	local.laser8 = spawn func_beam targetname "laser8"
-	local.laser8 minoffset 0.0
-	local.laser8 maxoffset 0.0
-	local.laser8 numsegments 1
-	local.laser8 life 0
-	local.laser8 color ( local.color[0] local.color[1] local.color[2] )
-	local.laser8 alpha 0.4
-	local.laser8 alwaysdraw
-	local.laser8 activate
-	local.laser8 scale .5
-	local.laser8.origin = local.origin4 + ( 0 0 local.height )
-	local.laser8 endpoint (local.origin1 + ( 0 0 local.height2 ))
-	local.laser8 notsolid
+	local.laser1 = thread spawnlaser local.origin1 (local.origin1 + ( 0 0 local.height2 )) local.color 0.5 "laser1"
+	local.laser2 = thread spawnlaser local.origin2 (local.origin2 + ( 0 0 local.height2 )) local.color 0.5 "laser2"
+	local.laser3 = thread spawnlaser local.origin3 (local.origin3 + ( 0 0 local.height )) local.color 0.5 "laser3"
+	local.laser4 = thread spawnlaser local.origin4 (local.origin4 + ( 0 0 local.height )) local.color 0.5 "laser4"
+	local.laser5 = thread spawnlaser (local.origin1 + ( 0 0 local.height2 )) (local.origin2 + ( 0 0 local.height2 )) local.color 0.5 "laser5"
+	local.laser6 = thread spawnlaser (local.origin2 + ( 0 0 local.height2 )) (local.origin3 + ( 0 0 local.height )) local.color 0.5 "laser6"
+	local.laser7 = thread spawnlaser (local.origin3 + ( 0 0 local.height )) (local.origin4 + ( 0 0 local.height )) local.color 0.5 "laser7"
+	local.laser8 = thread spawnlaser (local.origin4 + ( 0 0 local.height )) (local.origin1 + ( 0 0 local.height2 )) local.color 0.5 "laser8"
 end
 
 lasersremove:
@@ -1679,6 +1590,19 @@ cratesstuff local.model local.origin local.angles local.hide local.scale local.t
 	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
 end
 
+emitterstuff local.model local.origin local.angles local.scale local.anim local.targetname:
+
+	local.emitter = spawn script_model
+	local.emitter model local.model
+	if(local.emitter.model == "models/emitters/inferno.tik") { local.emitter.origin = local.origin + ( 0 0 50 ) }
+	else { local.emitter.origin = local.origin }
+	if(local.angles[2] != NIL) { local.emitter.angles = local.angles }
+	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
+	if(local.anim != NIL) { local.emitter anim local.anim }
+	if(local.targetname != NIL) { local.emitter.targetname = local.targetname }
+	local.emitter notsolid
+end local.emitter
+
 solidclip local.origin local.setsize1 local.setsize2 local.angle:
 
 	local.clip = spawn script_object  
@@ -1698,6 +1622,25 @@ solidclip2 local.origin local.setsize1 local.setsize2 local.angles:
 	local.clip solid
 	local.clip nodamage
 end
+
+spawnlaser local.origin local.endpoint local.color local.scale local.targetname:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+	if(local.targetname != NIL) { local.laser.targetname = local.targetname }
+end local.laser
 
 ////////////////////////////////////////////////////////////////////////
 

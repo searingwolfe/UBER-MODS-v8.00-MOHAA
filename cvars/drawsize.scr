@@ -1,0 +1,242 @@
+// This cvar is used to spawn a cube of lasers around any trigger or entity's setsizes.
+// Green lasers indicate the "setsize2" vertex (highest origin values).
+// Red lasers indicate the "setsize1" vertex (lowest origin values).
+//
+// The trigger/entity's setsizes must be saved to ".setsize1 = " and ".setsize2 = " for this cvar to work.
+// For example: "local.trigger.setsize1 = ( -100 -100 -50 )" and "local.trigger.setsize2 = ( 100 100 50 )".
+//
+// This cvar will only draw entity/trigger setsizes with targetnames,
+// since many nameless entities come from BSP, and additional code is required to find that entity, then give it a targetname, then save setsizes to ".setsize1 = " and ".setsize2 = ".
+
+main: // findset.scr. Run "exec global/drawsize.scr" in any map script to use the "drawsize [targetname]" cvar, or "drawsize 0" cvar (removes all drawsize lasers).
+
+	local.color1 = ( 1 0 0 )	// setsize1 vertex ( - - - )
+	local.color2 = ( 0 1 0 )	// setsize2 vertex ( + + + )
+	local.color = ( .7 .7 .7 )	// other vertexes
+	local.scale = 1			// laser scale
+
+	while(string(getcvar("drawsize")) == "") { waitframe }
+	local.name = string(getcvar("drawsize"))
+
+	if(level.lasers_drawsizecvar[local.name] == 1) { println("----- ERROR. This entity's setsizes have already been drawn!"); end }
+
+	if($(local.name) != NULL)
+	{
+		if($(local.name).size > 1)
+		{
+			println("----- NOTE. Multiple entities named: $" + local.name)
+			for(local.e = 1; local.e <= $(local.name).size; local.e++) { println("----- $" + local.name + "[" + local.e + "]") }
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+	}
+	if(local.name == "0")
+	{
+		if($drawsize_cvar_laser[1] != NULL)
+		{
+			for(local.a = 1; local.a <= $drawsize_cvar_laser.size; local.a++) { $drawsize_cvar_laser[local.a] remove }
+			println("----- Laser entities removed: " + (local.a - 1))
+		}
+		else { println("----- NOTE. There are no drawn lasers to remove.") }
+		level.lasers_drawsizecvar = NIL
+
+		if(local.name != "") { setcvar "drawsize" "" }
+  		thread main
+		end
+	}
+	if(local.name.size > 3 && local.name[local.name.size - 1] == "]")
+	{
+		if(local.name[local.name.size - 3] == "[")
+		{
+			local.arrayint = int(string(local.name[local.name.size - 2]))
+			local.subtract = 0
+		}
+		if(local.name[local.name.size - 4] == "[")
+		{
+			local.arrayint = int(string(local.name[local.name.size - 3]) + string(local.name[local.name.size - 2]))
+			local.subtract = 1
+		}
+		if(local.name[local.name.size - 5] == "[")
+		{
+			local.arrayint = int(string(local.name[local.name.size - 4]) + string(local.name[local.name.size - 3]) + string(local.name[local.name.size - 2]))
+			local.subtract = 2
+		}
+		local.arrayname = string("")
+		for(local.a = 0; local.a < (local.name.size - 3 - local.subtract); local.a++) { local.arrayname = local.arrayname + string(local.name[local.a]) }
+
+		if($(local.arrayname).size < local.arrayint)
+		{
+			println("----- ERROR. Targetname: $" + local.name + " does not exist!")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+	}
+	if(local.arrayint == NIL && $(local.name) == NULL)
+	{
+		println("----- ERROR. Targetname: $" + local.name + " does not exist!")
+		if(local.name != "") { setcvar "drawsize" "" }
+  		thread main
+		end
+	}
+
+	if(local.arrayint == NIL && $(local.name) != NULL)
+	{
+		if($(local.name).setsize1 == NIL || $(local.name).setsize2 == NIL)
+		{
+			println("----- ERROR. Targetname: $" + local.name + " must have setsizes saved to '.setsize1 = ' and '.setsize2 = '.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.name).setsize1[2] == NIL)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize1' value must be in ( 0 0 0 ) format.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.name).setsize2[2] == NIL)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize2' value must be in ( 0 0 0 ) format.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.name).setsize1[0] > 0 || $(local.name).setsize1[1] > 0 || $(local.name).setsize1[2] > 0)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize1' values must be > 0.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.name).setsize2[0] < 0 || $(local.name).setsize2[1] < 0 || $(local.name).setsize2[2] < 0)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize2' values must be < 0.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+
+		local.origin = $(local.name).origin
+		local.min = $(local.name).setsize1
+		local.max = $(local.name).setsize2
+
+		local.v1 = local.origin + $(local.name).setsize2			// vertex 1 ( + + + )
+		local.v2 = local.origin + ( local.min[0] local.max[1] local.max[2] )	// vertex 2 ( - + + )
+		local.v3 = local.origin + ( local.max[0] local.min[1] local.max[2] )	// vertex 3 ( + - + )
+		local.v4 = local.origin + ( local.min[0] local.min[1] local.max[2] )	// vertex 4 ( - - + )
+		local.v5 = local.origin + ( local.max[0] local.max[1] local.min[2] )	// vertex 5 ( + + - )
+		local.v6 = local.origin + ( local.min[0] local.max[1] local.min[2] )	// vertex 6 ( - + - )
+		local.v7 = local.origin + ( local.max[0] local.min[1] local.min[2] )	// vertex 7 ( + - - )
+		local.v8 = local.origin + $(local.name).setsize1			// vertex 8 ( - - - )
+	}
+	if(local.arrayint != NIL && $(local.arrayname)[local.arrayint] != NULL)
+	{
+		if($(local.arrayname)[local.arrayint].setsize1 == NIL || $(local.arrayname)[local.arrayint].setsize2 == NIL)
+		{
+			println("----- ERROR. Targetname: $" + local.name + " must have setsizes saved to '.setsize1 = ' and '.setsize2 = '.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.arrayname)[local.arrayint].setsize1[2] == NIL)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize1' value must be in ( 0 0 0 ) format.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.arrayname)[local.arrayint].setsize2[2] == NIL)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize2' value must be in ( 0 0 0 ) format.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.arrayname)[local.arrayint].setsize1[0] > 0 || $(local.arrayname)[local.arrayint].setsize1[1] > 0 || $(local.arrayname)[local.arrayint].setsize1[2] > 0)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize1' values must be > 0.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+		if($(local.arrayname)[local.arrayint].setsize2[0] < 0 || $(local.arrayname)[local.arrayint].setsize2[1] < 0 || $(local.arrayname)[local.arrayint].setsize2[2] < 0)
+		{
+			println("----- ERROR. Targetname: $" + local.name + "'s 'setsize2' values must be < 0.")
+			if(local.name != "") { setcvar "drawsize" "" }
+  			thread main
+			end
+		}
+
+		local.origin = $(local.arrayname)[local.arrayint].origin
+		local.min = $(local.arrayname)[local.arrayint].setsize1
+		local.max = $(local.arrayname)[local.arrayint].setsize2
+
+		local.v1 = local.origin + $(local.arrayname)[local.arrayint].setsize2	// vertex 1 ( + + + )
+		local.v2 = local.origin + ( local.min[0] local.max[1] local.max[2] )	// vertex 2 ( - + + )
+		local.v3 = local.origin + ( local.max[0] local.min[1] local.max[2] )	// vertex 3 ( + - + )
+		local.v4 = local.origin + ( local.min[0] local.min[1] local.max[2] )	// vertex 4 ( - - + )
+		local.v5 = local.origin + ( local.max[0] local.max[1] local.min[2] )	// vertex 5 ( + + - )
+		local.v6 = local.origin + ( local.min[0] local.max[1] local.min[2] )	// vertex 6 ( - + - )
+		local.v7 = local.origin + ( local.max[0] local.min[1] local.min[2] )	// vertex 7 ( + - - )
+		local.v8 = local.origin + $(local.arrayname)[local.arrayint].setsize1	// vertex 8 ( - - - )
+	}
+
+	thread spawnlaser local.v1 local.v2 local.color2 local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v1 local.v3 local.color2 local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v1 local.v5 local.color2 local.scale "drawsize_cvar_laser"
+
+	thread spawnlaser local.v2 local.v1 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v2 local.v4 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v2 local.v6 local.color local.scale "drawsize_cvar_laser"
+
+	thread spawnlaser local.v3 local.v1 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v3 local.v4 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v3 local.v7 local.color local.scale "drawsize_cvar_laser"
+
+	thread spawnlaser local.v4 local.v2 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v4 local.v3 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v4 local.v8 local.color local.scale "drawsize_cvar_laser"
+
+	thread spawnlaser local.v5 local.v1 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v5 local.v6 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v5 local.v7 local.color local.scale "drawsize_cvar_laser"
+
+	thread spawnlaser local.v6 local.v2 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v6 local.v5 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v6 local.v8 local.color local.scale "drawsize_cvar_laser"
+
+	thread spawnlaser local.v7 local.v3 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v7 local.v5 local.color local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v7 local.v8 local.color local.scale "drawsize_cvar_laser"
+
+	thread spawnlaser local.v8 local.v4 local.color1 local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v8 local.v6 local.color1 local.scale "drawsize_cvar_laser"
+	thread spawnlaser local.v8 local.v7 local.color1 local.scale "drawsize_cvar_laser"
+
+	level.lasers_drawsizecvar[local.name] = 1
+	println("----- Laser entities spawned: 24")
+
+	if(local.name != "") { setcvar "drawsize" "" }
+  	thread main
+end
+
+spawnlaser local.origin local.endpoint local.color local.scale local.targetname:
+
+	local.laser = spawn func_beam targetname local.targetname
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end

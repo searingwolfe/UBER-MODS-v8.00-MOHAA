@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -55,6 +52,7 @@ exec global/aliascache_triggersounds.scr radio_music2
 exec global/aliascache_triggersounds.scr bathroom
 exec global/aliascache_triggersounds.scr valve_switch
 exec global/aliascache_triggersounds.scr truck_sounds
+exec global/aliascache_triggersounds.scr woodcreak
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 
@@ -511,6 +509,7 @@ setup:
 		thread firesound ( -2927 687 48 )
 		thread firesound ( -801 -1635 240 )
 
+		thread tower_woodcreak ( -5888 1472 368 )
 		thread toilet ( -2652 532 216 )
 		thread toilet ( -872 -324 0 )
 		thread faucet ( -936 -32 0 )
@@ -552,6 +551,8 @@ setup:
 	exec global/doorlocked.scr ( -3784 -4058 -318 ) gatelarge 1
 	exec global/doorlocked.scr ( -399 -1567 0 ) wood 1
 	exec global/doorlocked.scr ( -609 279 -206 ) gatelarge 1
+
+	thread zeroents_with_targetname_fix
 	
 	level.springfield = 1
 	level.bar = 1
@@ -854,6 +855,26 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
 faucet local.origin: // triggers can do "playsound" but not "loopsound". need a script_model to do "loopsound" at a trigger's origin.
 
 	local.tub = spawn trigger_use
@@ -1123,6 +1144,20 @@ vehicles_undermap:
 		}
 		waitframe
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+zeroents_with_targetname_fix: // fixing the console errors below
+
+//^~^~^ Game (Event: 'patrolpath', Object: 'Actor') : There are 0 entities with targetname '0'. You are using a command that requires exactly one.
+
+	thread cratesstuff static/indycrate.tik ( 0 0 0 ) ( 0 0 0 ) 1 1 "0"
+
+	level waittill prespawn
+	level waittill spawn
+
+	$0 remove
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1615,13 +1650,13 @@ level waittill spawn
 
 			if(level.changesides == 0)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4045 5949 6 ) -167
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -339 -493 0 ) -90
 			}
 			if(level.changesides == 1)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -5594 -7018 -59 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -4485 540 0 ) 160
 			}
 			local.sides = level.changesides
 		}

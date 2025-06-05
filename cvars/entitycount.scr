@@ -52,7 +52,17 @@ main:
 				{
 					if((int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6) || (int(getcvar("entities")) == 5 && local.entity.targetname != "") || (int(getcvar("entities")) == 6 && local.entity.targetname == ""))
 					{
-						if(int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8) { println(local.i + ": " + local.entity) }
+						if(int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8)
+						{
+							if($(local.entity.targetname).size > 1)
+							{
+								for(local.t = 1; local.t <= $(local.entity.targetname).size; local.t++)
+								{
+									if($(local.entity.targetname)[local.t] == local.entity) { println(local.i + ": " + local.entity.targetname + "[" + local.t + "]") }
+								}
+							}
+							else { println(local.i + ": " + local.entity.targetname) }
+						}
 						if(int(getcvar("entities")) == 7) { println(local.i + ": " + local.entity.classname) }
 						if(int(getcvar("entities")) == 8 && local.entity.target != "") { println(local.i + ": " + local.entity.target) }
 					}

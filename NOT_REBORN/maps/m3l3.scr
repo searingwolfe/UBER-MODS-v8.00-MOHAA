@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -585,10 +582,11 @@ setup:
 			thread cratesstuff statweapons/nebelwerfer.tik ( -5676.50 -6055.58 -32.00 ) ( 0 40 0 )
 		}
 
-		thread wall_explode 100 500 600 1 // health, damage, radius, exploder integer ( for $exploder[local.int])
-		thread wall_explode 100 500 600 2
-		thread wall_explode 100 500 600 3
-		thread wall_explode 100 500 600 4
+		thread exploders 1 500 600 	// middle building (right side, no window)		// exploder[number], damage, radius, smaller (1 = smaller earthquake)
+		thread exploders 2 500 400 	// middle building (left side, with window)
+		thread exploders 3 500 600 	// middle building (middle)
+		thread exploders 4 500 400 1 	// small broken wall (outside)
+
 		thread toilet ( 3378 4151 -15 )
 		thread bathtub ( 3234 4102 -30 )
 		thread nebelwerfer_clip_escape 115 // distance to move behind nebelwerfers when exiting them, to avoid getting stuck in the map's solid player-clips (minimum = 110).
@@ -672,61 +670,29 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-wall_explode local.health local.damage local.radius local.exploderint:
+exploders local.inc local.damage local.radius local.smaller:
 
-	if($exploder == NULL || $exploderfire == NULL || $exploderchunk == NULL || $explodersmashed == NULL || local.exploderint == NIL) { end }
-	if(local.exploderint > 4 || local.exploderint < 1) { end }
+	//level.exploder_killer_onlyprojectiles = 1 // this prevents too many exploders from blowing up simultaneously.
 
-	local.tank = spawn "vehicles/tigertank.tik" // tank entity serves as a trigger sensor (there's not enough spawnflags) for only detecting rocket explosions & radiusdamage explosions (stuff that only kills tanks).
-	if(local.exploderint == 4) { local.tank.origin = ( 3167.758057 2323.583252 0 ) }
-	else { local.tank.origin = ( 3898 $exploder[local.exploderint].origin[1] 0 ) }
-	local.tank.angles = ( 0 0 0 )
-	local.tank.health = local.health
-	local.tank.scale = 0.1
-	local.tank notsolid // still has a tiny 1x1 solid box in the center; cannot make the .tik file's setsizes 0 0 0, otherwise explosions cannot touch it.
-	local.tank hide
+ // radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2 (trig origin = explosion origin), ::explode set number. [1] - [10] columns.
+	local.array = makeArray
+		( 3916 1696 -171 ) ( 4116 1696 -171 )		( 4016 1696 -271 ) ( 4016 1696 -115 ) 180	( 4016 1735 -271 ) ( 4016 1645 -255 )		( -50 -85 -10 ) ( 50 85 192 ) 3		// exploder[1].origin = ( 4016 1696 -188 )
+		( 3916 2112 -171 ) ( 4116 2112 -171 )		( 4016 2112 -271 ) ( 4016 2112 -115 ) 180	( 4016 2071 -263 ) ( 4016 2170 -255 )		( -50 -85 -10 ) ( 50 85 192 ) 1		// exploder[2].origin = ( 4016 2112 -188 )
+		( 3916 1920 -171 ) ( 4116 1920 -171 )		( 4016 1920 -271 ) ( 4016 1920 -115 ) 180	( 4016 1968 -263 ) ( 4016 1867 -271 )		( -50 -85 -10 ) ( 50 85 192 ) 2		// exploder[3].origin = ( 4016 1920 -196 )
+		( 3134 2128 -156 ) ( 3134 2328 -156 )		( 3134 2228 -256 ) ( 3017 2228 -118 ) 180	( 3112 2228 -231 ) ( 3241 2228 -250 )		( -118 -50 -20 ) ( 170 50 190 ) 4	// exploder[4].origin = ( 3134 2228 -196 )
+	endArray
 
-	local.tank2 = spawn "vehicles/tigertank.tik"
-	if(local.exploderint == 4) { local.tank2.origin = ( 3207.758057 2131.080322 0 ) }
-	else { local.tank2.origin = ( 4107 $exploder[local.exploderint].origin[1] 0 ) }
-	if(local.exploderint == 4) { local.tank2.angles = ( 0 270 0 ) }
-	else { local.tank2.angles = ( 0 0 0 ) }
-	local.tank2.health = local.health
-	local.tank2.scale = 0.1
-	local.tank2 notsolid
-	local.tank2 hide
+	//if(local.inc == 4) { local.test = 1 } 		// spawning test emitters for $exploder[4]'s radiusdamage, explosion, debris, smoke, and trig origin (same as explosion origin for these exploders).
+	//else { local.test = 0 }				// test = 1 also spawns lasers around the $exploder_trigshot trigger for the "local.inc" exploder #set.
 
-	while(local.tank != NULL && local.tank2 != NULL) { wait 0.1 }
-
-	println("----- Blowing up stone wall [" + local.exploderint + "].")
-	if(local.tank != NULL) { local.tank remove }
-	if(local.tank2 != NULL) { local.tank2 remove }
-
-	local.explode = spawn script_model
-	local.explode.origin = ( $exploder[local.exploderint].origin[0] $exploder[local.exploderint].origin[1] -271 )
-	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
-	local.explode.scale = 1.0 //2.5
-	local.explode anim start
-
-	$exploder[local.exploderint] playsound explode_building_large
-	if(local.exploderint == 1) { thread global/exploder.scr::explode 3 } // original game's building chunks exploder script
-	if(local.exploderint == 2) { thread global/exploder.scr::explode 1 }
-	if(local.exploderint == 3) { thread global/exploder.scr::explode 2 }
-	if(local.exploderint == 4) { thread global/exploder.scr::explode 4 }
-	radiusdamage $exploder[1].origin local.damage local.radius	// place radiusdamage after exploders finish, since the radiusdamage origin is still inside the wall.
-	thread jitter_large	
-
-	waitframe
-	local.explode remove
-	//$exploder[local.exploderint] remove
-end
-
-jitter_large:
-
-	waitexec global/earthquake.scr .35 10 0 0
-	waitexec global/earthquake.scr .23 6 0 0
-	waitexec global/earthquake.scr 1 1 0 0
-	waitexec global/earthquake.scr 1.25 .3 0 1
+	if(local.test == 1)
+	{
+		exec global/exploder_killer.scr local.array[local.inc][1] local.array[local.inc][2] local.array[local.inc][3] local.array[local.inc][4] local.array[local.inc][5] local.array[local.inc][6] local.array[local.inc][7] local.array[local.inc][8] local.array[local.inc][9] local.array[local.inc][10] local.damage local.radius local.smaller local.array[local.inc][3] local.test
+	}
+	else
+	{
+		exec global/exploder_killer.scr local.array[local.inc][1] local.array[local.inc][2] local.array[local.inc][3] local.array[local.inc][4] local.array[local.inc][5] local.array[local.inc][6] local.array[local.inc][7] local.array[local.inc][8] local.array[local.inc][9] local.array[local.inc][10] local.damage local.radius local.smaller
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

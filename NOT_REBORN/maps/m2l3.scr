@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -531,6 +528,30 @@ moving_train_check:
 					{
 						$player[local.i].drivingent damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
 					}
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+moving_train_check_runover:
+
+	while(self != NULL)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1 && $player[local.i].flying != 1)
+			{
+				if($player[local.i].driving != 1 && $player[local.i].passenger != 1 && self.runovertrig && $player[local.i].origin[2] < self.origin[2] + 240)
+				{
+					$player[local.i] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+				if($player[local.i].driving == 1 && $player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && $player[local.i].drivingent istouching self.runovertrig)
+				{
+					$player[local.i].drivingent damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
 				}
 			}
 		}

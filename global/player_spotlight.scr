@@ -111,9 +111,7 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 	local.spotlight.spottrigger = local.spottrigger
 
 	local.groundtarget = spawn script_origin
-	local.groundspot_target = spawn script_origin
 	local.spotlight.groundtarget = local.groundtarget
-	local.spotlight.groundspot_target = local.groundspot_target
 
 	local.light = spawn script_model
 	local.light model "fx/searchlight.tik"
@@ -146,9 +144,9 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
    	local.beam hide
 	local.spotlight.beam = local.beam
 
-  	thread aimspot local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.indestructible
+  	thread aimspot local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.indestructible
 
-	local.spottrigger thread replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path local.mountwall local.orient
+	local.spottrigger thread replace_spotlight local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path local.mountwall local.orient
 
 	local.spotlight thread spotpath local.name local.path local.spot local.flare
  
@@ -308,13 +306,13 @@ makespot local.spotlight local.mountwall local.name local.indestructible local.o
 	}
 end
 
-aimspot local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.indestructible:
+aimspot local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spottrigger local.spotlight local.indestructible:
 
    while(local.spotlight != NULL && local.spot != NULL && local.spottrigger != NULL && local.spot.destroyed != 1)
    {
-	local.groundspot_target.origin = local.spot.origin + local.spot.forwardvector * -10240
+	local.groundtarget.origin = local.spot.origin + local.spot.forwardvector * -10240
 
-	local.p = trace local.spot.origin local.groundspot_target.origin 0
+	local.p = trace local.spot.origin local.groundtarget.origin 0
 
 	local.beam endpoint local.p
 
@@ -371,7 +369,7 @@ aimspot local.groundspot_target local.name local.beam local.spot local.light loc
 		local.spottrigger delete
 		local.spotdamage delete
 		local.groundtarget delete
-		local.beam deactivate
+		local.beam delete
 
 		wait 0.1 // cannot use "waitframe" for "fx_spotlighthit.tik", the spark animation gets removed too fast.
 		local.spark remove
@@ -379,13 +377,24 @@ aimspot local.groundspot_target local.name local.beam local.spot local.light loc
 	}
    	waitframe
    }
+
+   if(local.spotlight == NULL) // if the spotlightbase is removed, remove everything else.
+   {
+	if(local.beam != NULL) { local.beam delete }
+	if(local.spot != NULL) { local.spot delete }
+	if(local.light != NULL) { local.light delete }
+	if(local.groundtarget != NULL) { local.groundtarget delete }
+	if(local.flare != NULL) { local.flare delete }
+	if(local.spotdamage != NULL) { local.spotdamage delete }
+	if(local.spottrigger != NULL) { local.spottrigger delete }
+   }
 end
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-replace_spotlight local.groundspot_target local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path local.mountwall local.orient:
+replace_spotlight local.name local.beam local.spot local.light local.groundtarget local.flare local.spotdamage local.spotlight local.path local.mountwall local.orient:
 
 	self waittill trigger
 	self nottriggerable
@@ -406,7 +415,6 @@ replace_spotlight local.groundspot_target local.name local.beam local.spot local
 	local.s_ang[0] = (local.s_ang[0] * -1) 	// un-invert pitch rotation for floor & ceiling mounts
 	local.spotangles_init = local.s_ang + ( 0 180 0 ) // keep spotlight's angles = local.player's angles.
 
-	local.groundspot_target remove
 	local.spotlight remove
 	local.beam remove
 	local.spot remove

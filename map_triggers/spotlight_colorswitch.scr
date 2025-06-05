@@ -23,13 +23,13 @@ main local.origin local.angles local.name local.name2:
 
 exec global/aliascache_triggersounds.scr alarm_switch
 
-local.switch = spawn script_model
+local.switch = spawn script_model targetname ("s_colorswitch_" + local.name)
 local.switch model "animate/alarmswitch.tik"
 local.switch.origin = local.origin
 local.switch.angles = local.angles
 local.switch notsolid
 
-local.switchtrig = spawn trigger_use
+local.switchtrig = spawn trigger_use targetname ("s_colorswitchtrig_" + local.name)
 local.switchtrig.origin = local.switch.origin
 local.switchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
 
@@ -60,19 +60,24 @@ else
 	if(local.name2 == "slowrainbow") { level.spotlight_rainbow[local.name] = 3 }
 	else { level.spotlight_rainbow[local.name] = 1 }
 
-	if(local.name != "all") { local.switchtrig message ("*** Rainbow spotlight colors turned ON. ***") }
-	if(local.name == "all") { local.switchtrig message ("*** Rainbow spotlight colors turned ON for all spotlights. ***") }
+	if(local.name != "all" && local.name2 != "slowrainbow") { local.switchtrig message ("*** Rainbow spotlight colors turned ON. ***") }
+	if(local.name == "all" && local.name2 != "slowrainbow") { local.switchtrig message ("*** Rainbow spotlight colors turned ON for all spotlights. ***") }
+	if(local.name != "all" && local.name2 == "slowrainbow") { local.switchtrig message ("*** Slow rainbow spotlight colors turned ON. ***") }
+	if(local.name == "all" && local.name2 == "slowrainbow") { local.switchtrig message ("*** Slow rainbow spotlight colors turned ON for all spotlights. ***") }
 	local.player = parm.other
 	local.switchtrig triggerable
 
 	local.switchtrig waittill trigger
-	if(local.name != "all") { local.switchtrig message ("*** Rainbow spotlight colors turned OFF. ***") }
-	if(local.name == "all") { local.switchtrig message ("*** Rainbow spotlight colors turned OFF for all spotlights. ***") }
+	if(local.name != "all" && local.name2 != "slowrainbow") { local.switchtrig message ("*** Rainbow spotlight colors turned OFF. ***") }
+	if(local.name == "all" && local.name2 != "slowrainbow") { local.switchtrig message ("*** Rainbow spotlight colors turned OFF for all spotlights. ***") }
+	if(local.name != "all" && local.name2 == "slowrainbow") { local.switchtrig message ("*** Slow rainbow spotlight colors turned OFF. ***") }
+	if(local.name == "all" && local.name2 == "slowrainbow") { local.switchtrig message ("*** Slow rainbow spotlight colors turned OFF for all spotlights. ***") }
 	local.switchtrig nottriggerable
 
 	local.switch playsound alarmswitch
 	local.switch anim turnoff
 	level.spotlight_rainbow[local.name] = 0
+	if(local.name == "all") { level.flags[allspotlights_rainbow] = 0 }
 	wait 1
 }
 

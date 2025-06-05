@@ -1,12 +1,20 @@
-main: // findset.scr. Run "exec global/findset.scr" in any map script to use the "findset [#set]" cvar and "findset all" cvar.
+// This cvar is used to find more information about any $exploder related entities on the map.
+//
+// Type "findset 101" into console to print any entnums + targetnames with ".set = 101".
+// Type "findset all" into console to print any entnums + set numbers that has a ".set" value, and print the total number of entities for each #set.
+// Type "findset exploder" (or exploders) into console to print all $exploder origins + set numbers, and print the total number of $exploder entities for each #set.
+
+main: // findset.scr. Run "exec global/findset.scr" in any map script to use the "findset [#set]" cvar, "findset all" cvar, and "findset exploder" (or "findset exploders") cvar.
 
 	while(string(getcvar("findset")) == "") { waitframe }
 
 	if(string(getcvar("findset")) == "all") { local.set = "all" }
+	else if(string(getcvar("findset")) == "exploder" || string(getcvar("findset")) == "exploders") { local.set = "exploders" }
 	else { local.set = int(getcvar("findset")) }
 	local.entcount = 0
 	local.array[0] = NIL
-	local.highest = 0
+	local.highest = -1
+	local.lowest = 9999999
 
 	for(local.i = 0; local.i <= 868; local.i++)
 	{
@@ -16,31 +24,91 @@ main: // findset.scr. Run "exec global/findset.scr" in any map script to use the
 		if(local.i == 0) { println("----- Note: This can only count up to 869 entities (0 to 868).") }
 		if(local.i == 0) { println("----- Counting entities. Please wait...") }
 
-		if(local.set == "all")
+		if(local.set == "all" || local.set == "exploders")
 		{
 			if(local.entity != NULL && local.entity.set != NIL)
 			{
-				local.array[local.entity.set][local.array[local.entity.set].size] = local.entity
+				local.array[local.entity.set][local.array[local.entity.set].size] = local.entity // this technically starts at size = -1, so local.b below must start at -1 (weird code, but it works).
 
 				if(local.highest < local.entity.set) { local.highest = local.entity.set }
-				println(local.i + ": " + local.entity.set); local.entcount++
+				if(local.lowest > local.entity.set) { local.lowest = local.entity.set }
+
+				if(local.set == "all") { println(local.i + ": " + local.entity.set) }
+				local.entcount++
 			}
 		}
 		else
 		{
-			if(local.entity != NULL && local.entity.set == local.set) { println(local.i + ": " + local.entity.targetname); local.entcount++ }
+			if(local.entity != NULL && local.entity.set == local.set)
+			{
+				if($(local.entity.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $(local.entity.targetname).size; local.t++)
+					{
+						if($(local.entity.targetname)[local.t] == local.entity) { println(local.i + ": " + local.entity.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println(local.i + ": " + local.entity.targetname) }
+				local.entcount++
+			}
 		}
 	}
-	if(local.entcount == 0) { println("----- ERROR. There are no entities with '.set = " + local.set + "'") }
+
+	if(local.set == "exploders")
+	{
+		local.exparray[1][1] = 0
+		for(local.w = 1; local.w <= $exploder.size; local.w++)
+		{
+			local.x = waitthread global/math.scr::simplify_decimal $exploder[local.w].origin[0]
+			local.y = waitthread global/math.scr::simplify_decimal $exploder[local.w].origin[1]
+			local.z = waitthread global/math.scr::simplify_decimal $exploder[local.w].origin[2]
+			local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+			println("$exploder[" + local.w + "].origin = " + local.origin + " : .set = " + $exploder[local.w].set)
+			//waitframe
+		}
+
+		if($exploder == NULL) { println("----- ERROR. There are no $exploder entities on the map.") }
+		else { println("----- $exploder entities found: " + $exploder.size) }
+	}
+	else if(local.entcount == 0)
+	{
+		if(local.set == "all") { println("----- ERROR. There are no entities that have '.set = ' values.") }
+		else { println("----- ERROR. There are no entities with '.set = " + local.set + "'") }
+	}
+
 	if(local.entcount > 0)
 	{
 		if(local.set == "all")
 		{
-			for(local.a = 0; local.a <= local.highest; local.a++)
+			for(local.a = local.lowest; local.a <= local.highest; local.a++)
 			{
+				if(local.a % 14 == 0) { waitframe }
 				if(local.array[local.a].size > 0) { println("----- #set " + local.a + " entities found: " + local.array[local.a].size) }
 			}
 			println("----- entities with #sets found: " + local.entcount)
+		}
+		else if(local.set == "exploders")
+		{
+			for(local.a = local.lowest; local.a <= local.highest; local.a++)
+			{
+				if(local.a % 14 == 0) { waitframe }
+
+				local.c = 0
+				if(local.array[local.a] != NIL)
+				{
+					for(local.b = -1; local.b <= local.array[local.a].size; local.b++) // start at -1 instead of 0, to account for all local.array[local.set][indexes].
+					{
+						if(local.array[local.a][local.b] != NIL && local.array[local.a][local.b] != NULL)
+						{
+ 							if(local.array[local.a][local.b].targetname == "exploder") { local.c++ }
+						}
+					}
+
+					if(local.c > 1) { println("----- #set " + local.a + " has " + local.c + " $exploder entities.") }
+					else if(local.c == 1) { println("----- #set " + local.a + " has " + local.c + " $exploder entity.") }
+					else { println("----- #set " + local.a + " does not have any $exploder entities.") }
+				}
+			}
 		}
 		else { println("----- '.set = " + local.set + "' entities found: " + local.entcount) }
 	}

@@ -1,0 +1,340 @@
+// This script utilizes any "exploder" sets found in a map.
+// 2 triggers are placed around each exploder: one for explosions, another for projectiles.
+// If a $world explosion occurs near the triggers, or a Player-weapon explosion occurs after a rocket/tank projectile is detected, the exploder blows up.
+// One exploder triggered by Players' projectiles will not trigger other nearby exploders. Only a $world explosion's with a large enough radius can trigger 2+ exploders simultaneously.
+// Once exploded, the exploder will spawn 2 nearby radiusdamages, a higgins explosion, a bombwall debris emitter, and 2 sherman smoke emitters that linger for a few seconds.
+//
+// First run "exec global/exploder.scr". Then run "exec global/exploder_killer.scr" with the parameters below.
+// Set any of the origin parameters to "( 0 0 0 )" to not spawn the parameter's corresponding entity.
+//
+// Example: exec global/exploder_killer.scr ( 120 200 10 ) ( 320 200 10 ) ( 220 200 10 ) ( 220 200 150 ) 180 ( 220 150 10 ) ( 220 250 10 ) ( -50 -100 0 ) ( 50 100 140 ) 500 600 0
+//
+// Parameters: damage origin1, damage origin2, explosion origin, debris origin, debris angle, smoke origin1, smoke origin2, trig setsize1, trig setsize2, ...
+// ... set number, damage, radius, smaller (if = 1, smaller earthquake effect), trig origin (optional, otherwise default = explosion origin), test (if = 1, spawn test emitters at all origins & lasers around exploder trigger).
+//
+//
+//
+// For linear-wall exploders along X-Y axis: explosion, debris, smoke1, smoke2 are lined up along one axis; radiusdamage1, radiusdamage2 are along the other axis.
+// Radiusdamage1, radiusdamage2 are 100 units off the ground, and 100 units in opposite directions away from explosion origin (covering both sides of a wall).
+// Debris height is 1 unit below the ceiling of the highest floor (or highest frame of a window, top of a destructible wall, etc), and must not be inside of any walls/chunks after exploding.
+// Trig setsize2 height is often slightly higher than debris height.
+// Trig setsizes should extend >= 50 units outside from exploding walls, otherwise projectiles may not be detected.
+// Debris moves opposite of the debris angle (i.e. if facing 90 degrees towards wall, debris moves 270 degrees out of wall).
+//
+// Example making coords for a destructible wall along the Y-axis (thinnest along the X-axis, or facing angles 0/180):
+// step 1: ( 4723 0 0 ) ( 4923 0 0 ) ( 4823 0 0 ) ( 4823 0 0 ) 0 ( 4823 0 0 ) ( 4823 0 0 )					( 0 0 0 ) ( 0 0 0 ) 19 		// find midpoint of the wall's thickness (4823), extend 100 units away for radiusdamages.
+// step 2: ( 4723 1648 0 ) ( 4923 1648 0 ) ( 4823 1648 0 ) ( 4823 1648 0 ) 0 ( 4823 0 0 ) ( 4823 0 0 )				( 0 0 0 ) ( 0 0 0 ) 19 		// find midpoint of the wall's length (1648), add to all except for smokes.
+// step 3: ( 4723 1648 364 ) ( 4923 1648 364 ) ( 4823 1648 264 ) ( 4823 1648 0 ) 0 ( 4823 0 0 ) ( 4823 0 0 )			( -50 0 0 ) ( 50 0 0 ) 19 	// find floor, add 100 for radiusdamage heights. add 50 for setsizes' X-axis.
+// step 4: ( 4723 1648 364 ) ( 4923 1648 364 ) ( 4823 1648 264 ) ( 4823 1648 0 ) 180 ( 4823 0 0 ) ( 4823 0 0 )			( -50 -160 0 ) ( 50 160 0 ) 19 	// find lengths of wall from its center, add them to setsizes' Y-axis. find debris angle.
+// step 5: ( 4723 1648 364 ) ( 4923 1648 364 ) ( 4823 1648 264 ) ( 4823 1648 526 ) 180 ( 4823 1540 264 ) ( 4823 1815 264 )	( -50 -160 0 ) ( 50 160 0 ) 19 	// blow up exploder. find debris height. find smokes' Y-axis, height.
+// step 6: ( 4723 1648 364 ) ( 4923 1648 364 ) ( 4823 1648 264 ) ( 4823 1648 526 ) 180 ( 4823 1540 264 ) ( 4823 1815 264 )	( -50 -160 0 ) ( 50 160 303 ) 19 // adjust exploder height if inside a chunk. find setsizes' heights (using exploder's origin).
+
+// Example making coords for a destructible wall along the X-axis (thinnest along the Y-axis, or facing angles 90/270):
+// step 1: ( 0 4723 0 ) ( 0 4923 0 ) ( 0 4823 0 ) ( 0 4823 0 ) 0 ( 0 4823 0 ) ( 0 4823 0 )					( 0 0 0 ) ( 0 0 0 ) 19 		// find midpoint of the wall's thickness (4823), extend 100 units away for radiusdamages.
+// step 2: ( 1648 4723 0 ) ( 1648 4923 0 ) ( 1648 4823 0 ) ( 1648 4823 0 ) 0 ( 0 4823 0 ) ( 0 4823 0 )				( 0 0 0 ) ( 0 0 0 ) 19 		// find midpoint of the wall's length (1648), add to all except for smokes.
+// step 3: ( 1648 4723 364 ) ( 1648 4923 364 ) ( 1648 4823 264 ) ( 1648 4823 0 ) 0 ( 0 4823 0 ) ( 0 4823 0 )			( 0 -50 0 ) ( 0 50 0 ) 19 	// find floor, add 100 for radiusdamage heights. add 50 for setsizes' Y-axis.
+// step 4: ( 1648 4723 364 ) ( 1648 4923 364 ) ( 1648 4823 264 ) ( 1648 4823 0 ) 180 ( 0 4823 0 ) ( 0 4823 0 )			( -160 -50 0 ) ( 160 50 0 ) 19	// find lengths of wall from its center, add them to setsizes' X-axis. find debris angle.
+// step 5: ( 1648 4723 364 ) ( 1648 4923 364 ) ( 1648 4823 264 ) ( 1648 4823 526 ) 90 ( 1540 4823 264 ) ( 1815 4823 264 )	( -160 -50 0 ) ( 160 50 0 ) 19	// blow up exploder. find debris height. find smokes' X-axis, height.
+// step 6: ( 1648 4723 364 ) ( 1648 4923 364 ) ( 1648 4823 264 ) ( 1648 4823 526 ) 180 ( 1540 4823 264 ) ( 1815 4823 264 )	( -160 -50 0 ) ( 160 50 303 ) 19 // adjust exploder height if inside a chunk. find setsizes' heights (using exploder's origin).
+//
+//
+//
+// Some exploder sets (such as set 32 or set 46 in m5l2b) have 2 or even 4 $exploder entities for one set (multiple exploders for 1 building, or group of buildings in 1 area).
+// In that case, simply add a 2nd (3rd and 4th) "exec global/exploder_killer.scr" with new parameters for the 2nd building's radiusdamages, explosion, debris, smoke, etc,
+// and make the "set" parameter equal to the 1st "exec global/exploder_killer.scr".
+// Then, one group of shot/projectile triggers will also trigger the other building's shot/projectile triggers to explode when "exec global/exploder.scr::explode local.set" runs for one of them.
+//
+// First, run "exec global/exploder_killer.scr" and include all parameters for the multi-exploder set's 1st exploder.
+// Then, run a second "exec global/exploder_killer.scr" for the 2nd (3rd and 4th) exploder along with new parameter origins (unless you don't want to spawn them, then make them "( 0 0 0 )"),
+// but set both "trig setsize1" and "trig setsize2" parameters to "( 0 0 0 )".
+// This will force the script to use the 1st exploder's "exploder_trigshot" and "exploder_trigproj" triggers, instead of spawning 2 new ones, hence both sets of exploder_killer scripts will blow up at the same time.
+//
+// Example:
+//	exec global/exploder_killer.scr ( -5373 -1096 170 ) ( -5126 1279 170 ) ( -5373 1096 90 ) ( -5373 1096 334 ) 135	( -5126 1279 39 ) ( -5426 1095 5 ) ( -323 -50 -130 ) ( 297 376 430 ) 12	// $exploder[3].origin = ( -5344 1468 240 )
+//	exec global/exploder_killer.scr ( -5373 -1096 170 ) ( -5126 1279 170 ) ( -5373 1096 90 ) ( -5373 1096 334 ) 135	( -5126 1279 39 ) ( -5426 1095 5 ) ( 0 0 0 ) ( 0 0 0 ) 12		// $exploder[12].origin = ( -5394 1280 240 )
+//
+//
+//
+// To prevent $world or other radiusdamage explosions from triggering the triggers (only allow projectiles), add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+// 	level.exploder_killer_onlyprojectiles = 1
+//	$exploder[4].onlyprojectiles = 1 // for only $exploder[4], or other $exploder[index].
+//
+// To also allow grenade projectiles to blow up the exploders, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+// 	level.exploder_killer_grenades = 1
+//	$exploder[4].grenades = 1 // for only $exploder[4], or other $exploder[index].
+//
+// To not print any "Blowing up..." mesasges to console, add this: level.exploder_killer_noprint = 1, or $exploder[4].noprint = 1.
+//
+
+main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debris_origin local.debris_angle local.smoke_origin1 local.smoke_origin2 local.trig_setsize1 local.trig_setsize2 local.set local.damage local.radius local.smaller local.trig_origin local.test:
+
+	if(local.damage_origin1 == NIL) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'damage_origin1' parameter is missing!"); end }
+	else if(local.damage_origin1[2] == NIL) 	{ wait 1; println("----- ERROR global/exploder_killer.scr: 'damage_origin1' parameter must be in ( 0 0 0 ) format."); end }
+	if(local.damage_origin2 == NIL) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'damage_origin2' parameter is missing!"); end }
+	else if(local.damage_origin2[2] == NIL) 	{ wait 1; println("----- ERROR global/exploder_killer.scr: 'damage_origin2' parameter must be in ( 0 0 0 ) format."); end }
+	if(local.explosion_origin == NIL) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'explosion_origin' parameter is missing!"); end }
+	else if(local.explosion_origin[2] == NIL) 	{ wait 1; println("----- ERROR global/exploder_killer.scr: 'explosion_origin' parameter must be in ( 0 0 0 ) format."); end }
+	if(local.debris_origin == NIL) 			{ wait 1; println("----- ERROR global/exploder_killer.scr: 'debris_origin' parameter is missing!"); end }
+	else if(local.debris_origin[2] == NIL) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'debris_origin' parameter must be in ( 0 0 0 ) format."); end }
+	if(local.debris_angle == NIL) 			{ wait 1; println("----- ERROR global/exploder_killer.scr: 'debris_angle' parameter is missing!"); end }
+	else if(local.debris_angle.size > 1) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'debris_angle' parameter must be an integer."); end }
+	if(local.smoke_origin1 == NIL) 			{ wait 1; println("----- ERROR global/exploder_killer.scr: 'smoke_origin1' parameter is missing!"); end }
+	else if(local.smoke_origin1[2] == NIL) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'smoke_origin1' parameter must be in ( 0 0 0 ) format."); end }
+	if(local.smoke_origin2 == NIL) 			{ wait 1; println("----- ERROR global/exploder_killer.scr: 'smoke_origin2' parameter is missing!"); end }
+	else if(local.smoke_origin2[2] == NIL) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'smoke_origin2' parameter must be in ( 0 0 0 ) format."); end }
+	if(local.trig_setsize1 == NIL) 			{ wait 1; println("----- ERROR global/exploder_killer.scr: 'trig_setsize1' parameter is missing!"); end }
+	else
+	{
+		if(local.trig_setsize1[2] == NIL) 	{ wait 1; println("----- ERROR global/exploder_killer.scr: 'trig_setsize1' parameter must be in ( 0 0 0 ) format."); end }
+		else if(local.trig_setsize1[0] > 0 || local.trig_setsize1[1] > 0 || local.trig_setsize1[2] > 0)
+		{
+			wait 1; println("----- ERROR global/exploder_killer.scr: 'trig_setsize1' parameter must have values <= 0."); end
+		}
+	}
+	if(local.trig_setsize2 == NIL) 			{ wait 1; println("----- ERROR global/exploder_killer.scr: 'trig_setsize2' parameter is missing!"); end }
+	else
+	{
+		if(local.trig_setsize2[2] == NIL) 	{ wait 1; println("----- ERROR global/exploder_killer.scr: 'trig_setsize2' parameter must be in ( 0 0 0 ) format."); end }
+		else if(local.trig_setsize2[0] < 0 || local.trig_setsize2[1] < 0 || local.trig_setsize2[2] < 0)
+		{
+			wait 1; println("----- ERROR global/exploder_killer.scr: 'trig_setsize2' parameter must have values >= 0."); end
+		}
+	}
+
+	if(local.damage_origin1 == ( 0 0 0 )) { local.radiusdamage1 = 0 }
+	if(local.damage_origin2 == ( 0 0 0 )) { local.radiusdamage2 = 0 }
+	if(local.explosion_origin == ( 0 0 0 )) { local.explosion = 0 }
+	if(local.debis_origin == ( 0 0 0 )) { local.debis = 0 }
+	if(local.smoke_origin1 == ( 0 0 0 )) { local.smoke1 = 0 }
+	if(local.smoke_origin2 == ( 0 0 0 )) { local.smoke2 = 0 }
+	if(local.trig_setsize1 == ( 0 0 0 ) && local.trig_setsize2 == ( 0 0 0 )) { local.triggers = 0 }
+
+	local.c = 0
+	while(level.exploders_main_done != 1 && local.c <= 100) { local.c++; waitframe }
+	if(local.c > 100) { println("----- ERROR global/exploder_killer.scr: Must run 'exec global/exploder.scr' first!"); end }
+
+// -------------------------
+
+	if(local.set == NIL) { wait 1; println("----- ERROR global/exploder_killer.scr: 'set' parameter is missing!"); end }
+	if($exploder == NULL) { wait 1; println("----- ERROR global/exploder_killer.scr: No $exploder entities found on the map."); end }
+	//if($exploderfire == NULL) { wait 1; println("----- ERROR global/exploder_killer.scr: No $exploderfire entities found on the map."); end } // some exploders don't have these.
+	//if($exploderchunk == NULL) { wait 1; println("----- ERROR global/exploder_killer.scr: No $exploderchunk entities found on the map."); end }
+	//if($explodersmashed == NULL) { wait 1; println("----- ERROR global/exploder_killer.scr: No $explodersmashed entities found on the map."); end }
+	if(local.trig_origin == NIL) 			{ local.trig_origin = local.explosion_origin }
+	else if(local.trig_origin[2] == NIL) 		{ wait 1; println("----- ERROR global/exploder_killer.scr: 'trig_origin' parameter must be in ( 0 0 0 ) format."); end } // default: trig_origin = explosion_origin.
+
+	for(local.s = 1; local.s <= $exploder.size; local.s++)
+	{
+		if($exploder[local.s].set == local.set) { local.exploder = $exploder[local.s]; break }
+	}
+	if(local.exploder == NIL || local.exploder == NULL) { wait 1; println("----- ERROR global/exploder_killer.scr: Cannot find $exploder with '.set = " + local.set + "'"); end }
+
+	for(local.t = 1; local.t <= $explodertrigger.size; local.t++)
+	{
+		if($explodertrigger[local.t].set == local.set) { $explodertrigger[local.t] remove } // remove original $explodertrigger and replace them with trigshot and trigproj.
+	}
+
+	if(local.damage == NIL) { local.damage = 500 } // defaults
+	if(local.radius == NIL) { local.radius = 600 }
+	if(local.smaller == NIL || local.smaller != 1) { local.smaller = 0 }
+
+	if(local.triggers != 0)
+	{
+		local.trigshot = spawn trigger_multiple spawnflags 128 targetname "exploder_trigshot" // triggers when any radiusdamage explosion (grenades, rockets, bombs, world, not bullets) hits it.
+		local.trigshot.origin = local.trig_origin
+		local.trigshot setsize local.trig_setsize1 local.trig_setsize2
+		local.trigshot.setsize1 = local.trig_setsize1
+		local.trigshot.setsize2 = local.trig_setsize2
+		local.trigshot setthread trigshot_exploder
+		local.trigshot.set = local.set
+		local.trigshot.onlyprojectiles = local.exploder.onlyprojectiles
+
+		local.trigproj = spawn trigger_multiple spawnflags 20 targetname "exploder_trigproj" // triggers when any projectiles hit or go through it (not players' bullets).
+		local.trigproj.origin = local.trig_origin
+		local.trigproj setsize local.trig_setsize1 local.trig_setsize2
+		local.trigproj.setsize1 = local.trig_setsize1
+		local.trigproj.setsize2 = local.trig_setsize2
+		local.trigproj setthread trigproj_exploder
+		local.trigproj.trigshot = local.trigshot
+		local.trigproj.set = local.set
+		local.trigproj.grenades = local.exploder.grenades
+	}
+	else
+	{
+		for(local.s = 1; local.s <= $exploder_trigshot.size; local.s++)
+		{
+			if($exploder_trigshot[local.s].set == local.set) { local.trigshot = $exploder_trigshot[local.s]; break }
+		}
+		if(local.trigshot == NIL) { wait 1; println("----- ERROR global/exploder_killer.scr: No $exploder_trigshot found for '.set = " + local.set + "'. Both trig_setsizes must not '( 0 0 0 )' for at least 1 exploder_killer thread with this #set."); end }
+	}
+
+	if(local.test == 1) { thread test local.damage_origin1 local.damage_origin2 local.explosion_origin local.debris_origin local.smoke_origin1 local.smoke_origin2 local.trig_origin local.trigshot }
+	thread precache
+
+	while(local.trigshot.dead != 1 && local.exploder != NIL && local.exploder != NULL) { waitframe }
+
+	if(local.triggers != 0)
+	{
+		local.trigshot remove
+		local.trigproj remove
+	}
+	if(local.exploder == NIL || local.exploder == NULL) { println("----- Removed without blowing up $exploder[" + local.s + "] with '.set = " + local.set + "'"); end }
+
+// -------------------------
+
+	if($exploder_trigshot != NULL) { $exploder_trigshot nottriggerable } // prevent one exploder's radiusdamage from blowing up other nearby exploders.
+	if($exploder_trigproj != NULL) { $exploder_trigproj nottriggerable }
+
+	thread removestuff local.set // remove miscellaneous entities that are near the exploder ("cratesstuff", "red_tele", "mapwall" targetnames with same set number as local.set).
+	thread remove_ambiences local.set // remove any "level.spawnamb" sound ambiences that have the same set number as local.set.
+
+	if(level.exploder_killer_noprint != 1 && local.exploder.noprint != 1) { println("----- Blowing up $exploder[" + local.s + "] with '.set = " + local.set + "'") }
+
+	if(local.explosion != 0) { local.explode = thread emitterstuff "emitters/explosion_tank.tik" local.explosion_origin ( 260 -90 0 ) 1 start ("exploder_" + local.s + "_explode") }
+	if(local.debris != 0) { local.debris = thread emitterstuff "animate/explosion_bombwall.tik" local.debris_origin ( 0 local.debris_angle 0 ) 1 start ("exploder_" + local.s + "_debris") }
+	if(local.explosion != 0) { local.dirt = thread emitterstuff "emitters/mortar_dirt_dustcloud.tik" local.explosion_origin ( 0 0 0 ) 1 start ("exploder_" + local.s + "_dirt") }
+
+	thread global/exploder.scr::explode local.set
+
+	$exploder[local.s] playsound explode_building_large
+	thread jitter_large local.smaller
+
+	if(local.radiusdamage1 != 0) { radiusdamage local.damage_origin1 local.damage local.radius }
+	if(local.radiusdamage2 != 0) { radiusdamage local.damage_origin2 local.damage local.radius }
+
+	waitframe
+	if(local.explosion != 0) { local.explode remove }
+	if(local.debris != 0) { local.debris remove }
+	if(local.explosion != 0) { local.dirt remove }
+
+	if($exploder_trigshot != NULL) { $exploder_trigshot triggerable }
+	if($exploder_trigproj != NULL) { $exploder_trigproj triggerable }
+
+	thread global/exploder.scr::remove local.set // remove exploder-related entities that are no longer needed (including their .target ScriptOrigins).
+
+// -------------------------
+
+	if(local.smoke1 != 0) { local.smoke1 = thread emitterstuff "emitters/shermansmoke.tik" local.smoke_origin1 ( 270 180 0 ) 1 start ("exploder_" + local.s + "_smoke1") }
+	if(local.smoke2 != 0) { local.smoke2 = thread emitterstuff "emitters/shermansmoke.tik" local.smoke_origin2 ( 270 180 0 ) 1 start ("exploder_" + local.s + "_smoke2") }
+
+	local.dec = 0.01	// waitframe = 0.05 seconds. 0.05 / (5 seconds duration) = 0.01 increments.
+	while((local.smoke1 != 0 && local.smoke1.scale > 0) || (local.smoke2 != 0 && local.smoke2.scale > 0))
+	{
+		if(local.smoke1 != 0) { local.smoke1.scale -= local.dec }
+		if(local.smoke2 != 0) { local.smoke2.scale -= local.dec }
+		waitframe
+	}
+	if(local.smoke1 != 0) { local.smoke1 remove }
+	if(local.smoke2 != 0) { local.smoke2 remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+trigshot_exploder:
+
+	local.damager = parm.other
+	if((local.damager == $world && (level.exploder_killer_onlyprojectiles != 1 && self.onlyprojectiles != 1)) || self.projectile == 1) { self.dead = 1 }
+	if(self.projectile == 1) { self.projectile = 0 }
+end
+
+trigproj_exploder:
+
+	local.projectile = parm.other
+	if(local.projectile.model == "models/projectiles/bazookashell_dm.tik" || local.projectile.model == "models/projectiles/bazookashell.tik" || local.projectile.model == "models/projectiles/panzerschreckshell.tik" || local.projectile.model == "models/projectiles/tigercannonshell.tik" || ((level.exploder_killer_grenades == 1 || self.grenades == 1) && (local.projectile.model == "models/projectiles/m2fgrenade_primary.tik" || local.projectile.model == "models/projectiles/steilhandgranate_primary.tik" || local.projectile.model == "models/projectiles/panzerivshell.tik")))
+	{
+		self.trigshot.projectile = 1
+	}
+end
+
+jitter_large local.smaller:
+
+	if(local.smaller != 1) { waitexec global/earthquake.scr .35 10 0 0 }
+	waitexec global/earthquake.scr .23 6 0 0
+	waitexec global/earthquake.scr 1 1 0 0
+	waitexec global/earthquake.scr 1.25 .3 0 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+removestuff local.set:
+
+	for(local.c = 1; local.c <= $mapwall.size; local.c++)
+	{
+		if($mapwall[local.c].set == local.set) { $mapwall[local.c] remove }
+	}
+	for(local.c = 1; local.c <= $red_tele.size; local.c++)
+	{
+		if($red_tele[local.c].set == local.set) { $red_tele[local.c] remove }
+	}
+	for(local.c = 1; local.c <= $cratesstuff.size; local.c++)
+	{
+		if($cratesstuff[local.c].set == local.set) { $cratesstuff[local.c] remove }
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+remove_ambiences local.set:
+
+	for(local.a = 1; local.a <= level.spawnamb.size; local.a++)
+	{
+		if(level.spawnamb[local.a].size >= 5 && level.spawnamb[local.a][5] == local.set)
+		{
+			level.spawnamb[local.a][1] = 0
+			level.spawnamb[local.a][2] = 0
+			level.spawnamb[local.a][3] = 0
+			level.spawnamb[local.a][4] = 0
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+emitterstuff local.model local.origin local.angles local.scale local.anim local.targetname:
+
+	local.emitter = spawn script_model
+	local.emitter model local.model
+	local.emitter.origin = local.origin
+	local.emitter.angles = local.angles
+	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
+	if(local.anim != NIL) { local.emitter anim local.anim }
+	if(local.targetname != NIL) { local.emitter.targetname = local.targetname }
+	local.emitter notsolid
+end local.emitter
+
+////////////////////////////////////////////////////////////////////////
+
+// Sparks + red corona = explosion origin
+// Raining sparks = debris origin
+// Orange lights = smoke origins
+// White lights = radiusdamage origins
+//
+test local.damage_origin1 local.damage_origin2 local.explosion_origin local.debris_origin local.smoke_origin1 local.smoke_origin2 local.trig_origin local.trigshot:
+
+	if(local.damage_origin1 != 0) { thread emitterstuff static/corona_util.tik local.damage_origin1 ( 0 0 0 ) 1 idle "exploder_damage_origin1" }
+	if(local.damage_origin2 != 0) { thread emitterstuff static/corona_util.tik local.damage_origin2 ( 0 0 0 ) 1 idle "exploder_damage_origin2" }
+	if(local.explosion_origin != 0) { thread emitterstuff emitters/adamspark.tik local.explosion_origin ( 0 0 0 ) 0.25 idle "exploder_explosion_origin" }
+	if(local.debris_origin != 0) { thread emitterstuff emitters/welding_spark.tik local.debris_origin ( 0 0 0 ) 0.25 idle "exploder_debris_origin" }
+	if(local.smoke_origin1 != 0) { thread emitterstuff static/corona_orange.tik local.smoke_origin1 ( 0 0 0 ) 1 idle "exploder_smoke_origin1" }
+	if(local.smoke_origin2 != 0) { thread emitterstuff static/corona_orange.tik local.smoke_origin2 ( 0 0 0 ) 1 idle "exploder_smoke_origin2" }
+	if(local.trig_origin != 0) { thread emitterstuff fx/corona_red.tik local.trig_origin ( 0 0 0 ) 1 idle "exploder_trig_origin" }
+
+	for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++)
+	{
+		if(local.trigshot != NIL && local.trigshot != NULL && local.trigshot == $exploder_trigshot[local.e])
+		{
+			setcvar "drawsize" ("exploder_trigshot[" + local.e + "]")
+		}
+	}
+end
+
+precache:
+
+	if(level.exploder_killer_precache == 1) { end }
+	level.exploder_killer_precache = 1
+
+	cache models/emitters/explosion_tank.tik //models/animate/fx_mortar_higgins.tik
+	cache models/animate/explosion_bombwall.tik
+	cache models/emitters/mortar_dirt_dustcloud.tik
+	cache models/emitters/shermansmoke.tik
+end

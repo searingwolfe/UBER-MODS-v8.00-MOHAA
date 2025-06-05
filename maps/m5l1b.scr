@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -221,16 +218,17 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 	local.exterior = sound/amb_stereo/Amb_M5_Trees.mp3	// main level
 	local.exterior2 = sound/amb_stereo/Amb_M5_Field.mp3	// ending road
 
+	// origin, setsize1, setsize2, music, set number.
 	level.spawnamb = makeArray
-		( -16 -5664 594 ) ( -50 -639 -49 ) ( 50 0 0 ) local.interior
-		( -16 -5664 544 ) ( -100 -639 -49 ) ( 100 0 0 ) local.interior
-		( -16 -5664 494 ) ( -150 -639 -46 ) ( 150 0 0 ) local.interior
-		( -16 -5664 447 ) ( -175 -639 -444 ) ( 175 0 0 ) local.interior
+		( -16 -5664 594 ) ( -50 -639 -49 ) ( 50 0 0 ) local.interior 3
+		( -16 -5664 544 ) ( -100 -639 -49 ) ( 100 0 0 ) local.interior 3
+		( -16 -5664 494 ) ( -150 -639 -46 ) ( 150 0 0 ) local.interior 3
+		( -16 -5664 447 ) ( -175 -639 -444 ) ( 175 0 0 ) local.interior 3
 		( -40 -6192 794 ) ( -359 -50 -49 ) ( 0 50 0 ) local.interior // amb[5]
 		( -40 -6192 744 ) ( -359 -100 -31 ) ( 0 100 0 ) local.interior
 		( -40 -6192 712 ) ( -359 -112 -712 ) ( 0 112 0 ) local.interior
 
-		( -1776 -6015 927 ) ( -671 0 -927 ) ( 0 319 0 ) local.interior
+		( -1776 -6015 927 ) ( -671 0 -927 ) ( 0 319 0 ) local.interior 1
 
 		( -2480 -5247 703 ) ( -1104 -448 -703 ) ( 0 0 0 ) local.interior
 		( -2623 -5007 703 ) ( -961 -240 -415 ) ( 0 0 0 ) local.interior // amb[10]
@@ -357,6 +355,12 @@ ambience: // make sure the spawnamb volumes are not overlapping!!!
 		( 3200 175 968 ) ( -200 0 -49 ) ( 200 289 0 ) local.interior
 		( 3200 175 918 ) ( -250 0 -618 ) ( 250 289 0 ) local.interior // amb[120]
 
+		( -1776 -6015 927 ) ( -671 0 -212 ) ( 0 319 0 ) local.interior // 1
+
+		( 159 -6063 168 ) ( -200 -240 0 ) ( 0 0 300 ) local.interior // 3
+
+		( -1327 880 594 ) ( 0 0 0 ) ( 175 127 197 ) local.interior
+
 		( 3000 1950 0 ) ( -8000 0 -4000 ) ( 8000 8000 4000 ) local.exterior2
 	endArray
 
@@ -402,16 +406,6 @@ setup:
 
 	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
 	{
-		/*
-		$exploderfire remove
-		$explodersmashed remove
-		$exploderchunk remove
-		$exploder remove
-		$t1279 remove; $t1280 remove; $t1281 remove; $t1282 remove; $t1283 remove; $t1284 remove; $t1285 remove; $t1286 remove; $t1287 remove	// exploder[1]
-		$t1297 remove; $t1293a remove; $t1294 remove; $t1296 remove; $t1295 remove								// exploder[2]
-		$t1288 remove; $t1289 remove; $t1290 remove; $t1291 remove; $t1292asdf remove; $t1292 remove; $t1293 remove				// exploder[3]
-		$t1969 remove; $t1356 remove; $t1357 remove; $t1358 remove; $t1359 remove; $t1360 remove; $t1970 remove; $t1950 remove; $t1971 remove	// exploder[4]
-		*/
 		thread global/exploder.scr::remove_exploders // also removes their chunks' ScriptOrigin entities, keeps original non-exploded $exploder entities (unless "exploder.scr::remove_exploders 1").
 
 		$intro_door time 1
@@ -466,10 +460,10 @@ setup:
 		{
 			$cabinet solid
 
-			thread wall_explode 1 100 500 600 // 3 story building		// exploder[number], health, damage, radius
-			thread wall_explode 2 100 500 400 // allies-side stone wall
-			thread wall_explode 3 100 500 600 // allies spawn building
-			thread wall_explode 4 100 500 400 // middle stone wall
+			thread exploders 1 500 600 	// 3 story building		// exploder[number], damage, radius, smaller (1 = smaller earthquake)
+			thread exploders 2 500 400 1 	// allies-side stone wall
+			thread exploders 3 500 600 	// allies spawn building
+			thread exploders 4 500 400 1 	// middle stone wall
 
 			if(getcvar("g_ubergametype") != "bb") { thread solidify_road }						// make the road solid for vehicles to drive over.
 			thread solidclip ( 3071 508 1168 ) ( 0 0 0 ) ( 256 291 432 ) 0 						// block off the bell tower.
@@ -478,8 +472,6 @@ setup:
 		}
 		thread notsolid_houses
 	}
-
-	thread zeroents_with_targetname_fix WindowObject
 
 	exec global/doorlocked.scr ( -1696 -5750 122 ) wood 1 // these do not add any entities.
 	exec global/doorlocked.scr ( -1950 -4846 187 ) wood 1
@@ -512,6 +504,8 @@ setup:
 	exec global/doorlocked.scr ( 3415 779 464 ) wood 1
 	exec global/doorlocked.scr ( 2937 691 672 ) wood 1
 	exec global/doorlocked.scr ( 3466 779 672 ) wood 1
+
+	thread zeroents_with_targetname_fix WindowObject
 	
 	level.springfield = 1
 	level.bar = 1
@@ -553,6 +547,33 @@ airstrikes_alternate:
 			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
 		}
 		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+exploders local.inc local.damage local.radius local.smaller:
+
+	//level.exploder_killer_onlyprojectiles = 1 // this prevents too many exploders from blowing up simultaneously.
+
+ // radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2 (trig origin = explosion origin), ::explode set number. [1] - [10] columns.
+	local.array = makeArray
+		( -250 -5893 228 ) ( -150 -5893 228 )		( -191 -5893 168 ) ( -200 -5848 430 ) 0		( -191 -5956 168 ) ( -191 -5780 168 )		( -100 -170 -64 ) ( 111 245 462 ) 3	// exploder[1].origin = ( -116 -5856 434 )
+		( -1063 -5683 250 ) ( -1007 -5634 250 )		( -1041 -5668 108 ) ( -1034 -5659 210 ) 225	( -1113 -5594 108 ) ( -988 -5721 104 )		( -165 -135 -10 ) ( 130 150 160 ) 2	// exploder[2].origin = ( -1129 -5682 159 )
+		( -2121 -5633 517 ) ( -2121 -5769 517 )		( -2080 -5712 320 ) ( -2080 -5705 767 ) 270	( -2194 -5712 320 ) ( -1984 -5712 320 )		( -310 -100 -20 ) ( 321 100 465 ) 1	// exploder[3].origin = ( -2112 -5702 544 )
+		( -1253 -1016 461 ) ( -1212 -1095 461 )		( -1234 -1052 389 ) ( -1234 -1052 461 ) 135	( -1296 -1094 376 ) ( -1172 -1011 367 )		( -150 -170 -55 ) ( 130 100 125 ) 5	// exploder[4].origin = ( -1318 -1097 398 )
+	endArray
+
+	//if(local.inc == 4) { local.test = 1 } 		// spawning test emitters for $exploder[4]'s radiusdamage, explosion, debris, smoke, and trig origin (same as explosion origin for these exploders).
+	//else { local.test = 0 }				// test = 1 also spawns lasers around the $exploder_trigshot trigger for the "local.inc" exploder #set.
+
+	if(local.test == 1) // if using this, make sure to remove other mods first (besides the exploders above), since there are too many entities already.
+	{
+		exec global/exploder_killer.scr local.array[local.inc][1] local.array[local.inc][2] local.array[local.inc][3] local.array[local.inc][4] local.array[local.inc][5] local.array[local.inc][6] local.array[local.inc][7] local.array[local.inc][8] local.array[local.inc][9] local.array[local.inc][10] local.damage local.radius local.smaller local.array[local.inc][3] local.test
+	}
+	else
+	{
+		exec global/exploder_killer.scr local.array[local.inc][1] local.array[local.inc][2] local.array[local.inc][3] local.array[local.inc][4] local.array[local.inc][5] local.array[local.inc][6] local.array[local.inc][7] local.array[local.inc][8] local.array[local.inc][9] local.array[local.inc][10] local.damage local.radius local.smaller
 	}
 end
 
@@ -639,123 +660,6 @@ belltower_trigger local.origin local.angles:
 	local.eswitch remove
 	local.eswitchtrig remove
 	thread belltower_trigger local.origin local.angles
-end
-
-////////////////////////////////////////////////////////////////////////
-
-wall_explode local.inc local.health local.damage local.radius:
-
-	if($exploder == NULL || $exploderfire == NULL || $exploderchunk == NULL || $explodersmashed == NULL) { end }
-	if($exploder[local.inc] == NULL) { end }
-
- 	// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2 (trig origin = $exploder[local.inc] origin), ::explode set number. [1] - [10] columns.
-	local.array = makeArray
-		( -250 -5893 228 ) ( -150 -5893 228 )		( -191 -5893 168 ) ( -200 -5848 430 ) 0		( -191 -5956 168 ) ( -191 -5780 168 )		( -167 -300 -512 ) ( 0 300 0 ) 3	// exploder[1].origin = ( -116 -5856 434 )
-		( -1063 -5683 250 ) ( -1007 -5634 250 )		( -1041 -5668 108 ) ( -1034 -5659 210 ) 0	( -1113 -5594 108 ) ( -988 -5721 104 )		( 0 0 -220 ) ( 162 107 55 ) 2		// exploder[2].origin = ( -1129 -5682 159 )
-		( -2121 -5633 517 ) ( -2121 -5769 517 )		( -2080 -5712 320 ) ( -2080 -5705 767 ) 0	( -2194 -5712 320 ) ( -1984 -5712 320 )		( -351 -75 -240 ) ( 561 75 240 ) 1	// exploder[3].origin = ( -2112 -5702 544 )
-		( -1253 -1016 461 ) ( -1212 -1095 461 )		( -1234 -1052 389 ) ( -1234 -1052 461 ) 0	( -1296 -1094 376 ) ( -1172 -1011 367 )		( -217 -132 -126 ) ( 214 250 63 ) 5	// exploder[4].origin = ( -1318 -1097 398 )
-	endArray
-
-	for(local.s = 1; local.s <= $exploder.size; local.s++)
-	{
-		if($exploder[local.s].set == local.array[local.inc][10]) { local.exploder = $exploder[local.s] }
-	}
-
-	local.trigshot = spawn trigger_multiple spawnflags 128 targetname "wall_explode_trigshot" // triggers when any radiusdamage explosion (grenades, rockets, bombs, world, not bullets) hits it.
-	local.trigshot.origin = $exploder[local.inc].origin
-	local.trigshot setsize local.array[local.inc][8] local.array[local.inc][9]
-	local.trigshot setthread trigshot_exploder
-	local.trigshot.set = local.array[local.inc][10]
-
-	local.trigproj = spawn trigger_multiple spawnflags 20 targetname "wall_explode_trigproj" // triggers when any projectiles hit or go through it (not players' bullets).
-	local.trigproj.origin = $exploder[local.inc].origin
-	local.trigproj setsize local.array[local.inc][8] local.array[local.inc][9]
-	local.trigproj setthread trigproj_exploder
-	local.trigproj.trigshot = local.trigshot
-
-	while(local.trigshot.dead != 1 && local.exploder != NIL && local.exploder != NULL) { waitframe }
-
-	if($wall_explode_trigshot != NULL) { $wall_explode_trigshot nottriggerable } // prevent one exploder's radiusdamage from blowing up other nearby exploders.
-	if($wall_explode_trigproj != NULL) { $wall_explode_trigproj nottriggerable }
-
-	local.trigshot remove
-	local.trigproj remove
-	if(local.exploder == NIL || local.exploder == NULL) { end }
-
-	if(local.inc == 1) { println("----- Blowing up the Allies spawn building.") }
-	if(local.inc == 2) { println("----- Blowing up the Allies-side stone wall.") }
-	if(local.inc == 3) { println("----- Blowing up the 3 story building.") }
-	if(local.inc == 4) { println("----- Blowing up the middle stone wall.") }
-
-	local.explode = thread emitterstuff "animate//fx_mortar_higgins.tik" local.array[local.inc][3] ( 260 -90 0 ) 1 start ("exploder_" + local.inc + "_explode")
-	local.debris = thread emitterstuff "animate/explosion_bombwall.tik" local.array[local.inc][4] ( 0 0 0 ) 1 start ("exploder_" + local.inc + "_debris")
-	local.dirt = thread emitterstuff "emitters/mortar_dirt_dustcloud.tik" local.array[local.inc][3] ( 0 0 0 ) 1 start ("exploder_" + local.inc + "_dirt")
-
-	thread global/exploder.scr::explode local.array[local.inc][10]
-	$exploder[local.inc] playsound explode_building_large
-	thread jitter_large local.inc
-
-	radiusdamage local.array[local.inc][1] local.damage local.radius
-	radiusdamage local.array[local.inc][2] local.damage local.radius
-
-	waitframe
-	//local.explode remove // for some mysterious reason, these 3 lines do not remove the emitters, and instead print NIL errors to console (must remove them via targetnames instead).
-	//local.debris remove
-	//local.dirt remove
-	$("exploder_" + local.inc + "_explode") remove
-	$("exploder_" + local.inc + "_debris") remove
-	$("exploder_" + local.inc + "_dirt") remove
-
-	if($wall_explode_trigshot != NULL) { $wall_explode_trigshot triggerable }
-	if($wall_explode_trigproj != NULL) { $wall_explode_trigproj triggerable }
-
-	thread global/exploder.scr::remove local.array[local.inc][10] // remove exploder-related entities that are no longer needed (including their .target ScriptOrigins).
-
-	local.smoke1 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][6] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke1")
-	local.smoke2 = thread emitterstuff "emitters/shermansmoke.tik" local.array[local.inc][7] ( 270 180 0 ) 1 start ("exploder_" + local.inc + "_smoke2")
-
-	local.dec = 0.01	// waitframe = 0.05 seconds. 0.05 / (5 seconds duration) = 0.01 increments.
-	while($("exploder_" + local.inc + "_smoke1").scale > 0)
-	{
-		$("exploder_" + local.inc + "_smoke1").scale -= local.dec
-		$("exploder_" + local.inc + "_smoke2").scale -= local.dec
-		waitframe
-	}
-	$("exploder_" + local.inc + "_smoke1") remove
-	$("exploder_" + local.inc + "_smoke2") remove
-end
-
-trigshot_exploder:
-
-	local.damager = parm.other
-	if(local.damager == $world || self.projectile == 1) { self.dead = 1 }
-	if(self.projectile == 1) { self.projectile = 0 }
-end
-
-trigproj_exploder:
-
-	local.projectile = parm.other
-	if(local.projectile.model == "models/projectiles/bazookashell_dm.tik" || local.projectile.model == "models/projectiles/bazookashell.tik" || local.projectile.model == "models/projectiles/panzerschreckshell.tik" || local.projectile.model == "models/projectiles/tigercannonshell.tik")
-	{
-		self.trigshot.projectile = 1
-	}
-end
-
-jitter_large local.inc:
-
-	if(local.inc == 2 || local.inc == 4)
-	{
-		waitexec global/earthquake.scr .23 6 0 0
-		waitexec global/earthquake.scr 1 1 0 0
-		waitexec global/earthquake.scr 1.25 .3 0 1
-	}
-	else
-	{
-		waitexec global/earthquake.scr .35 10 0 0
-		waitexec global/earthquake.scr .23 6 0 0
-		waitexec global/earthquake.scr 1 1 0 0
-		waitexec global/earthquake.scr 1.25 .3 0 1
-	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1695,13 +1599,13 @@ level waittill spawn
 
 			if(level.changesides == 0)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 3907 747 464 ) 180
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1014 724 624 ) -90
 			}
 			if(level.changesides == 1)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -16 -6035 168 ) 90
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -2683 -2631 568 ) 180
 			}
 			local.sides = level.changesides
 		}

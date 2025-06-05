@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -49,6 +46,7 @@ if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 exec global/aliascache_triggersounds.scr airstrikes
 exec global/aliascache_triggersounds.scr explode_building_small
 exec global/aliascache_triggersounds.scr explode_wood_small
+exec global/aliascache_triggersounds.scr woodcreak
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 
@@ -211,6 +209,8 @@ setup:
 	//removeclass Trigger // this will print "^~^~^ No dummy barrel for launcher barrel with set number: 1  - converting to normal exploder!!" errors.
 	//removeclass CrateObject // 48 entities, including explosive barrels
 
+if(getcvar("g_ubermods") == "2")
+{
 	local.gun = $panzer1 QueryTurretSlotEntity 0; local.gun remove
 	local.gun = $panzer1 QueryTurretSlotEntity 1; local.gun remove
 	local.gun = $panzer2 QueryTurretSlotEntity 0; local.gun remove
@@ -236,6 +236,13 @@ setup:
 	$bike1 remove // (1844.000000, 5531.000000, -25.375002), 270
 	$bike2 remove // (2330.425293, 5522.425293, -25.375002), 225
 	// 20mmflak = (-875.000000, 2157.000000, 8.000000), 45
+}
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	thread tower_woodcreak ( -912 -879 376 )
+	thread tower_woodcreak ( -1648 -880 368 )
+}
 
 if(getcvar("g_ubermods") != "2")
 {
@@ -315,13 +322,13 @@ if(getcvar("g_ubermods") != "2")
 
 	exec global/doorlocked.scr ( -2943 1823 -24 ) gatelarge 1
 
+	thread zeroents_with_targetname_fix
+
 	level.springfield = 1								
 	level.bar = 1								
 	level.bazooka = 1	
 	level.mp44 = 1		
 	level.shotgun = 1
-
-	thread zeroents_with_targetname_fix CrateObject
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -595,7 +602,27 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-zeroents_with_targetname_fix local.class: // fixing the console errors below
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+zeroents_with_targetname_fix: // fixing the console errors below
 
 	// 0 entities with targetname 'g1p1'. You are using a command that requires exactly one.
 

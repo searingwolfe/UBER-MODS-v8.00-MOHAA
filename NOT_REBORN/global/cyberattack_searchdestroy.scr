@@ -766,8 +766,17 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 	if(getcvar("g_ubergametype") == "snd") { level.newgametype = snd }
 	if(level.newgametype != "cyb" && level.newgametype != "snd") { level.newgametype = "cyb" }
 
+	if(level.bomborigin_allies_init == NIL) { level.bomborigin_allies_init = local.originallies }
+	if(level.bombangle_allies_init == NIL) { level.bombangle_allies_init = local.angleallies }
+	if(level.bomborigin_axis_init == NIL) { level.bomborigin_axis_init = local.originaxis }
+	if(level.bombangle_axis_init == NIL) { level.bomborigin_axis_init = local.angleaxis }
+	if(level.bomborigin_central_init == NIL) { level.bomborigin_central_init = local.origincentral }
+	if(level.bombangle_central_init == NIL) { level.bomborigin_central_init = local.anglecentral }
+
+	while($bombexplosive != NULL) { waitframe }
+
 	local.bombtrig = spawn trigger_use targetname "bombexplosive"
-	if(local.norotate == 1) { $bombexplosive.norotate = 1 }		// if local.norotate = 1, keep bombs from rotating and instead use the local.angleallies, angleaxis, anglecentral parameters.
+	if(local.norotate == 1) { $bombexplosive.norotate = 1 } // if local.norotate = 1, keep bombs from rotating and instead use the local.angleallies, angleaxis, anglecentral parameters.
 	else { $bombexplosive.norotate = 0 }
 
 	if(level.newgametype == "snd") 
@@ -775,8 +784,10 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 		local.bombtrig model "animate/pulse_explosive_pickup.tik" 
 		if(level.changesides != 1)
 		{
-			local.bombtrig.origin = local.originallies
-			local.bombtrig.angles = ( 0 local.angleallies 0 )
+			if(local.originallies == NIL) { local.bombtrig.origin = level.bomborigin_allies_init }
+			else { local.bombtrig.origin = local.originallies }
+			if(local.angleallies == NIL) { local.bombtrig.angles = ( 0 level.bombangle_allies_init 0 ) }
+			else { local.bombtrig.angles = ( 0 local.angleallies 0 ) }
 			local.bombtrig light 0 0 1 125
 			local.bombtrig.team = "allies"
 
@@ -784,8 +795,10 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 		}
 		if(level.changesides == 1)
 		{
-			local.bombtrig.origin = local.originaxis
-			local.bombtrig.angles = ( 0 local.angleaxis 0 )
+			if(local.originaxis == NIL) { local.bombtrig.origin = level.bomborigin_axis_init }
+			else { local.bombtrig.origin = local.originaxis }
+			if(local.angleaxis == NIL) { local.bombtrig.angles = ( 0 level.bombangle_axis_init 0 ) }
+			else { local.bombtrig.angles = ( 0 local.angleaxis 0 ) }
 			local.bombtrig light 1 0 0 125
 			local.bombtrig.team = "axis"
 
@@ -796,8 +809,10 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 	if(level.newgametype == "cyb") 
 	{ 
 		local.bombtrig model "animate/pulse_radiobomb_pickup.tik"
-		local.bombtrig.origin = local.origincentral
-		local.bombtrig.angles = ( 0 local.anglecentral 0 )
+		if(local.origincentral == NIL) { local.bombtrig.origin = level.bomborigin_central_init }
+		else { local.bombtrig.origin = local.origincentral }
+		if(local.anglecentral == NIL) { local.bombtrig.angles = ( 0 level.bombangle_central_init 0 ) }
+		else { local.bombtrig.angles = ( 0 local.anglecentral 0 ) }
 		local.bombtrig light .25 0 .667 125
 
 		exec global/flickerrotate.scr bombexplosive ( .25 0 .667 ) 125 0 25 0

@@ -19,11 +19,10 @@ entity_pointer:
 
 	local.cvar = getcvar("entity_pointer")
 	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
-	if(int(local.cvar) == 0 && local.cvar != "0") { println("----- ERROR. Typing player names in CVARs only works in MOHAA Reborn 1.12.") }
 
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
-		if($player[local.i] != NULL && int(local.cvar) == local.i)
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
 		{
 			if($player[local.i].entity_pointer_given != 1)
 			{
@@ -45,6 +44,7 @@ entity_pointer:
 	if(local.on != 1)
 	{
 		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
 	}
 
 	if(getcvar("entity_pointer") != "0") { setcvar "entity_pointer" "0" }
@@ -80,7 +80,7 @@ give_player_pointer:
 			{
 				if(self.entity_pointer_printed != 1)
 				{
-					if((self getcontrollerangles 0)[2] > 15 || (self getcontrollerangles 0)[2] < -15)
+					if(self.leanleftheld == 1 || self.leanrightheld == 1)
 					{
 						self tele local.pointing_target
 						local.string = ("( " + int(local.pointer.origin[0]) + " " + int(local.pointer.origin[1]) + " " + int(local.pointer.origin[2]) + " ) " + int(local.angles[1]))
@@ -203,10 +203,21 @@ projectile:
 	}
 	println("----- [" + local.hitthing.entnum + "].classname = " + local.hitthing.classname)
 	if(local.hitthing.model != NIL) { println("----- [" + local.hitthing.entnum + "].model = " + local.hitthing.model) }
-	if(local.hitthing.targetname != "") { println("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname) }
+	if(local.hitthing.targetname != "")
+	{
+		if($(local.hitthing.targetname).size > 1)
+		{
+			for(local.t = 1; local.t <= $(local.hitthing.targetname).size; local.t++)
+			{
+				if($(local.hitthing.targetname)[local.t] == local.hitthing) { println("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname + "[" + local.t + "]") }
+			}
+		}
+		else { println("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname) }
+	}
 	if(local.hitthing.target != "") { println("----- [" + local.hitthing.entnum + "].target = " + local.hitthing.target) }
 	if(local.hitthing.health != 0) { println("----- [" + local.hitthing.entnum + "].health = " + local.hitthing.health) }
 	if(local.hitthing.scale != 1) { println("----- [" + local.hitthing.entnum + "].scale = " + local.hitthing.scale) }
+	if(local.hitthing.set != NIL) { println("----- [" + local.hitthing.entnum + "].set = " + local.hitthing.set) }
 
 	if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname == "") { println("----- [" + local.hitthing.entnum + "].gun = entity " + local.hitthing.gun.entnum) }
 	if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname != "") { println("----- [" + local.hitthing.entnum + "].gun = " + local.hitthing.gun) }
@@ -228,10 +239,21 @@ projectile:
 		}
 		self iprint ("----- [" + local.hitthing.entnum + "].classname = " + local.hitthing.classname)
 		if(local.hitthing.model != NIL) { self iprint ("----- [" + local.hitthing.entnum + "].model = " + local.hitthing.model) }
-		if(local.hitthing.targetname != "") { self iprint ("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname) }
+		if(local.hitthing.targetname != "")
+		{
+			if($(local.hitthing.targetname).size > 1)
+			{
+				for(local.t = 1; local.t <= $(local.hitthing.targetname).size; local.t++)
+				{
+					if($(local.hitthing.targetname)[local.t] == local.hitthing) { self iprint ("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname + "[" + local.t + "]") }
+				}
+			}
+			else { self iprint ("----- [" + local.hitthing.entnum + "].targetname = " + local.hitthing.targetname) }
+		}
 		if(local.hitthing.target != "") { self iprint ("----- [" + local.hitthing.entnum + "].target = " + local.hitthing.target) }
 		if(local.hitthing.health != 0) { self iprint ("----- [" + local.hitthing.entnum + "].health = " + local.hitthing.health) }
 		if(local.hitthing.scale != 1) { self iprint ("----- [" + local.hitthing.entnum + "].scale = " + local.hitthing.scale) }
+		if(local.hitthing.set != NIL) { self iprint("----- [" + local.hitthing.entnum + "].set = " + local.hitthing.set) }
 
 		if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname == "") { self iprint ("----- [" + local.hitthing.entnum + "].gun = entity " + local.hitthing.gun.entnum) }
 		if(local.hitthing.gun != NIL && local.hitthing.gun != NULL && local.hitthing.gun.targetname != "") { self iprint ("----- [" + local.hitthing.entnum + "].gun = " + local.hitthing.gun) }

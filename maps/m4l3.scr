@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -55,6 +52,7 @@ exec global/aliascache_triggersounds.scr radio_music2
 exec global/aliascache_triggersounds.scr bathroom
 exec global/aliascache_triggersounds.scr valve_switch
 exec global/aliascache_triggersounds.scr truck_sounds
+exec global/aliascache_triggersounds.scr woodcreak
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 
@@ -444,6 +442,7 @@ setup:
 		thread firesound ( -2927 687 48 )
 		thread firesound ( -801 -1635 240 )
 
+		thread tower_woodcreak ( -5888 1472 368 )
 		thread toilet ( -2652 532 216 )
 		thread toilet ( -872 -324 0 )
 		thread faucet ( -936 -32 0 )
@@ -479,14 +478,14 @@ setup:
 		local.ladderrungs = 2
 	}
 
-	thread zeroents_with_targetname_fix RotatingDoor
-
 	// origin, ladder angle, height, width, thickness (going into wall), spawn solid clip (0 = no, 1 = yes), spawn lasers (1 = 1 laser, 2 = 2 lasers for ladder, 3 = ladder with rungs), laser color (R G B).
 	exec global/spawnladder.scr ( -5888 1351 -25 ) 0 393 13.5 1 1 local.ladderrungs ( 0 0 1 )
 
 	exec global/doorlocked.scr ( -3784 -4058 -318 ) gatelarge 1
 	exec global/doorlocked.scr ( -399 -1567 0 ) wood 1
 	exec global/doorlocked.scr ( -609 279 -206 ) gatelarge 1
+
+	thread zeroents_with_targetname_fix RotatingDoor
 	
 	level.springfield = 1
 	level.bar = 1
@@ -852,6 +851,26 @@ fire_valveswitch local.int local.origin local.angles local.rotatetime local.rota
 	local.valve remove
 	local.valvetrig remove
 	thread fire_valveswitch local.int local.origin local.angles local.rotatetime local.rotateamount local.clockwise 
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1639,13 +1658,13 @@ level waittill spawn
 
 			if(level.changesides == 0)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4045 5949 6 ) -167
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -339 -493 0 ) -90
 			}
 			if(level.changesides == 1)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -5594 -7018 -59 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -4485 540 0 ) 160
 			}
 			local.sides = level.changesides
 		}

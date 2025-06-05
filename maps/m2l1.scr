@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -50,6 +47,7 @@ exec global/aliascache_triggersounds.scr airstrikes
 exec global/aliascache_triggersounds.scr explode_building_small
 exec global/aliascache_triggersounds.scr explode_building_large
 exec global/aliascache_triggersounds.scr explode_wood_small
+exec global/aliascache_triggersounds.scr woodcreak
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 exec global/aliascache_triggersounds.scr bathroom
@@ -274,13 +272,16 @@ setup:
 	$interior remove
 	$exterior remove
 	$autosave remove
+	$enemyspawnertrigger remove
 	//$document1 remove; $document2 remove; $document3 remove; $document4 remove
+	//$exploder remove // ladder for metal sniper house
 
 	$gate_clip remove
 	if(getcvar("g_ubermods") != "2") { $main_gate remove }
 
 	if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 	{
+		thread tower_woodcreak ( -1756 -2784 776 )
 		thread waterspigot ( 4214 7221 176 )
 		thread red_hvac ( 1283 2288 448 )
 		thread red_hvac ( 3294 7006 16 )
@@ -550,6 +551,26 @@ trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damag
 		self.health = local.health
 		waitframe
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
 end
 
 ////////////////////////////////////////////////////////////////////////

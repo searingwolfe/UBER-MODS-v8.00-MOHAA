@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -53,6 +50,7 @@ exec global/aliascache_triggersounds.scr explode_wood_small
 exec global/aliascache_triggersounds.scr radio_music2
 exec global/aliascache_triggersounds.scr bathroom
 exec global/aliascache_triggersounds.scr track_switch
+exec global/aliascache_triggersounds.scr woodcreak
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 
@@ -430,6 +428,7 @@ setup:
 		thread radio_music ( 4788.66015625 3441.5400390625 327 ) ( 0 170 0 )
 		thread radio_music ( -5036 1983 113 ) ( 0 90 0 )
 
+		thread tower_woodcreak ( -2480 4064 392 )
 		thread airvent ( -3296 3292 -48 )
 		thread waterspigot ( -2660 1212 64 )
 		thread transformers_humming ( -2337 826 171 )
@@ -736,6 +735,26 @@ radio_music local.origin local.angles:
 	local.trig remove
 
 	thread radio_music local.origin local.angles
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -2600,13 +2619,13 @@ level waittill spawn
 
 			if(level.changesides == 0)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -6668 4998 328 ) 11
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( -3234 4560 -95 ) 0
 			}
 			if(level.changesides == 1)
 			{
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
-  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 0 0 0 ) 0
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 5944 -556 358 ) 90
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4560 3489 278 ) -10
 			}
 			local.sides = level.changesides
 		}

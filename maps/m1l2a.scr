@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -136,8 +133,8 @@ if(getcvar("g_ubergametype") != "bb")
 	exec map_triggers/spotlight_colorswitch.scr ( 2177 1064 328 ) ( 270 90 180 ) s10 rainbow
 }
 
-	thread spotlight_colorswitch_auto ( 895 2479 310 ) ( 0 -90 0 )
-	thread spotlight_colorswitch_auto ( 607 2479 310 ) ( 0 -90 0 ) slower
+	exec map_triggers/spotlight_colorswitch.scr ( 895 2479 310 ) ( 0 -90 0 ) all rainbow
+	exec map_triggers/spotlight_colorswitch.scr ( 607 2479 310 ) ( 0 -90 0 ) all slowrainbow
 
 //exec maps/gen_mapscripts/truckstuff_trig.scr $latertruck2 1 1 500 //$t208 // targetname, horn, headlights, health, name2nd (optional collision entity targetname)
 //exec maps/gen_mapscripts/truckstuff_trig.scr $truck2 1 1 500 //$t208
@@ -188,39 +185,31 @@ exec map_triggers/gen_switches/cabinetswitch.scr ( 5481 -4495.90 176 ) ( 0 0 0 )
 exec map_triggers/gen_switches/cabinetswitch.scr ( 5707.79 -4439.85 176 ) ( 0 180 0 ) 1 1
 
 exec maps/gen_mapscripts/radios_musictrig.scr ( 5476 -4496 40 ) ( 0 0 0 ) miscobj/radio_civilian.tik 0.01
-thread vehicle_tele 150		// this allows the kingtank specifically to pass through the explodable laser doors near the flak88s
-thread vehicle_tele2 200
-thread vehicles_undermap
 
-thread laserdoor ( .3608 .6627 .0016 ) 100 500 600 // color, health, damage, radius
-thread laserdoorvoid ( .3608 .6627 .0016 )
-thread explosivesroom 100 500 600
-thread cardchairs 5 // health
+	thread vehicle_tele 150		// this allows the kingtank specifically to pass through the explodable laser doors near the flak88s
+	thread vehicle_tele2 200
+	thread vehicles_undermap
 
-thread splinepath
-thread splinepath2
-thread splinepath3
-thread splinepath4
-thread bomberplane allies first 180 0 7 2.3
-thread bomberplane allies second 180 0 7 2.3
-thread bomberplane axis first 190 0 7 2.3
-thread bomberplane axis second 190 0 7 2.3
+	thread splinepath
+	thread splinepath2
+	thread splinepath3
+	thread splinepath4
+	thread bomberplane allies first 180 0 7 2.3
+	thread bomberplane allies second 180 0 7 2.3
+	thread bomberplane axis first 190 0 7 2.3
+	thread bomberplane axis second 190 0 7 2.3
 }
 
 if(getcvar("g_ubermods") == "1")
 {
-thread laserdoor ( .3608 .6627 .0016 ) 100 500 600 // color, health, damage, radius
-thread flak88_explode1 300 500 600
-thread flak88_explode2 300 500 600
-
-thread splinepath
-thread splinepath2
-thread splinepath3
-thread splinepath4
-thread bomberplane allies first 180 1 7 2.3
-thread bomberplane allies second 180 1 7 2.3
-thread bomberplane axis first 190 1 7 2.3
-thread bomberplane axis second 190 1 7 2.3
+	thread splinepath
+	thread splinepath2
+	thread splinepath3
+	thread splinepath4
+	thread bomberplane allies first 180 1 7 2.3
+	thread bomberplane allies second 180 1 7 2.3
+	thread bomberplane axis first 190 1 7 2.3
+	thread bomberplane axis second 190 1 7 2.3
 }
 
 level waittill spawn
@@ -354,11 +343,6 @@ setup:
 	$t737 remove
 	$t738 remove
 
-if(getcvar("g_ubermods") == "2")
-{
-	$flak88a_d remove
-	$flak88b_d remove
-}
 	$introclip delete	// note for below: info_pathnodes & info_waypoints for AI actors do not count as entities and aren't seen by "getentity()" Reborn command, so they don't need to be removed (only seen in the .bsp)
 	//$introdoorL remove	// removing any pathnodes could cause a "recursive error after: Z-Free: freed a pointer without ZONEID" and crash the server. 
 	//$introdoorR remove
@@ -400,63 +384,6 @@ if(getcvar("g_ubermods") == "2")
 	$spotlight remove // $spotlight[1], [2], [3]							// "recursive error after: Z-Free: freed a pointer without ZONEID"
 	$spotdamage remove
 	$spotcover remove
-if(getcvar("g_ubermods") != "2")
-{
-	$spotpath1_1 remove; $t351 remove; $t352 remove; $t353 remove; $t354 remove; $blahblah remove; $t348 remove; $t346 remove; $t349 remove
-	$spotpath1_2 remove; $t355 remove; $t720 remove; $t357 remove; $t358 remove; $t779 remove; $t765 remove; $t781 remove; $t767 remove; $t769 remove; $t771 remove; $t773 remove
-	$t775 remove; $t777 remove; $t359 remove; $t360 remove; $t361 remove; $t362 remove
-	$spotpath1_3 remove; $t336 remove; $t337 remove; $t338 remove; $t339 remove; $t340 remove; $t341 remove; $t342 remove; $t343 remove
-
-	$flak88a_d hide
-	$flak88b_d hide
-
-	local.fwd_vec = angles_toforward $flak88a.angles
-	local.init_angles = spawn script_origin		// need this entity to initially point the turret towards local.angles
-	local.init_angles.origin = trace ($flak88a.origin + local.fwd_vec * 56) ($flak88a.origin + local.fwd_vec * 10240) 0
-	$flak88a setaimtarget local.init_angles
-
-	local.fwd_vec2 = angles_toforward $flak88b.angles
-	local.init_angles2 = spawn script_origin
-	local.init_angles2.origin = trace ($flak88b.origin + local.fwd_vec2 * 56) ($flak88b.origin + local.fwd_vec2 * 10240) 0
-	$flak88b setaimtarget local.init_angles2
-
-	local.truck1 = spawn script_model targetname "latertruck2"
- 	local.truck1 model "vehicles/opeltruck.tik"
- 	local.truck1.origin = ( 1525 250 -154 ) 
- 	local.truck1.angles = ( 1.49 130 0.00 )
-	local.truck1.scale = 1
-	local.truck1 anim stop_wheels
-	local.truck1 anim idlenolights
-
-	local.truck2 = spawn script_model targetname "truck2" // made $truck2 a driv
- 	local.truck2 model "vehicles/opeltruck.tik"
- 	local.truck2.origin = ( 1586 2905 -200 )
- 	local.truck2.angles = ( 0 -103 0 )
-	local.truck2.scale = 1
-	local.truck2 anim stop_wheels
-	local.truck2 anim idlenolights
-}
-	exec global/doorlocked.scr ( 6363 -5152 32 ) gateiron
-	exec global/doorlocked.scr ( 6593 -4496 -1 ) gatelarge 1
-	exec global/doorlocked.scr ( 5155 -2880 -63 ) gateiron
-	exec global/doorlocked.scr ( 5928 -881 -31 ) wood 1
-	exec global/doorlocked.scr ( 4743 -1104 -151 ) wood 1
-	exec global/doorlocked.scr ( 4158 -11 -167 ) wood 1
-	exec global/doorlocked.scr ( 3677 -436 -133 ) wood 1
-	exec global/doorlocked.scr ( 2831 -223 -127 ) wood 1
-	exec global/doorlocked.scr ( 2223 -1000 -71 ) wood 1
-	exec global/doorlocked.scr ( 1571 -1178 -19 ) gatelarge 1
-	exec global/doorlocked.scr ( 1268 4100 -195 ) wood 1
-
-	exec global/doorlocked.scr ( 6496 -5312 8 ) gateiron
-	exec global/doorlocked.scr ( 7520 -5952 40 ) wood
-	exec global/doorlocked.scr ( 7048 -5187 18 ) gateiron
-	exec global/doorlocked.scr ( 6792 -4776 32 ) gateiron
-	exec global/doorlocked.scr ( 5031 -3601 128 ) wood
-	exec global/doorlocked.scr ( 3294 -267 -127 ) wood
-	exec global/doorlocked.scr ( 3060 -694 -127 ) wood
-	exec global/doorlocked.scr ( 95 -385 -103 ) gateiron
-	exec global/doorlocked.scr ( -1407 -807 -144 ) gatemetal
 
 	//$doorL remove
 	//$doorR remove
@@ -472,16 +399,99 @@ if(getcvar("g_ubermods") != "2")
 	$interchair.origin = ( 1970 3270 64 )
 	$interchair.angles = ( 0 -90 0 )
 
-	level.springfield = 1								
-	level.bar = 1								
-	level.bazooka = 1	
-	level.mp44 = 1		
-	level.shotgun = 1
-
 	$explosives100 show
 	$explosives100.angles = ( 0 180 0 )
 	$friendlyexplosive.origin = ( 684.25 -675.78 -54 )
 	$friendlyexplosive.angles = ( 0 0 0 )
+
+	for(local.e = 1; local.e <= $exploderfire.size; local.e++)
+	{
+		if($exploderfire[local.e].set != "100") { $exploderfire[local.e] remove; local.e = 1 } // use "100" instead of 100, otherwise some entities may not get removed.
+	}
+
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
+	{
+		$exploder remove
+		$explosives100 remove
+		$friendlyexplosive remove
+	}
+
+	if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+	{
+		//local.test = 1
+ 		// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2, ::explode set number, ... 
+		// ... damage, radius, smaller (1 = smaller earthquake), trig origin (default = explosion origin), test (1 = spawn lasers around trigger box & emitters at all the origins).
+		//
+		// Example template: exec global/exploder_killer.scr ( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 0 	( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 1 500 600 0 	( 0 0 0 ) local.test
+		//
+		// Parameters after "set number" are optional, and will auto-default if left blank.
+		//
+		//$exploder.origin = ( 704 -672 70 )
+		level.exploder_killer_noprint = 1 // applies to all exploders.
+		//$exploder[1].grenades = 1
+		level.exploder_killer_grenades = 1 // applies to all exploders.
+
+		exec global/exploder_killer.scr ( 604 -672 50 ) ( 804 -672 50 ) ( 704 -672 -50 ) ( 704 -672 210 ) 180 ( 554 -586 -79 ) ( 644 -790 -54 ) ( -175 -160 -30 ) ( 175 160 300 ) 100 500 600 0 ( 704 -672 -50 ) local.test
+		thread laserdoor ( .3608 .6627 .0016 ) // color
+	}
+
+	if(getcvar("g_ubermods") == "2")
+	{
+		$flak88a_d remove
+		$flak88b_d remove
+
+		thread laserdoorvoid ( .3608 .6627 .0016 )
+		thread cardchairs 5 // health
+
+		local.exploder2 = spawn script_origin targetname "exploder" // need a 2nd "exploder" for exploder_killer.scr to work properly (for blowing up the explosives room).
+		local.exploder2.origin = ( 2058 3024 -424 )
+		local.exploder2.set = 105
+		//local.exploder2.grenades = 1
+
+		exec global/exploder_killer.scr ( 1967 3024 -411 ) ( 1967 3327 -411 ) ( 1967 3024 -511 ) ( 1967 3024 -340 ) 270 ( 2086 2892 -511 ) ( 1846 2892 -511 ) ( -176 -144 0 ) ( 176 176 175 ) 105 500 600 0 ( 1967 3024 -511 ) local.test
+		thread explosivesroom 500 600
+	}
+
+	if(getcvar("g_ubermods") == "1")
+	{
+
+		thread flak88_explode1 300 500 600
+		thread flak88_explode2 300 500 600
+
+		$spotpath1_1 remove; $t351 remove; $t352 remove; $t353 remove; $t354 remove; $blahblah remove; $t348 remove; $t346 remove; $t349 remove
+		$spotpath1_2 remove; $t355 remove; $t720 remove; $t357 remove; $t358 remove; $t779 remove; $t765 remove; $t781 remove; $t767 remove; $t769 remove; $t771 remove; $t773 remove
+		$t775 remove; $t777 remove; $t359 remove; $t360 remove; $t361 remove; $t362 remove
+		$spotpath1_3 remove; $t336 remove; $t337 remove; $t338 remove; $t339 remove; $t340 remove; $t341 remove; $t342 remove; $t343 remove
+
+		$flak88a_d hide
+		$flak88b_d hide
+
+		local.fwd_vec = angles_toforward $flak88a.angles
+		local.init_angles = spawn script_origin		// need this entity to initially point the turret towards local.angles
+		local.init_angles.origin = trace ($flak88a.origin + local.fwd_vec * 56) ($flak88a.origin + local.fwd_vec * 10240) 0
+		$flak88a setaimtarget local.init_angles
+
+		local.fwd_vec2 = angles_toforward $flak88b.angles
+		local.init_angles2 = spawn script_origin
+		local.init_angles2.origin = trace ($flak88b.origin + local.fwd_vec2 * 56) ($flak88b.origin + local.fwd_vec2 * 10240) 0
+		$flak88b setaimtarget local.init_angles2
+
+		local.truck1 = spawn script_model targetname "latertruck2"
+	 	local.truck1 model "vehicles/opeltruck.tik"
+	 	local.truck1.origin = ( 1525 250 -154 ) 
+	 	local.truck1.angles = ( 1.49 130 0.00 )
+		local.truck1.scale = 1
+		local.truck1 anim stop_wheels
+		local.truck1 anim idlenolights
+
+		local.truck2 = spawn script_model targetname "truck2" // made $truck2 a driv
+	 	local.truck2 model "vehicles/opeltruck.tik"
+	 	local.truck2.origin = ( 1586 2905 -200 )
+	 	local.truck2.angles = ( 0 -103 0 )
+		local.truck2.scale = 1
+		local.truck2 anim stop_wheels
+		local.truck2 anim idlenolights
+	}
 	
 	local.ossdoor = spawn trigger_use targetname "ossdoor_trigger"
  	local.ossdoor.origin = ( 5908 -4456 208 )
@@ -528,12 +538,33 @@ if(getcvar("g_ubermods") != "2")
  	local.enddoor setsize ( -40 -40 -70 ) ( 40 70 70 )
 	local.enddoor thread maps/gen_mapscripts/doorsgates.scr::wood_doors $enddoor NIL -85
 
-if(getcvar("g_ubermods") == "0" || getcvar("g_ubermods") == "")
-{
-	$exploder remove
-	$explosives100 remove
-	$friendlyexplosive remove
-}
+	exec global/doorlocked.scr ( 6363 -5152 32 ) gateiron
+	exec global/doorlocked.scr ( 6593 -4496 -1 ) gatelarge 1
+	exec global/doorlocked.scr ( 5155 -2880 -63 ) gateiron
+	exec global/doorlocked.scr ( 5928 -881 -31 ) wood 1
+	exec global/doorlocked.scr ( 4743 -1104 -151 ) wood 1
+	exec global/doorlocked.scr ( 4158 -11 -167 ) wood 1
+	exec global/doorlocked.scr ( 3677 -436 -133 ) wood 1
+	exec global/doorlocked.scr ( 2831 -223 -127 ) wood 1
+	exec global/doorlocked.scr ( 2223 -1000 -71 ) wood 1
+	exec global/doorlocked.scr ( 1571 -1178 -19 ) gatelarge 1
+	exec global/doorlocked.scr ( 1268 4100 -195 ) wood 1
+
+	exec global/doorlocked.scr ( 6496 -5312 8 ) gateiron
+	exec global/doorlocked.scr ( 7520 -5952 40 ) wood
+	exec global/doorlocked.scr ( 7048 -5187 18 ) gateiron
+	exec global/doorlocked.scr ( 6792 -4776 32 ) gateiron
+	exec global/doorlocked.scr ( 5031 -3601 128 ) wood
+	exec global/doorlocked.scr ( 3294 -267 -127 ) wood
+	exec global/doorlocked.scr ( 3060 -694 -127 ) wood
+	exec global/doorlocked.scr ( 95 -385 -103 ) gateiron
+	exec global/doorlocked.scr ( -1407 -807 -144 ) gatemetal
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1	
+	level.mp44 = 1		
+	level.shotgun = 1
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -574,71 +605,31 @@ end
 ////////////////////////////////////////////////////////////////////////
 
 laserdoor local.color local.health local.damage local.radius:
-	
-	local.laser1 = spawn func_beam targetname "laserwall1"
-	local.laser1 minoffset 0.0
-	local.laser1 maxoffset 0.0
-	local.laser1 numsegments 1
-	local.laser1 life 0
-	local.laser1 color local.color
-	local.laser1 alpha 0.4
-	local.laser1 alwaysdraw
-	local.laser1 activate	
-	local.laser1 scale .5
-	local.laser1.origin = ( 694 -511 206 )
-	local.laser1 endpoint ( 694 -833 206 )
 
-	local.laser2 = spawn func_beam targetname "laserwall2"
-	local.laser2 minoffset 0.0
-	local.laser2 maxoffset 0.0
-	local.laser2 numsegments 1
-	local.laser2 life 0
-	local.laser2 color local.color
-	local.laser2 alpha 0.4
-	local.laser2 alwaysdraw
-	local.laser2 activate	
-	local.laser2 scale .5
-	local.laser2.origin = ( 694 -511 144 )
-	local.laser2 endpoint ( 694 -833 144 )
+	level waittill spawn
 
-	local.laser3 = spawn func_beam targetname "laserwall3"
-	local.laser3 minoffset 0.0
-	local.laser3 maxoffset 0.0
-	local.laser3 numsegments 1
-	local.laser3 life 0
-	local.laser3 color local.color
-	local.laser3 alpha 0.4
-	local.laser3 alwaysdraw
-	local.laser3 activate	
-	local.laser3 scale .5
-	local.laser3.origin = ( 694 -511 82 )
-	local.laser3 endpoint ( 694 -833 82 )
+	for(local.e = 1; local.e <= $exploder.size; local.e++)
+	{
+		if($exploder[local.e].set == 100) { local.exploder = $exploder[local.e]; break }
+	}
 
-	local.laser4 = spawn func_beam targetname "laserwall4"
-	local.laser4 minoffset 0.0
-	local.laser4 maxoffset 0.0
-	local.laser4 numsegments 1
-	local.laser4 life 0
-	local.laser4 color local.color
-	local.laser4 alpha 0.4
-	local.laser4 alwaysdraw
-	local.laser4 activate	
-	local.laser4 scale .5
-	local.laser4.origin = ( 694 -511 20 )
-	local.laser4 endpoint ( 694 -833 20 )
+	if(local.exploder == NIL || local.exploder == NULL) { end }
 
-	local.laser5 = spawn func_beam targetname "laserwall5"
-	local.laser5 minoffset 0.0
-	local.laser5 maxoffset 0.0
-	local.laser5 numsegments 1
-	local.laser5 life 0
-	local.laser5 color local.color
-	local.laser5 alpha 0.4
-	local.laser5 alwaysdraw
-	local.laser5 activate	
-	local.laser5 scale .5
-	local.laser5.origin = ( 694 -511 -42 )
-	local.laser5 endpoint ( 694 -833 -42 )
+	for(local.s = 1; local.s <= $explodersmashed.size; local.s++)
+	{
+		if($explodersmashed[local.s].set == 100) { $explodersmashed[local.s].nosound = 1 } // turns off global/exploder.scr's explosion sound, since one exists in this thread already.
+	}
+
+	for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++)
+	{
+		if($exploder_trigshot[local.e].set == 100) { local.explodertrig = $exploder_trigshot[local.e]; break }
+	}
+
+	local.laser1 = thread spawnlaser ( 694 -511 206 ) ( 694 -833 206 ) local.color 0.5 "laserwall1"
+	local.laser2 = thread spawnlaser ( 694 -511 144 ) ( 694 -833 144 ) local.color 0.5 "laserwall2"
+	local.laser3 = thread spawnlaser ( 694 -511 82 ) ( 694 -833 82 ) local.color 0.5 "laserwall3"
+	local.laser4 = thread spawnlaser ( 694 -511 20 ) ( 694 -833 20 ) local.color 0.5 "laserwall4"
+	local.laser5 = thread spawnlaser ( 694 -511 -42 ) ( 694 -833 -42 ) local.color 0.5 "laserwall5"
 
 	local.trig = spawn trigger_multiple
 	local.trig.origin = ( 691 -672 -54 )
@@ -651,20 +642,9 @@ laserdoor local.color local.health local.damage local.radius:
 	local.trig2.lasercolor = local.color
 	local.trig2 setthread laserdoor_shot
 
-	local.trig3 = spawn trigger_multiple spawnflags 128
-	local.trig3.origin = ( 691 -672 -54 )
-	local.trig3 setsize ( -12 -168 -5 ) ( 37 167 260 )
-	local.trig3.health = 125
-	local.trig3 thread trig_healthboost
+	while(local.explodertrig != NIL && local.explodertrig != NULL && local.explodertrig.dead != 1) { waitframe }
 
-	while(local.trig3.health > 0) { waitframe }
-
-	local.debris = spawn script_model
-	local.debris model "emitters/mortar_dirt_nosound.tik" 
-	local.debris.origin = ( 708 -675.78 -54 )
-	local.debris notsolid
-	local.debris.scale = 1.25
-	local.debris anim start
+	local.debris = thread emitterstuff "emitters/mortar_dirt_nosound.tik"  ( 708 -675.78 -54 ) ( 0 0 0 ) 1.25 start
 
 	local.r = randomint(4)
 	if(local.r == 0) { $explosives100 playsound explode_building_large1 }
@@ -676,15 +656,11 @@ laserdoor local.color local.health local.damage local.radius:
 	if(local.r2 == 0) { local.debris playsound explode_wood_small1 }
 	if(local.r2 == 1) { local.debris playsound explode_wood_small2 }
 
-	exec global/earthquake.scr .35 2 0 0
-	radiusdamage $exploder.origin local.damage local.radius
-	$exploder thread global/exploder.scr::explode 100 // original game's script (100 = laser door, 101 = flak88 #1, 102 = flakk88 #2).
 	println("----- Blowing up the Laser Barrier.")
 	level.laserdoors_dead = 1
 
 	local.trig remove
 	local.trig2 remove
-	local.trig3 remove
 	local.laser1 remove
 	local.laser2 remove
 	local.laser3 remove
@@ -721,125 +697,22 @@ laserdoor_shot:
 	if(self != NULL) { self triggerable }
 end
 
-trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
-
-	local.health = self.health
-	while(self != NULL && self.health > 0) // prevent regular bullets from killing trigger (i.e. if 250 health, trigger can still be killed by 2 grenades or a shotgun blast)
-	{
-		self.health = local.health
-		waitframe
-	}
-end
-
 ////////////////////////////////////////////////////////////////////////
 
 laserdoorvoid local.color:
 
+	level waittill spawn
+
 	if($doorL == NULL || $doorR == NULL) { end }
 
-	local.laser1 = spawn func_beam targetname "laserwallvoid1"
-	local.laser1 minoffset 0.0
-	local.laser1 maxoffset 0.0
-	local.laser1 numsegments 1
-	local.laser1 life 0
-	local.laser1 color local.color
-	local.laser1 alpha 0.4
-	local.laser1 alwaysdraw
-	local.laser1 activate	
-	local.laser1 scale .5
-	local.laser1.origin = ( 4193 -1736 -3 )
-	local.laser1 endpoint ( 4352 -1726 -3 )
-
-	local.laser2 = spawn func_beam targetname "laserwallvoid2"
-	local.laser2 minoffset 0.0
-	local.laser2 maxoffset 0.0
-	local.laser2 numsegments 1
-	local.laser2 life 0
-	local.laser2 color local.color
-	local.laser2 alpha 0.4
-	local.laser2 alwaysdraw
-	local.laser2 activate	
-	local.laser2 scale .5
-	local.laser2.origin = ( 4193 -1736 130 )
-	local.laser2 endpoint ( 4352 -1726 130 )
-
-	local.laser3 = spawn func_beam targetname "laserwallvoid3"
-	local.laser3 minoffset 0.0
-	local.laser3 maxoffset 0.0
-	local.laser3 numsegments 1
-	local.laser3 life 0
-	local.laser3 color local.color
-	local.laser3 alpha 0.4
-	local.laser3 alwaysdraw
-	local.laser3 activate	
-	local.laser3 scale .5
-	local.laser3.origin = ( 4193 -1736 260 )
-	local.laser3 endpoint ( 4352 -1726 260 )
-
-	local.laser4 = spawn func_beam targetname "laserwallvoid4"
-	local.laser4 minoffset 0.0
-	local.laser4 maxoffset 0.0
-	local.laser4 numsegments 1
-	local.laser4 life 0
-	local.laser4 color local.color
-	local.laser4 alpha 0.4
-	local.laser4 alwaysdraw
-	local.laser4 activate	
-	local.laser4 scale .5
-	local.laser4.origin = ( 4191 -1736 -3 )
-	local.laser4 endpoint ( 4032 -1726 -3 )
-
-	local.laser5 = spawn func_beam targetname "laserwallvoid5"
-	local.laser5 minoffset 0.0
-	local.laser5 maxoffset 0.0
-	local.laser5 numsegments 1
-	local.laser5 life 0
-	local.laser5 color local.color
-	local.laser5 alpha 0.4
-	local.laser5 alwaysdraw
-	local.laser5 activate	
-	local.laser5 scale .5
-	local.laser5.origin = ( 4191 -1736 130 )
-	local.laser5 endpoint ( 4032 -1726 130 )
-
-	local.laser6 = spawn func_beam targetname "laserwallvoid6"
-	local.laser6 minoffset 0.0
-	local.laser6 maxoffset 0.0
-	local.laser6 numsegments 1
-	local.laser6 life 0
-	local.laser6 color local.color
-	local.laser6 alpha 0.4
-	local.laser6 alwaysdraw
-	local.laser6 activate	
-	local.laser6 scale .5
-	local.laser6.origin = ( 4191 -1736 260 )
-	local.laser6 endpoint ( 4032 -1726 260 )
-
-	local.laser7 = spawn func_beam targetname "laserwallvoid7"
-	local.laser7 minoffset 0.0
-	local.laser7 maxoffset 0.0
-	local.laser7 numsegments 1
-	local.laser7 life 0
-	local.laser7 color local.color
-	local.laser7 alpha 0.4
-	local.laser7 alwaysdraw
-	local.laser7 activate	
-	local.laser7 scale .5
-	local.laser7.origin = local.laser3.origin
-	local.laser7 endpoint (local.laser3.origin + ( 0 0 -300 ))
-
-	local.laser8 = spawn func_beam targetname "laserwallvoid8"
-	local.laser8 minoffset 0.0
-	local.laser8 maxoffset 0.0
-	local.laser8 numsegments 1
-	local.laser8 life 0
-	local.laser8 color local.color
-	local.laser8 alpha 0.4
-	local.laser8 alwaysdraw
-	local.laser8 activate	
-	local.laser8 scale .5
-	local.laser8.origin = local.laser6.origin
-	local.laser8 endpoint (local.laser6.origin + ( 0 0 -300 ))
+	local.laser1 = thread spawnlaser ( 4193 -1736 -3 ) ( 4352 -1726 -3 ) local.color 0.5 "laserwallvoid1"
+	local.laser2 = thread spawnlaser ( 4193 -1736 130 ) ( 4352 -1726 130 ) local.color 0.5 "laserwallvoid2"
+	local.laser3 = thread spawnlaser ( 4193 -1736 260 ) ( 4352 -1726 260 ) local.color 0.5 "laserwallvoid3"
+	local.laser4 = thread spawnlaser ( 4191 -1736 -3 ) ( 4032 -1726 -3 ) local.color 0.5 "laserwallvoid4"
+	local.laser5 = thread spawnlaser ( 4191 -1736 130 ) ( 4032 -1726 130 ) local.color 0.5 "laserwallvoid5"
+	local.laser6 = thread spawnlaser ( 4191 -1736 260 ) ( 4032 -1726 260 ) local.color 0.5 "laserwallvoid6"
+	local.laser7 = thread spawnlaser local.laser3.origin (local.laser3.origin + ( 0 0 -300 )) local.color 0.5 "laserwallvoid7"
+	local.laser8 = thread spawnlaser local.laser6.origin (local.laser6.origin + ( 0 0 -300 )) local.color 0.5 "laserwallvoid8"
 
 	local.trig = spawn trigger_multiple spawnflags 128
 	local.trig.origin = ( 4192 -1743 0 )
@@ -932,46 +805,42 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-explosivesroom local.health local.damage local.radius:
+explosivesroom local.damage local.radius:
 
-	local.trig = spawn trigger_multiple spawnflags 128
-	local.trig.origin = ( 2009 3078 -510 )
-	local.trig setsize ( -22 -54 -20 ) ( 0 0 15 )
-	local.trig.health = 125
-	local.trig thread trig_healthboost
+	level waittill spawn
 
-	while(local.trig.health > 0) { waitframe }
+	for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++)
+	{
+		if($exploder_trigshot[local.e].set == 105) { local.explodertrig = $exploder_trigshot[local.e]; break }
+	}
+
+	while(local.explodertrig != NIL && local.explodertrig != NULL && local.explodertrig.dead != 1) { waitframe }
 	
-	thread jitter_large
 	println("----- Blowing up the Explosives Room.")
 
+	wait (randomint(25) / 100.000 + 0.25)
 	thread explosivesroom_boom ( 2009 3078 -510 ) local.damage local.radius
-	wait (randomint(25) / 100.000)
-	thread explosivesroom_boom ( 2182 3307 -511 ) local.damage local.radius
+	radiusdamage ( 2009 3078 -410 ) local.damage local.radius
 	exec global/earthquake.scr .35 2 0 0
-	wait (randomint(25) / 100.000)
+
+	wait (randomint(25) / 100.000 + 0.25)
+	thread explosivesroom_boom ( 2182 3307 -511 ) local.damage local.radius
+	radiusdamage ( 2182 3307 -410 ) local.damage local.radius
+	exec global/earthquake.scr .35 2 0 0
+
+	wait (randomint(25) / 100.000 + 0.25)
 	thread explosivesroom_boom ( 1745 3718 -511 ) local.damage local.radius
+	radiusdamage ( 1745 3718 -410 ) local.damage local.radius
 	exec global/earthquake.scr .35 2 0 0
 
 	waitframe
 	if($explosive != NULL) { $explosive remove }
-	if(local.trig != NULL) { local.trig remove }
 end
 
 explosivesroom_boom local.origin local.damage local.radius:
 
-	local.explode = spawn script_model
-	local.explode model "animate//fx_mortar_higgins.tik" //"fx/fx_flak88_explosion.tik"
-	local.explode.origin = local.origin
-	local.explode.scale = 0.45
-	local.explode anim start
-
-	local.debris = spawn script_model
-	local.debris model "emitters/mortar_dirt_nosound.tik" 
-	local.debris.origin = local.origin
-	local.debris notsolid
-	local.debris.scale = 1
-	local.debris anim start
+	local.explode = thread emitterstuff "animate//fx_mortar_higgins.tik" local.origin ( 0 0 0 ) 0.45 start //"fx/fx_flak88_explosion.tik"
+	local.debris = thread emitterstuff "emitters/mortar_dirt_nosound.tik" local.origin ( 0 0 0 ) 1 start
 
 	local.r1 = randomint(5)
 	if(local.r1 == 0) { local.explode playsound explode_building_small1 }
@@ -984,7 +853,6 @@ explosivesroom_boom local.origin local.damage local.radius:
 	if(local.r2 == 0) { local.debris playsound explode_wood_small1 }
 	if(local.r2 == 1) { local.debris playsound explode_wood_small2 }
 
-	radiusdamage local.origin local.damage local.radius
 	waitframe
 	local.explode remove
 	local.debris remove
@@ -993,6 +861,8 @@ end
 ////////////////////////////////////////////////////////////////////////
 
 flak88_explode1 local.health local.damage local.radius:
+
+	level waittill spawn
 
 	if($flak88a == NULL || $flak88a_d == NULL) { end }
 
@@ -1053,6 +923,8 @@ flak88_explode1 local.health local.damage local.radius:
 end
 
 flak88_explode2 local.health local.damage local.radius:
+
+	level waittill spawn
 
 	if($flak88b == NULL || $flak88b_d == NULL) { end }
 
@@ -1126,6 +998,8 @@ end
 
 cardchairs local.health:
 
+	level waittill spawn
+
 	if($cardgame == NULL) { end }
 
 	local.chair1 = spawn script_model targetname "patrol_g1"
@@ -1165,6 +1039,16 @@ cardchairs local.health:
 	local.chair1 playsound kick_chair
 	local.chair2 playsound kick_chair
 	local.chair3 playsound kick_chair
+end
+
+trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0) // prevent regular bullets from killing trigger (i.e. if 250 health, trigger can still be killed by 2 grenades or a shotgun blast)
+	{
+		self.health = local.health
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -2334,6 +2218,19 @@ cratesstuff local.model local.origin local.angles local.hide local.scale local.t
 	if(local.ent.model == "models/vehicles/uboat.tik") { local.ent setsize ( -2150 -212 0 ) ( 2150 212 582 ) }
 end
 
+emitterstuff local.model local.origin local.angles local.scale local.anim local.targetname:
+
+	local.emitter = spawn script_model
+	local.emitter model local.model
+	if(local.emitter.model == "models/emitters/inferno.tik") { local.emitter.origin = local.origin + ( 0 0 50 ) }
+	else { local.emitter.origin = local.origin }
+	if(local.angles[2] != NIL) { local.emitter.angles = local.angles }
+	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
+	if(local.anim != NIL) { local.emitter anim local.anim }
+	if(local.targetname != NIL) { local.emitter.targetname = local.targetname }
+	local.emitter notsolid
+end local.emitter
+
 solidclip local.origin local.setsize1 local.setsize2 local.angle:
 
 	local.clip = spawn script_object  
@@ -2343,6 +2240,25 @@ solidclip local.origin local.setsize1 local.setsize2 local.angle:
 	local.clip solid
 	local.clip nodamage
 end
+
+spawnlaser local.origin local.endpoint local.color local.scale local.targetname:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+	if(local.targetname != NIL) { local.laser.targetname = local.targetname }
+end local.laser
 
 ////////////////////////////////////////////////////////////////////////
 

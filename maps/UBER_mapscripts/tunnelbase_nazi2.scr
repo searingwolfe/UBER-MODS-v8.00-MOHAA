@@ -715,14 +715,26 @@ local.tunnelmg42gun4 setplayerusable 1
 
 local.tunnelalarm1 = spawn script_model targetname "tunnelbase_alarmb1"
 local.tunnelalarm1 model "static/alarmbell.tik" 
-local.tunnelalarm1.origin = local.origin + ( 132.5 -498 210 )
-local.tunnelalarm1.angles = ( 0 180 0 )
+local.tunnelalarm1.origin = local.origin + ( -498 132.5 200 )
+local.tunnelalarm1.angles = ( 0 270 0 )
 local.tunnelalarm1 notsolid
 local.tunnelalarm2 = spawn script_model targetname "tunnelbase_alarmb2"
 local.tunnelalarm2 model "static/alarmbell.tik"
-local.tunnelalarm2.origin = local.origin + ( 132.5 502 210 )
-local.tunnelalarm2.angles = ( 0 180 0 )
+local.tunnelalarm2.origin = local.origin + ( 502 132.5 200 )
+local.tunnelalarm2.angles = ( 0 270 0 )
 local.tunnelalarm2 notsolid
+local.tunnelalarm3 = spawn script_model targetname "tunnelbase_alarmb3"
+local.tunnelalarm3 model "static/alarmbell.tik" 
+local.tunnelalarm3.origin = local.origin + ( -498 85 225 )
+local.tunnelalarm3.angles = ( 0 270 0 )
+local.tunnelalarm3 notsolid
+local.tunnelalarm3.scale = 0.001
+local.tunnelalarm4 = spawn script_model targetname "tunnelbase_alarmb4"
+local.tunnelalarm4 model "static/alarmbell.tik"
+local.tunnelalarm4.origin = local.origin + ( 502 85 225 )
+local.tunnelalarm4.angles = ( 0 270 0 )
+local.tunnelalarm4 notsolid
+local.tunnelalarm4.scale = 0.001
 
 if(local.mirrorflip == 1) 
 {  
@@ -740,10 +752,14 @@ if(local.mirrorflip == 1)
  local.tunnelmg42gun2.angles = ( 0 133 0 )
  local.tunnelmg42gun3.origin = local.origin + ( 12 765 72 )
  local.tunnelmg42gun4.origin = local.origin + ( 13.35 819.35 114 )
- local.tunnelalarm1.origin = local.origin + ( -132.5 -498 210 )
+ local.tunnelalarm1.origin = local.origin + ( -132.5 -498 200 )
  local.tunnelalarm1.angles = ( 0 0 0 )
- local.tunnelalarm2.origin = local.origin + ( -132.5 502 210 )
+ local.tunnelalarm2.origin = local.origin + ( -132.5 502 200 )
  local.tunnelalarm2.angles = ( 0 0 0 )
+ local.tunnelalarm3.origin = local.origin + ( -85 -498 225 )
+ local.tunnelalarm3.angles = ( 0 0 0 )
+ local.tunnelalarm4.origin = local.origin + ( -85 502 225 )
+ local.tunnelalarm4.angles = ( 0 0 0 )
 }
 end
 
@@ -785,11 +801,15 @@ for(local.n = 1; local.n <= local.flashes; local.n++)
 	{ 
 		$tunnelbase_alarmb1 light local.color1[0] local.color1[1] local.color1[2] local.radius1
 	  	$tunnelbase_alarmb2 light local.color2[0] local.color2[1] local.color2[2] local.radius2 
+		$tunnelbase_alarmb3 light local.color1[0] local.color1[1] local.color1[2] local.radius1
+	  	$tunnelbase_alarmb4 light local.color2[0] local.color2[1] local.color2[2] local.radius2 
 	}
 	if(local.c == 1)
 	{
 		$tunnelbase_alarmb1 light local.color2[0] local.color2[1] local.color2[2] local.radius2
 		$tunnelbase_alarmb2 light local.color1[0] local.color1[1] local.color1[2] local.radius1
+		$tunnelbase_alarmb3 light local.color2[0] local.color2[1] local.color2[2] local.radius2
+		$tunnelbase_alarmb4 light local.color1[0] local.color1[1] local.color1[2] local.radius1
 	}
 	wait (local.time / local.flashes)
 
@@ -799,6 +819,8 @@ for(local.n = 1; local.n <= local.flashes; local.n++)
 
 $tunnelbase_alarmb1 light 0 0 0 0
 $tunnelbase_alarmb2 light 0 0 0 0
+$tunnelbase_alarmb3 light 0 0 0 0
+$tunnelbase_alarmb4 light 0 0 0 0
 $tunnelbase_alarmb1 stoploopsound
 $tunnelbase_alarmb2 stoploopsound
 end

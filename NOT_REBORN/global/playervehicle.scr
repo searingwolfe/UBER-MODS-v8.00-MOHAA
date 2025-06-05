@@ -1416,16 +1416,13 @@ end
 
 illuminate local.side:
 
-	if(self.model == "models/vehicles/bmwbike.tik" && local.side == "right") { end }
-	if(self.model == "models/vehicles/bmwbike.tik" && local.side == "left") { local.side = "bike" }
-
-	if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.distance = 340; local.height = 57 } // distance = how far away from the vehicle's origin
-	else if(self.model == "models/vehicles/bmwbike.tik") { local.distance = 215; local.height = 52 }
-	else if(self.model == "models/vehicles/m3.tik") { local.distance = 335; local.height = 77 }
-	else if(self.model == "models/vehicles/shermantank.tik") { local.distance = 195; local.height = 80.5 }
-	else if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 350; local.height = 72.5 }
+	if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.distance = 325; local.height = 57 } // distance = how far away from the vehicle's origin
+	else if(self.model == "models/vehicles/bmwbike.tik") { local.distance = 165; local.height = 52 }
+	else if(self.model == "models/vehicles/m3.tik") { local.distance = 285; local.height = 77 }
+	else if(self.model == "models/vehicles/shermantank.tik") { local.distance = 145; local.height = 80.5 }
+	else if(self.model == "models/vehicles/gmctruck.tik") { local.distance = 320; local.height = 72.5 }
 	else if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik" || self.model == "models/vehicles/mercedes.tik") { local.distance = 300 }
-	else { local.distance = 275 }
+	else { local.distance = 255 }
 
 	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik") { local.height = 53 }
 	if(self.model == "models/vehicles/mercedes.tik") { local.height = 46.5 }
@@ -1433,28 +1430,27 @@ illuminate local.side:
 	if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik") { local.height = 44.25 }
 	if(local.height == NIL) { local.height = 55 }
 
+	local.radius = 250
+	if(self.model == "models/vehicles/bmwbike.tik") { local.radius = 175 }
+
 	local.light = spawn script_model
 	local.light model "fx/searchlight.tik"
 	local.light.origin = self.origin
 	local.light.scale = 0.001
 	local.light notsolid
-	local.light light 1 1 1 250
-
-	local.PI = 3.14159265359
-	local.origin = self.origin
-
-	while(self != NULL && self.corona == 1)
+	if(local.side == "right")
 	{
-		if(local.side == "bike") { local.degrees = self.angles[1] }
-		if(local.side == "left") { local.degrees = self.angles[1] + 20 }
-		if(local.side == "right") { local.degrees = self.angles[1] - 20 }
+		local.light light .5 .5 .5 (local.radius * 2)
+		local.distance += local.radius
+	}
+	else { local.light light 1 1 1 local.radius }
 
+	local.origin = self.origin
+	while(self != NULL && self.corona == 1) // make sure the illumination stays a certain distance in front of the truck. adding the speed to the distance keeps the entity roughly in the same spot.
+	{
 		local.speed = waitthread global/math.scr::sqrt ((self.origin[0] - local.origin[0]) * (self.origin[0] - local.origin[0]) + (self.origin[1] - local.origin[1]) * (self.origin[1] - local.origin[1]) + (self.origin[2] - local.origin[2]) * (self.origin[2] - local.origin[2]))
-		local.sin2 = (waitthread global/math.scr::sine local.degrees) * (local.distance + (local.speed * 0.55))
-		local.cos2 = (waitthread global/math.scr::cosine local.degrees) * (local.distance + (local.speed * 0.55))
-
+ 		local.light.origin = trace (self.origin + ( 0 0 local.height )) (self.origin + ( 0 0 local.height ) + self.forwardvector * (local.distance + (local.speed * 0.55))) 0 // use trace to ensure the light doesn't go into walls when vehicle is facing walls.
 		local.origin = self.origin
- 		local.light.origin = trace (self.origin + ( 0 0 50 )) (self.origin + ( local.cos2 local.sin2 local.height )) 0 // use trace to ensure the light doesn't go into walls when vehicle is facing walls
 		waitframe
 	}
 	if(local.light != NULL) { local.light remove }

@@ -1,14 +1,17 @@
 // Simple script for adding simulated $door_locked triggers, but without spawning any entities.
 //
-// Parameters: trigger origin (standing on ground in front of a door), door type (wood, metal, gateiron, gatelarge, gatemetal, garagedoor), extra sounds (0 = no, 1 = yes for "wood", "metal", "gatelarge" only).
+// Parameters: trigger origin (standing on ground in front of a door), door type (wood, metal, gateiron, gatelarge, gatemetal, garagedoor), ...
+// ... extra sounds (0 = no, 1 = yes for "wood", "metal", "gatelarge" only), set number (doorlocked gets removed if an exploder with the #set explodes).
 // Example: exec global/doorlocked.scr ( 234 -2453 129 ) wood
 // Example: exec global/doorlocked.scr ( 234 -2453 129 ) gatelarge 1
 
-main local.trigorigin local.type local.extra:
+main local.trigorigin local.type local.extra local.set:
 
 	if(local.trigorigin == NIL || (local.trigorigin != NIL && local.trigorigin[2] == NIL)) { wait 1; println("----- ERROR doorlocked.scr: 'origin' parameter is missing!"); end }
 	if(local.type == NIL) { wait 1; println("----- ERROR doorlocked.scr: 'door type' parameter is missing!"); end }
 	else if(local.type != "wood" && local.type != "metal" && local.type != "gateiron" && local.type != "gatelarge" && local.type != "gatemetal" && local.type != "garagedoor") { wait 1; println("----- ERROR doorlocked.scr: 'door type' parameter must be 'wood', 'metal', 'gatelarge', 'gatemetal', or 'garagedoor'."); end }
+
+	level waittill spawn // need this for script to find any "local.explodertrig" with the #set "local.set", if it exists.
 
 	local.setsize1 = ( -85 -85 -30 )	// generic door trigger setsizes (keep them large enough for players to stand inside trigger's volume, do not use exact door dimensions).
 	local.setsize2 = ( 85 85 125 )
@@ -16,7 +19,15 @@ main local.trigorigin local.type local.extra:
 	if(level.doorlocked_scriptmaster[local.type] != 1) { thread doorlocked_scriptmaster local.type local.extra }
 	local.c = 0
 
-	while(1)
+	if(local.set != NIL)
+	{
+		for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++) // remove the doorlocked if an exploder with the #set explodes.
+		{
+			if($exploder_trigshot[local.e].set == local.set) { local.explodertrig = $exploder_trigshot[local.e]; break }
+		}
+	}
+
+	while(local.set == NIL || local.explodertrig == NIL || local.explodertrig == NULL || (local.explodertrig != NIL && local.explodertrig != NULL && local.explodertrig.dead != 1))
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{

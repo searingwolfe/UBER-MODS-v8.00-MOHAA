@@ -17,9 +17,6 @@ setcvar "fraglimit" "0"
 setcvar "timelimit" "20"
 setcvar "maxentities" "2000"
 
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
 setcvar "level.clockside" "kills"
@@ -49,6 +46,7 @@ if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 exec global/aliascache_triggersounds.scr airstrikes
 exec global/aliascache_triggersounds.scr explode_building_small
 exec global/aliascache_triggersounds.scr explode_wood_small
+exec global/aliascache_triggersounds.scr woodcreak
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 
@@ -241,6 +239,12 @@ if(getcvar("g_ubermods") == "2")
 	// 20mmflak = (-875.000000, 2157.000000, 8.000000), 45
 }
 
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	thread tower_woodcreak ( -912 -879 376 )
+	thread tower_woodcreak ( -1648 -880 368 )
+}
+
 if(getcvar("g_ubermods") != "2")
 {
 	level.mapname = getcvar "mapname"
@@ -319,13 +323,13 @@ if(getcvar("g_ubermods") != "2")
 
 	exec global/doorlocked.scr ( -2943 1823 -24 ) gatelarge 1
 
+	thread zeroents_with_targetname_fix CrateObject
+
 	level.springfield = 1								
 	level.bar = 1								
 	level.bazooka = 1	
 	level.mp44 = 1		
 	level.shotgun = 1
-
-	thread zeroents_with_targetname_fix CrateObject
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -600,6 +604,26 @@ vehicles_undermap:
 		}
 		waitframe
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
 end
 
 ////////////////////////////////////////////////////////////////////////

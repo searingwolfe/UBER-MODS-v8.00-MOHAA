@@ -36,22 +36,39 @@
 //
 //		thread global/exploder.scr::remove # // # being the #set value of the exploder.
 //
+//	Add the line below after running "exec global/exploder.scr::explode #".
+//	Does not work if "thread global/exploder.scr::remove #" already ran.
+//	This resets the #set exploder's entities back to their original positions.
+//
+//		thread global/exploder.scr::reset # // # being the #set value of the exploder.
+//
 //	Add the line below to destroy all exploders and remove their chunks' .target entities.
 //	This keeps the remaining "explodersmashed" entities, unless "exploder.scr::kill_exploders 1" is run instead.
+//	Optionally, run "exploder.scr::kill_exploders 0 local.array": where local.array[1] = 1st #set, local.array[2] = 2nd #set, etc (or local.array = an integer).
+//	in order to omit the removal of those exploder #sets.
 //
 // 		thread global/exploder.scr::kill_exploders
 //
 //	Add the line below to remove all exploder-related entities and keep their original forms.
 //	This keeps the original "exploder" entities, unless "exploder.scr::remove_exploders 1" is run instead.
+//	Optionally, run "exploder.scr::remove_exploders 0 local.array": where local.array[1] = 1st #set, local.array[2] = 2nd #set, etc (or local.array = an integer).
+//	in order to omit the removal of those exploder #sets.
 //
 // 		thread global/exploder.scr::remove_exploders
 //
+//	Set "$exploder[local.i].nosound = 1" to turn off the explosion sound for the exploder entity.
+//	Set "$explodersmashed[local.i].nosound = 1" to turn off the explosion sound for the explodersmashed entity.
 
 main:
-//end
 
 level.exploderrepeat = 0
 
+	local.total = 0 // only for console prints
+	local.e_smashed = 0
+	local.e_chunk = 0
+	local.e_fire = 0
+	local.e_exploder = 0 
+	local.e_trigger = 0
 
 	if (level.debug == NIL)
 		level.debug = 0
@@ -65,7 +82,7 @@ level.exploderrepeat = 0
 	{
 		level.explodersmashed = exec global/makearray.scr $explodersmashed
 
-		for (local.i=1;local.i<level.explodersmasheds+1;local.i++)
+		for(local.i = 1; level.explodersmasheds != NIL && local.i < level.explodersmasheds + 1; local.i++)
 		{
 			level.explodersmashed[local.i] hide
 			level.explodersmashed[local.i] notsolid
@@ -76,7 +93,8 @@ level.exploderrepeat = 0
 				//println ("Spawned ExploderSmashed " + local.i)
 
 		}
-		println ("Spawned [" + local.i + "] $explodersmashed entities.")
+		println ("Spawned [" + (local.i - 1) + "] $explodersmashed entities.")
+		local.e_smashed = local.i - 1
 	}
 
 	if ($exploderchunk == NULL)
@@ -89,7 +107,7 @@ level.exploderrepeat = 0
 		level.exploderchunks = $exploderchunk.size
 		level.exploderchunk = exec global/makearray.scr $exploderchunk
 
-		for (local.i=1;local.i<level.exploderchunks+1;local.i++)
+		for(local.i = 1; level.exploderchunks != NIL && local.i < level.exploderchunks + 1; local.i++)
 		{
 			if (level.exploderchunk[local.i].target == NIL)
 				println "Error, ExploderChunk has no Target!!!"
@@ -105,12 +123,20 @@ level.exploderrepeat = 0
 				//println ("Spawned ExploderChunk " + local.i)
 
 			if (!(level.exploderchunk[local.i].target) || (level.exploderchunk[local.i].target == NIL))
+			{
 				exec global/error.scr ("Error, ExploderChunk at " + level.exploderchunk[local.i].origin + " has no target") 1
-
+			}
+			else
+			{
+				level.exploderchunk[local.i].targetorigin = level.exploderchunk[local.i].target.origin
+				level.exploderchunk[local.i].target remove
+			}
 
 
 		}
-		println ("Spawned [" + local.i + "] $exploderchunk entities.")
+		println ("Spawned [" + (local.i - 1) + "] $exploderchunk entities.")
+		println ("Removed [" + (local.i - 1) + "] $exploderchunk.target entities (saved origins to '.targetorigin').")
+		local.e_chunk = local.i - 1
 	}
 
 	
@@ -125,7 +151,7 @@ level.exploderrepeat = 0
 		level.exploderfire = exec global/makearray.scr $exploderfire
 
 
-		for (local.i=1;local.i<level.exploderfires+1;local.i++)
+		for(local.i = 1; level.exploderfires != NIL && local.i < level.exploderfires + 1; local.i++)
 		{
 
 			if (level.exploderfire[local.i].model == NIL)
@@ -160,7 +186,8 @@ level.exploderrepeat = 0
 				//println ("Spawned ExploderFire " + local.i)
 
 		}
-		println ("Spawned [" + local.i + "] $exploderfire entities.")
+		println ("Spawned [" + (local.i - 1) + "] $exploderfire entities.")
+		local.e_fire = local.i - 1
 	}
 
 	if ($exploder == NULL)
@@ -173,7 +200,7 @@ level.exploderrepeat = 0
 		level.exploders = $exploder.size
 		level.exploder = exec global/makearray.scr $exploder
 
-		for (local.i=1;local.i<level.exploders+1;local.i++)
+		for(local.i = 1; level.exploders != NIL && local.i < level.exploders + 1; local.i++)
 		{
 			
 			if (level.exploder[local.i].walkable == NIL)
@@ -192,7 +219,8 @@ level.exploderrepeat = 0
 				//println ("Spawned Exploder " + local.i)
 
 		}
-		println ("Spawned [" + local.i + "] $exploder entities.")
+		println ("Spawned [" + (local.i - 1) + "] $exploder entities.")
+		local.e_exploder = local.i - 1
 	}
 
 
@@ -206,7 +234,7 @@ level.exploderrepeat = 0
 		level.explodertriggers = $explodertrigger.size
 		level.explodertrigger = exec global/makearray.scr $explodertrigger
 
-		for (local.i=1;local.i<level.explodertriggers+1;local.i++)
+		for(local.i = 1 ; level.explodertriggers != NIL && local.i < level.explodertriggers + 1 ; local.i++)
 		{
 			level.explodertrigger[local.i] thread explodetrigger
 
@@ -216,12 +244,15 @@ level.exploderrepeat = 0
 				//println ("Spawned ExploderTrigger " + local.i)
 
 		}
-		println ("Spawned [" + local.i + "] $explodertrigger entities.")
+		println ("Spawned [" + (local.i - 1) + "] $explodertrigger entities.")
+		local.e_trigger = local.i - 1
 	}
 
 	if (getcvar(exploders) == "0")
 		thread kill_exploders
 
+	local.total = local.e_smashed + local.e_chunk + local.e_fire + local.e_exploder + local.e_trigger
+	println ("----- Total exploder entities spawned: " + local.total)
 	level.exploders_main_done = 1
 end
 
@@ -233,7 +264,7 @@ remove local.set local.removeall: // "removeall" also removes $explodersmashed j
 
 	for(local.s = 1; local.s <= $exploder.size; local.s++)
 	{
-		if($exploder[local.s].set == local.set) { local.exploder = $exploder[local.s] }
+		if($exploder[local.s].set == local.set) { local.exploder = $exploder[local.s]; local.exploder.removed = 1 }
 	}
 
 	while(local.exploder != NIL && local.exploder != NULL && local.exploder.dead != 1) { waitframe } // wait until the exploder has finished exploding before removing its entities.
@@ -269,79 +300,329 @@ remove local.set local.removeall: // "removeall" also removes $explodersmashed j
 	{
 		if($exploder[local.s].dead != 1) { end } // wait until all exploders are dead before removing any $exploderfire and $exploder entities.
 	}
-	thread kill_exploders
+	thread kill_exploders 0 NIL 1
 end
 
 ////////////////////////////////////////////////////////////////////////
 
-kill_exploders local.removeall: // "removeall" also removes $explodersmashed jagged building pieces.
+// Run this after "exec global/exploder.scr::explode local.set", and before "exec global/exploder.scr::remove local.set".
+//
+reset local.set:
+
+	for(local.s = 1; local.s <= $exploder.size; local.s++)
+	{
+		if($exploder[local.s].set == local.set) { local.exploder = $exploder[local.s] }
+	}
+	if(local.exploder.removed == 1) { println("----- ERROR global/exploder.scr: exploder with #set " + local.set + " was already removed by '::remove' thread, and cannot be reset."); end }
+
+	while(local.exploder.explodechunk != 1) { waitframe } // wait until the exploder is done exploding first.
+
+	for(local.i = 1; level.exploderchunks != NIL && local.i < level.exploderchunks + 1; local.i++)
+	{
+		if(level.exploderchunk[local.i] != NULL && local.set == level.exploderchunk[local.i].set)
+		{
+			level.exploderchunk[local.i] physics_off
+			level.exploderchunk[local.i].velocity = (0 0 0)
+			level.exploderchunk[local.i] hide
+			level.exploderchunk[local.i].origin = level.exploderchunk[local.i].org
+			level.exploderchunk[local.i].angles = level.exploderchunk[local.i].ang
+		}
+	}
+	for(local.i = 1; level.explodersmasheds != NIL && local.i < level.explodersmasheds + 1; local.i++)
+	{
+		if(level.explodersmashed[local.i] != NULL && local.set == level.explodersmashed[local.i].set)
+		{
+			level.explodersmashed[local.i] hide
+			level.explodersmashed[local.i] notsolid
+		}
+
+	}
+	for(local.i = 1; level.exploderfires != NIL && local.i < level.exploderfires + 1; local.i++)
+	{
+		if(level.exploderfire[local.i] != NULL && local.set == level.exploderfire[local.i].set)
+		{
+			level.exploderfire[local.i] thread fireoff local.i
+		}
+	}
+
+	for(local.i = 1; level.exploders != NIL && local.i < level.exploders + 1; local.i++)
+	{
+		if(level.exploder[local.i] != NULL && local.set == level.exploder[local.i].set)
+		{
+			level.exploder[local.i] show
+			level.exploder[local.i] solid
+			level.exploder[local.i].dead = 0
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+kill_exploders local.removeall local.array local.noremove: // "removeall" also removes $explodersmashed jagged building pieces.
 
 	while(level.exploders_main_done != 1) { waitframe } // must wait for "main" thread to finish first.
 
 	for(local.s = 1; local.s <= $explodertrigger.size; local.s++)
 	{
-		if($($explodertrigger[local.s].target) != NULL) { $explodertrigger[local.s].target remove }
-		$explodertrigger[local.s] remove
+		if(local.array == NIL)
+		{
+			if($($explodertrigger[local.s].target) != NULL) { $explodertrigger[local.s].target remove }
+			$explodertrigger[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($explodertrigger[local.s].set != local.array[local.a])
+				{
+					if($($explodertrigger[local.s].target) != NULL) { $explodertrigger[local.s].target remove }
+					$explodertrigger[local.s] remove
+				}
+			}
+		}
 	}
 	for(local.s = 1; local.s <= $explodersmashed.size; local.s++)
 	{
-		if($($explodersmashed[local.s].target) != NULL) { $explodersmashed[local.s].target remove }
-
-		if(local.removeall == 1) { $explodersmashed[local.s] remove }
+		if(local.array == NIL)
+		{
+			if($($explodersmashed[local.s].target) != NULL) { $explodersmashed[local.s].target remove }
+			if(local.removeall == 1) { $explodersmashed[local.s] remove }
+			else
+			{
+				$explodersmashed[local.s] show
+				$explodersmashed[local.s] solid
+				$explodersmashed[local.s] disconnect_paths
+			}
+		}
 		else
 		{
-			$explodersmashed[local.s] show
-			$explodersmashed[local.s] solid
-			$explodersmashed[local.s] disconnect_paths
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($explodersmashed[local.s].set != local.array[local.a])
+				{
+					if($($explodersmashed[local.s].target) != NULL) { $explodersmashed[local.s].target remove }
+					if(local.removeall == 1) { $explodersmashed[local.s] remove }
+					else
+					{
+						$explodersmashed[local.s] show
+						$explodersmashed[local.s] solid
+						$explodersmashed[local.s] disconnect_paths
+					}
+				}
+			}
 		}
 	}
 	for(local.s = 1; local.s <= $exploderchunk.size; local.s++)
 	{
-		if($($exploderchunk[local.s].target) != NULL) { $exploderchunk[local.s].target remove }
-		$exploderchunk[local.s] remove
+		if(local.array == NIL)
+		{
+			if($($exploderchunk[local.s].target) != NULL) { $exploderchunk[local.s].target remove }
+			$exploderchunk[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($exploderchunk[local.s].set != local.array[local.a])
+				{
+					if($($exploderchunk[local.s].target) != NULL) { $exploderchunk[local.s].target remove }
+					$exploderchunk[local.s] remove
+				}
+			}
+		}
 	}
 	for(local.s = 1; local.s <= $exploderfire.size; local.s++)
 	{
-		if($($exploderfire[local.s].target) != NULL) { $exploderfire[local.s].target remove }
-		$exploderfire[local.s] remove
+		if(local.array == NIL)
+		{
+			if($($exploderfire[local.s].target) != NULL) { $exploderfire[local.s].target remove }
+			$exploderfire[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($exploderfire[local.s].set != local.array[local.a])
+				{
+					if($($exploderfire[local.s].target) != NULL) { $exploderfire[local.s].target remove }
+					$exploderfire[local.s] remove
+				}
+			}
+		}
 	}
 	for(local.s = 1; local.s <= $exploder.size; local.s++)
 	{
-		if($($exploder[local.s].target) != NULL) { $exploder[local.s].target remove }
-		$exploder[local.s] remove
+		if(local.array == NIL)
+		{
+			if(local.noremove != 1) // these will only get removed by "global/exploder_killer.scr", unless "global/exploder::kill_exploders" ran before level waittill spawn.
+			{
+				thread removestuff $exploder[local.s].set
+				thread remove_ambiences $exploder[local.s].set
+			}
+
+			if($($exploder[local.s].target) != NULL) { $exploder[local.s].target remove }
+			$exploder[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($exploder[local.s].set != local.array[local.a])
+				{
+					if(local.noremove != 1) // these will only get removed by "global/exploder_killer.scr", unless "global/exploder::kill_exploders" ran before level waittill spawn.
+					{
+						thread removestuff $exploder[local.s].set
+						thread remove_ambiences $exploder[local.s].set
+					}
+
+					if($($exploder[local.s].target) != NULL) { $exploder[local.s].target remove }
+					$exploder[local.s] remove
+				}
+			}
+		}
 	}
 end
 
 ////////////////////////////////////////////////////////////////////////
 
-remove_exploders local.removeall: // "removeall" also removes $exploder initial non-exploded building pieces.
+// remove miscellaneous entities that are near the exploder ("cratesstuff", "red_tele", "mapwall" targetnames with same set number as local.set).
+removestuff local.set:
+
+	level waittill spawn
+	wait 1		// wait until entities have fully spawned.
+
+	for(local.c = 1; local.c <= $mapwall.size; local.c++)
+	{
+		if($mapwall[local.c].set == local.set) { $mapwall[local.c] remove }
+	}
+	for(local.c = 1; local.c <= $red_tele.size; local.c++)
+	{
+		if($red_tele[local.c].set == local.set) { $red_tele[local.c] remove }
+	}
+	for(local.c = 1; local.c <= $cratesstuff.size; local.c++)
+	{
+		if($cratesstuff[local.c].set == local.set) { $cratesstuff[local.c] remove }
+	}
+end
+
+// remove any "level.spawnamb" sound ambiences that have the same set number as local.set.
+remove_ambiences local.set:
+
+	level waittill spawn
+	wait 1		// wait until ambiences have fully spawned.
+
+	for(local.a = 1; local.a <= level.spawnamb.size; local.a++)
+	{
+		if(level.spawnamb[local.a].size >= 5 && level.spawnamb[local.a][5] == local.set)
+		{
+			level.spawnamb[local.a][1] = 0
+			level.spawnamb[local.a][2] = 0
+			level.spawnamb[local.a][3] = 0
+			level.spawnamb[local.a][4] = 0
+		}
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+remove_exploders local.removeall local.array: // "removeall" also removes $exploder initial non-exploded building pieces.
 
 	while(level.exploders_main_done != 1) { waitframe } // must wait for "main" thread to finish first.
 
 	for(local.s = 1; local.s <= $explodertrigger.size; local.s++)
 	{
-		if($($explodertrigger[local.s].target) != NULL) { $explodertrigger[local.s].target remove }
-		$explodertrigger[local.s] remove
+		if(local.array == NIL)
+		{
+			if($($explodertrigger[local.s].target) != NULL) { $explodertrigger[local.s].target remove }
+			$explodertrigger[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($explodertrigger[local.s].set != local.array[local.a])
+				{
+					if($($explodertrigger[local.s].target) != NULL) { $explodertrigger[local.s].target remove }
+					$explodertrigger[local.s] remove
+				}
+			}
+		}
 	}
 	for(local.s = 1; local.s <= $explodersmashed.size; local.s++)
 	{
-		if($($explodersmashed[local.s].target) != NULL) { $explodersmashed[local.s].target remove }
-		$explodersmashed[local.s] remove
+		if(local.array == NIL)
+		{
+			if($($explodersmashed[local.s].target) != NULL) { $explodersmashed[local.s].target remove }
+			$explodersmashed[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($explodersmashed[local.s].set != local.array[local.a])
+				{
+					if($($explodersmashed[local.s].target) != NULL) { $explodersmashed[local.s].target remove }
+					$explodersmashed[local.s] remove
+				}
+			}
+		}
 	}
 	for(local.s = 1; local.s <= $exploderchunk.size; local.s++)
 	{
-		if($($exploderchunk[local.s].target) != NULL) { $exploderchunk[local.s].target remove }
-		$exploderchunk[local.s] remove
+		if(local.array == NIL)
+		{
+			if($($exploderchunk[local.s].target) != NULL) { $exploderchunk[local.s].target remove }
+			$exploderchunk[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($exploderchunk[local.s].set != local.array[local.a])
+				{
+					if($($exploderchunk[local.s].target) != NULL) { $exploderchunk[local.s].target remove }
+					$exploderchunk[local.s] remove
+				}
+			}
+		}
 	}
 	for(local.s = 1; local.s <= $exploderfire.size; local.s++)
 	{
-		if($($exploderfire[local.s].target) != NULL) { $exploderfire[local.s].target remove }
-		$exploderfire[local.s] remove
+		if(local.array == NIL)
+		{
+			if($($exploderfire[local.s].target) != NULL) { $exploderfire[local.s].target remove }
+			$exploderfire[local.s] remove
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($exploderfire[local.s].set != local.array[local.a])
+				{
+					if($($exploderfire[local.s].target) != NULL) { $exploderfire[local.s].target remove }
+					$exploderfire[local.s] remove
+				}
+			}
+		}
 	}
 	for(local.s = 1; local.s <= $exploder.size; local.s++)
 	{
-		if($($exploder[local.s].target) != NULL) { $exploder[local.s].target remove }
-		if(local.removeall == 1) { $exploder[local.s] remove }
+		if(local.array == NIL)
+		{
+			if($($exploder[local.s].target) != NULL) { $exploder[local.s].target remove }
+			if(local.removeall == 1) { $exploder[local.s] remove }
+		}
+		else
+		{
+			for(local.a = 1; local.a <= local.array.size; local.a++)
+			{
+				if($exploder[local.s].set != local.array[local.a])
+				{
+					if($($exploder[local.s].target) != NULL) { $exploder[local.s].target remove }
+					if(local.removeall == 1) { $exploder[local.s] remove }
+				}
+			}
+		}
 	}
 end
 
@@ -417,7 +698,7 @@ end
 
 fireoff2 local.name:
 
-	for (local.i=1;local.i<level.exploderfires + 1;local.i++)
+	for(local.i = 1; level.exploderfires != NIL && local.i < level.exploderfires + 1; local.i++)
 	{
 		if (level.exploderfire[local.i].set == local.name)
 		{
@@ -475,7 +756,7 @@ fireon local.i:
 end
 
 fireinit local.name:
-	for (local.i=1;local.i<level.exploderfires + 1;local.i++)
+	for(local.i = 1; level.exploderfires != NIL && local.i < level.exploderfires + 1; local.i++)
 	{
 		if (level.exploderfire[local.i].set == local.name)
 		if (level.exploderfire[local.i].fire != NIL)
@@ -492,7 +773,7 @@ explodersmashedON local.i:
 
 
 
-	level.explodersmashed[local.i] playsound ("stonecrash0" + (randomint(3) + 1))
+	if(level.explodersmashed[local.i].nosound != 1) { level.explodersmashed[local.i] playsound ("stonecrash0" + (randomint(3) + 1)) }
 	level.explodersmashed[local.i] show
 	level.explodersmashed[local.i] solid
 	waitframe
@@ -514,7 +795,7 @@ exploderOFF local.i:
 	wait level.exploder[local.i].pause
 
 
-	if (level.exploder[local.i].sound != NIL)
+	if (level.exploder[local.i].sound != NIL && level.exploder[local.i].nosound != 1)
 		level.exploder[local.i] playsound level.exploder[local.i].sound
 
 
@@ -538,52 +819,51 @@ explode local.name:
 //	println ("explode " + local.name)
 		level.explodertimer[local.name] = level.time + 6
 
-	for (local.i=1;local.i<level.exploders+1;local.i++)
+	for(local.i = 1; level.exploders != NIL && local.i < level.exploders + 1; local.i++)
 	{
-		if (local.name == level.exploder[local.i].set)
+		if (level.exploder[local.i] != NULL && local.name == level.exploder[local.i].set)
 		{
 			local.exploder = level.exploder[local.i]
 			thread exploderOFF local.i
 		}
 	}
 
-	for (local.i=1;local.i<level.explodersmasheds+1;local.i++)
+	for(local.i = 1; level.explodersmasheds != NIL && local.i < level.explodersmasheds + 1; local.i++)
 	{
-		if (local.name == level.explodersmashed[local.i].set)
+		if (level.explodersmashed[local.i] != NULL && local.name == level.explodersmashed[local.i].set)
 		{
 			thread explodersmashedON local.i
 		}
 	}
 
-	for (local.i=1;local.i<level.exploderfires + 1;local.i++)
+	for(local.i = 1; level.exploderfires != NIL && local.i < level.exploderfires + 1; local.i++)
 	{
-		if (level.exploderfire[local.i].set == local.name)
+		if (level.exploderfire[local.i] != NULL && level.exploderfire[local.i].set == local.name)
 		{
 			level.exploderfire[local.i] thread fireon local.i
 		}
 	}
 
 	/*
-	for (local.i=1;local.i<level.exploderchunks+1;local.i++)
+	for(local.i = 1; level.exploderchunks != NIL && local.i < level.exploderchunks + 1; local.i++)
 	{
-		if (local.name == level.exploderchunk[local.i].set)
+		if (level.exploderchunk[local.i] != NULL && local.name == level.exploderchunk[local.i].set)
 		{
 			thread exploderchunkON local.i
 		}
 	}
 	*/
-	for (local.i=1;local.i<level.exploderchunks+1;local.i++)
+	for(local.i = 1; level.exploderchunks != NIL && local.i < level.exploderchunks + 1; local.i++)
 	{
-		if (level.exploderchunk[local.i])
-		if (local.name == level.exploderchunk[local.i].set)
+		if (level.exploderchunk[local.i] != NULL && local.name == level.exploderchunk[local.i].set)
 		{
 			level.exploderchunk[local.i] thread explodechunk local.exploder
 		}
 	}
 
-	for (local.i=1;local.i<level.exploderfires+1;local.i++)
+	for(local.i = 1; level.exploderfires != NIL && local.i < level.exploderfires + 1; local.i++)
 	{
-		if (local.name == level.exploderfire[local.i].set)
+		if (level.exploderfire[local.i] != NULL && local.name == level.exploderfire[local.i].set)
 			level.exploderfire[local.i] thread fireoff local.i
 
 //			level.exploderfire[local.i] thread fireoff level.exploderfire[local.i].set
@@ -593,7 +873,7 @@ explode local.name:
 
 	if(local.exploder != NIL && local.exploder != NULL)
 	{
-		local.exploder.dead = 1
+		if(local.exploder.cannotdie != 1) { local.exploder.dead = 1 }
 	}
 
 	if (level.exploderrepeat != 1)
@@ -601,7 +881,7 @@ explode local.name:
 
 	//*********************************************************************
 
-	for (local.i=1;local.i<level.exploderchunks+1;local.i++)
+	for(local.i = 1; level.exploderchunks != NIL && local.i < level.exploderchunks + 1; local.i++)
 	{
 		if (local.name == level.exploderchunk[local.i].set)
 		{
@@ -615,7 +895,7 @@ explode local.name:
 
 	wait 6
 
-	for (local.i=1;local.i<level.explodersmasheds+1;local.i++)
+	for(local.i = 1; level.explodersmasheds != NIL && local.i < level.explodersmasheds + 1; local.i++)
 		if (local.name == level.explodersmashed[local.i].set)
 		{
 			level.explodersmashed[local.i] hide
@@ -623,7 +903,7 @@ explode local.name:
 		}
 
 
-	for (local.i=1;local.i<level.exploderfires+1;local.i++)
+	for(local.i = 1; level.exploderfires != NIL && local.i < level.exploderfires + 1; local.i++)
 	{
 		if (local.name == level.exploderfire[local.i].set)
 			level.exploderfire[local.i] thread fireoff local.i
@@ -631,7 +911,7 @@ explode local.name:
 //			level.exploderfire[local.i] thread fireoff level.exploderfire[local.i].set
 	}
 
-	for (local.i=1;local.i<level.exploders+1;local.i++)
+	for(local.i = 1; level.exploders != NIL && local.i < level.exploders + 1; local.i++)
 	{
 		if (local.name == level.exploder[local.i].set)
 		{
@@ -643,20 +923,19 @@ explode local.name:
 end
 
 phyvel local.vec:
+
 	self physics_velocity ( local.vec )
 	wait 0.2
+	if(self == NULL) { end }
 	self physics_on 1
 	self physics_velocity ( local.vec )
-	
-
 end
 
 rocksound:
 
-		wait (1 + randomfloat(4))
-		self playsound ("stonesmall0" + (randomint(5) + 1))
-	
-
+	wait (1 + randomfloat(4))
+	if(self == NULL) { end }
+	self playsound ("stonesmall0" + (randomint(5) + 1))
 end
 
 moveitout local.num:
@@ -695,7 +974,7 @@ explodechunk local.exploder:
 
 	self show
 	self notsolid
-	local.vec = (self.origin - self.target.origin)
+	local.vec = (self.origin - self.targetorigin)
 	local.veclength = vector_length (local.vec)
 	local.vec = vector_normalize (local.vec)
 	local.vecscale = local.veclength * -1
@@ -719,15 +998,15 @@ explodechunk local.exploder:
 
 	if ((self.anglex == 0) && (self.angley == 0) && (self.anglez == 0))
 	{
-		if (self.origin[0] > self.target.origin[0])
-		local.xnum = self.origin[0] - self.target.origin[0]
+		if (self.origin[0] > self.targetorigin[0])
+		local.xnum = self.origin[0] - self.targetorigin[0]
 		else
-		local.xnum = self.target.origin[0] - self.origin[0]
+		local.xnum = self.targetorigin[0] - self.origin[0]
 
-		if (self.origin[1] > self.target.origin[1])
-		local.ynum = self.origin[1] - self.target.origin[1]
+		if (self.origin[1] > self.targetorigin[1])
+		local.ynum = self.origin[1] - self.targetorigin[1]
 		else
-		local.ynum = self.target.origin[1] - self.origin[1]
+		local.ynum = self.targetorigin[1] - self.origin[1]
 
 
 		self.anglex = randomfloat(local.veclength / 3) * (randomint(3) - 1)
@@ -736,14 +1015,14 @@ explodechunk local.exploder:
 		
 		if (local.xnum > local.ynum)
 		{ // was 1.5s
-			if (self.origin[0] > self.target.origin[0])
+			if (self.origin[0] > self.targetorigin[0])
 				self.anglex = local.veclength * -0.5 - (randomfloat(0.5))
 			else
 				self.anglex = local.veclength * 0.5 + (randomfloat(0.5))
 		}
 		else
 		{
-			if (self.origin[1] > self.target.origin[1])
+			if (self.origin[1] > self.targetorigin[1])
 				self.anglez = local.veclength * 0.5  + (randomfloat(0.5))
 			else
 				self.anglez = local.veclength * -0.5 - (randomfloat(0.5))
@@ -773,7 +1052,7 @@ explodechunk local.exploder:
 
 //	thread moveitdown
 	
-	for (local.i = 0; local.i < local.inc; local.i++)
+	for(local.i = 0; local.i < local.inc; local.i++)
 	{
 		if (local.vec[0] > 0)
 		local.vec[0] = local.vec[0] - local.x
@@ -790,6 +1069,7 @@ explodechunk local.exploder:
 		else
 		local.vec[2] = local.vec[2] - local.z
 
+		if(self == NULL) { break }
 		self rotatex local.vec[0]
 		self rotatey local.vec[1]
 		self rotatez local.vec[2]
@@ -798,10 +1078,14 @@ explodechunk local.exploder:
 	}
 	wait 10
 	
-	if (self != NULL)
-		self delete
+	if(self != NULL)
+	{
+		//self delete
+		self notsolid
+		self hide
+	}
 
-	if(local.exploder != NULL) { local.exploder.explodechunk = 1 }
+	if(local.exploder != NIL && local.exploder != NULL) { local.exploder.explodechunk = 1 }
 end
 
 removetouch:
@@ -814,7 +1098,7 @@ removetouch:
 	{
 		local.v = self.velocity
 		local.count = 0
-		for (local.i=0;local.i<3;local.i++)
+		for (local.i = 0; local.i < 3; local.i++)
 		{
 			if ((local.v[local.i] > local.amount * -1) && (local.v[local.i] < local.amount))
 				local.count++

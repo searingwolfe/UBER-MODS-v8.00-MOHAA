@@ -1,0 +1,74 @@
+// Spawns a detonator at the specified origin. When triggered, the detonator blows up the exploder with "$exploder.set = local.set".
+// After waiting until the exploder is done, the detonator can be reset to reset the exploder and its chunks.
+//
+// If "new" parameter = 1, then the exploder will be set to "dead" ($exploder.dead = 1),
+// forcing any "exploders" threads in a map script to fully blow up the exploder, removing entities in that #set, and preventing any resets.
+
+main local.origin local.set local.new:
+
+exec global/aliascache_triggersounds.scr detonator_switch
+exec global/aliascache_triggersounds.scr light_switch
+
+	local.detonator = spawn script_model
+	local.detonator model "miscobj/detonator.tik"
+	local.detonator.origin = local.origin
+	local.detonator.angles = ( 0 0 0 )
+
+	local.detonator anim idle
+	local.detonator notsolid
+
+	local.detonatortrig = spawn trigger_use
+	local.detonatortrig.origin = local.detonator.origin
+	local.detonatortrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+	local.detonatortrig message ("*** Blowing up exploder #set " + local.set + " ***")
+
+	local.detonatortrig waittill trigger
+	local.detonator anim fire
+	local.detonator playsound plungersound
+	waitframe // need this, otherwise setthread will run immediately.
+	local.detonatortrig setthread triggered
+	wait 1
+
+	if(local.new == 1)
+	{
+		for(local.c = 1; local.c <= $exploder_trigshot.size; local.c++)
+		{
+			if($exploder_trigshot[local.c].set == local.set) { $exploder_trigshot[local.c].dead = 1 } // kill the exploder's trigger, to begin the "global/exploder_killer.scr" thread for that exploder.
+		}
+		end // don't allow any resets.
+	}
+	else
+	{
+		for(local.s = 1; local.s <= $exploder.size; local.s++)
+		{
+			if($exploder[local.s].set == local.set) { local.exploder = $exploder[local.s]; local.exploder.cannotdie = 1 } // allows this detonator to reset the exploder, even when scripted "exploders" thread is active.
+		}														// without this, the "global/exploder.scr::remove" thread will prevent the exploder from being reset.
+
+		thread global/exploder.scr::explode local.set // blow up an exploder.
+	}
+
+	while(local.exploder.explodechunk != 1) { waitframe } // wait until the exploder is done exploding first.
+
+	local.detonatortrig setthread off
+	local.detonatortrig message ("*** Resetting exploder #set " + local.set + " ***")
+	local.detonatortrig waittill trigger
+	local.detonator anim idle
+	local.detonator playsound light_switch
+
+	thread global/exploder.scr::reset local.set
+
+	wait 1
+	local.detonator remove
+	local.detonatortrig remove
+	thread main local.origin local.set local.new
+end
+
+triggered:
+
+	local.player = parm.other
+	local.player iprint ("Must wait until exploder is finished before resetting.")
+	self message ""
+end
+
+off:
+end
