@@ -22,7 +22,7 @@ entity_pointer:
 
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
-		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		if($player[local.i] != NULL && int(local.cvar) == local.i)
 		{
 			if($player[local.i].entity_pointer_given != 1)
 			{
@@ -80,7 +80,7 @@ give_player_pointer:
 			{
 				if(self.entity_pointer_printed != 1)
 				{
-					if(self.leanleftheld == 1 || self.leanrightheld == 1)
+					if((self getcontrollerangles 0)[2] > 15 || (self getcontrollerangles 0)[2] < -15)
 					{
 						self tele local.pointing_target
 						local.string = ("( " + int(local.pointer.origin[0]) + " " + int(local.pointer.origin[1]) + " " + int(local.pointer.origin[2]) + " ) " + int(local.angles[1]))
