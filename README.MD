@@ -243,6 +243,7 @@ ADDITIONAL FEATURES:
 |       | "findset 20" | print all entnums and their targetnames in the map with .set = 20 (exploder-related entities). |
 |       | "findset all" | print all entnums and their ".set" values, then prints total number of entities for each ".set" value. |
 |       | "findset exploder" | (or "exploders") print all $exploder origins + set numbers, and print the total number of $exploder entities for each #set. |
+|       | "findset exploderfire" | (or "exploderfires") print all $exploderfire data saved within the "level.exploderfire" matrix array ($exploderfire entities are removed afterwards). |
 | exec cvars/drawpath.scr      | "drawpath bomberpath" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
 |       | "drawpath spotpath1_1" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
 |       | "drawpath exploderchunk[1]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
