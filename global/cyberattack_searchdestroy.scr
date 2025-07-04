@@ -763,6 +763,7 @@ end
 
 bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral local.norotate:
 
+	if($bombexplosive != NULL) { end }
 	if(level.newgametype == "ft" || getcvar("g_ubergametype") == "ft") { end }
 	if(getcvar("g_ubergametype") == "cyb") { level.newgametype = cyb }
 	if(getcvar("g_ubergametype") == "snd") { level.newgametype = snd }
@@ -771,9 +772,9 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 	if(level.bomborigin_allies_init == NIL) { level.bomborigin_allies_init = local.originallies }
 	if(level.bombangle_allies_init == NIL) { level.bombangle_allies_init = local.angleallies }
 	if(level.bomborigin_axis_init == NIL) { level.bomborigin_axis_init = local.originaxis }
-	if(level.bombangle_axis_init == NIL) { level.bomborigin_axis_init = local.angleaxis }
+	if(level.bombangle_axis_init == NIL) { level.bombangle_axis_init = local.angleaxis }
 	if(level.bomborigin_central_init == NIL) { level.bomborigin_central_init = local.origincentral }
-	if(level.bombangle_central_init == NIL) { level.bomborigin_central_init = local.anglecentral }
+	if(level.bombangle_central_init == NIL) { level.bombangle_central_init = local.anglecentral }
 
 	while($bombexplosive != NULL) { waitframe }
 
@@ -835,12 +836,12 @@ bomb local.originallies local.angleallies local.originaxis local.angleaxis local
 	local.bombtrig.anglecentral = local.anglecentral
 
 	local.bombtrig setthread pickup // call setthreads after all other bombtrig variables have been called.
+	local.bombtrig thread reset_bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral
 end
 
 pickup:
 
 	local.player = parm.other
-
 	if(level.newgametype == "snd" && level.round_starttime > 0 && ((local.player.dmteam == "axis" && level.changesides != 1) || (local.player.dmteam == "allies" && level.changesides == 1))) { end }
 
 	if(level.spectate_enemyteam == 1 || local.player.dead == 1) { $bombexplosive message (""); end }
@@ -965,6 +966,8 @@ scan_player local.originallies local.angleallies local.originaxis local.angleaxi
 		}
      		else
      		{
+			if($bombexplosive != NULL) { $bombexplosive remove } // make sure another $bombexplosive does not mysteriously respawn.
+
   			if(self.dmteam != local.team || !isalive self || self.dead == 1 || self.dmteam == spectator || level.bomb_set == 1 || level.change_team_score == 1 || self.fellundermap == 1)
     			{
 				self.bombdog = 0
@@ -1002,13 +1005,13 @@ end local.result
 reset_bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral:
 
 	while(level.spectate_enemyteam != 1) { waitframe }
-	
-	if($bombexplosive != NULL) { $bombexplosive nottriggerable }
 	while(level.spectate_enemyteam == 1) { waitframe }
-
+	
 	if(self != NULL && $("bombhip" + self.entnum) != NULL) { $("bombhip" + self.entnum) remove }
 	if($bombexplosive != NULL) { $bombexplosive remove }
 	if(self != NULL) { self.inuse = 0 }
+
+	waitframe
 	
 	thread bomb local.originallies local.angleallies local.originaxis local.angleaxis local.origincentral local.anglecentral
 end
@@ -1170,7 +1173,7 @@ end
 dummyavatar:
 
 	if(self.team == NIL) { wait 1 }
-	if(self.team == NIL) { end }
+	if(self == NULL || self.team == NIL) { end }
 
 	while(level.bombisdead == 1 || level.change_team_score == 1) { waitframe }
 
@@ -1388,15 +1391,15 @@ blowup_bomb local.i local.team:
 	huddraw_string 207 ("Target Destroyed."); huddraw_color 207 1.0 0.0 0.0
 
 	local.expboxfire1 = spawn script_model
-	local.expboxfire1.origin = $("expbox1_" + local.i).origin + ( 0 5 0 )
+	local.expboxfire1.origin = $("expbox1_" + local.i).origin //+ ( 0 5 0 )
 	local.expboxfire1.angles = ( 0 270 0 )
 	local.expboxfire1 notsolid
 	local.expboxfire2 = spawn script_model
-	local.expboxfire2.origin = $("expbox2_" + local.i).origin + ( 0 5 0 )
+	local.expboxfire2.origin = $("expbox2_" + local.i).origin //+ ( 0 5 0 )
 	local.expboxfire2.angles = ( 0 270 0 )
 	local.expboxfire2 notsolid
 	local.expboxfire3 = spawn script_model targetname "expboxfire3" // tnt box or wire mesh ring
-	local.expboxfire3.origin = $("expbox3_" + local.i).origin + ( 0 5 0 )
+	local.expboxfire3.origin = $("expbox3_" + local.i).origin //+ ( 0 5 0 )
 	local.expboxfire3.angles = ( 0 270 0 )
 	local.expboxfire3 notsolid
 

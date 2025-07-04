@@ -63,6 +63,23 @@
 // 	level.exploder_killer_grenades = 1
 //	$exploder[4].grenades = 1 // for only $exploder[4], or other $exploder[index].
 //
+// To allow exploder_killer threads to reset after a certain amount of time, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+// 	level.exploder_killer_resettime = 60 // seconds
+//	$exploder[4].resettime = 60 // for only $exploder[4], or other $exploder[index].
+//
+// To prevent this script from playing large explosion sounds, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+// 	level.exploder_killer_nosound = 1
+//	$exploder[4].nosound = 1
+//
+// To prevent this script from making camera shaking earthquake effects, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+// 	level.exploder_killer_noearthquake = 1
+//	$exploder[4].noearthquake = 1
+
+// To only allow another script to blow up the exploders (no projectiles, no $world radiusdamages, nothing), add the level variable below to any map script containing "exec global/exploder_killer.scr" threads,
+// and set the desired "$exploder.dead = 1" or $exploder_trigshot.dead = 1" in another script to begin explosions from the "exploder_killer" thread.
+// 	level.exploder_killer_nottriggerable = 1
+//	$exploder[4].nottriggerable = 1
+//
 // To not print any "Blowing up..." mesasges to console, add this: level.exploder_killer_noprint = 1, or $exploder[4].noprint = 1.
 //
 
@@ -125,8 +142,14 @@ main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 
 	for(local.s = 1; local.s <= $exploder.size; local.s++)
 	{
-		if($exploder[local.s].set == local.set) { local.exploder = $exploder[local.s]; break }
+		if($exploder[local.s].set == local.set && $exploder[local.s].killer_using != 1)
+		{
+			local.exploder = $exploder[local.s]
+			local.exploder.killer_using = 1
+			break
+		}
 	}
+
 	if(local.exploder == NIL || local.exploder == NULL) { wait 1; println("----- ERROR global/exploder_killer.scr: Cannot find $exploder with '.set = " + local.set + "'"); end }
 
 	for(local.t = 1; local.t <= $explodertrigger.size; local.t++)
@@ -148,22 +171,24 @@ main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 		local.trigshot setthread trigshot_exploder
 		local.trigshot.set = local.set
 		local.trigshot.onlyprojectiles = local.exploder.onlyprojectiles
+		local.trigshot.nottriggerable = local.exploder.nottriggerable
 
 		local.trigproj = spawn trigger_multiple spawnflags 20 targetname "exploder_trigproj" // triggers when any projectiles hit or go through it (not players' bullets).
 		local.trigproj.origin = local.trig_origin
 		local.trigproj setsize local.trig_setsize1 local.trig_setsize2
 		local.trigproj.setsize1 = local.trig_setsize1
 		local.trigproj.setsize2 = local.trig_setsize2
-		local.trigproj setthread trigproj_exploder
 		local.trigproj.trigshot = local.trigshot
+		local.trigproj setthread trigproj_exploder
 		local.trigproj.set = local.set
 		local.trigproj.grenades = local.exploder.grenades
+		local.trigproj.nottriggerable = local.exploder.nottriggerable
 	}
 	else
 	{
-		for(local.s = 1; local.s <= $exploder_trigshot.size; local.s++)
+		for(local.r = 1; local.r <= $exploder_trigshot.size; local.r++)
 		{
-			if($exploder_trigshot[local.s].set == local.set) { local.trigshot = $exploder_trigshot[local.s]; break }
+			if($exploder_trigshot[local.r].set == local.set) { local.trigshot = $exploder_trigshot[local.r]; break }
 		}
 		if(local.trigshot == NIL) { wait 1; println("----- ERROR global/exploder_killer.scr: No $exploder_trigshot found for '.set = " + local.set + "'. Both trig_setsizes must not '( 0 0 0 )' for at least 1 exploder_killer thread with this #set."); end }
 	}
@@ -171,7 +196,8 @@ main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 	if(local.test == 1) { thread test local.damage_origin1 local.damage_origin2 local.explosion_origin local.debris_origin local.smoke_origin1 local.smoke_origin2 local.trig_origin local.trigshot }
 	thread precache
 
-	while(local.trigshot.dead != 1 && local.exploder != NIL && local.exploder != NULL) { waitframe }
+	waitframe
+	while(local.trigshot != NIL && local.trigshot != NULL && local.trigshot.dead != 1 && local.exploder != NIL && local.exploder != NULL && local.exploder.dead != 1 && local.exploder.exploded != 1) { waitframe }
 
 	if(local.triggers != 0)
 	{
@@ -196,8 +222,8 @@ main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 
 	thread global/exploder.scr::explode local.set
 
-	$exploder[local.s] playsound explode_building_large
-	thread jitter_large local.smaller
+	if($exploder[local.s].nosound != 1 && level.exploder_killer_nosound != 1) { $exploder[local.s] playsound explode_building_large }
+	if($exploder[local.s].noearthquake != 1 && level.exploder_killer_noearthquake != 1) { thread jitter_large local.smaller }
 
 	if(local.radiusdamage1 != 0) { radiusdamage local.damage_origin1 local.damage local.radius }
 	if(local.radiusdamage2 != 0) { radiusdamage local.damage_origin2 local.damage local.radius }
@@ -210,7 +236,7 @@ main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 	if($exploder_trigshot != NULL) { $exploder_trigshot triggerable }
 	if($exploder_trigproj != NULL) { $exploder_trigproj triggerable }
 
-	thread global/exploder.scr::remove local.set // remove exploder-related entities that are no longer needed (including their .target ScriptOrigins).
+	if(local.exploder.resettime == NIL) { thread global/exploder.scr::remove local.set } // remove exploder-related entities that are no longer needed (including their .target ScriptOrigins).
 
 // -------------------------
 
@@ -226,6 +252,20 @@ main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 	}
 	if(local.smoke1 != 0) { local.smoke1 remove }
 	if(local.smoke2 != 0) { local.smoke2 remove }
+
+	if(local.exploder != NIL && local.exploder != NULL && local.exploder.resettime != NIL)
+	{
+ 		wait local.exploder.resettime
+
+		thread global/exploder.scr::reset local.set
+		if(level.exploder_killer_noprint != 1 && local.exploder.noprint != 1) { println("----- Resetting $exploder[" + local.s + "] with '.set = " + local.set + "'") }
+		local.exploder.killer_using = 0
+
+		//waitframe 		// need to wait at least 1 frame for global/exploder.scr to finish resetting exploders.
+		wait (local.s / 10) 	// this ensures that all exploder_killer threads rerun in the same exact order as the initially-run exploder_killer threads, otherwise "No $exploder_trigshot found" errors may print.
+
+		thread main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debris_origin local.debris_angle local.smoke_origin1 local.smoke_origin2 local.trig_setsize1 local.trig_setsize2 local.set local.damage local.radius local.smaller local.trig_origin local.test
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -233,17 +273,32 @@ end
 trigshot_exploder:
 
 	local.damager = parm.other
+	if(self.nottriggerable == 1 || level.exploder_killer_nottriggerable == 1) { end }
+
 	if((local.damager == $world && (level.exploder_killer_onlyprojectiles != 1 && self.onlyprojectiles != 1)) || self.projectile == 1) { self.dead = 1 }
 	if(self.projectile == 1) { self.projectile = 0 }
 end
 
 trigproj_exploder:
 
+	self.count = 0
+	local.check = 0
 	local.projectile = parm.other
+	if(self.nottriggerable == 1 || level.exploder_killer_nottriggerable == 1) { end }
+
 	if(local.projectile.model == "models/projectiles/bazookashell_dm.tik" || local.projectile.model == "models/projectiles/bazookashell.tik" || local.projectile.model == "models/projectiles/panzerschreckshell.tik" || local.projectile.model == "models/projectiles/tigercannonshell.tik" || ((level.exploder_killer_grenades == 1 || self.grenades == 1) && (local.projectile.model == "models/projectiles/m2fgrenade_primary.tik" || local.projectile.model == "models/projectiles/steilhandgranate_primary.tik" || local.projectile.model == "models/projectiles/panzerivshell.tik")))
 	{
 		self.trigshot.projectile = 1
 	}
+
+	waitframe
+	while(self != NULL && self.count <= 2 && (self.count != 0 || local.check == 0)) // make self.projectile = 0 again if projectiles flew through the triggers without impacting or blowing up near them,
+	{										// otherwise bullets & grenades will still be able to blow up the exploders.
+		self.count++
+		local.check = 1
+		waitframe
+	}
+	if(self != NULL && self.trigshot != NULL) { self.trigshot.projectile = 0 }
 end
 
 jitter_large local.smaller:
@@ -321,7 +376,7 @@ test local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 
 	for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++)
 	{
-		if(local.trigshot != NIL && local.trigshot != NULL && local.trigshot == $exploder_trigshot[local.e])
+		if(local.trigshot != NIL && local.trigshot != NULL && local.trigshot == $exploder_trigshot[local.e] && local.trig_origin != 0)
 		{
 			setcvar "drawsize" ("exploder_trigshot[" + local.e + "]")
 		}

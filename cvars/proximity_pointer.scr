@@ -1,0 +1,239 @@
+// A simple laser pointer for iprinting & console-printing origin + angles (in simplified decimals), model, targetname, etc of an entity/trigger (including notsolid ones), that is closest to the pointed target.
+// Right-click to point the laser at the exact origin of the nearest target entity.
+// Hold right-click after finding the nearest target entity for 3+ seconds to remove the entity.
+// Lean left/right + right-click to teleport to the pointed target.
+//
+// Type "proximity_pointer [player number or player name]" into console to give/take a proximity pointer.
+// i.e. "proximity_pointer 1". Giving $player[1] a proximity_pointer.
+//
+// Run "exec cvars/proximity_pointer.scr" in any map script.
+
+main:
+
+	cache models/emitters/lanternflame.tik
+	cache models/fx/dummy.tik
+	thread proximity_pointer
+end
+
+proximity_pointer:
+
+	while(getcvar("proximity_pointer") == "0" || getcvar("proximity_pointer") == "") { waitframe }
+
+	local.cvar = getcvar("proximity_pointer")
+	if(int(local.cvar) < 0) { local.cvar = local.cvar * -1 }
+
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i] != NULL && $player[local.i] getconnstate != 1 && (local.cvar == netname $player[local.i] || int(local.cvar) == local.i))
+		{
+			if($player[local.i].proximity_pointer_given != 1)
+			{
+				$player[local.i] iprint ("----- You've acquired the proximity pointer.")
+				$player[local.i] iprint ("----- Hold USE(e) to aim near an entity/trigger. Press FIRE to iprint entity/trigger's info.")
+				println("----- Giving $player[" + local.i + "] a proximity pointer.")
+
+				$player[local.i] thread give_player_pointer
+			}
+			else
+			{
+				$player[local.i] iprint ("----- Your proximity pointer has been taken away.")
+				println("----- Taking $player[" + local.i + "]'s proximity pointer.")
+				$player[local.i].proximity_pointer_given = 0			
+			}
+			local.on = 1
+		}
+	}
+	if(local.on != 1)
+	{
+		if(int(local.cvar) > 0) { println("----- ERROR. $player[" + int(local.cvar) + "] does not exist!") }
+		if(local.cvar.size > 0 && local.cvar != "0") { println("----- ERROR. Player name: " + local.cvar + " does not exist!") }
+	}
+
+	if(getcvar("proximity_pointer") != "0") { setcvar "proximity_pointer" "0" }
+	thread proximity_pointer
+end
+
+give_player_pointer:
+
+	self.proximity_pointer_given = 1
+	self.proximity_pointer_c = 0
+
+	local.pointer = spawn script_model
+	local.pointer model emitters/lanternflame.tik
+	local.pointer.origin = self.origin
+	local.pointer.angle = self.angle
+	local.pointer.scale = 1
+	local.pointer notsolid
+	local.pointer anim stop
+
+	local.laser = thread spawnlaser self.origin self.origin ( 0 1 1 ) 0.1
+
+	while(self != NULL && self.proximity_pointer_given == 1)
+	{
+		if(self.useheld == 1)
+		{
+			local.pointing_target = (trace (self gettagposition "eyes bone") (self gettagposition "eyes bone" + (angles_toforward self.viewangles) * 10248) 0)
+			local.pointer anim start
+
+			if(self.proximity_pointer_aimed != 1 || local.angles == NIL) { local.angles = ( 0 self.angle 0 ) }
+			self.proximity_pointer_aimed = 1
+
+			if(self.fireheld == 1)
+			{
+				if(self.proximity_pointer_printed != 1)
+				{
+					if(self.leanleftheld == 1 || self.leanrightheld == 1)
+					{
+						self tele local.pointing_target
+						local.string = ("( " + int(local.pointer.origin[0]) + " " + int(local.pointer.origin[1]) + " " + int(local.pointer.origin[2]) + " ) " + int(local.angles[1]))
+						self iprint ("Teleporting to: " + local.string)
+					}
+					else if(self.secfireheld != 1) { self thread find_nearest_entity local.pointer local.laser }
+
+					self.proximity_pointer_printed = 1
+					local.origin_old = local.pointer.origin
+				}
+				if(self.proximity_pointer_nearthing != NIL && self.proximity_pointer_nearthing != NULL && self.secfireheld == 1 && self.leanleftheld != 1 && self.leanrightheld != 1)
+				{
+					local.laser color ( 1 0 0 )
+					local.laser endpoint self.proximity_pointer_nearthing.origin
+					local.pointer.origin = self.proximity_pointer_nearthing.origin
+
+					if(self.proximity_pointer_c == 0) { self stopwatch 3 }
+					if(self.proximity_pointer_c >= 60)
+					{
+						self iprint ("----- Removed entity: [" + self.proximity_pointer_nearthing.entnum + "]")
+						println("----- Removed entity: [" + self.proximity_pointer_nearthing.entnum + "]")
+						self.proximity_pointer_nearthing remove
+					}
+					else { self.proximity_pointer_c++ }
+				}
+				else
+				{
+					local.laser color ( .5 0 1 )
+					self.proximity_pointer_c = 0
+					self stopwatch 0
+				}
+			}
+			else
+			{
+				local.laser color ( .5 0 1 )
+				self.proximity_pointer_c = 0
+				self stopwatch 0
+			}
+			if(self.fireheld != 1 && self.secfireheld != 1 && self.proximity_pointer_printed == 1) { self.proximity_pointer_printed = 0 }
+		}
+		else
+		{
+			self.proximity_pointer_aimed = 0
+			self.proximity_pointer_c = 0
+			self stopwatch 0
+			local.pointing_target = self gettagposition "eyes bone"
+			local.pointer anim stop
+			local.laser color ( .5 0 1 )
+
+			if(self.fireheld == 1 && self.secfireheld != 1) { self thread find_nearest_entity local.pointer local.laser 1 }
+		}
+
+		if(self.proximity_pointer_finding == 1) { local.laser color ( 0 0 0 ) }
+
+		local.laser.origin = self gettagposition "eyes bone"
+		if(self.proximity_pointer_c == 0)
+		{
+			local.laser endpoint local.pointing_target
+			local.pointer.origin = local.pointing_target
+		}
+		waitframe
+	}
+
+	if(self != NULL)
+	{
+		self.proximity_pointer_aimed = 0
+		self.proximity_pointer_printed = 0
+		self.proximity_pointer_given = 0
+		self.proximity_pointer_nearthing = NIL
+		self.proximity_pointer_c = 0
+	}
+	local.laser remove
+	local.pointer remove
+end
+
+spawnlaser local.origin local.endpoint local.color local.scale:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
+
+////////////////////////////////////////////////////////////////////////
+
+find_nearest_entity local.pointer local.laser local.notuseheld:
+
+	if(self.proximity_pointer_finding == 1) { end }
+	self.proximity_pointer_finding = 1
+
+	self iprint ("")
+	self iprint ("----- Note: This pointer can only count up to 869 entities (0 to 868).")
+	self iprint ("----- Finding nearest entity. Please wait...")
+
+	local.smallest = 9999999
+	for(local.i = 0; local.i <= 868; local.i++)
+	{
+		if(local.i % 100 == 0) { waitframe }
+
+		local.entity = getentity(local.i) // $player[1] = entity 0
+		if(local.entity != NULL && local.entity != local.pointer && local.entity != local.laser && local.entity.classname != Player && local.entity != $world)
+		{
+			if(local.notuseheld == 1 && local.entity.targetname.size >= 7)
+			{
+				local.string = ""
+				for(local.s = 0; local.s < 7; local.s++)
+				{
+					local.string += local.entity.targetname[local.s]
+				}
+			}
+			if(local.notuseheld == NIL || (local.notuseheld == 1 && local.entity.classname != Weapon && (local.string == NIL || local.string != "knife_1"))) // do not include player weapons or throwing knife attachmodels.
+			{
+				local.dist = vector_length(local.pointer.origin - local.entity.origin)
+				if(local.dist < local.smallest)
+				{
+					local.smallest = local.dist
+					local.closest = local.entity
+				}
+			}
+		}
+	}
+
+	if(local.closest == NIL || local.closest == NULL)
+	{
+		println("----- ERROR proximity_pointer.scr: No valid entities could be found on the map!")
+
+		if(self != NULL)
+		{
+			self iprint ("----- ERROR: No valid entities could be found on the map!")
+			self.proximity_pointer_nearthing = NIL
+			self.proximity_pointer_finding = 0
+		}
+	}
+	else
+	{
+		local.closest thread cvars/cvars.scr::entprint
+
+		if(self != NULL)
+		{
+			self.proximity_pointer_nearthing = local.closest
+			self.proximity_pointer_finding = 0
+		}
+	}
+end

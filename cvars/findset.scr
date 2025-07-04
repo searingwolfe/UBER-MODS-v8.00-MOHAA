@@ -3,6 +3,7 @@
 // Type "findset 101" into console to print any entnums + targetnames with ".set = 101".
 // Type "findset all" into console to print any entnums + set numbers that has a ".set" value, and print the total number of entities for each #set.
 // Type "findset exploder" (or exploders) into console to print all $exploder origins + set numbers, and print the total number of $exploder entities for each #set.
+// Type "findset exploderfire" (or exploderfires) to print all $exploderfire data saved within the "level.exploderfire" matrix array ($exploderfire entities are removed afterwards).
 
 main: // findset.scr. Run "exec global/findset.scr" in any map script to use the "findset [#set]" cvar, "findset all" cvar, and "findset exploder" (or "findset exploders") cvar.
 
@@ -10,6 +11,7 @@ main: // findset.scr. Run "exec global/findset.scr" in any map script to use the
 
 	if(string(getcvar("findset")) == "all") { local.set = "all" }
 	else if(string(getcvar("findset")) == "exploder" || string(getcvar("findset")) == "exploders") { local.set = "exploders" }
+	else if(string(getcvar("findset")) == "exploderfire" || string(getcvar("findset")) == "exploderfires") { local.set = "exploderfire" }
 	else { local.set = int(getcvar("findset")) }
 	local.entcount = 0
 	local.array[0] = NIL
@@ -18,6 +20,7 @@ main: // findset.scr. Run "exec global/findset.scr" in any map script to use the
 
 	for(local.i = 0; local.i <= 868; local.i++)
 	{
+		if(local.set == "exploderfire") { break }
 		if(local.i % 14 == 0) { waitframe }
 
 		local.entity = getentity(local.i) // $player[1] = entity 0		
@@ -70,7 +73,7 @@ main: // findset.scr. Run "exec global/findset.scr" in any map script to use the
 		if($exploder == NULL) { println("----- ERROR. There are no $exploder entities on the map.") }
 		else { println("----- $exploder entities found: " + $exploder.size) }
 	}
-	else if(local.entcount == 0)
+	else if(local.entcount == 0 && local.set != "exploderfire")
 	{
 		if(local.set == "all") { println("----- ERROR. There are no entities that have '.set = ' values.") }
 		else { println("----- ERROR. There are no entities with '.set = " + local.set + "'") }
@@ -110,7 +113,71 @@ main: // findset.scr. Run "exec global/findset.scr" in any map script to use the
 				}
 			}
 		}
-		else { println("----- '.set = " + local.set + "' entities found: " + local.entcount) }
+		else
+		{
+			println("----- '.set = " + local.set + "' entities found: " + local.entcount)
+			
+			if(level.exploderfire != NIL && level.exploderfire.size > 0)
+			{
+				local.varcount = 0
+				for(local.f = 1; local.f <= level.exploderfire.size; local.f++)
+				{
+					if(level.exploderfire[local.f][5] == local.set)
+					{
+						println("level.exploderfire[" + local.f + "]")
+						local.varcount++
+					}
+				}
+				if(local.varcount != 0)
+				{
+					println("----- '.set = " + local.set + "' level.exploderfire variables found: " + local.varcount)
+					//println("----- Type 'findset exploderfire' to print more details.")
+				}
+			}
+		}
+	}
+
+	if((local.set == "exploderfire") && level.exploderfire != NIL && level.exploderfire.size > 0)
+	{
+		println("----- $exploderfire data is saved to 'level.exploderfire' matrix array, before removing the entities.")
+		wait 0.25
+		println("----- For example: level.exploderfire[1][2] = $exploderfire[1].origin")
+		wait 0.25
+		println("----- Rows = $exploderfire[row #].")
+		wait 0.25
+		println("----- Columns = level.exploderfire[row #][column #] data. [1] to [9] columns.")
+		println("")
+		wait 0.25
+		println("----- Columns left to right: model, origin, angles, scale, set #, pause, damage, damageradius, fire")
+		println("")
+		wait 1
+		println("level.exploderfire = ")
+
+		for(local.f = 1; local.f <= level.exploderfire.size; local.f++)
+		{
+			local.x = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][0]
+			local.y = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][1]
+			local.z = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][2]
+			local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][0]
+			local.y = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][1]
+			local.z = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][2]
+			local.angles = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.scale = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][4]
+			local.pause = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][6]
+
+			local.model = ""
+			for(local.s = 7; local.s < level.exploderfire[local.f][1].size; local.s++)
+			{
+				local.model += level.exploderfire[local.f][1][local.s]
+			}
+
+			println("[" + local.f + "] : " + local.model + " " + local.origin + " " + local.angles + " " + local.scale + " #" + string(level.exploderfire[local.f][5]) + " " + local.pause + " " + string(level.exploderfire[local.f][7]) + " " + string(level.exploderfire[local.f][8]) + " " + string(level.exploderfire[local.f][9]))
+
+			waitframe
+		}
+		println("----- Number of 'level.exploderfire' rows: " + level.exploderfire.size)
+		println("")
 	}
 
 	if(local.classname != "") { setcvar "findset" "" }

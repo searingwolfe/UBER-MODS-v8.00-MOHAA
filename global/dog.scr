@@ -24,7 +24,7 @@ local.thing2 light 1 .75 0 50
 //local.thing2 notsolid		// if using a model for a trigger, do not add "notsolid", otherwise "setthread" will not work.
 
 local.thing2.bulletsanger = local.bulletsanger
-local.thing2.angertime = local.angertime * 10 // for-loop counter increments every 0.1 seconds.
+local.thing2.angertime = local.angertime * 20 // for-loop counter increments every 0.05 seconds.
 local.thing2.shot = 0
 local.thing2.runonce = 0
 local.thing2.angrydog = 0
@@ -192,7 +192,7 @@ biteplayers:
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
 		local.dist = vector_length(self.origin - $player[local.i].origin) // do "self - $player[local.i]", not the other way around, otherwise dog's angles will be backwards.
-		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator")  // if a player gets too close, kill the player
+		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && $(self.name).bitingplayer != 1)  // if a player gets too close, kill the player
 		{
 			if(local.dist < 70)
 			{
@@ -219,9 +219,23 @@ bite_anim local.name:
 
 	$(local.name).bitingplayer = 1
 	$(local.name) anim dog_bite_face
-	killent self.entnum // "self kill" doesn't work if the player just respawned
 
-	wait 1
+	waitframe
+	waitframe
+	$(local.name) playsound dogcollar
+	waitframe
+	waitframe
+	$(local.name) playsound dogbite
+	if(isalive self && self.dmteam != "spectator") { killent self.entnum } // "self kill" doesn't work if the player just respawned
+	waitframe
+	waitframe
+	waitframe
+	waitframe
+	$(local.name) playsound dogfs
+	waitframe
+	$(local.name) playsound dogfs
+
+	wait 0.55
 	$(local.name) anim dog_stand_curious
 	$(local.name).bitingplayer = 0
 end

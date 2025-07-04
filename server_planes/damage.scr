@@ -133,8 +133,7 @@ checkhit local.place:
 		}
 	 	local.hit_entity = 1
          }
-      } 
-
+      }
    } 
    for(local.i = 1; level.botlastid != NIL && local.i <= level.botlastid; local.i++) 
    { 
@@ -164,8 +163,22 @@ checkhit local.place:
             local.player damage self local.damage self.plane local.player.origin self.forwardvector (0 0 0) 10 1 18 -1
 	    local.hit_entity = 1
          }
-      } 
-
+      }
+   }
+   for(local.e = 1; local.e <= $exploder_trigshot.size; local.e++) 
+   {
+	local.X_min[local.e] = $exploder_trigshot[local.e].origin[0] + $exploder_trigshot[local.e].setsize1[0] - 50 // prevent bullet's radiusdamage from hitting $exploder_trigshot entities.
+	local.X_max[local.e] = $exploder_trigshot[local.e].origin[0] + $exploder_trigshot[local.e].setsize2[0] + 50
+	local.Y_min[local.e] = $exploder_trigshot[local.e].origin[1] + $exploder_trigshot[local.e].setsize1[1] - 50
+	local.Y_max[local.e] = $exploder_trigshot[local.e].origin[1] + $exploder_trigshot[local.e].setsize2[1] + 50
+	local.Z_min[local.e] = $exploder_trigshot[local.e].origin[2] + $exploder_trigshot[local.e].setsize1[2] - 50
+	local.Z_max[local.e] = $exploder_trigshot[local.e].origin[2] + $exploder_trigshot[local.e].setsize2[2] + 50
+	local.origin = local.place
+	
+	if(int(local.origin[0]) >= local.X_min[local.e] && int(local.origin[0]) <= local.X_max[local.e] && int(local.origin[1]) >= local.Y_min[local.e] && int(local.origin[1]) <= local.Y_max[local.e] && int(local.origin[2]) >= local.Z_min[local.e] && int(local.origin[2]) <= local.Z_max[local.e])
+	{
+	    local.hit_entity = 1
+	}
    }
    if(local.hit_entity != 1) { radiusdamage local.place 30 10 }
 end 

@@ -47,7 +47,7 @@ main local.modelpair:
 		self waitexec server_planes/first_flight_instructions.scr local.team
 	}
 
-	if(self == NULL || self getconnstate == 1) { end }
+	if(self == NULL) { end }
 	if(self.dmteam != local.team || level.change_team_score == 1 || level.bbactive == 0)
 	{
 		self.flying = 0
@@ -298,7 +298,8 @@ main local.modelpair:
 	{
 		self.drivingent = NIL
 		self.no_usemine = 0 //can use a mine again
-		self.no_usemedic = 0 //
+		self.no_usemedic = 0
+		self.flying = 0
 		if(isalive self) { self.health = 100 } // bot setup
 
 		self exec server_planes/plane_crash.scr::plane_crashing //crash sequence

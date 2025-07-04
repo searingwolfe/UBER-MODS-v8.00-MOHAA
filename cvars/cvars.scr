@@ -41,14 +41,15 @@ exec cvars/findmodel.scr	// "findmodel [models/...tik]" cvar. "findmodel models/
 				//
 exec cvars/findset.scr		// "findset [#set]" cvar. "findset 7", "findmodel 20", or any other set number (for each $exploder in a map) to print all entnums and their targetnames in the map with that ".set" value.
 				// "findset all" cvar prints all entnums and their ".set" values, then prints total number of entities for each ".set" value.
-				//  "findset exploder" (or exploders) prints all $exploder origins + set numbers, and print the total number of $exploder entities for each #set.
+				// "findset exploder" (or exploders) prints all $exploder origins + set numbers, and print the total number of $exploder entities for each #set.
+				// "findset exploderfire" (or exploderfires) prints all $exploderfire data saved within the "level.exploderfire" matrix array ($exploderfire entities are removed afterwards).
 				//
 exec cvars/drawpath.scr		// "drawpath [1st ent's targetname without $ in a path]" cvar. "drawpath bomberpath", "drawpath spotpath1_1", "drawpath latertruckpath", or multiple paths with the same targetname: "drawpath
 				// exploderchunk[1]", "drawpath exploderchunk[12]", to spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node.
 				// "drawpath 0" cvar deletes all nodes & lasers drawn by drawpath.
 				//
 exec cvars/drawsize.scr		// "drawsize [targetname without $]" cvar. "drawsize trigger_explode", "drawsize tank01", "drawsize exploder_trigshot", or multiple entities with the same targetname: "drawsize
-				// exploder_trigger[1]", "drawsize exploder_trigger[12]", to spawn lasers around the setsize edges of the trigger/entity. setsizes must be saved to "local.ent.setsize1 = and "local.ent.setsize2",
+				// exploder_trigger[1]", "drawsize exploder_trigger[12]", to lasers around the setsize edges of the trigger/entity. setsizes must be saved to "local.ent.setsize1 = and "local.ent.setsize2",
 				// for example: local.ent.setsize1 = ( -100 -100 -50 ) and local.ent.setsize2 = ( 100 100 50 ), in order to use this cvar. Green lasers = setsize2's vertex. Red lasers = setsize1's vertex.
 				// "drawsize 0" cvar deletes all lasers drawn by drawsize.
 				//
@@ -58,13 +59,16 @@ exec cvars/cybsnd.scr		// "cybsnd_score 1" cvar, to print the current Cyber Atta
 				// "cybsnd_debug 1" cvar, to print once per second the Allies/Axis team count (living players) and Allies/Axis team total.
 				//
 exec cvars/coord_pointer.scr	// "coord_pointer" cvar.	"coord_pointer [27 or Searingwolfe]" = give/take a coord pointer to $player[27] or the player with the name "Searingwolfe".
-				//				Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console).
-				//				Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places and write to "coords.txt"
+				//				Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as simplified decimals (also prints them to console).
 				//				Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt").
 				//
 exec cvars/entity_pointer.scr	// "entity_pointer" cvar.	"entity_pointer [27 or Searingwolfe]" = give/take an entity pointer to $player[27] or the player with the name "Searingwolfe".
 				//				Hold USE(e) to aim the laser at a solid entity, and press FIRE to iprint & print to console the entity's info: origin, angles, classname, model, targetname, entnum, etc.
-				//				Double click the same entity to print origin + angles in 6 decimal places.
+				//				Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt").
+				//
+exec cvars/proximity_pointer.scr // "proximity_pointer" cvar.	"proximity_pointer [27 or Searingwolfe]" = give/take a proximity pointer to $player[27] or the player with the name "Searingwolfe".
+				//				Hold USE(e) to aim the laser near a notsolid entity or trigger (ideally near their origins), and press FIRE to iprint & print to console the entity's info.
+				//				Press FIRE without holding USE(e) to iprint & print to console the entity's info that is closest to the player (not including weapons or attached throwing knives).
 				//				Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt").
 				//
 exec cvars/ubergametype.scr	// "g_ubergametype" cvar. 	"g_ubergametype bb" = Base-Builder gametype.
@@ -107,4 +111,683 @@ exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 27" = continuousl
 				//				"coord2 spawn" = print ""0 0 0" "angle" "0"" coords format on a new line.
 				//
 				// for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
+end
+
+//
+
+//
+
+//
+
+//
+
+//
+
+entprint local.targetname local.int:
+
+	if(local.targetname != NIL)
+	{
+		if(local.int == NIL)
+		{
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname).origin[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname).origin[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname).origin[2]
+			local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname).angles[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname).angles[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname).angles[2]
+			local.angles = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname).destination[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname).destination[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname).destination[2]
+			local.destination = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname).targetorigin[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname).targetorigin[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname).targetorigin[2]
+			local.targetorigin = "( " + local.x + " " + local.y + " " + local.z + " )"
+
+			if($(local.targetname).entnum != NIL) { println("----- Teleporting to entity " + $(local.targetname).entnum + ": $" + local.targetname) }
+			if($(local.targetname).entnum == NIL) { println("----- Teleporting to simple entity: $" + local.targetname) }
+			println("----- $" + local.targetname + ".origin = " + local.origin)
+			println("----- $" + local.targetname + ".angles = " + local.angles)
+			println("----- $" + local.targetname + ".classname = " + $(local.targetname).classname)
+			if($(local.targetname).model != NIL) { println("----- $" + local.targetname + ".model = " + $(local.targetname).model) }
+			if($(local.targetname).target != "" && $($(local.targetname).target) != NULL) { println("----- $" + local.targetname + ".target = " + $(local.targetname).target) }
+			if($(local.targetname).target != "" && $($(local.targetname).target) == NULL) { println("----- $" + local.targetname + ".target = " + $(local.targetname).target + " (NULL)") }
+			if($(local.targetname).targetorigin != NIL) { println("----- $" + local.targetname + ".targetorigin = " + local.targetorigin) }
+			if($(local.targetname).health != NIL && $(local.targetname).health != 0) { println("----- $" + local.targetname + ".health = " + $(local.targetname).health) }
+			if($(local.targetname).scale != NIL && $(local.targetname).scale != 1) { println("----- $" + local.targetname + ".scale = " + $(local.targetname).scale) }
+
+			if($(local.targetname).group != NIL) { println("----- $" + local.targetname + ".group = " + $(local.targetname).group) }
+			if($(local.targetname).set != NIL) { println("----- $" + local.targetname + ".set = " + $(local.targetname).set) }
+			if($(local.targetname).pause != NIL) { println("----- $" + local.targetname + ".pause = " + $(local.targetname).pause) }
+			if($(local.targetname).damage != NIL) { println("----- $" + local.targetname + ".damage = " + $(local.targetname).damage) }
+			if($(local.targetname).damageradius != NIL) { println("----- $" + local.targetname + ".damageradius = " + $(local.targetname).damageradius) }
+			if($(local.targetname).fire != NIL) { println("----- $" + local.targetname + ".fire = " + $(local.targetname).fire) }
+			if($(local.targetname).walkable != NIL) { println("----- $" + local.targetname + ".walkable = " + $(local.targetname).walkable) }
+			if($(local.targetname).sound != NIL) { println("----- $" + local.targetname + ".sound = " + $(local.targetname).sound) }
+			if($(local.targetname).dead == 1) { println("----- $" + local.targetname + ".dead = " + $(local.targetname).dead) }
+			if($(local.targetname).exploded == 1) { println("----- $" + local.targetname + ".exploded = " + $(local.targetname).exploded) }
+
+			if($(local.targetname).onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles != 1) { println("----- $" + local.targetname + ".onlyprojectiles = " + $(local.targetname).onlyprojectiles) }
+			if($(local.targetname).onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles == 1) { println("----- $" + local.targetname + ".onlyprojectiles = level.exploder_killer_onlyprojectiles = 1") }
+			if($(local.targetname).grenades != NIL && level.exploder_killer_grenades != 1) { println("----- $" + local.targetname + ".grenades = " + $(local.targetname).grenades) }
+			if($(local.targetname).grenades != NIL && level.exploder_killer_grenades == 1) { println("----- $" + local.targetname + ".grenades = level.exploder_killer_grenades = 1") }
+			if($(local.targetname).resettime != NIL && level.exploder_killer_resettime != 1) { println("----- $" + local.targetname + ".resettime = " + $(local.targetname).resettime) }
+			if($(local.targetname).resettime != NIL && level.exploder_killer_resettime == 1) { println("----- $" + local.targetname + ".resettime = level.exploder_killer_resettime = 1") }
+			if($(local.targetname).noprint != NIL && level.exploder_killer_noprint != 1) { println("----- $" + local.targetname + ".noprint = " + $(local.targetname).noprint) }
+			if($(local.targetname).noprint != NIL && level.exploder_killer_noprint == 1) { println("----- $" + local.targetname + ".noprint = level.exploder_killer_noprint = 1") }
+			if($(local.targetname).nosound != NIL && level.exploder_killer_nosound != 1) { println("----- $" + local.targetname + ".nosound = " + $(local.targetname).nosound) }
+			if($(local.targetname).nosound != NIL && level.exploder_killer_nosound == 1) { println("----- $" + local.targetname + ".nosound = level.exploder_killer_nosound = 1") }
+			if($(local.targetname).noearthquake != NIL && level.exploder_killer_noearthquake != 1) { println("----- $" + local.targetname + ".noearthquake = " + $(local.targetname).noearthquake) }
+			if($(local.targetname).noearthquake != NIL && level.exploder_killer_noearthquake == 1) { println("----- $" + local.targetname + ".noearthquake = level.exploder_killer_noearthquake = 1") }
+			if($(local.targetname).nottriggerable != NIL && level.exploder_killer_nottriggerable != 1) { println("----- $" + local.targetname + ".nottriggerable = " + $(local.targetname).nottriggerable) }
+			if($(local.targetname).nottriggerable != NIL && level.exploder_killer_nottriggerable == 1) { println("----- $" + local.targetname + ".nottriggerable = level.exploder_killer_nottriggerable = 1") }
+
+			if($(local.targetname).anglex != NIL) { println("----- $" + local.targetname + ".anglex = " + $(local.targetname).anglex) }
+			if($(local.targetname).angley != NIL) { println("----- $" + local.targetname + ".angley = " + $(local.targetname).angley) }
+			if($(local.targetname).anglez != NIL) { println("----- $" + local.targetname + ".anglez = " + $(local.targetname).anglez) }
+			if($(local.targetname).anglesx != NIL) { println("----- $" + local.targetname + ".anglesx = " + $(local.targetname).anglesx) }
+			if($(local.targetname).anglesy != NIL) { println("----- $" + local.targetname + ".anglesy = " + $(local.targetname).anglesy) }
+			if($(local.targetname).anglesz != NIL) { println("----- $" + local.targetname + ".anglesz = " + $(local.targetname).anglesz) }
+
+			if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname == "") { println("----- $" + local.targetname + ".gun = entity " + $(local.targetname).gun.entnum) }
+			if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname != "")
+			{
+				if($($(local.targetname).gun.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname).gun.targetname).size; local.t++)
+					{
+						if($($(local.targetname).gun.targetname)[local.t] == $(local.targetname).gun) { println("----- $" + local.targetname + ".gun = " + $(local.targetname).gun.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + ".gun = " + $(local.targetname).gun.targetname) }
+			}
+			if($(local.targetname).gun2 != NIL && $(local.targetname).gun2 != NULL && $(local.targetname).gun2.targetname == "") { println("----- $" + local.targetname + ".gun2 = entity " + $(local.targetname).gun2.entnum) }
+			if($(local.targetname).gun2 != NIL && $(local.targetname).gun2 != NULL && $(local.targetname).gun2.targetname != "")
+			{
+				if($($(local.targetname).gun2.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname).gun2.targetname).size; local.t++)
+					{
+						if($($(local.targetname).gun2.targetname)[local.t] == $(local.targetname).gun2) { println("----- $" + local.targetname + ".gun2 = " + $(local.targetname).gun2.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + ".gun = " + $(local.targetname).gun2.targetname) }
+			}
+
+			if($(local.targetname).destination != NIL) { println("----- $" + local.targetname + ".destination = " + local.destination) }
+			if($(local.targetname).trigger1 != NIL && $(local.targetname).trigger1 != NULL && $(local.targetname).trigger1.targetname == "") { println("----- $" + local.targetname + ".trigger1 = entity " + $(local.targetname).trigger1.entnum) }
+			if($(local.targetname).trigger1 != NIL && $(local.targetname).trigger1 != NULL && $(local.targetname).trigger1.targetname != "")
+			{
+				if($($(local.targetname).trigger1.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname).trigger1.targetname).size; local.t++)
+					{
+						if($($(local.targetname).trigger1.targetname)[local.t] == $(local.targetname).trigger1) { println("----- $" + local.targetname + ".trigger1 = " + $(local.targetname).trigger1.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + ".trigger1 = " + $(local.targetname).trigger1.targetname) }
+			}
+			if($(local.targetname).trigger2 != NIL && $(local.targetname).trigger2 != NULL && $(local.targetname).trigger2.targetname == "") { println("----- $" + local.targetname + ".trigger2 = entity " + $(local.targetname).trigger2.entnum) }
+			if($(local.targetname).trigger2 != NIL && $(local.targetname).trigger2 != NULL && $(local.targetname).trigger2.targetname != "")
+			{
+				if($($(local.targetname).trigger2.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname).trigger2.targetname).size; local.t++)
+					{
+						if($($(local.targetname).trigger2.targetname)[local.t] == $(local.targetname).trigger2) { println("----- $" + local.targetname + ".trigger2 = " + $(local.targetname).trigger2.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + ".trigger = " + $(local.targetname).trigger2.targetname) }
+			}
+
+			if($player.size >= 1)
+			{
+				if($(local.targetname).entnum != NIL) { $player iprint ("----- Teleporting to entity " + $(local.targetname).entnum + ": $" + local.targetname) }
+				if($(local.targetname).entnum == NIL) { $player iprint ("----- Teleporting to simple entity: $" + local.targetname) }
+				$player iprint ("----- $" + local.targetname + ".origin = " + local.origin)
+				$player iprint ("----- $" + local.targetname + ".angles = " + local.angles)
+				$player iprint ("----- $" + local.targetname + ".classname = " + $(local.targetname).classname)
+				if($(local.targetname).model != NIL) { $player iprint ("----- $" + local.targetname + ".model = " + $(local.targetname).model) }
+				if($(local.targetname).target != "" && $($(local.targetname).target) != NULL) { $player iprint ("----- $" + local.targetname + ".target = " + $(local.targetname).target) }
+				if($(local.targetname).target != "" && $($(local.targetname).target) == NULL) { $player iprint ("----- $" + local.targetname + ".target = " + $(local.targetname).target + " (NULL)") }
+				if($(local.targetname).targetorigin != NIL) { $player iprint ("----- $" + local.targetname + ".targetorigin = " + local.targetorigin) }
+				if($(local.targetname).health != NIL && $(local.targetname).health != 0) { $player iprint ("----- $" + local.targetname + ".health = " + $(local.targetname).health) }
+				if($(local.targetname).scale != NIL && $(local.targetname).scale != 1) { $player iprint ("----- $" + local.targetname + ".scale = " + $(local.targetname).scale) }
+
+				if($(local.targetname).group != NIL) { $player iprint ("----- $" + local.targetname + ".group = " + $(local.targetname).group) }
+				if($(local.targetname).set != NIL) { $player iprint ("----- $" + local.targetname + ".set = " + $(local.targetname).set) }
+				if($(local.targetname).pause != NIL) { $player iprint ("----- $" + local.targetname + ".pause = " + $(local.targetname).pause) }
+				if($(local.targetname).damage != NIL) { $player iprint ("----- $" + local.targetname + ".damage = " + $(local.targetname).damage) }
+				if($(local.targetname).damageradius != NIL) { $player iprint ("----- $" + local.targetname + ".damageradius = " + $(local.targetname).damageradius) }
+				if($(local.targetname).fire != NIL) { $player iprint ("----- $" + local.targetname + ".fire = " + $(local.targetname).fire) }
+				if($(local.targetname).walkable != NIL) { $player iprint ("----- $" + local.targetname + ".walkable = " + $(local.targetname).walkable) }
+				if($(local.targetname).sound != NIL) { $player iprint ("----- $" + local.targetname + ".sound = " + $(local.targetname).sound) }
+				if($(local.targetname).dead == 1) { $player iprint ("----- $" + local.targetname + ".dead = " + $(local.targetname).dead) }
+				if($(local.targetname).exploded == 1) { $player iprint ("----- $" + local.targetname + ".exploded = " + $(local.targetname).exploded) }
+
+				if($(local.targetname).onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles != 1) { $player iprint ("----- $" + local.targetname + ".onlyprojectiles = " + $(local.targetname).onlyprojectiles) }
+				if($(local.targetname).onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles == 1) { $player iprint ("----- $" + local.targetname + ".onlyprojectiles = level.exploder_killer_onlyprojectiles = 1") }
+				if($(local.targetname).grenades != NIL && level.exploder_killer_grenades != 1) { $player iprint ("----- $" + local.targetname + ".grenades = " + $(local.targetname).grenades) }
+				if($(local.targetname).grenades != NIL && level.exploder_killer_grenades == 1) { $player iprint ("----- $" + local.targetname + ".grenades = level.exploder_killer_grenades = 1") }
+				if($(local.targetname).resettime != NIL && level.exploder_killer_resettime != 1) { $player iprint ("----- $" + local.targetname + ".resettime = " + $(local.targetname).resettime) }
+				if($(local.targetname).resettime != NIL && level.exploder_killer_resettime == 1) { $player iprint ("----- $" + local.targetname + ".resettime = level.exploder_killer_resettime = 1") }
+				if($(local.targetname).noprint != NIL && level.exploder_killer_noprint != 1) { $player iprint ("----- $" + local.targetname + ".noprint = " + $(local.targetname).noprint) }
+				if($(local.targetname).noprint != NIL && level.exploder_killer_noprint == 1) { $player iprint ("----- $" + local.targetname + ".noprint = level.exploder_killer_noprint = 1") }
+				if($(local.targetname).nosound != NIL && level.exploder_killer_nosound != 1) { $player iprint ("----- $" + local.targetname + ".nosound = " + $(local.targetname).nosound) }
+				if($(local.targetname).nosound != NIL && level.exploder_killer_nosound == 1) { $player iprint ("----- $" + local.targetname + ".nosound = level.exploder_killer_nosound = 1") }
+				if($(local.targetname).noearthquake != NIL && level.exploder_killer_noearthquake != 1) { $player iprint ("----- $" + local.targetname + ".noearthquake = " + $(local.targetname).noearthquake) }
+				if($(local.targetname).noearthquake != NIL && level.exploder_killer_noearthquake == 1) { $player iprint ("----- $" + local.targetname + ".noearthquake = level.exploder_killer_noearthquake = 1") }
+				if($(local.targetname).nottriggerable != NIL && level.exploder_killer_nottriggerable != 1) { $player iprint ("----- $" + local.targetname + ".nottriggerable = " + $(local.targetname).nottriggerable) }
+				if($(local.targetname).nottriggerable != NIL && level.exploder_killer_nottriggerable == 1) { $player iprint ("----- $" + local.targetname + ".nottriggerable = level.exploder_killer_nottriggerable = 1") }
+
+				if($(local.targetname).anglex != NIL) { $player iprint ("----- $" + local.targetname + ".anglex = " + $(local.targetname).anglex) }
+				if($(local.targetname).angley != NIL) { $player iprint ("----- $" + local.targetname + ".angley = " + $(local.targetname).angley) }
+				if($(local.targetname).anglez != NIL) { $player iprint ("----- $" + local.targetname + ".anglez = " + $(local.targetname).anglez) }
+				if($(local.targetname).anglesx != NIL) { $player iprint ("----- $" + local.targetname + ".anglesx = " + $(local.targetname).anglesx) }
+				if($(local.targetname).anglesy != NIL) { $player iprint ("----- $" + local.targetname + ".anglesy = " + $(local.targetname).anglesy) }
+				if($(local.targetname).anglesz != NIL) { $player iprint ("----- $" + local.targetname + ".anglesz = " + $(local.targetname).anglesz) }
+
+				if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname == "") { $player iprint ("----- $" + local.targetname + ".gun = entity " + $(local.targetname).gun.entnum) }
+				if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname != "")
+				{
+					if($($(local.targetname).gun.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname).gun.targetname).size; local.t++)
+						{
+							if($($(local.targetname).gun.targetname)[local.t] == $(local.targetname).gun) { $player iprint ("----- $" + local.targetname + ".gun = " + $(local.targetname).gun.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + ".gun = " + $(local.targetname).gun.targetname) }
+				}
+				if($(local.targetname).gun2 != NIL && $(local.targetname).gun2 != NULL && $(local.targetname).gun2.targetname == "") { $player iprint ("----- $" + local.targetname + ".gun2 = entity " + $(local.targetname).gun2.entnum) }
+				if($(local.targetname).gun2 != NIL && $(local.targetname).gun2 != NULL && $(local.targetname).gun2.targetname != "")
+				{
+					if($($(local.targetname).gun2.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname).gun2.targetname).size; local.t++)
+						{
+							if($($(local.targetname).gun2.targetname)[local.t] == $(local.targetname).gun2) { $player iprint ("----- $" + local.targetname + ".gun2 = " + $(local.targetname).gun2.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + ".gun = " + $(local.targetname).gun2.targetname) }
+				}
+
+				if($(local.targetname).destination != NIL) { $player iprint ("----- $" + local.targetname + ".destination = " + local.destination) }
+				if($(local.targetname).trigger1 != NIL && $(local.targetname).trigger1 != NULL && $(local.targetname).trigger1.targetname == "") { $player iprint ("----- $" + local.targetname + ".trigger1 = entity " + $(local.targetname).trigger1.entnum) }
+				if($(local.targetname).trigger1 != NIL && $(local.targetname).trigger1 != NULL && $(local.targetname).trigger1.targetname != "")
+				{
+					if($($(local.targetname).trigger1.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname).trigger1.targetname).size; local.t++)
+						{
+							if($($(local.targetname).trigger1.targetname)[local.t] == $(local.targetname).trigger1) { $player iprint ("----- $" + local.targetname + ".trigger1 = " + $(local.targetname).trigger1.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + ".trigger1 = " + $(local.targetname).trigger1.targetname) }
+				}
+				if($(local.targetname).trigger2 != NIL && $(local.targetname).trigger2 != NULL && $(local.targetname).trigger2.targetname == "") { $player iprint ("----- $" + local.targetname + ".trigger2 = entity " + $(local.targetname).trigger2.entnum) }
+				if($(local.targetname).trigger2 != NIL && $(local.targetname).trigger2 != NULL && $(local.targetname).trigger2.targetname != "")
+				{
+					if($($(local.targetname).trigger2.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname).trigger2.targetname).size; local.t++)
+						{
+							if($($(local.targetname).trigger2.targetname)[local.t] == $(local.targetname).trigger2) { $player iprint ("----- $" + local.targetname + ".trigger2 = " + $(local.targetname).trigger2.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + ".trigger = " + $(local.targetname).trigger2.targetname) }
+				}
+			}
+		}
+		else
+		{
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].origin[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].origin[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].origin[2]
+			local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].angles[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].angles[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].angles[2]
+			local.angles = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].destination[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].destination[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].destination[2]
+			local.destination = "( " + local.x + " " + local.y + " " + local.z + " )"
+			local.x = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].targetorigin[0]
+			local.y = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].targetorigin[1]
+			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].targetorigin[2]
+			local.targetorigin = "( " + local.x + " " + local.y + " " + local.z + " )"
+
+			if($(local.targetname)[local.int].entnum != NIL) { println("----- Teleporting to entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
+			if($(local.targetname)[local.int].entnum == NIL) { println("----- Teleporting to simple entity: $" + local.targetname + "[" + local.int + "]") }
+			println("----- $" + local.targetname + "[" + local.int + "].origin = " + local.origin)
+			println("----- $" + local.targetname + "[" + local.int + "].angles = " + local.angles)
+			println("----- $" + local.targetname + "[" + local.int + "].classname = " + $(local.targetname)[local.int].classname)
+			if($(local.targetname)[local.int].model != NIL) { println("----- $" + local.targetname + "[" + local.int + "].model = " + $(local.targetname)[local.int].model) }
+			if($(local.targetname)[local.int].target != "" && $($(local.targetname)[local.int].target) != NULL) { println("----- $" + local.targetname + "[" + local.int + "].target = " + $(local.targetname)[local.int].target) }
+			if($(local.targetname)[local.int].target != "" && $($(local.targetname)[local.int].target) == NULL) { println("----- $" + local.targetname + "[" + local.int + "].target = " + $(local.targetname)[local.int].target + " (NULL)") }
+			if($(local.targetname)[local.int].targetorigin != NIL) { println("----- $" + local.targetname + "[" + local.int + "].targetorigin = " + local.targetorigin) }
+			if($(local.targetname)[local.int].health != NIL && $(local.targetname)[local.int].health != 0) { println("----- $" + local.targetname + "[" + local.int + "].health = " + $(local.targetname)[local.int].health) }
+			if($(local.targetname)[local.int].scale != NIL && $(local.targetname)[local.int].scale != 1) { println("----- $" + local.targetname + "[" + local.int + "].scale = " + $(local.targetname)[local.int].scale) }
+
+			if($(local.targetname)[local.int].group != NIL) { println("----- $" + local.targetname + "[" + local.int + "].group = " + $(local.targetname)[local.int].group) }
+			if($(local.targetname)[local.int].set != NIL) { println("----- $" + local.targetname + "[" + local.int + "].set = " + $(local.targetname)[local.int].set) }
+			if($(local.targetname)[local.int].pause != NIL) { println("----- $" + local.targetname + "[" + local.int + "].pause = " + $(local.targetname)[local.int].pause) }
+			if($(local.targetname)[local.int].damage != NIL) { println("----- $" + local.targetname + "[" + local.int + "].damage = " + $(local.targetname)[local.int].damage) }
+			if($(local.targetname)[local.int].damageradius != NIL) { println("----- $" + local.targetname + "[" + local.int + "].damageradius = " + $(local.targetname)[local.int].damageradius) }
+			if($(local.targetname)[local.int].fire != NIL) { println("----- $" + local.targetname + "[" + local.int + "].fire = " + $(local.targetname)[local.int].fire) }
+			if($(local.targetname)[local.int].walkable != NIL) { println("----- $" + local.targetname + "[" + local.int + "].walkable = " + $(local.targetname)[local.int].walkable) }
+			if($(local.targetname)[local.int].sound != NIL) { println("----- $" + local.targetname + "[" + local.int + "].sound = " + $(local.targetname)[local.int].sound) }
+			if($(local.targetname)[local.int].dead == 1) { println("----- $" + local.targetname + "[" + local.int + "].dead = " + $(local.targetname)[local.int].dead) }
+			if($(local.targetname)[local.int].exploded == 1) { println("----- $" + local.targetname + "[" + local.int + "].exploded = " + $(local.targetname)[local.int].exploded) }
+
+			if($(local.targetname)[local.int].onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles != 1) { println("----- $" + local.targetname + "[" + local.int + "].onlyprojectiles = " + $(local.targetname)[local.int].onlyprojectiles) }
+			if($(local.targetname)[local.int].onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles == 1) { println("----- $" + local.targetname + "[" + local.int + "].onlyprojectiles = level.exploder_killer_onlyprojectiles = 1") }
+			if($(local.targetname)[local.int].grenades != NIL && level.exploder_killer_grenades != 1) { println("----- $" + local.targetname + "[" + local.int + "].grenades = " + $(local.targetname)[local.int].grenades) }
+			if($(local.targetname)[local.int].grenades != NIL && level.exploder_killer_grenades == 1) { println("----- $" + local.targetname + "[" + local.int + "].grenades = level.exploder_killer_grenades = 1") }
+			if($(local.targetname)[local.int].resettime != NIL && level.exploder_killer_resettime != 1) { println("----- $" + local.targetname + "[" + local.int + "].resettime = " + $(local.targetname)[local.int].resettime) }
+			if($(local.targetname)[local.int].resettime != NIL && level.exploder_killer_resettime == 1) { println("----- $" + local.targetname + "[" + local.int + "].resettime = level.exploder_killer_resettime = 1") }
+			if($(local.targetname)[local.int].noprint != NIL && level.exploder_killer_noprint != 1) { println("----- $" + local.targetname + "[" + local.int + "].noprint = " + $(local.targetname)[local.int].noprint) }
+			if($(local.targetname)[local.int].noprint != NIL && level.exploder_killer_noprint == 1) { println("----- $" + local.targetname + "[" + local.int + "].noprint = level.exploder_killer_noprint = 1") }
+			if($(local.targetname)[local.int].nosound != NIL && level.exploder_killer_nosound != 1) { println("----- $" + local.targetname + "[" + local.int + "].nosound = " + $(local.targetname)[local.int].nosound) }
+			if($(local.targetname)[local.int].nosound != NIL && level.exploder_killer_nosound == 1) { println("----- $" + local.targetname + "[" + local.int + "].nosound = level.exploder_killer_nosound = 1") }
+			if($(local.targetname)[local.int].noearthquake != NIL && level.exploder_killer_noearthquake != 1) { println("----- $" + local.targetname + "[" + local.int + "].noearthquake = " + $(local.targetname)[local.int].noearthquake) }
+			if($(local.targetname)[local.int].noearthquake != NIL && level.exploder_killer_noearthquake == 1) { println("----- $" + local.targetname + "[" + local.int + "].noearthquake = level.exploder_killer_noearthquake = 1") }
+			if($(local.targetname)[local.int].nottriggerable != NIL && level.exploder_killer_nottriggerable != 1) { println("----- $" + local.targetname + "[" + local.int + "].nottriggerable = " + $(local.targetname)[local.int].nottriggerable) }
+			if($(local.targetname)[local.int].nottriggerable != NIL && level.exploder_killer_nottriggerable == 1) { println("----- $" + local.targetname + "[" + local.int + "].nottriggerable = level.exploder_killer_nottriggerable = 1") }
+
+			if($(local.targetname)[local.int].anglex != NIL) { println("----- $" + local.targetname + "[" + local.int + "].anglex = " + $(local.targetname)[local.int].anglex) }
+			if($(local.targetname)[local.int].angley != NIL) { println("----- $" + local.targetname + "[" + local.int + "].angley = " + $(local.targetname)[local.int].angley) }
+			if($(local.targetname)[local.int].anglez != NIL) { println("----- $" + local.targetname + "[" + local.int + "].anglez = " + $(local.targetname)[local.int].anglez) }
+			if($(local.targetname)[local.int].anglesx != NIL) { println("----- $" + local.targetname + "[" + local.int + "].anglesx = " + $(local.targetname)[local.int].anglesx) }
+			if($(local.targetname)[local.int].anglesy != NIL) { println("----- $" + local.targetname + "[" + local.int + "].anglesy = " + $(local.targetname)[local.int].anglesy) }
+			if($(local.targetname)[local.int].anglesz != NIL) { println("----- $" + local.targetname + "[" + local.int + "].anglesz = " + $(local.targetname)[local.int].anglesz) }
+
+			if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname == "") { println("----- $" + local.targetname + "[" + local.int + "].gun = entity " + $(local.targetname)[local.int].gun.entnum) }
+			if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname != "")
+			{
+				if($($(local.targetname)[local.int].gun.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname)[local.int].gun.targetname).size; local.t++)
+					{
+						if($($(local.targetname)[local.int].gun.targetname)[local.t] == $(local.targetname)[local.int].gun) { println("----- $" + local.targetname + "[" + local.int + "].gun = " + $(local.targetname)[local.int].gun.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + "[" + local.int + "].gun = " + $(local.targetname)[local.int].gun.targetname) }
+			}
+			if($(local.targetname)[local.int].gun2 != NIL && $(local.targetname)[local.int].gun2 != NULL && $(local.targetname)[local.int].gun2.targetname == "") { println("----- $" + local.targetname + "[" + local.int + "].gun2 = entity " + $(local.targetname)[local.int].gun2.entnum) }
+			if($(local.targetname)[local.int].gun2 != NIL && $(local.targetname)[local.int].gun2 != NULL && $(local.targetname)[local.int].gun2.targetname != "")
+			{
+				if($($(local.targetname)[local.int].gun2.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname)[local.int].gun2.targetname).size; local.t++)
+					{
+						if($($(local.targetname)[local.int].gun2.targetname)[local.t] == $(local.targetname)[local.int].gun2) { println("----- $" + local.targetname + "[" + local.int + "].gun2 = " + $(local.targetname)[local.int].gun2.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + "[" + local.int + "].gun = " + $(local.targetname)[local.int].gun2.targetname) }
+			}
+
+			if($(local.targetname)[local.int].destination != NIL) { println("----- $" + local.targetname + "[" + local.int + "].destination = " + local.destination) }
+			if($(local.targetname)[local.int].trigger1 != NIL && $(local.targetname)[local.int].trigger1 != NULL && $(local.targetname)[local.int].trigger1.targetname == "") { println("----- $" + local.targetname + "[" + local.int + "].trigger1 = entity " + $(local.targetname)[local.int].trigger1.entnum) }
+			if($(local.targetname)[local.int].trigger1 != NIL && $(local.targetname)[local.int].trigger1 != NULL && $(local.targetname)[local.int].trigger1.targetname != "")
+			{
+				if($($(local.targetname)[local.int].trigger1.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname)[local.int].trigger1.targetname).size; local.t++)
+					{
+						if($($(local.targetname)[local.int].trigger1.targetname)[local.t] == $(local.targetname)[local.int].trigger1) { println("----- $" + local.targetname + "[" + local.int + "].trigger1 = " + $(local.targetname)[local.int].trigger1.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + "[" + local.int + "].trigger1 = " + $(local.targetname)[local.int].trigger1.targetname) }
+			}
+			if($(local.targetname)[local.int].trigger2 != NIL && $(local.targetname)[local.int].trigger2 != NULL && $(local.targetname)[local.int].trigger2.targetname == "") { println("----- $" + local.targetname + "[" + local.int + "].trigger2 = entity " + $(local.targetname)[local.int].trigger2.entnum) }
+			if($(local.targetname)[local.int].trigger2 != NIL && $(local.targetname)[local.int].trigger2 != NULL && $(local.targetname)[local.int].trigger2.targetname != "")
+			{
+				if($($(local.targetname)[local.int].trigger2.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $($(local.targetname)[local.int].trigger2.targetname).size; local.t++)
+					{
+						if($($(local.targetname)[local.int].trigger2.targetname)[local.t] == $(local.targetname)[local.int].trigger2) { println("----- $" + local.targetname + "[" + local.int + "].trigger2 = " + $(local.targetname)[local.int].trigger2.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { println("----- $" + local.targetname + "[" + local.int + "].trigger = " + $(local.targetname)[local.int].trigger2.targetname) }
+			}
+
+			if($player.size >= 1)
+			{
+				if($(local.targetname)[local.int].entnum != NIL) { $player iprint ("----- Teleporting to entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
+				if($(local.targetname)[local.int].entnum == NIL) { $player iprint ("----- Teleporting to simple entity: $" + local.targetname + "[" + local.int + "]") }
+				$player iprint ("----- $" + local.targetname + "[" + local.int + "].origin = " + local.origin)
+				$player iprint ("----- $" + local.targetname + "[" + local.int + "].angles = " + local.angles)
+				$player iprint ("----- $" + local.targetname + "[" + local.int + "].classname = " + $(local.targetname)[local.int].classname)
+				if($(local.targetname)[local.int].model != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].model = " + $(local.targetname)[local.int].model) }
+				if($(local.targetname)[local.int].target != "" && $($(local.targetname)[local.int].target) != NULL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].target = " + $(local.targetname)[local.int].target) }
+				if($(local.targetname)[local.int].target != "" && $($(local.targetname)[local.int].target) == NULL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].target = " + $(local.targetname)[local.int].target + " (NULL)") }
+				if($(local.targetname)[local.int].targetorigin != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].targetorigin = " + local.targetorigin) }
+				if($(local.targetname)[local.int].health != NIL && $(local.targetname)[local.int].health != 0) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].health = " + $(local.targetname)[local.int].health) }
+				if($(local.targetname)[local.int].scale != NIL && $(local.targetname)[local.int].scale != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].scale = " + $(local.targetname)[local.int].scale) }
+
+				if($(local.targetname)[local.int].group != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].group = " + $(local.targetname)[local.int].group) }
+				if($(local.targetname)[local.int].set != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].set = " + $(local.targetname)[local.int].set) }
+				if($(local.targetname)[local.int].pause != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].pause = " + $(local.targetname)[local.int].pause) }
+				if($(local.targetname)[local.int].damage != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].damage = " + $(local.targetname)[local.int].damage) }
+				if($(local.targetname)[local.int].damageradius != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].damageradius = " + $(local.targetname)[local.int].damageradius) }
+				if($(local.targetname)[local.int].fire != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].fire = " + $(local.targetname)[local.int].fire) }
+				if($(local.targetname)[local.int].walkable != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].walkable = " + $(local.targetname)[local.int].walkable) }
+				if($(local.targetname)[local.int].sound != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].sound = " + $(local.targetname)[local.int].sound) }
+				if($(local.targetname)[local.int].dead == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].dead = " + $(local.targetname)[local.int].dead) }
+				if($(local.targetname)[local.int].exploded == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].exploded = " + $(local.targetname)[local.int].exploded) }
+
+				if($(local.targetname)[local.int].onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].onlyprojectiles = " + $(local.targetname)[local.int].onlyprojectiles) }
+				if($(local.targetname)[local.int].onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].onlyprojectiles = level.exploder_killer_onlyprojectiles = 1") }
+				if($(local.targetname)[local.int].grenades != NIL && level.exploder_killer_grenades != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].grenades = " + $(local.targetname)[local.int].grenades) }
+				if($(local.targetname)[local.int].grenades != NIL && level.exploder_killer_grenades == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].grenades = level.exploder_killer_grenades = 1") }
+				if($(local.targetname)[local.int].resettime != NIL && level.exploder_killer_resettime != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].resettime = " + $(local.targetname)[local.int].resettime) }
+				if($(local.targetname)[local.int].resettime != NIL && level.exploder_killer_resettime == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].resettime = level.exploder_killer_resettime = 1") }
+				if($(local.targetname)[local.int].noprint != NIL && level.exploder_killer_noprint != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].noprint = " + $(local.targetname)[local.int].noprint) }
+				if($(local.targetname)[local.int].noprint != NIL && level.exploder_killer_noprint == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].noprint = level.exploder_killer_noprint = 1") }
+				if($(local.targetname)[local.int].nosound != NIL && level.exploder_killer_nosound != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].nosound = " + $(local.targetname)[local.int].nosound) }
+				if($(local.targetname)[local.int].nosound != NIL && level.exploder_killer_nosound == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].nosound = level.exploder_killer_nosound = 1") }
+				if($(local.targetname)[local.int].noearthquake != NIL && level.exploder_killer_noearthquake != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].noearthquake = " + $(local.targetname)[local.int].noearthquake) }
+				if($(local.targetname)[local.int].noearthquake != NIL && level.exploder_killer_noearthquake == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].noearthquake = level.exploder_killer_noearthquake = 1") }
+				if($(local.targetname)[local.int].nottriggerable != NIL && level.exploder_killer_nottriggerable != 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].nottriggerable = " + $(local.targetname)[local.int].nottriggerable) }
+				if($(local.targetname)[local.int].nottriggerable != NIL && level.exploder_killer_nottriggerable == 1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].nottriggerable = level.exploder_killer_nottriggerable = 1") }
+
+				if($(local.targetname)[local.int].anglex != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].anglex = " + $(local.targetname)[local.int].anglex) }
+				if($(local.targetname)[local.int].angley != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].angley = " + $(local.targetname)[local.int].angley) }
+				if($(local.targetname)[local.int].anglez != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].anglez = " + $(local.targetname)[local.int].anglez) }
+				if($(local.targetname)[local.int].anglesx != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].anglesx = " + $(local.targetname)[local.int].anglesx) }
+				if($(local.targetname)[local.int].anglesy != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].anglesy = " + $(local.targetname)[local.int].anglesy) }
+				if($(local.targetname)[local.int].anglesz != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].anglesz = " + $(local.targetname)[local.int].anglesz) }
+
+				if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname == "") { $player iprint ("----- $" + local.targetname + "[" + local.int + "].gun = entity " + $(local.targetname)[local.int].gun.entnum) }
+				if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname != "")
+				{
+					if($($(local.targetname)[local.int].gun.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname)[local.int].gun.targetname).size; local.t++)
+						{
+							if($($(local.targetname)[local.int].gun.targetname)[local.t] == $(local.targetname)[local.int].gun) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].gun = " + $(local.targetname)[local.int].gun.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + "[" + local.int + "].gun = " + $(local.targetname)[local.int].gun.targetname) }
+				}
+				if($(local.targetname)[local.int].gun2 != NIL && $(local.targetname)[local.int].gun2 != NULL && $(local.targetname)[local.int].gun2.targetname == "") { $player iprint ("----- $" + local.targetname + "[" + local.int + "].gun2 = entity " + $(local.targetname)[local.int].gun2.entnum) }
+				if($(local.targetname)[local.int].gun2 != NIL && $(local.targetname)[local.int].gun2 != NULL && $(local.targetname)[local.int].gun2.targetname != "")
+				{
+					if($($(local.targetname)[local.int].gun2.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname)[local.int].gun2.targetname).size; local.t++)
+						{
+							if($($(local.targetname)[local.int].gun2.targetname)[local.t] == $(local.targetname)[local.int].gun2) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].gun2 = " + $(local.targetname)[local.int].gun2.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + "[" + local.int + "].gun = " + $(local.targetname)[local.int].gun2.targetname) }
+				}
+
+				if($(local.targetname)[local.int].destination != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].destination = " + local.destination) }
+				if($(local.targetname)[local.int].trigger1 != NIL && $(local.targetname)[local.int].trigger1 != NULL && $(local.targetname)[local.int].trigger1.targetname == "") { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger1 = entity " + $(local.targetname)[local.int].trigger1.entnum) }
+				if($(local.targetname)[local.int].trigger1 != NIL && $(local.targetname)[local.int].trigger1 != NULL && $(local.targetname)[local.int].trigger1.targetname != "")
+				{
+					if($($(local.targetname)[local.int].trigger1.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname)[local.int].trigger1.targetname).size; local.t++)
+						{
+							if($($(local.targetname)[local.int].trigger1.targetname)[local.t] == $(local.targetname)[local.int].trigger1) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger1 = " + $(local.targetname)[local.int].trigger1.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger1 = " + $(local.targetname)[local.int].trigger1.targetname) }
+				}
+				if($(local.targetname)[local.int].trigger2 != NIL && $(local.targetname)[local.int].trigger2 != NULL && $(local.targetname)[local.int].trigger2.targetname == "") { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger2 = entity " + $(local.targetname)[local.int].trigger2.entnum) }
+				if($(local.targetname)[local.int].trigger2 != NIL && $(local.targetname)[local.int].trigger2 != NULL && $(local.targetname)[local.int].trigger2.targetname != "")
+				{
+					if($($(local.targetname)[local.int].trigger2.targetname).size > 1)
+					{
+						for(local.t = 1; local.t <= $($(local.targetname)[local.int].trigger2.targetname).size; local.t++)
+						{
+							if($($(local.targetname)[local.int].trigger2.targetname)[local.t] == $(local.targetname)[local.int].trigger2) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger2 = " + $(local.targetname)[local.int].trigger2.targetname + "[" + local.t + "]") }
+						}
+					}
+					else { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger = " + $(local.targetname)[local.int].trigger2.targetname) }
+				}
+			}
+		}
+	}
+	else if(self != NULL)
+	{
+		local.x = waitthread global/math.scr::simplify_decimal self.origin[0]
+		local.y = waitthread global/math.scr::simplify_decimal self.origin[1]
+		local.z = waitthread global/math.scr::simplify_decimal self.origin[2]
+		local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+		local.x = waitthread global/math.scr::simplify_decimal self.angles[0]
+		local.y = waitthread global/math.scr::simplify_decimal self.angles[1]
+		local.z = waitthread global/math.scr::simplify_decimal self.angles[2]
+		local.angles = "( " + local.x + " " + local.y + " " + local.z + " )"
+		local.x = waitthread global/math.scr::simplify_decimal self.destination[0]
+		local.y = waitthread global/math.scr::simplify_decimal self.destination[1]
+		local.z = waitthread global/math.scr::simplify_decimal self.destination[2]
+		local.destination = "( " + local.x + " " + local.y + " " + local.z + " )"
+		local.x = waitthread global/math.scr::simplify_decimal self.targetorigin[0]
+		local.y = waitthread global/math.scr::simplify_decimal self.targetorigin[1]
+		local.z = waitthread global/math.scr::simplify_decimal self.targetorigin[2]
+		local.targetorigin = "( " + local.x + " " + local.y + " " + local.z + " )"
+
+		println("----- Teleporting to entity number: " + self.entnum)
+		println("----- [" + self.entnum + "].origin = " + local.origin)
+		println("----- [" + self.entnum + "].angles = " + local.angles)
+		println("----- [" + self.entnum + "].classname = " + self.classname)
+		if(self.model != NIL) { println("----- [" + self.entnum + "].model = " + self.model) }
+		if(self.targetname != "")
+		{
+			if($(self.targetname).size > 1)
+			{
+				for(local.t = 1; local.t <= $(self.targetname).size; local.t++)
+				{
+					if($(self.targetname)[local.t] == self) { println("----- [" + self.entnum + "].targetname = " + self.targetname + "[" + local.t + "]") }
+				}
+			}
+			else { println("----- [" + self.entnum + "].targetname = " + self.targetname) }
+		}
+		if(self.target != "" && $(self.target) != NULL) { println("----- [" + self.entnum + "].target = " + self.target) }
+		if(self.target != "" && $(self.target) == NULL) { println("----- [" + self.entnum + "].target = " + self.target + " (NULL)") }
+		if(self.targetorigin != NIL) { println("----- [" + self.entnum + "].targetorigin = " + local.targetorigin) }
+		if(self.health != 0) { println("----- [" + self.entnum + "].health = " + self.health) }
+		if(self.scale != 1) { println("----- [" + self.entnum + "].scale = " + self.scale) }
+
+		if(self.group != NIL) { println("----- [" + self.entnum + "].group = " + self.group) }
+		if(self.set != NIL) { println("----- [" + self.entnum + "].set = " + self.set) }
+		if(self.pause != NIL) { println("----- [" + self.entnum + "].pause = " + self.pause) }
+		if(self.damage != NIL) { println("----- [" + self.entnum + "].damage = " + self.damage) }
+		if(self.damageradius != NIL) { println("----- [" + self.entnum + "].damageradius = " + self.damageradius) }
+		if(self.fire != NIL) { println("----- [" + self.entnum + "].fire = " + self.fire) }
+		if(self.walkable != NIL) { println("----- [" + self.entnum + "].walkable = " + self.walkable) }
+		if(self.sound != NIL) { println("----- [" + self.entnum + "].sound = " + self.sound) }
+		if(self.dead == 1) { println("----- [" + self.entnum + "].dead = " + self.dead) }
+		if(self.exploded == 1) { println("----- [" + self.entnum + "].exploded = " + self.exploded) }
+
+		if(self.onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles != 1) { println("----- [" + self.entnum + "].onlyprojectiles = " + self.onlyprojectiles) }
+		if(self.onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles == 1) { println("----- [" + self.entnum + "].onlyprojectiles = level.exploder_killer_onlyprojectiles = 1") }
+		if(self.grenades != NIL && level.exploder_killer_grenades != 1) { println("----- [" + self.entnum + "].grenades = " + self.grenades) }
+		if(self.grenades != NIL && level.exploder_killer_grenades == 1) { println("----- [" + self.entnum + "].grenades = level.exploder_killer_grenades = 1") }
+		if(self.resettime != NIL && level.exploder_killer_resettime != 1) { println("----- [" + self.entnum + "].resettime = " + self.resettime) }
+		if(self.resettime != NIL && level.exploder_killer_resettime == 1) { println("----- [" + self.entnum + "].resettime = level.exploder_killer_resettime = 1") }
+		if(self.noprint != NIL && level.exploder_killer_noprint != 1) { println("----- [" + self.entnum + "].noprint = " + self.noprint) }
+		if(self.noprint != NIL && level.exploder_killer_noprint == 1) { println("----- [" + self.entnum + "].noprint = level.exploder_killer_noprint = 1") }
+		if(self.nosound != NIL && level.exploder_killer_nosound != 1) { println("----- [" + self.entnum + "].nosound = " + self.nosound) }
+		if(self.nosound != NIL && level.exploder_killer_nosound == 1) { println("----- [" + self.entnum + "].nosound = level.exploder_killer_nosound = 1") }
+		if(self.noearthquake != NIL && level.exploder_killer_noearthquake != 1) { println("----- [" + self.entnum + "].noearthquake = " + self.noearthquake) }
+		if(self.noearthquake != NIL && level.exploder_killer_noearthquake == 1) { println("----- [" + self.entnum + "].noearthquake = level.exploder_killer_noearthquake = 1") }
+		if(self.nottriggerable != NIL && level.exploder_killer_nottriggerable != 1) { println("----- [" + self.entnum + "].nottriggerable = " + self.nottriggerable) }
+		if(self.nottriggerable != NIL && level.exploder_killer_nottriggerable == 1) { println("----- [" + self.entnum + "].nottriggerable = level.exploder_killer_nottriggerable = 1") }
+
+		if(self.anglex != NIL) { println("----- [" + self.entnum + "].anglex = " + self.anglex) }
+		if(self.angley != NIL) { println("----- [" + self.entnum + "].angley = " + self.angley) }
+		if(self.anglez != NIL) { println("----- [" + self.entnum + "].anglez = " + self.anglez) }
+		if(self.anglesx != NIL) { println("----- [" + self.entnum + "].anglesx = " + self.anglesx) }
+		if(self.anglesy != NIL) { println("----- [" + self.entnum + "].anglesy = " + self.anglesy) }
+		if(self.anglesz != NIL) { println("----- [" + self.entnum + "].anglesz = " + self.anglesz) }
+
+		if(self.gun != NIL && self.gun != NULL && self.gun.targetname == "") { println("----- [" + self.entnum + "].gun = entity " + self.gun.entnum) }
+		if(self.gun != NIL && self.gun != NULL && self.gun.targetname != "")
+		{
+			if($(self.gun.targetname).size > 1)
+			{
+				for(local.t = 1; local.t <= $(self.gun.targetname).size; local.t++)
+				{
+					if($(self.gun.targetname)[local.t] == self.gun) { println("----- [" + self.entnum + "].gun = " + self.gun.targetname + "[" + local.t + "]") }
+				}
+			}
+			else { println("----- [" + self.entnum + "].gun = " + self.gun.targetname) }
+		}
+		if(self.gun2 != NIL && self.gun2 != NULL && self.gun2.targetname == "") { println("----- [" + self.entnum + "].gun2 = entity " + self.gun2.entnum) }
+		if(self.gun2 != NIL && self.gun2 != NULL && self.gun2.targetname != "")
+		{
+			if($(self.gun2.targetname).size > 1)
+			{
+				for(local.t = 1; local.t <= $(self.gun2.targetname).size; local.t++)
+				{
+					if($(self.gun2.targetname)[local.t] == self.gun2) { println("----- [" + self.entnum + "].gun2 = " + self.gun2.targetname + "[" + local.t + "]") }
+				}
+			}
+			else { println("----- [" + self.entnum + "].gun = " + self.gun2.targetname) }
+		}
+
+		if(self.destination != NIL) { println("----- [" + self.entnum + "].destination = " + local.destination) }
+		if(self.trigger1 != NIL && self.trigger1 != NULL && self.trigger1.targetname == "") { println("----- [" + self.entnum + "].trigger1 = entity " + self.trigger1.entnum) }
+		if(self.trigger1 != NIL && self.trigger1 != NULL && self.trigger1.targetname != "")
+		{
+			if($(self.trigger1.targetname).size > 1)
+			{
+				for(local.t = 1; local.t <= $(self.trigger1.targetname).size; local.t++)
+				{
+					if($(self.trigger1.targetname)[local.t] == self.trigger1) { println("----- [" + self.entnum + "].trigger1 = " + self.trigger1.targetname + "[" + local.t + "]") }
+				}
+			}
+			else { println("----- [" + self.entnum + "].trigger1 = " + self.trigger1.targetname) }
+		}
+		if(self.trigger2 != NIL && self.trigger2 != NULL && self.trigger2.targetname == "") { println("----- [" + self.entnum + "].trigger2 = entity " + self.trigger2.entnum) }
+		if(self.trigger2 != NIL && self.trigger2 != NULL && self.trigger2.targetname != "")
+		{
+			if($(self.trigger2.targetname).size > 1)
+			{
+				for(local.t = 1; local.t <= $(self.trigger2.targetname).size; local.t++)
+				{
+					if($(self.trigger2.targetname)[local.t] == self.trigger2) { println("----- [" + self.entnum + "].trigger2 = " + self.trigger2.targetname + "[" + local.t + "]") }
+				}
+			}
+			else { println("----- [" + self.entnum + "].trigger = " + self.trigger2.targetname) }
+		}
+
+		if($player.size >= 1)
+		{
+			$player iprint ("----- Teleporting to entity number: " + self.entnum)
+			$player iprint ("----- [" + self.entnum + "].origin = " + local.origin)
+			$player iprint ("----- [" + self.entnum + "].angles = " + local.angles)
+			$player iprint ("----- [" + self.entnum + "].classname = " + self.classname)
+			if(self.model != NIL) { $player iprint ("----- [" + self.entnum + "].model = " + self.model) }
+			if(self.targetname != "")
+			{
+				if($(self.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $(self.targetname).size; local.t++)
+					{
+						if($(self.targetname)[local.t] == self) { $player iprint ("----- [" + self.entnum + "].targetname = " + self.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { $player iprint ("----- [" + self.entnum + "].targetname = " + self.targetname) }
+			}
+			if(self.target != "" && $(self.target) != NULL) { $player iprint ("----- [" + self.entnum + "].target = " + self.target) }
+			if(self.target != "" && $(self.target) == NULL) { $player iprint ("----- [" + self.entnum + "].target = " + self.target + " (NULL)") }
+			if(self.targetorigin != NIL) { $player iprint ("----- [" + self.entnum + "].targetorigin = " + local.targetorigin) }
+			if(self.health != 0) { $player iprint ("----- [" + self.entnum + "].health = " + self.health) }
+			if(self.scale != 1) { $player iprint ("----- [" + self.entnum + "].scale = " + self.scale) }
+
+			if(self.group != NIL) { $player iprint ("----- [" + self.entnum + "].group = " + self.group) }
+			if(self.set != NIL) { $player iprint ("----- [" + self.entnum + "].set = " + self.set) }
+			if(self.pause != NIL) { $player iprint ("----- [" + self.entnum + "].pause = " + self.pause) }
+			if(self.damage != NIL) { $player iprint ("----- [" + self.entnum + "].damage = " + self.damage) }
+			if(self.damageradius != NIL) { $player iprint ("----- [" + self.entnum + "].damageradius = " + self.damageradius) }
+			if(self.fire != NIL) { $player iprint ("----- [" + self.entnum + "].fire = " + self.fire) }
+			if(self.walkable != NIL) { $player iprint ("----- [" + self.entnum + "].walkable = " + self.walkable) }
+			if(self.sound != NIL) { $player iprint ("----- [" + self.entnum + "].sound = " + self.sound) }
+			if(self.dead == 1) { $player iprint ("----- [" + self.entnum + "].dead = " + self.dead) }
+			if(self.exploded == 1) { $player iprint ("----- [" + self.entnum + "].exploded = " + self.exploded) }
+
+			if(self.onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles != 1) { $player iprint ("----- [" + self.entnum + "].onlyprojectiles = " + self.onlyprojectiles) }
+			if(self.onlyprojectiles != NIL && level.exploder_killer_onlyprojectiles == 1) { $player iprint ("----- [" + self.entnum + "].onlyprojectiles = level.exploder_killer_onlyprojectiles = 1") }
+			if(self.grenades != NIL && level.exploder_killer_grenades != 1) { $player iprint ("----- [" + self.entnum + "].grenades = " + self.grenades) }
+			if(self.grenades != NIL && level.exploder_killer_grenades == 1) { $player iprint ("----- [" + self.entnum + "].grenades = level.exploder_killer_grenades = 1") }
+			if(self.resettime != NIL && level.exploder_killer_resettime != 1) { $player iprint ("----- [" + self.entnum + "].resettime = " + self.resettime) }
+			if(self.resettime != NIL && level.exploder_killer_resettime == 1) { $player iprint ("----- [" + self.entnum + "].resettime = level.exploder_killer_resettime = 1") }
+			if(self.noprint != NIL && level.exploder_killer_noprint != 1) { $player iprint ("----- [" + self.entnum + "].noprint = " + self.noprint) }
+			if(self.noprint != NIL && level.exploder_killer_noprint == 1) { $player iprint ("----- [" + self.entnum + "].noprint = level.exploder_killer_noprint = 1") }
+			if(self.nosound != NIL && level.exploder_killer_nosound != 1) { $player iprint ("----- [" + self.entnum + "].nosound = " + self.nosound) }
+			if(self.nosound != NIL && level.exploder_killer_nosound == 1) { $player iprint ("----- [" + self.entnum + "].nosound = level.exploder_killer_nosound = 1") }
+			if(self.noearthquake != NIL && level.exploder_killer_noearthquake != 1) { $player iprint ("----- [" + self.entnum + "].noearthquake = " + self.noearthquake) }
+			if(self.noearthquake != NIL && level.exploder_killer_noearthquake == 1) { $player iprint ("----- [" + self.entnum + "].noearthquake = level.exploder_killer_noearthquake = 1") }
+			if(self.nottriggerable != NIL && level.exploder_killer_nottriggerable != 1) { $player iprint ("----- [" + self.entnum + "].nottriggerable = " + self.nottriggerable) }
+			if(self.nottriggerable != NIL && level.exploder_killer_nottriggerable == 1) { $player iprint ("----- [" + self.entnum + "].nottriggerable = level.exploder_killer_nottriggerable = 1") }
+
+			if(self.anglex != NIL) { $player iprint ("----- [" + self.entnum + "].anglex = " + self.anglex) }
+			if(self.angley != NIL) { $player iprint ("----- [" + self.entnum + "].angley = " + self.angley) }
+			if(self.anglez != NIL) { $player iprint ("----- [" + self.entnum + "].anglez = " + self.anglez) }
+			if(self.anglesx != NIL) { $player iprint ("----- [" + self.entnum + "].anglesx = " + self.anglesx) }
+			if(self.anglesy != NIL) { $player iprint ("----- [" + self.entnum + "].anglesy = " + self.anglesy) }
+			if(self.anglesz != NIL) { $player iprint ("----- [" + self.entnum + "].anglesz = " + self.anglesz) }
+
+			if(self.gun != NIL && self.gun != NULL && self.gun.targetname == "") { $player iprint ("----- [" + self.entnum + "].gun = entity " + self.gun.entnum) }
+			if(self.gun != NIL && self.gun != NULL && self.gun.targetname != "")
+			{
+				if($(self.gun.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $(self.gun.targetname).size; local.t++)
+					{
+						if($(self.gun.targetname)[local.t] == self.gun) { $player iprint ("----- [" + self.entnum + "].gun = " + self.gun.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { $player iprint ("----- [" + self.entnum + "].gun = " + self.gun.targetname) }
+			}
+			if(self.gun2 != NIL && self.gun2 != NULL && self.gun2.targetname == "") { $player iprint ("----- [" + self.entnum + "].gun2 = entity " + self.gun2.entnum) }
+			if(self.gun2 != NIL && self.gun2 != NULL && self.gun2.targetname != "")
+			{
+				if($(self.gun2.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $(self.gun2.targetname).size; local.t++)
+					{
+						if($(self.gun2.targetname)[local.t] == self.gun2) { $player iprint ("----- [" + self.entnum + "].gun2 = " + self.gun2.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { $player iprint ("----- [" + self.entnum + "].gun = " + self.gun2.targetname) }
+			}
+
+			if(self.destination != NIL) { $player iprint ("----- [" + self.entnum + "].destination = " + local.destination) }
+			if(self.trigger1 != NIL && self.trigger1 != NULL && self.trigger1.targetname == "") { $player iprint ("----- [" + self.entnum + "].trigger1 = entity " + self.trigger1.entnum) }
+			if(self.trigger1 != NIL && self.trigger1 != NULL && self.trigger1.targetname != "")
+			{
+				if($(self.trigger1.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $(self.trigger1.targetname).size; local.t++)
+					{
+						if($(self.trigger1.targetname)[local.t] == self.trigger1) { $player iprint ("----- [" + self.entnum + "].trigger1 = " + self.trigger1.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { $player iprint ("----- [" + self.entnum + "].trigger1 = " + self.trigger1.targetname) }
+			}
+			if(self.trigger2 != NIL && self.trigger2 != NULL && self.trigger2.targetname == "") { $player iprint ("----- [" + self.entnum + "].trigger2 = entity " + self.trigger2.entnum) }
+			if(self.trigger2 != NIL && self.trigger2 != NULL && self.trigger2.targetname != "")
+			{
+				if($(self.trigger2.targetname).size > 1)
+				{
+					for(local.t = 1; local.t <= $(self.trigger2.targetname).size; local.t++)
+					{
+						if($(self.trigger2.targetname)[local.t] == self.trigger2) { $player iprint ("----- [" + self.entnum + "].trigger2 = " + self.trigger2.targetname + "[" + local.t + "]") }
+					}
+				}
+				else { $player iprint ("----- [" + self.entnum + "].trigger = " + self.trigger2.targetname) }
+			}
+		}
+	}
 end

@@ -15,6 +15,7 @@
 //
 // For testing where the podium will be, run "exec global/victory_podium.scr::test ( 220 -41 48 ) -90" and change origin + angle to spawn 3 visible solid crates.
 // For testing only the fireworks, run "exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90" and change origin + angle to continuously launch fireworks (to check distance, particle time, explosion scale, etc).
+// For testing the whole script & the $intermission_camera placement, simply type into console: "timelimit 0.5".
 //
 // exec global/victory_podium.scr::test ( 220 -41 48 ) -90	// testing purposes only; spawn and show the podium crates.
 // exec global/victory_podium.scr::fireworks ( 220 -41 48 ) -90	// testing purposes only; launch fireworks continuously.
@@ -142,10 +143,7 @@ map_ended local.origin local.angle local.timeduration local.distance local.parti
 			{
 				fadein 0.5 0 0 0 1
 				wait 0.1
-				freezeplayer
-				$player nodamage
-				$player hide
-				cuecamera $intermission_camera
+				thread cameracue // continuously cuecamera for players that were dead when this thread began.
 			}
 		}
 	}
@@ -153,6 +151,18 @@ map_ended local.origin local.angle local.timeduration local.distance local.parti
 	thread spawn_victors // intermission has started
 	if(local.nofireworks != 1) { thread fireworks local.origin local.angle local.distance local.particletime local.explosionscale }
 	thread change_maps local.timeduration
+end
+
+cameracue:
+
+	while(1)
+	{
+		freezeplayer
+		$player nodamage
+		$player hide
+		cuecamera $intermission_camera
+		waitframe
+	}
 end
 
 change_maps local.time:

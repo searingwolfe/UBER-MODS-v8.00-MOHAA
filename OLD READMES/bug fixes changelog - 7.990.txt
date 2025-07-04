@@ -1,0 +1,126 @@
+v7.990 (7-4-2025): - New cvar added: "proximity_pointer [player clientnum]".
+- This cvar gives any player a simple laser pointer for iprinting & console-printing origin + angles (in simplified decimals), model, targetname, etc of an entity/trigger (including notsolid ones), that is closest to the pointed target.
+- Hold USE(e) + Left-click to find the entity closest to the laser pointer.
+- Right-click to point the laser at the exact origin of the targeted entity.
+- Hold right-click after finding the nearest target entity for 3+ seconds to remove the entity.
+- Lean left/right + right-click to teleport to the pointed target.
+
+- Type "proximity_pointer [player number or player name]" into console to give/take a proximity pointer.
+- i.e. "proximity_pointer 1". Giving $player[1] a proximity_pointer.
+
+---------------
+
+- global/exploder.scr revamped: In order to reduce the number of exploder ents on the map, the $exploderchunk.target ents were removed and their origins saved to $exploderchunk.targetorigin.
+- Now, the $exploderfire entities are also auto-removed when map loads, after saving their data to a "level.exploderfire" matrix array, and only spawned when "::explode" thread runs (reduces map's entity count).
+- From level.exploderfire: "pause" = wait in seconds until beginning exploderfire emitter. "fire" [0 or 1] = keep emitter on instead of deleting it and play fire loop sounds (not used in any original maps).
+
+- To adjust any "level.exploderfire" data, simply change the $exploderfire.origin, .angles, .pause, etc before running "exec global/exploder.scr".
+- For example: to prevent $exploderfire[4] from waiting 2 seconds before turning on (pause = 2), set $exploderfire[4].pause = 0, then run "exec global/exploder.scr".
+
+- Example of a map's level.exploderfire array:	//	model	origin	angles	scale	set	pause	damage	damageradius	fire	// columns [1] to [9]
+
+	level.exploderfire = makeArray
+		models/emitters/explosion_bombdirt.tik 	( 100 200 300 ) ( 0 0 0 ) 1 	101 	0 256 500 0	// $exploderfire[1]
+		models/emitters/explosion_bombdirt.tik 	( 150 250 350 ) ( 0 0 0 ) 1 	102 	0 256 500 0	// $exploderfire[2]
+		models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	1 256 500 0	// $exploderfire[3]
+		models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	2 256 500 0	// $exploderfire[4]
+		models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	1 256 500 0	// $exploderfire[5]
+		models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	2 256 500 0	// $exploderfire[6]
+	endArray
+
+---------------
+
+- Added "findset exploderfire" (or exploderfires) for the "findset" cvar, printing all $exploderfire data saved within the "level.exploderfire" matrix array ($exploderfire entities are removed afterwards).
+
+- Moved the various entity info printing by the cvars: "find", "findent" "entity_pointer", "proximity_pointer" into the "cvars/cvars.scr::entprint" thread (below all the cvar descriptions).
+- The "entity_pointer" will now print in simplified decimals instead of integers.
+- Printed entity info from cvars now includes much more variables for exploders & others: targetorigin, group, set, pause, damage, damageradius, sound, .dead, exploded, onlyprojectiles, grenades, resettime, noprint, nosound, noearthquake, nottriggerable, and more for $exploder ents.
+- Fixed "drawsize" cvar not resetting properly if the error message "this entity's setsizes have already been drawn!" appears.
+
+---------------
+
+- Improved global/exploder_killer.scr with new features & bug fixes, such as fully resetting the exploders if ".resettime" is added to the $exploder.
+
+- To allow exploder_killer threads to reset after a certain amount of time, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+ 	level.exploder_killer_resettime = 60 // seconds
+	$exploder[4].resettime = 60 // for only $exploder[4], or other $exploder[index].
+
+- To prevent this script from playing large explosion sounds, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+ 	level.exploder_killer_nosound = 1
+	$exploder[4].nosound = 1
+
+- To prevent this script from making camera shaking earthquake effects, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
+ 	level.exploder_killer_noearthquake = 1
+	$exploder[4].noearthquake = 1
+
+- To only allow another script to blow up the exploders (no projectiles, no $world radiusdamages, nothing), add the level variable below to any map script containing "exec global/exploder_killer.scr" threads,
+- and set the desired "$exploder.dead = 1" or $exploder_trigshot.dead = 1" in another script to begin explosions from the "exploder_killer" thread.
+	level.exploder_killer_nottriggerable = 1
+	$exploder[4].nottriggerable = 1
+
+- When resetting, a "wait (local.s / 10)" line (where local.s = the $exploder[index] number) ensures that threads rerun in the same exact order as the initially-run exploder_killer threads, otherwise "No $exploder_trigshot found" errors may print.
+- Ensured that global/exploder_killer.scr cannot run for more than 1 exploder.
+- Fixed a bug that allows bullets to kill an exploder if a projectile flies through the trigger but doesn't blow up near the exploder, by resetting the $exploder_trigproj trigger 2 frames after a projectile is detected (projectiles trigger them once per frame).
+
+---------------
+
+- In global/cyberattack_searchdestroy.scr: fixed $bombexplosive not properly switching between the initial Allies/Axis bomb origins when level.changesides switches between 0/1 respectively.
+- This bug only occurred in Search & Destroy gametype, and only happened if "bombsites are switching sides" without the $bombexplosive getting picked up from its initial origin during the previous round.
+
+- Flyable planes' bullets will no longer trigger exploder_killer.scr threads, since the server_planes/damage.scr script checks if bullets are landing within any $exploder_trigshot's setsize volumes (if so, the bullets' $world radiusdamage is turned off, but they can still kill players).
+- Fixed a rare bug where players driving planes that get show down by enemies could no longer use vehicles/jetpacks/guided missiles since "self.flying = 0" never ran for them when they stopped flying.
+
+- Fixed global/dog.scr trigger's "angertime" parameter that was counting seconds twice as fast.
+- When the dog trigger is angry after shooting it "bulletsanger" times, the dog will bite players only one at a time (thread "biteplayers" runs once instead of spamming).
+- Added sounds to the dog trigger's bite anim when angry and biting nearby players, and timed the bite anim to kill nearby players exactly when the dog's anim starts biting.
+
+- In global/water_wade_sounds.scr, ensured that both $player[local.i].water_temp_ent & $player[local.i].water_temp_ent2 entities are removed for all cases, otherwise these could build up and crash the server if going beyond 1024 entities on the map.
+- Fixed a server-crashing bug that occurs on some maps (so far, only M5L3), where the "water_temp_ent" entities were not gluing to the player and instead spamming the console with "script_model::glue : Cannot glue to master because of: MAX_GLUE_CHILDREN reached,
+- by keeping the "water_temp"ent" origins at the player's origin instead of directly gluing to the player.
+
+- Fixed a bug in jetpack/trigger.scr that allowed non-Player entities (such as vehicles in rare cases) to trigger the jetpack, causing lots of console errors due to jetpacks attempting to attach themselves to nonexistent Spine tags.
+- All map_triggers/tele.scr corona_red teleporters now have ".trigger2" = the destination trigger if it exists, and ".trigger1" = the origin trigger if a destination trigger exists.
+
+- Improved the mini-flak88 flamethrowers (exclusive to UBER Base-Builder gametype) by keeping the flames aligned with the player's line of sight.
+- Readded some gravity to the flamethrowers' fire projectiles.
+
+- The global/victory_podium.scr will now continuously "cuecamera" for all players when map time ends instead of running once, allowing players that were dead & respawned immediately after map time ends to see the victory podium.
+
+- Replaced all "removeclass ScriptOrigin" lines with a thread that first waits for exec global/exploder.scr to finish, for all maps with exploders.
+- Without this, $exploderchunk ents' origins will not be properly saved to $exploderchunk.targetorigin, and $exploder explosions will not spread chunks out from their center.
+
+- Fixed explosive barrels in M3l1B.
+- Fixed some ambience volumes in M2L2A and M2L2B.
+- Added destructible transformers back into M4l2.
+
+---------------
+
+- M5L3 fully modded.
+
+- Airstrikes occur at random times across any X-Y-axis direction on the map.
+- One mortar dirt explosion will occur randomly on the map after a random short amount of time.
+- Water wade sounds added for the river.
+
+- Numerous lasers outline invisible building wall, the map's edges in the Axis spawn, and invisible platforms inside some buildings.
+- The blue map edge lasers' color will always be the negative color of the $world farplane_color.
+- Solidified floors inside various Allies spawn buildings.
+- 3 fireplaces in Allies spawn buildings have a valve switch for closing/opening the chimney valve, which causes black smoke to emit/stop emitting (respectively) out of the fireplace.
+- 1 cabinet can be opened/closed.
+- The undermap teles will kill players instead of respawning them, since simply respawning caused player client lag.
+
+- Since this map has 48 exploders (and hundreds of exploder-related entities), almost all mods are disabled & all exploders are enabled if the cvar "g_ubermods 1" is set.
+- For "g_ubermods 2":
+	- 4 tanks, 8 flak88, 8 extra throwing knives added to the map (vehicles, nebelwerfers, flyable planes, guided missiles, jetpacks removed due to too many sound aliases being loaded in, causing players' games to crash).
+	- Only a few red teleporters are added.
+	- Some lasers & teles are removed, while others are added when some buildings blow up.
+	- The detonator near the bridge will blow up the entire bridge, with numerous added emitters ($exploderchunk ents were modified to not fly everywhere, since this caused lots of player client lag).
+	- The leftmost Axis destructible building (#set 5) originally had unused chunks. Now if exploded, this building will fly up into the air before crashing down, making a 2nd explosion, and spreading the formerly unused chunks.
+	- 11 structures can be blown up with rockets/tanks or other large explosives (not including grenades). These exploders are removed if "g_ubergametype bb" is set (base-builder).
+- For "g_ubermods 1":
+	- All red teleporters are added.
+	- Airstrikes, crater mortar explosions, and random mortar strikes (occurring anywhere on the map) are included for "g_ubermods 1".
+	- 8 spotlights and a spotlight_colorswitch in the sniper tower, LED Dot traps, and 2 radiobomb walkies added (removed if "g_ubergametype bb", base-builder, is set).
+	- 6 bangalore wallbombs added, and 2 sets of bangalore wallbombs that are triggered by detonators.
+	- The detonator near the bridge blows up a large set of bangalore wallbombs across the bridge.
+
+<><><> <><><>

@@ -18,7 +18,13 @@ main: // findset.scr. Run "exec global/drawsize.scr" in any map script to use th
 	while(string(getcvar("drawsize")) == "") { waitframe }
 	local.name = string(getcvar("drawsize"))
 
-	if(level.lasers_drawsizecvar[local.name] == 1) { println("----- ERROR. This entity's setsizes have already been drawn!"); end }
+	if(level.lasers_drawsizecvar[local.name] == 1)
+	{
+		println("----- ERROR. This entity's setsizes have already been drawn!")
+		if(local.name != "") { setcvar "drawsize" "" }
+  		thread main
+		end
+	}
 
 	if($(local.name) != NULL)
 	{

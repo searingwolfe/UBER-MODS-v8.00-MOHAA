@@ -68,7 +68,11 @@ players_water_sounds local.bigsplash:
 								if($player[local.i] getposition == "offground" && $player[local.i].water_falling != 1) { $player[local.i] thread water_volumes_falling local.bigsplash }
 							}
 						}
-						else if($player[local.i].water_temp_ent != NIL && $player[local.i].water_temp_ent != NULL) { $player[local.i].water_temp_ent remove }
+						else
+						{
+							if($player[local.i].water_temp_ent != NIL && $player[local.i].water_temp_ent != NULL) { $player[local.i].water_temp_ent remove }
+							if($player[local.i].water_temp_ent2 != NIL && $player[local.i].water_temp_ent2 != NULL) { $player[local.i].water_temp_ent2 remove }
+						}
 					}
 				}
 			}
@@ -83,13 +87,23 @@ water_temp_ent:
 
 	local.ent = spawn script_model	// one entity for left-foot water-movement sounds and the player's entity for the right-foot.
 	local.ent model fx/dummy.tik	// starting another "playsound" on the same entity will prematurely end the previous sound that is playing.
-	local.ent glue self
+	local.ent thread glue self
 	self.water_temp_ent = local.ent
 
 	local.ent2 = spawn script_model // secondary entity for initial splash sound into the water, since players may start moving in the water before the splash sound finishes.
 	local.ent2 model fx/dummy.tik
-	local.ent2 glue self
+	local.ent2 thread glue self	// don't directly glue to player, otherwise "script_model::glue : Cannot glue to master because of: MAX_GLUE_CHILDREN reached" errors may spam console while in water (so far, only in M5L3).
 	self.water_temp_ent2 = local.ent2
+end
+
+glue local.player:
+
+	while(self != NULL && local.player != NIL && local.player != NULL)
+	{
+		self.origin = local.player.origin
+		waitframe
+	}
+	if(self != NULL) { self remove }
 end
 
 //-----------------------------------------------------------------------------
