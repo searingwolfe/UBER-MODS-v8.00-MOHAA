@@ -1237,14 +1237,14 @@ Further revamped global/exploder.scr (fewer entities)
 
 	- Example of a map's level.exploderfire array:	//	model	origin	angles	scale	set	pause	damage	damageradius	fire	// columns [1] to [9]
 
-			level.exploderfire = makeArray
-				models/emitters/explosion_bombdirt.tik 	( 100 200 300 ) ( 0 0 0 ) 1 	101 	0 256 500 0	// $exploderfire[1]
-				models/emitters/explosion_bombdirt.tik 	( 150 250 350 ) ( 0 0 0 ) 1 	102 	0 256 500 0	// $exploderfire[2]
-				models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	1 256 500 0	// $exploderfire[3]
-				models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	2 256 500 0	// $exploderfire[4]
-				models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	1 256 500 0	// $exploderfire[5]
-				models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	2 256 500 0	// $exploderfire[6]
-			endArray
+		level.exploderfire = makeArray
+			models/emitters/explosion_bombdirt.tik 	( 100 200 300 ) ( 0 0 0 ) 1 	101 	0 256 500 0	// $exploderfire[1]
+			models/emitters/explosion_bombdirt.tik 	( 150 250 350 ) ( 0 0 0 ) 1 	102 	0 256 500 0	// $exploderfire[2]
+			models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	1 256 500 0	// $exploderfire[3]
+			models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	2 256 500 0	// $exploderfire[4]
+			models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	1 256 500 0	// $exploderfire[5]
+			models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	2 256 500 0	// $exploderfire[6]
+		endArray
 
 More "findset" cvar options
 
@@ -1260,21 +1260,21 @@ Improved global/exploder_killer.scr & new features
 	- Improved global/exploder_killer.scr with new features & bug fixes, such as fully resetting the exploders if ".resettime" is added to the $exploder.
 
 	- To allow exploder_killer threads to reset after a certain amount of time, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
-		 	level.exploder_killer_resettime = 60 // seconds
-			$exploder[4].resettime = 60 // for only $exploder[4], or other $exploder[index].
+			level.exploder_killer_resettime = 60 // seconds
+		$exploder[4].resettime = 60 // for only $exploder[4], or other $exploder[index].
 
 	- To prevent this script from playing large explosion sounds, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
- 			level.exploder_killer_nosound = 1
-			$exploder[4].nosound = 1
+ 		level.exploder_killer_nosound = 1
+		$exploder[4].nosound = 1
 
 	- To prevent this script from making camera shaking earthquake effects, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
- 			level.exploder_killer_noearthquake = 1
-			$exploder[4].noearthquake = 1
+ 		level.exploder_killer_noearthquake = 1
+		$exploder[4].noearthquake = 1
 
 	- To only allow another script to blow up the exploders (no projectiles, no $world radiusdamages, nothing), add the level variable below to any map script containing "exec global/exploder_killer.scr" threads,
 	- and set the desired "$exploder.dead = 1" or $exploder_trigshot.dead = 1" in another script to begin explosions from the "exploder_killer" thread.
-			level.exploder_killer_nottriggerable = 1
-			$exploder[4].nottriggerable = 1
+		level.exploder_killer_nottriggerable = 1
+		$exploder[4].nottriggerable = 1
 
 	- When resetting, a "wait (local.s / 10)" line (where local.s = the $exploder[index] number) ensures that threads rerun in the same exact order as the initially-run exploder_killer threads, otherwise "No $exploder_trigshot found" errors may print.
 	- Ensured that global/exploder_killer.scr cannot run for more than 1 exploder.
