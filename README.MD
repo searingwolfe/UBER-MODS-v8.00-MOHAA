@@ -1,4 +1,4 @@
-	*Current Version: 7.990 - Updated: 7/4/2025*
+	*Current Version: 7.991 - Updated: 8/3/2025*
 
 ### Table of Contents
 
@@ -167,8 +167,9 @@ ADDITIONAL FEATURES:
 	When a new object is picked up, their build-laser's distance is automatically reset back to "level.basebuild_laserdist" (default = 350).
 
 	Hold USE(e) + Lean left/right to activate a yellow "Builder Remover Laser".
-	Hold USE(e) + hold FIRE at an object, lift, or tele that you placed to pick it up again (laser will turn red while picking it up).
-	Players can only pick up their own objects, unless logged in as admin (isadmin = 1).
+	For Non-Reborn: Hold USE(e) + hold FIRE at an object, lift, or tele that you placed (solid objects only) to pick it up again.
+	For Reborn: Hold USE(e) + FIRE near an object, lift, or tele that you placed, then Hold FIRE(zoom) to pick it up again.
+	Players can only pick up their own objects, unless logged in as admin (isadmin = 1). Laser will turn red while picking up an object.
 
 	When placing lifts and after first setting the start-position, the builder laser will turn red if the lift is below its start-position + 25 units (cannot be placed).
 	Hold USE(e) to hold the lift's angle in its current position, and hold the build-laser's current length.
@@ -647,7 +648,8 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3, M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3.
+Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3,
+M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B.
 
 ---------------
 
@@ -1210,108 +1212,145 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+- M6L1A fully modded. 7 drivable vehicles, 9 nebelwerfers, 2 flak88s added to the map.
+- 2 sets of bangalore wall bombs triggered by alarm switches, 3 sets of bangalore wall bombs triggered by detonators.
+
+- 2 20mm turrets can be blown up with grenades.
+- Invisible walls block off the map's outer border (no teles added to go behind them) since players can shoot through these walls from the outside edges of the map.
+
+---------------
+
+- M6L1B fully modded. 8 drivable vehicles, 8 nebelwerfers, 4 flak88s added to the map.
+- 2 sets of bangalore wall bombs triggered by alarm switches, 1 set of bangalore wall bombs triggered by a detonator.
+- 1 20mm turret can be blown up with grenades.
+- Invisible walls block off the map's outer border (no teles added to go behind them) since players can shoot through these walls from the outside edges of the map.
+
+- White lasers added behind the Allies spawn outlining the invisible wall that blocks off the rest of Allies spawn. Shooting this wall will make the lasers flash brighter.
+- A radio can play music or static sounds by pressing USE(e) near it.
+- The nearby water droplets sound entity has a valve switch next to it. This valve can turn on/off "steam control", causing steam to emit from the metal pipe and grow/shrink in scale.
+
+- Any mortar_dirt_explosions from Giant Bombs, airstrike bombs, vehicle/turret explosions, etc. that explode on top of the large central bunker will cause bunker dust to emit from the ceiling.
+- An invisible ladder allows players to climb the telephone pole near the large central bunker.
+
+---------------
+
+- All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
+
 #
 
 # Updates & Bug Fixes
 
-v7.990 (7-4-2025):
+v7.991 (8-3-2025):
 
-New cvar added: Proximity Pointer
+New Weather Mod created (global/weather.scr).
 
-	- This cvar gives any player a simple laser pointer for iprinting & console-printing origin + angles (in simplified decimals), model, targetname, etc of an entity/trigger (including notsolid ones), that is closest to the pointed target.
-	- Hold USE(e) + Left-click to find the entity closest to the laser pointer.
-	- Right-click to point the laser at the exact origin of the targeted entity.
-	- Hold right-click after finding the nearest target entity for 3+ seconds to remove the entity.
-	- Lean left/right + right-click to teleport to the pointed target.
+- This mod can create weather on any map. Much better rain sounds: interior/exterior, plant, near puddle, under roof, random location thunder sounds.
+- Available weather types (add more or modify as needed in the script's switch statement):
 
-	- Type "proximity_pointer [player number or player name]" into console to give/take a proximity pointer.
-	- i.e. "proximity_pointer 1". Giving $player[1] a proximity_pointer.
+- "snow", "snow_fast", "blizzard", "hail", "snow_original", "rain", "drizzle", "monsoon", "rain_original", "0" or "off".
 
-Further revamped global/exploder.scr (fewer entities)
+- Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
+- Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
 
-	- global/exploder.scr revamped: In order to reduce the number of exploder ents on the map, the $exploderchunk.target ents were removed and their origins saved to $exploderchunk.targetorigin.
-	- Now, the $exploderfire entities are also auto-removed when map loads, after saving their data to a "level.exploderfire" matrix array, and only spawned when "::explode" thread runs (reduces map's entity count).
-	- From level.exploderfire: "pause" = wait in seconds until beginning exploderfire emitter. "fire" [0 or 1] = keep emitter on instead of deleting it and play fire loop sounds (not used in any original maps).
+---------------
 
-	- To adjust any "level.exploderfire" data, simply change the $exploderfire.origin, .angles, .pause, etc before running "exec global/exploder.scr".
-	- For example: to prevent $exploderfire[4] from waiting 2 seconds before turning on (pause = 2), set $exploderfire[4].pause = 0, then run "exec global/exploder.scr".
+- To use this mod, add "exec global/weather.scr" to any map .scr script after "level waittill prespawn" with given parameters below.
 
-	- Example of a map's level.exploderfire array:	//	model	origin	angles	scale	set	pause	damage	damageradius	fire	// columns [1] to [9]
+- The 2 original weathers have the exact values given to the game's original "snow" and "rain".
+- If the "thunder" parameter = 1, the sky will occasionally flash white and thunder sounds will play.
+- Adjust the max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5, or set "level.weather_sound = 0.5" instead of 1.
 
-		level.exploderfire = makeArray
-			models/emitters/explosion_bombdirt.tik 	( 100 200 300 ) ( 0 0 0 ) 1 	101 	0 256 500 0	// $exploderfire[1]
-			models/emitters/explosion_bombdirt.tik 	( 150 250 350 ) ( 0 0 0 ) 1 	102 	0 256 500 0	// $exploderfire[2]
-			models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	1 256 500 0	// $exploderfire[3]
-			models/emitters/explosion_mine.tik 	( 200 100 300 ) ( 0 0 0 ) 2 	103 	2 256 500 0	// $exploderfire[4]
-			models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	1 256 500 0	// $exploderfire[5]
-			models/emitters/mortar_higgins.tik 	( 250 150 350 ) ( 0 0 0 ) 1 	104 	2 256 500 0	// $exploderfire[6]
-		endArray
+- Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no).
+- Example: exec global/weather.scr "snow"
+- Example: exec global/weather.scr "snow_fast" 0
+- Example: exec global/weather.scr "rain" 1 0.8
+- Example: exec global/weather.scr "snow_fast" 0 1 0 // m6l1b
 
-More "findset" cvar options
+- Set the "spawn_funcrain" parameter to 0 to prevent spawning in "func_rain" entities,
+- only use this if there's already "Rain" classname entities/brushes on the map, and if the script's "func_rain" entities are causing weather to not appear fast enough.
 
-	- Added "findset exploderfire" (or exploderfires) for the "findset" cvar, printing all $exploderfire data saved within the "level.exploderfire" matrix array ($exploderfire entities are removed afterwards).
+---------------
 
-	- Moved the various entity info printing by the cvars: "find", "findent" "entity_pointer", "proximity_pointer" into the "cvars/cvars.scr::entprint" thread (below all the cvar descriptions).
-	- The "entity_pointer" will now print in simplified decimals instead of integers.
-	- Printed entity info from cvars now includes much more variables for exploders & others: targetorigin, group, set, pause, damage, damageradius, sound, .dead, exploded, onlyprojectiles, grenades, resettime, noprint, nosound, noearthquake, nottriggerable, and more for $exploder ents.
-	- Fixed "drawsize" cvar not resetting properly if the error message "this entity's setsizes have already been drawn!" appears.
+- In order to have more dynamic weather sounds in custom maps, 2 level variable arrays must be created:
+- level.interior_volumes (array of interior ambience volumes), level.water_volumes (array of water volumes).
 
-Improved global/exploder_killer.scr & new features
+- The level.variables above have already been created for all fully modded maps (latest UBER MODS version).
+- See "ambience" & "water_volumes" threads in each map's .scr
 
-	- Improved global/exploder_killer.scr with new features & bug fixes, such as fully resetting the exploders if ".resettime" is added to the $exploder.
+- Without ambience volumes, the weather will not play any interior sounds.
+- Without water volumes, the weather will not play any exterior water droplet sounds.
 
-	- To allow exploder_killer threads to reset after a certain amount of time, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
-			level.exploder_killer_resettime = 60 // seconds
-		$exploder[4].resettime = 60 // for only $exploder[4], or other $exploder[index].
+- level.map_height, level_map_setsize1 & level.map_setsize2 are all auto-created by the script if they don't exist already.
+- These variables control randomized location for thunder sounds, and allow under-roof rain sounds that play if not near the map's skybox ceiling.
 
-	- To prevent this script from playing large explosion sounds, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
- 		level.exploder_killer_nosound = 1
-		$exploder[4].nosound = 1
+- If playing singleplayer or if there's only 1 player in a server, the weather will turn off/on while going inside/outside ambience volumes.
 
-	- To prevent this script from making camera shaking earthquake effects, add the level variable below to any map script containing "exec global/exploder_killer.scr" threads.
- 		level.exploder_killer_noearthquake = 1
-		$exploder[4].noearthquake = 1
+---------------
 
-	- To only allow another script to blow up the exploders (no projectiles, no $world radiusdamages, nothing), add the level variable below to any map script containing "exec global/exploder_killer.scr" threads,
-	- and set the desired "$exploder.dead = 1" or $exploder_trigshot.dead = 1" in another script to begin explosions from the "exploder_killer" thread.
-		level.exploder_killer_nottriggerable = 1
-		$exploder[4].nottriggerable = 1
+- NOTE: if the map's height is very high and the weather has a slow "cg_rain_speed" value (such as snow),
+- players will not see the weather falling down in time if they are traveling fast across the map.
+- In this case (i.e. maps m6l1a & m6l1b), do not run "removeclass Rain", but instead keep them to help the map spawn weather particles further below the map's height.
+- Set "spawn func_rain entities" parameter to 0 if the script's ents cause weather to spawn too high up, too slow, etc (i.e. map m6l1b).
 
-	- When resetting, a "wait (local.s / 10)" line (where local.s = the $exploder[index] number) ensures that threads rerun in the same exact order as the initially-run exploder_killer threads, otherwise "No $exploder_trigshot found" errors may print.
-	- Ensured that global/exploder_killer.scr cannot run for more than 1 exploder.
-	- Fixed a bug that allows bullets to kill an exploder if a projectile flies through the trigger but doesn't blow up near the exploder, by resetting the $exploder_trigproj trigger 2 frames after a projectile is detected (projectiles trigger them once per frame).
+---------------
+
+- Example "level.interior_volumes" from m6l1a for interior sounds: // these are found in the "weather" folder. For custom maps, a new [mapname].txt file must be made in this folder.
+
+	level.interior_volumes = makeArray
+		( -1007 5663 5583 ) ( 0 -104 -191 ) ( 287 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // origin, setsize1, setsize2, music filepath.
+		( -700 5559 5583 ) ( -325 -160 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // make sure interior_volumes volumes with different sounds are not overlapping.
+		( -717 5399 5583 ) ( -293 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		( -747 5369 5583 ) ( -233 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+
+		( -2128 -143 5583 ) ( -287 0 -191 ) ( 0 104 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		( -2435 -39 5583 ) ( 0 0 -191 ) ( 325 160 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		( -2418 121 5583 ) ( 0 0 -191 ) ( 293 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		( -2388 151 5583 ) ( 0 0 -191 ) ( 233 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+	endArray
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+
+
+
+- Example "level.water_volumes" from m5l2b for water sounds:
+
+	level.water_volumes = makeArray
+		( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
+	endArray
 
 Misc map changes & bug fixes
 
-	- In global/cyberattack_searchdestroy.scr: fixed $bombexplosive not properly switching between the initial Allies/Axis bomb origins when level.changesides switches between 0/1 respectively.
-	- This bug only occurred in Search & Destroy gametype, and only happened if "bombsites are switching sides" without the $bombexplosive getting picked up from its initial origin during the previous round.
+	- For Reborn version of Base-Builder UBER only ("g_ubergametype bb"): changed Builder Remover Laser from an entity-pointer to a proximity-pointer, to allow players to pick up their own non-solid objects.
+	- Lean Left/Right to activate the Builder Remover Laser, Hold USE(e) + FIRE to find your nearest object/lift/tele, then Hold FIRE(zoom) to pick up your object.
 
-	- Flyable planes' bullets will no longer trigger exploder_killer.scr threads, since the server_planes/damage.scr script checks if bullets are landing within any $exploder_trigshot's setsize volumes (if so, the bullets' $world radiusdamage is turned off, but they can still kill players).
-	- Fixed a rare bug where players driving planes that get show down by enemies could no longer use vehicles/jetpacks/guided missiles since "self.flying = 0" never ran for them when they stopped flying.
+	- Players in Freeze Tag UBER ("g_ubergametype ft") will now auto-melt their teammates if standing near their frozen bodies (same as original Freeze Tag).
+	- Players that get melted/revived in Cyber Attack UBER ("g_ubergametype cyb") will now face the same yaw-angle that they were looking at when frozen/died.
 
-	- Fixed global/dog.scr trigger's "angertime" parameter that was counting seconds twice as fast.
-	- When the dog trigger is angry after shooting it "bulletsanger" times, the dog will bite players only one at a time (thread "biteplayers" runs once instead of spamming).
-	- Added sounds to the dog trigger's bite anim when angry and biting nearby players, and timed the bite anim to kill nearby players exactly when the dog's anim starts biting.
+	- The stufftext hack detection script in cvars/adminstuff.scr now waits 2 extra seconds after a player joins before beginning the stufftext test, and waits 5 seconds of "level.time" after the map begins.
+	- This should help avoid false positives caused by players pressing the "score" (Tab) button immediately when joining, kicking them for failing the test when they should've passed.
 
-	- In global/water_wade_sounds.scr, ensured that both $player[local.i].water_temp_ent & $player[local.i].water_temp_ent2 entities are removed for all cases, otherwise these could build up and crash the server if going beyond 1024 entities on the map.
-	- Fixed a server-crashing bug that occurs on some maps (so far, only M5L3), where the "water_temp_ent" entities were not gluing to the player and instead spamming the console with "script_model::glue : Cannot glue to master because of: MAX_GLUE_CHILDREN reached,
-	- by keeping the "water_temp"ent" origins at the player's origin instead of directly gluing to the player.
+	- Slowed down the updating of a player's health/jetpack fuel secondary HUD meter to 2x per second for drivable vehicles/boats/tanks, jetpacks, and guided missiles.
+	- Without this, the server could crash trying to send stufftexts to update the player's 2nd HUD meter if that player's game crashed, but the in-game player somehow did not leave the server.
 
-	- Fixed a bug in jetpack/trigger.scr that allowed non-Player entities (such as vehicles in rare cases) to trigger the jetpack, causing lots of console errors due to jetpacks attempting to attach themselves to nonexistent Spine tags.
-	- All map_triggers/tele.scr corona_red teleporters now have ".trigger2" = the destination trigger if it exists, and ".trigger1" = the origin trigger if a destination trigger exists.
+	- Fixed Assisted Suicides mod that allowed players to get score for an enemy's death that they shot at a long time ago, since the script wasn't clearing some player variables.
+	- Players can no longer get illuminated by the same spotlight that they are currently using.
+	- Fixed global/respawn_stuck_fix.scr to stop running dozens of times for one player respawn iteration.
 
-	- Improved the mini-flak88 flamethrowers (exclusive to UBER Base-Builder gametype) by keeping the flames aligned with the player's line of sight.
-	- Readded some gravity to the flamethrowers' fire projectiles.
+	- The "players" cvar & "entities" cvar will now print players' clientnums along with their $player[index] number & netname.
+	- Added $world "farplane", "farplane_color", and "farplane_cull" data when using the "find" cvar to find "$world" (i.e. "find world" in console).
+	- Reduced farplane fog in M5L3 from 6500 to 4500 to reduce FPS lag and/or high ping from some players.
+	- Fixed some ambience volumes in M5L1B.
 
-	- The global/victory_podium.scr will now continuously "cuecamera" for all players when map time ends instead of running once, allowing players that were dead & respawned immediately after map time ends to see the victory podium.
+	- Added "rain" weather with thunder in maps: M5L1A, M5L1B, M5L2A, M5L2B.
+	- Added "snow_fast" weather in DM/MOHDM5 (Snowy Park), M6L1A, M6L1B.
+	- Moved all "ambience" and "water_volumes" threads into a new "weather" folder with [mapname].txt files for each map (each containing "level.interior_volumes" & "level.water_volumes" arrays).
 
-	- Replaced all "removeclass ScriptOrigin" lines with a thread that first waits for exec global/exploder.scr to finish, for all maps with exploders.
-	- Without this, $exploderchunk ents' origins will not be properly saved to $exploderchunk.targetorigin, and $exploder explosions will not spread chunks out from their center.
+Server auto-reopen script fixes (Windows)
 
-	- Fixed explosive barrels in M3l1B.
-	- Fixed some ambience volumes in M2L2A and M2L2B.
-	- Added destructible transformers back into M4l2.
+	- The server auto-reopen .bat script for Windows will now also reopen the server if a DLL initialization routine failed, or simply failed to load while switching maps.
+	- The Windows and older Linux .bat scripts are only available from xNULL website's version of UBER MODS download (newer Linux scripts coming soon).
 
-New map modded: m5l3
+New map modded: m6l1a
+New map modded: m6l1b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
