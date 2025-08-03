@@ -1244,78 +1244,78 @@ v7.991 (8-3-2025):
 
 New Weather Mod created (global/weather.scr).
 
-- This mod can create weather on any map. Much better rain sounds: interior/exterior, plant, near puddle, under roof, random location thunder sounds.
-- Available weather types (add more or modify as needed in the script's switch statement):
+	- This mod can create weather on any map. Much better rain sounds: interior/exterior, plant, near puddle, under roof, random location thunder sounds.
+	- Available weather types (add more or modify as needed in the script's switch statement):
 
-- "snow", "snow_fast", "blizzard", "hail", "snow_original", "rain", "drizzle", "monsoon", "rain_original", "0" or "off".
+	- "snow", "snow_fast", "blizzard", "hail", "snow_original", "rain", "drizzle", "monsoon", "rain_original", "0" or "off".
 
-- Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
-- Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
+	- Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
+	- Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
 
----------------
+	---------------
 
-- To use this mod, add "exec global/weather.scr" to any map .scr script after "level waittill prespawn" with given parameters below.
+	- To use this mod, add "exec global/weather.scr" to any map .scr script after "level waittill prespawn" with given parameters below.
 
-- The 2 original weathers have the exact values given to the game's original "snow" and "rain".
-- If the "thunder" parameter = 1, the sky will occasionally flash white and thunder sounds will play.
-- Adjust the max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5, or set "level.weather_sound = 0.5" instead of 1.
+	- The 2 original weathers have the exact values given to the game's original "snow" and "rain".
+	- If the "thunder" parameter = 1, the sky will occasionally flash white and thunder sounds will play.
+	- Adjust the max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5, or set "level.weather_sound = 0.5" instead of 1.
 
-- Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no).
-- Example: exec global/weather.scr "snow"
-- Example: exec global/weather.scr "snow_fast" 0
-- Example: exec global/weather.scr "rain" 1 0.8
-- Example: exec global/weather.scr "snow_fast" 0 1 0 // m6l1b
+	- Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no).
+	- Example: exec global/weather.scr "snow"
+	- Example: exec global/weather.scr "snow_fast" 0
+	- Example: exec global/weather.scr "rain" 1 0.8
+	- Example: exec global/weather.scr "snow_fast" 0 1 0 // m6l1b
 
-- Set the "spawn_funcrain" parameter to 0 to prevent spawning in "func_rain" entities,
-- only use this if there's already "Rain" classname entities/brushes on the map, and if the script's "func_rain" entities are causing weather to not appear fast enough.
+	- Set the "spawn_funcrain" parameter to 0 to prevent spawning in "func_rain" entities,
+	- only use this if there's already "Rain" classname entities/brushes on the map, and if the script's "func_rain" entities are causing weather to not appear fast enough.
 
----------------
+	---------------
 
-- In order to have more dynamic weather sounds in custom maps, 2 level variable arrays must be created:
-- level.interior_volumes (array of interior ambience volumes), level.water_volumes (array of water volumes).
+	- In order to have more dynamic weather sounds in custom maps, 2 level variable arrays must be created:
+	- level.interior_volumes (array of interior ambience volumes), level.water_volumes (array of water volumes).
 
-- The level.variables above have already been created for all fully modded maps (latest UBER MODS version).
-- See "ambience" & "water_volumes" threads in each map's .scr
+	- The level.variables above have already been created for all fully modded maps (latest UBER MODS version).
+	- See "ambience" & "water_volumes" threads in each map's .scr
 
-- Without ambience volumes, the weather will not play any interior sounds.
-- Without water volumes, the weather will not play any exterior water droplet sounds.
+	- Without ambience volumes, the weather will not play any interior sounds.
+	- Without water volumes, the weather will not play any exterior water droplet sounds.
 
-- level.map_height, level_map_setsize1 & level.map_setsize2 are all auto-created by the script if they don't exist already.
-- These variables control randomized location for thunder sounds, and allow under-roof rain sounds that play if not near the map's skybox ceiling.
+	- level.map_height, level_map_setsize1 & level.map_setsize2 are all auto-created by the script if they don't exist already.
+	- These variables control randomized location for thunder sounds, and allow under-roof rain sounds that play if not near the map's skybox ceiling.
 
-- If playing singleplayer or if there's only 1 player in a server, the weather will turn off/on while going inside/outside ambience volumes.
+	- If playing singleplayer or if there's only 1 player in a server, the weather will turn off/on while going inside/outside ambience volumes.
 
----------------
+	---------------
 
-- NOTE: if the map's height is very high and the weather has a slow "cg_rain_speed" value (such as snow),
-- players will not see the weather falling down in time if they are traveling fast across the map.
-- In this case (i.e. maps m6l1a & m6l1b), do not run "removeclass Rain", but instead keep them to help the map spawn weather particles further below the map's height.
-- Set "spawn func_rain entities" parameter to 0 if the script's ents cause weather to spawn too high up, too slow, etc (i.e. map m6l1b).
+	- NOTE: if the map's height is very high and the weather has a slow "cg_rain_speed" value (such as snow),
+	- players will not see the weather falling down in time if they are traveling fast across the map.
+	- In this case (i.e. maps m6l1a & m6l1b), do not run "removeclass Rain", but instead keep them to help the map spawn weather particles further below the map's height.
+	- Set "spawn func_rain entities" parameter to 0 if the script's ents cause weather to spawn too high up, too slow, etc (i.e. map m6l1b).
 
----------------
+	---------------
 
-- Example "level.interior_volumes" from m6l1a for interior sounds: // these are found in the "weather" folder. For custom maps, a new [mapname].txt file must be made in this folder.
+	- Example "level.interior_volumes" from m6l1a for interior sounds: // these are found in the "weather" folder. For custom maps, a new [mapname].txt file must be made in this folder.
 
-	level.interior_volumes = makeArray
-		( -1007 5663 5583 ) ( 0 -104 -191 ) ( 287 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // origin, setsize1, setsize2, music filepath.
-		( -700 5559 5583 ) ( -325 -160 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // make sure interior_volumes volumes with different sounds are not overlapping.
-		( -717 5399 5583 ) ( -293 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-		( -747 5369 5583 ) ( -233 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		level.interior_volumes = makeArray
+			( -1007 5663 5583 ) ( 0 -104 -191 ) ( 287 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // origin, setsize1, setsize2, music filepath.
+			( -700 5559 5583 ) ( -325 -160 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // make sure interior_volumes volumes with different sounds are not overlapping.
+			( -717 5399 5583 ) ( -293 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+			( -747 5369 5583 ) ( -233 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
 
-		( -2128 -143 5583 ) ( -287 0 -191 ) ( 0 104 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-		( -2435 -39 5583 ) ( 0 0 -191 ) ( 325 160 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-		( -2418 121 5583 ) ( 0 0 -191 ) ( 293 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-		( -2388 151 5583 ) ( 0 0 -191 ) ( 233 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-	endArray
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+			( -2128 -143 5583 ) ( -287 0 -191 ) ( 0 104 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+			( -2435 -39 5583 ) ( 0 0 -191 ) ( 325 160 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+			( -2418 121 5583 ) ( 0 0 -191 ) ( 293 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+			( -2388 151 5583 ) ( 0 0 -191 ) ( 233 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		endArray
+		exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 
 
 
-- Example "level.water_volumes" from m5l2b for water sounds:
+	- Example "level.water_volumes" from m5l2b for water sounds:
 
-	level.water_volumes = makeArray
-		( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
-	endArray
+		level.water_volumes = makeArray
+			( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
+		endArray
 
 Misc map changes & bug fixes
 
@@ -1353,4 +1353,5 @@ New map modded: m6l1a
 New map modded: m6l1b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
