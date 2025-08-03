@@ -177,7 +177,7 @@ exec maps/UBER_mapextras/obj1_cratesstuff.scr::craterfire
 
 level waittill spawn
 
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -190,73 +190,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( 3790 3278 -63 ) ( 0 180 0 ) 
 	exec global/throwingknife.scr k4 ( 3989 2157 -79 ) ( 0 180 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( 1304 -223 -400 ) ( 0 0 0 ) ( 287 302 393 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 1304 -223 -6 ) ( 0 0 0 ) ( 287 194 25 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 1304 -223 20 ) ( 0 0 0 ) ( 287 144 50 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 1304 -223 71 ) ( 0 0 0 ) ( 287 94 50 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 1304 -223 132 ) ( 0 0 0 ) ( 287 44 50 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 1447 -28 -6 ) ( -110 0 0 ) ( 110 107 25 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 1447 -28 20 ) ( -85 0 0 ) ( 85 107 50 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 1447 -28 71 ) ( -35 0 0 ) ( 35 107 50 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 2308 4061 -300 ) ( 0 0 0 ) ( 93 252 300 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 2402 3968 -300 ) ( 0 0 0 ) ( 329 345 300 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 2308 3982 1 ) ( 0 0 0 ) ( 423 331 234 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 2952 3968 -350 ) ( 0 0 0 ) ( 447 495 302 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 2952 3968 -47 ) ( 0 0 0 ) ( 232 495 174 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3185 4288 -47 ) ( 0 0 0 ) ( 214 175 174 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 3984 1464 -450 ) ( 0 0 0 ) ( 415 407 450 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 4399 2152 -400 ) ( -415 0 0 ) ( 0 323 312 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 4399 2476 -400 ) ( -176 0 0 ) ( 0 104 312 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 4399 2581 -400 ) ( -415 0 0 ) ( 0 170 312 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 4167 1896 382 ) ( -50 -457 -49 ) ( 50 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 4167 1896 332 ) ( -100 -457 -49 ) ( 100 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 4167 1896 282 ) ( -150 -457 -49 ) ( 150 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 4167 1896 232 ) ( -200 -457 -49 ) ( 200 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 4167 1896 182 ) ( -250 -457 -181 ) ( 250 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 3667 1309.000 163 ) ( -523 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // This building is tilted by 30 degrees, not along X-Y axis.
-		( 3637 1326.321 163 ) ( -483 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // Since ambience volume setsizes are only along X-Y axis, numerous pancaked rectangles
-		( 3607 1343.642 163 ) ( -443 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // with heights + or - 17.321 units (not both simultaneously) are required to fill the internal space.
-		( 3577 1360.963 163 ) ( -403 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // Assuming 30-60-90 triangle rules, triangles (between volume & building's wall) with 17.321 Y-height will have 30.000 X-length on one side.
-		( 3547 1378.284 163 ) ( -363 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // On the other side, triangles will have the same 17.321 Y-height, but only 10.000 X-length.
-		( 3517 1395.605 163 ) ( -323 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // Start at left-most vertex (inside building). For top half: subtract each X-origin by 30 per volume, and reduce each -X setsize by 40.000.
-		( 3487 1412.926 163 ) ( -283 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // Start at right-most vertex (inside building). For bottom half: add each X-origin by 30 per volume, and reduce each +X setsize by 40.000.
-		( 3457 1430.247 163 ) ( -243 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // Any remaining space (within the tilted building) between the left-most & right-most vertices must be filled
-		( 3427 1447.568 163 ) ( -203 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // with more rectangular volumes of equal setsizes, but each shifted left or right 10 units.
-		( 3397 1464.889 163 ) ( -163 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3367 1482.210 163 ) ( -123 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // NOTE: volume triangles extending outside the walls must be <= 30 units to avoid being triggered by players.
-		( 3337 1499.531 163 ) ( -83 0 -235 ) ( 0 17.321 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // amb[35]
-
-		( 3134 1234.000 163 ) ( 0 -17.321 -235 ) ( 523 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3164 1216.679 163 ) ( 0 -17.321 -235 ) ( 483 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3194 1199.358 163 ) ( 0 -17.321 -235 ) ( 443 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3224 1182.037 163 ) ( 0 -17.321 -235 ) ( 403 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3254 1164.716 163 ) ( 0 -17.321 -235 ) ( 363 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // amb[40]
-		( 3284 1147.395 163 ) ( 0 -17.321 -235 ) ( 323 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3314 1130.074 163 ) ( 0 -17.321 -235 ) ( 283 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3344 1112.753 163 ) ( 0 -17.321 -235 ) ( 243 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3374 1095.432 163 ) ( 0 -17.321 -235 ) ( 203 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3404 1078.111 163 ) ( 0 -17.321 -235 ) ( 163 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // amb[45]
-		( 3434 1060.790 163 ) ( 0 -17.321 -235 ) ( 123 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3464 1043.469 163 ) ( 0 -17.321 -235 ) ( 83 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-
-		( 3134 1234.000 163 ) ( 0 0 -235 ) ( 504 25 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // 1309 - 1234 = 75 / 3 = 25 Y-height per rectangle, 3 total in the middle.
-		( 3144 1259.000 163 ) ( 0 0 -235 ) ( 504 25 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		( 3154 1284.000 163 ) ( 0 0 -235 ) ( 504 25 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3 // amb[50]
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M5_Trees.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

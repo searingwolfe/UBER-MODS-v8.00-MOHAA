@@ -365,7 +365,7 @@ level waittill spawn
 
 	level.grenade_target = 0
 	thread tank_sound
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 if(getcvar("g_ubergametype") != "bb" && getcvar("g_ubergametype") != "cyb" && getcvar("g_ubergametype") != "snd" && getcvar("g_ubergametype") != "ft")
 {
@@ -385,27 +385,6 @@ if(getcvar("g_throwingknives") == "1")
 {
 	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	wait 1
-	if($tunnelbase_centerpoint != NULL)
-	{
-		level.spawnamb = makeArray
-			( 6174 -3023 -475 ) ( 0 0 0 ) ( 225 319 227 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-
-			( -6295 366 -800 ) ( 0 0 0 ) ( 2190 267 296 ) sound/amb_stereo/Amb_M4_BunkerInt_01.mp3
-		endArray
-	}
-	else
-	{
-		level.spawnamb = makeArray
-			( 6174 -3023 -475 ) ( 0 0 0 ) ( 225 319 227 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-		endArray
-	}
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_03.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

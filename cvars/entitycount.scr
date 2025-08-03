@@ -21,7 +21,7 @@ main:
 
 		if(int(getcvar("entities")) != 1 && int(getcvar("entities")) != 2 && int(getcvar("entities")) != 3 && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8) { break }
 
-		local.entity = getentity(local.i) // $player[1] = entity 0		
+		local.entity = getentity(local.i)		
 		if(local.i == 0)
 		{
 			println("----- Note: This can only count up to 869 entities (0 to 868).")
@@ -38,8 +38,15 @@ main:
 		{
 			if(local.i < local.maxclients && int(getcvar("entities")) != 4 && int(getcvar("entities")) != 5 && int(getcvar("entities")) != 6 && int(getcvar("entities")) != 7 && int(getcvar("entities")) != 8)
 			{
-				if(local.entity == NULL) { println("$player[" + (local.i + 1) + "] = NULL"); local.j++ }
-				if(local.entity != NULL) { println("$player[" + (local.i + 1) + "] = " + (netname $player[local.i + 1 - local.j])) }
+				if(local.entity == NULL) { println("client " + local.i + " = NULL"); local.j++ }
+				if(local.entity != NULL)
+				{
+					for(local.k = 1; local.k <= $player.size; local.k++)
+					{
+						if($player[local.k] == local.entity) { break }
+					}
+					println("client " + local.i + " = $player[" + local.k + "] = " + netname $player[local.k])
+				}
 			}
 			if(local.i >= local.maxclients)
 			{

@@ -197,8 +197,7 @@ exec guidedmissile/trigger.scr ( 3715 2854 -511 )
 level waittill spawn
 
 	thread consoleprint
-	thread ambience
-	thread water_volumes
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -215,27 +214,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k7 ( -2509 -6586 -447 ) ( 0 -90 0 )
 	exec global/throwingknife.scr k8 ( -718 -6586 -447 ) ( 0 -90 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		 ( -3905 1888 630 ) ( -10000 -10000 -10000 ) ( 0 0 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-		 ( -3905 -1471 630 ) ( 0 -10000 -10000 ) ( 4671 0 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-		 ( 800 -447 630 ) ( 0 -5185 -10000 ) ( 10000 0 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-		 ( 800 -4737 630 ) ( 0 -10000 -10000 ) ( 2612 0 0 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-
-		 ( 3413 -5633 0 ) ( 0 -10000 -10000 ) ( 10000 0 10000 ) sound/amb_stereo/Amb_M2_SubInt.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_04.mp3 1 // 0 = no, 1 = keep players' music volume at max.
-end
-
-water_volumes: // these are for any airstrikes that drop bombs into the ocean.
-
-	level.water_volumes = makeArray
-		( 0 0 -680 ) ( -10000 -10000 -500 ) ( 10000 10000 1 )
-	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////

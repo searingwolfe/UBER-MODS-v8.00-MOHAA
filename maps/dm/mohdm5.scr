@@ -41,6 +41,7 @@ level waittill prespawn
 	level.script = maps/dm/mohdm5.scr
 	exec global/ambient.scr mohdm5
 	exec global/door_locked.scr::lock
+	exec global/weather.scr "snow_fast" 0 1 0
 
    	setcvar "r_fastsky" "1"
 	exec global/fastsky.scr 1
@@ -109,11 +110,9 @@ exec maps/UBER_mapextras/dm5_cratesstuff.scr::smoke
 
 level waittill spawn
 
-	thread snow
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
-
-	thread ambience
 
 if(getcvar("g_throwingknives") == "1")
 {
@@ -124,16 +123,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( 3353 -5934 216 ) ( 0 90 0 ) 
 	exec global/throwingknife.scr k4 ( 2638 -3156 224 ) ( 0 270 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( 2208 -7463 -150 ) ( 0 0 0 ) ( 383 487 373 ) sound/amb_stereo/Amb_M2_SnowInt.mp3
-		( 576 -2239 -150 ) ( 0 0 0 ) ( 319 319 365 ) sound/amb_stereo/Amb_M2_SnowInt.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -175,23 +164,6 @@ exec alienx/basebuild.scr::basebuild ( -1312 -5419 160 ) "static/bunkertable.tik
 exec alienx/basebuild.scr::basebuild ( -1312 -5519 172 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( -1312 -5619 180 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( -1312 -5719 186 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
-end
-
-////////////////////////////////////////////////////////////////////////
-
-snow:
-
-	wait 1
-	level.rain_speed = "32"
-	level.rain_speed_vary = "16"
-	level.rain_length = "2"
-	level.rain_width = "1"
-	level.rain_density = ".2"
-	level.rain_slant = "250"
-	level.rain_min_dist = "1800"
-	//level.rain_min_dist = "512"
-	level.rain_numshaders = 12
-	level.rain_shader = "textures/snow0"
 end
 
 clickitem_fail:

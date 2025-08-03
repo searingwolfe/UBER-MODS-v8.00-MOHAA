@@ -181,8 +181,7 @@ thread alarmswitch2 ( 140 -2463 413 ) ( 0 90 0 ) 60 450 2
 level waittill spawn
 
 	thread consoleprint
-	thread ambience
-	thread water_volumes
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -195,43 +194,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( -5379 -5574 28 ) ( 0 0 0 )
 	exec global/throwingknife.scr k4 ( -5000 -4970 764 ) ( 0 90 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( 319 -1592 210 ) ( -135 -479 0 ) ( 135 0 405 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 519 -1696 210 ) ( -63 -375 0 ) ( 0 73 405 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 560 -1831.5 210 ) ( -40 -239.5 0 ) ( 0 145.5 405 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 120 -1696 210 ) ( 0 -343 0 ) ( 63 73 405 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 80 -1831.5 210 ) ( 0 -135.5 0 ) ( 38 145.5 405 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( 319 -1624 616 ) ( -115.5 -415 0 ) ( 115.5 0 635 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 491 -1715 616 ) ( -56 -232 0 ) ( 0 63 635 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 528 -1831.5 616 ) ( -36 -115.5 0 ) ( 0 115.5 635 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 148 -1715 616 ) ( 0 -232 0 ) ( 55 63 635 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 111 -1831.5 616 ) ( 0 -115.5 0 ) ( 36 115.5 635 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( 79 -2071 210 ) ( -108 0 0 ) ( 0 151 301 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 80 -2071 210 ) ( 0 0 0 ) ( 103 30 405 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 80 -2040 210 ) ( 0 0 0 ) ( 39 72 405 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( 80 -2072 110 ) ( -223 -8000 0 ) ( 1645 0 590 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( -144 -2336 210 ) ( -391 -8000 0 ) ( 0 0 301 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( -4408 -3935 -160 ) ( -1735 -8000 0 ) ( 0 0 847 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( -4408 -3935 688 ) ( -1735 -8000 0 ) ( 0 0 363 ) sound/amb_stereo/Amb_M1_Bunker_01.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_Cliff_01.mp3 1 // 0 = no, 1 = keep players' music volume at max.
-end
-
-water_volumes: // these are for any airstrikes that drop bombs into the ocean.
-
-	level.water_volumes = makeArray
-		( 0 0 -375 ) ( -10000 -10000 -500 ) ( 10000 10000 1 )
-	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////

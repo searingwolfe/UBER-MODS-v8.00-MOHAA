@@ -278,6 +278,7 @@ playergetin:
 	ihuddraw_string local.player 110 "" // "Turret User:   0"
 	local.turretuser_hud = 0
 	local.turretuser_count = 0
+	local.stufftext_c = 0
 
 	self.attachingdriver = 0
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
@@ -328,7 +329,10 @@ playergetin:
 		local.turretangles = self.gun.angles
 
 		if(self.health > level.tank_inithealth[self.name]) { self.health = level.tank_inithealth[self.name] }
-		self.driver stufftext ("set phealth " + int(self.health))
+		if(local.stufftext_c == 10) { self.driver stufftext ("set phealth " + int(self.health)) }
+
+		local.stufftext_c++
+		if(local.stufftext_c > 10) { local.stufftext_c = 0 } // twice every second.
 		waitframe
 	}
 

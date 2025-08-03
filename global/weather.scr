@@ -1,0 +1,942 @@
+// Simple script for creating weather on any map. Much better rain sounds: interior/exterior, plant, near puddle, under roof, random location thunder sounds.
+// Available weather types (add more or modify as needed in the script's switch statement):
+//
+// "snow", "snow_fast", "blizzard", "hail", "snow_original", "rain", "drizzle", "monsoon", "rain_original", "0" or "off".
+//
+// Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
+// Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// To use this mod, add "exec global/weather.scr" to any map .scr script after "level waittill prespawn" with given parameters below.
+//
+// The 2 original weathers have the exact values given to the game's original "snow" and "rain".
+// If the "thunder" parameter = 1, the sky will occasionally flash white and thunder sounds will play.
+// Adjust the max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5, or set "level.weather_sound = 0.5" instead of 1.
+//
+// Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no).
+// Example: exec global/weather.scr "snow"
+// Example: exec global/weather.scr "snow_fast" 0
+// Example: exec global/weather.scr "rain" 1 0.8
+// Example: exec global/weather.scr "snow_fast" 0 1 0 // m6l1b
+//
+// Set the "spawn_funcrain" parameter to 0 to prevent spawning in "func_rain" entities,
+// only use this if there's already "Rain" classname entities/brushes on the map, and if the script's "func_rain" entities are causing weather to not appear fast enough.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// In order to have more dynamic weather sounds in custom maps, 2 level variable arrays must be created:
+// level.spawnamb (array of interior ambience volumes), level.water_volumes (array of water volumes).
+//
+// The level.variables above have already been created for all fully modded maps (latest UBER MODS version).
+// See "ambience" & "water_volumes" threads in each map's .scr
+//
+// Without ambience volumes, the weather will not play any interior sounds.
+// Without water volumes, the weather will not play any exterior water droplet sounds.
+//
+// level.map_height, level_map_setsize1 & level.map_setsize2 are all auto-created by the script if they don't exist already.
+// These variables control randomized location for thunder sounds, and allow under-roof rain sounds that play if not near the map's skybox ceiling.
+//
+// If playing singleplayer or if there's only 1 player in a server, the weather will turn off/on while going inside/outside ambience volumes.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// NOTE: if the map's height is very high and the weather has a slow "cg_rain_speed" value (such as snow),
+// players will not see the weather falling down in time if they are traveling fast across the map.
+// In this case (i.e. maps m6l1a & m6l1b), do not run "removeclass Rain", but instead keep them to help the map spawn weather particles further below the map's height.
+// Set "spawn func_rain entities" parameter to 0 if the script's ents cause weather to spawn too high up, too slow, etc (i.e. map m6l1b).
+//
+////////////////////////////////////////////////////////////////////////
+//
+// Example "level.spawnamb" from m6l1a for interior sounds: // these are found in the "weather" folder. For custom maps, a new [mapname].txt file must be made in this folder.
+//
+//	level.spawnamb = makeArray
+//		( -1007 5663 5583 ) ( 0 -104 -191 ) ( 287 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // origin, setsize1, setsize2, music filepath.
+//		( -700 5559 5583 ) ( -325 -160 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // make sure spawnamb volumes with different sounds are not overlapping.
+//		( -717 5399 5583 ) ( -293 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+//		( -747 5369 5583 ) ( -233 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+//
+//		( -2128 -143 5583 ) ( -287 0 -191 ) ( 0 104 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+//		( -2435 -39 5583 ) ( 0 0 -191 ) ( 325 160 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+//		( -2418 121 5583 ) ( 0 0 -191 ) ( 293 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+//		( -2388 151 5583 ) ( 0 0 -191 ) ( 233 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+//	endArray
+//	exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+//
+//
+//
+// Example "level.water_volumes" from m5l2b for water sounds:
+//
+//	level.water_volumes = makeArray
+//		( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
+//	endArray
+//
+
+main local.string local.thunder local.weathersound local.spawn_funcrain:
+
+	if(level.weather_script == 1) { end }
+	level.weather_script = 1
+
+	waitframe // need this for the script to save $world farplane_color from map's .scr.
+	if($weather_volume != NULL) { $weather_volume remove }
+	if($weather_thunder != NULL) { $weather_thunder remove }
+
+	if(local.spawn_funcrain != 0)
+	{
+		local.weather1 = thread funcrain ( 0 0 0 ) // 9 entities fill up all playable map sizes, since their setsizes are somehow hardcoded down to roughly ( -4000 -4000 ground ) ( 4000 4000 map_height ).
+		local.weather2 = thread funcrain ( 4000 4000 0 )
+		local.weather3 = thread funcrain ( -4000 4000 0 )
+		local.weather4 = thread funcrain ( 4000 -4000 0 )
+		local.weather5 = thread funcrain ( -4000 -4000 0 )
+		local.weather6 = thread funcrain ( 4000 0 0 )
+		local.weather7 = thread funcrain ( 0 4000 0 )
+		local.weather8 = thread funcrain ( -4000 0 0 )
+		local.weather9 = thread funcrain ( 0 -4000 0 )
+	}
+
+	local.thunderent = spawn script_model "targetname" "weather_thunder" // 10 entities spawned + 2 entities per player.
+	local.thunderent model "fx/dummy.tik"
+	local.thunderent notsolid
+	local.thunderent hide
+	local.thunderent rendereffects "+viewlensflare"
+	local.thunderent light 1 1 1 3000
+
+	setcvar "cg_weather" local.string
+	thread cg_weather_cvar
+	thread cg_thunder_cvar
+
+	thread weather local.string
+	thread weather_init local.thunder local.weathersound
+	thread playerweather
+
+	wait 0.3
+	println("----- Starting weather '" + local.string + "'")
+
+	while(1)
+	{
+		level.rain_speed = getcvar("cg_rain_speed")
+		level.rain_speed_vary = getcvar("cg_rain_speed_vary")
+		level.rain_length = getcvar("cg_rain_length")
+		level.rain_width = getcvar("cg_rain_width")
+		level.rain_density = getcvar("cg_rain_density")
+		level.rain_slant = getcvar("cg_rain_slant")
+		level.rain_min_dist = getcvar("cg_rain_min_dist")
+		level.rain_numshaders = getcvar("cg_rain_numshaders")
+		level.rain_shader = getcvar("cg_rain_shader")
+		level.rain_drawcoverage = getcvar("cg_rain_drawcoverage")
+		if(level.rain_density != "0") { level.rain_density_init = getcvar("cg_rain_density") } // for singleplayer only.
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+weather local.string:
+
+	switch(local.string)
+	{
+		case "snow":
+			setcvar "cg_rain_speed" "50"
+			setcvar "cg_rain_speed_vary" "25"
+			setcvar "cg_rain_length" "3"
+			setcvar "cg_rain_width" "2"
+			setcvar "cg_rain_density" "1"
+			setcvar "cg_rain_slant" "500"
+			setcvar "cg_rain_min_dist" "1800"
+			setcvar "cg_rain_numshaders" "textures/snow10"
+			setcvar "cg_rain_shader" "textures/snow10"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "0"
+			break
+
+		case "snow_fast":
+			setcvar "cg_rain_speed" "150"
+			setcvar "cg_rain_speed_vary" "50"
+			setcvar "cg_rain_length" "3"
+			setcvar "cg_rain_width" "2"
+			setcvar "cg_rain_density" "1"
+			setcvar "cg_rain_slant" "900"
+			setcvar "cg_rain_min_dist" "1800"
+			setcvar "cg_rain_numshaders" "textures/snow10"
+			setcvar "cg_rain_shader" "textures/snow10"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "0"
+			break
+
+		case "blizzard":
+			setcvar "cg_rain_speed" "350"
+			setcvar "cg_rain_speed_vary" "150"
+			setcvar "cg_rain_length" "4"
+			setcvar "cg_rain_width" "3"
+			setcvar "cg_rain_density" "3"
+			setcvar "cg_rain_slant" "1500"
+			setcvar "cg_rain_min_dist" "1800"
+			setcvar "cg_rain_numshaders" "textures/snow10"
+			setcvar "cg_rain_shader" "textures/snow10"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "0"
+			break
+
+		case "hail":
+			setcvar "cg_rain_speed" "1000"
+			setcvar "cg_rain_speed_vary" "250"
+			setcvar "cg_rain_length" "4"
+			setcvar "cg_rain_width" "3"
+			setcvar "cg_rain_density" "1"
+			setcvar "cg_rain_slant" "75"
+			setcvar "cg_rain_min_dist" "2048"
+			setcvar "cg_rain_numshaders" "textures/snow10"
+			setcvar "cg_rain_shader" "textures/snow10"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "0"
+			break
+
+		case "snow_original":
+			setcvar "cg_rain_speed" "32"
+			setcvar "cg_rain_speed_vary" "16"
+			setcvar "cg_rain_length" "2"
+			setcvar "cg_rain_width" "1"
+			setcvar "cg_rain_density" "0.2"
+			setcvar "cg_rain_slant" "250"
+			setcvar "cg_rain_min_dist" "1800"
+			setcvar "cg_rain_numshaders" "textures/snow10"
+			setcvar "cg_rain_shader" "textures/snow10"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "0"
+			break
+
+		case "rain":
+			setcvar "cg_rain_speed" "2048"
+			setcvar "cg_rain_speed_vary" "512"
+			setcvar "cg_rain_length" "50"
+			setcvar "cg_rain_width" "0.5"
+			setcvar "cg_rain_density" "1"
+			setcvar "cg_rain_slant" "75"
+			setcvar "cg_rain_min_dist" "1024"
+			setcvar "cg_rain_numshaders" "textures/rain"
+			setcvar "cg_rain_shader" "textures/rain"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "1"
+			break
+
+		case "drizzle":
+			setcvar "cg_rain_speed" "2048"
+			setcvar "cg_rain_speed_vary" "512"
+			setcvar "cg_rain_length" "50"
+			setcvar "cg_rain_width" "0.5"
+			setcvar "cg_rain_density" "0.1"
+			setcvar "cg_rain_slant" "50"
+			setcvar "cg_rain_min_dist" "2048"
+			setcvar "cg_rain_numshaders" "textures/rain"
+			setcvar "cg_rain_shader" "textures/rain"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "1"
+			break
+
+		case "monsoon":
+			setcvar "cg_rain_speed" "2048"
+			setcvar "cg_rain_speed_vary" "512"
+			setcvar "cg_rain_length" "50"
+			setcvar "cg_rain_width" "0.5"
+			setcvar "cg_rain_density" "3"
+			setcvar "cg_rain_slant" "250"
+			setcvar "cg_rain_min_dist" "1024"
+			setcvar "cg_rain_numshaders" "textures/rain"
+			setcvar "cg_rain_shader" "textures/rain"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "1"
+			break
+
+		case "rain_original":
+			setcvar "cg_rain_speed" "2048"
+			setcvar "cg_rain_speed_vary" "512"
+			setcvar "cg_rain_length" "90"
+			setcvar "cg_rain_width" "0.4"
+			setcvar "cg_rain_density" "1"
+			setcvar "cg_rain_slant" "50"
+			setcvar "cg_rain_min_dist" "512"
+			setcvar "cg_rain_numshaders" "textures/rain"
+			setcvar "cg_rain_shader" "textures/rain"
+			setcvar "cg_rain" "1"
+			setcvar "cg_rain_sounds" "1"
+			break
+
+		default: // "0" or "off"
+			setcvar "cg_rain_speed" "0"
+			setcvar "cg_rain_speed_vary" "0"
+			setcvar "cg_rain_length" "0"
+			setcvar "cg_rain_width" "0"
+			setcvar "cg_rain_density" "0"
+			setcvar "cg_rain_slant" "0"
+			setcvar "cg_rain_min_dist" "0"
+			setcvar "cg_rain_numshaders" ""
+			setcvar "cg_rain_shader" ""
+			setcvar "cg_rain" "0"
+			setcvar "cg_rain_sounds" "0"
+			setcvar "cg_weather" "0"
+			break
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cg_weather_cvar:
+
+	local.string = getcvar("cg_weather")
+	while(getcvar("cg_weather") == local.string) { waitframe }
+	local.string = getcvar("cg_weather")
+
+	waitthread weather local.string
+	thread cg_weather_cvar
+end
+
+cg_thunder_cvar:
+
+	local.string = getcvar("cg_thunder")
+	while(getcvar("cg_thunder") == local.string) { waitframe }
+	local.string = getcvar("cg_thunder")
+
+	if(local.string == "1")
+	{
+		if(level.weather_thundering == NIL)
+		{
+			println("----- Weather thunder ENABLED.")
+			thread thunder
+		}
+	}
+	else { println("----- Weather thunder DISABLED.") }
+	thread cg_thunder_cvar
+end
+
+////////////////////////////////////////////////////////////////////////
+
+funcrain local.origin:
+
+	local.weather = spawn script_model targetname "weather_volume" classname "func_rain"
+	local.weather model "fx/dummy.tik"
+	local.weather notsolid
+	local.weather setsize ( -20000 -20000 -20000 ) ( 20000 20000 20000 ) // this allows weather to play throughout the entire volume.
+	local.weather.origin = local.origin
+end local.weather
+
+////////////////////////////////////////////////////////////////////////
+
+playerweather:
+
+	while(getcvar("cg_rain_sounds") != "1") { waitframe }
+	while(getcvar("cg_rain_sounds") == "1")
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i] != NULL)
+			{
+				if($player[local.i].weather_soundent == NIL || $player[local.i].weather_soundent == NULL)
+				{
+					$player[local.i].weather_soundent = spawn script_model targetname ("playerweather_" + $player[local.i].entnum)
+					$player[local.i].weather_soundent.model = "fx/dummy.tik" // for generic interior/exterior sounds
+					$player[local.i].weather_soundent notsolid
+					$player[local.i].weather_soundent.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+					$player[local.i].weather_soundent show // must add "show", otherwise loopsound will not work.
+					$player[local.i].weather_soundent loopsound rainext 1
+
+					$player[local.i].weather_soundent2 = spawn script_model targetname ("playerweather2_" + $player[local.i].entnum)
+					$player[local.i].weather_soundent2.model = "fx/dummy.tik" // for puddle, plant, roof exterior sounds or window interior sounds.
+					$player[local.i].weather_soundent2 notsolid
+					$player[local.i].weather_soundent2.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+					$player[local.i].weather_soundent2 show // must add "show", otherwise loopsound will not work.
+					$player[local.i].weather_soundent2 loopsound rainplant 1
+
+					$player[local.i] thread playerleft $player[local.i].weather_soundent $player[local.i].weather_soundent2
+				}
+				else // add a tiny bit of stereo effect (vertical instead of horizontal).
+				{
+					$player[local.i].weather_soundent.origin = trace $player[local.i].origin ($player[local.i].origin + $player[local.i].forwardvector * 50)
+					$player[local.i].weather_soundent2.origin = trace ($player[local.i].origin + ( 0 0 50 )) ($player[local.i] gettagposition "Bip01 Head" + ( 0 0 30 ))
+				}
+			}
+		}
+		waitframe
+	}
+	thread playerweather
+end
+
+playerleft local.soundent1 local.soundent2:
+
+	waitframe // need this to prevent auto-removing the soundents.
+
+	while(self != NULL && getcvar("cg_rain_sounds") == "1") { waitframe }
+
+	local.soundent1 remove
+	local.soundent2 remove
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+weather_init local.thunder local.weathersound:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache thunderclap1 sound/amb/Amb_Thunder_01.wav soundparms 2.0 0.0 1.0 0.0 10000 10000 auto streamed maps level.mapname
+	local.master aliascache thunderclap2 sound/amb/Amb_Thunder_02.wav soundparms 2.0 0.0 1.0 0.0 10000 10000 auto streamed maps level.mapname
+	local.master aliascache thunderclap3 sound/amb/Amb_Thunder_03.wav soundparms 2.0 0.0 1.0 0.0 10000 10000 auto streamed maps level.mapname
+
+	local.master aliascache rainext sound/amb/Amb_RainExt_01.wav soundparms 1.0 0.0 1.0 0.0 3000 6000 auto streamed maps level.mapname
+	//local.master aliascache rainint sound/amb/Amb_RainInt_01.wav soundparms 1.0 0.0 1.0 0.0 3000 6000 auto streamed maps level.mapname
+	local.master aliascache rainpuddle sound/amb/Amb_RainPuddle_01.wav soundparms 1.0 0.0 1.0 0.0 3000 6000 auto streamed maps level.mapname
+	local.master aliascache rainroof sound/amb/Amb_RainRoof_02.wav soundparms 1.0 0.0 1.0 0.0 160 320 auto streamed maps level.mapname
+	local.master aliascache rainwindow sound/amb/Amb_RainWindow_01.wav soundparms 1.0 0.0 1.0 0.0 160 320 auto streamed maps level.mapname
+	local.master aliascache rainplant sound/amb/Amb_RainPlant_01.wav soundparms 1.0 0.0 1.0 0.0 3000 6000 auto streamed maps level.mapname
+	if($weather_volume_wind != NULL)
+	{
+		local.master aliascache windweak sound/amb/wind_weak.wav soundparms 1.0 0.0 1.0 0.0 3000 6000 auto streamed maps level.mapname
+		local.master aliascache windstrong sound/amb/wind_strong.wav soundparms 1.0 0.0 1.0 0.0 3000 6000 auto streamed maps level.mapname
+	}
+
+	if(level.weather_sound == NIL)
+	{
+		if(local.weathersound == NIL) { level.weather_sound = 1 }
+		else { level.weather_sound = local.weathersound }
+	}
+
+	if(level.map_setsize1 == NIL || level.map_setsize2 == NIL)
+	{
+		local.map_setsizes = waitthread get_map_setsizes 50 // randomize traces in 3 dimensions to find the map's setsizes, then shrink the volume by 50.
+		level.map_setsize1 = ( local.map_setsizes[1][0] local.map_setsizes[1][1] local.map_setsizes[1][2] )
+		level.map_setsize2 = ( local.map_setsizes[2][0] local.map_setsizes[2][1] local.map_setsizes[2][2] )
+	}
+	if(level.map_height == NIL) { level.map_height = level.map_setsize2[2] }
+
+	level.farplane = $world.farplane
+	level.farplane_color = $world.farplane_color
+	level.rain = 0
+	level.raindest = 0
+	if(level.windtime == NIL) { level.windtime = 15.00 }
+	if(level.shuttertime == NIL) { level.shuttertime = 0.80 }
+	if(level.rainvolume == NIL) { level.rainvolume = 0.00 }
+	if(level.raindensity == NIL) { level.raindensity = 0.00 }
+	if(level.thundertime == NIL) { level.thundertime = 20.00 }
+
+	if(local.thunder == 1) { setcvar "cg_thunder" "1" }
+	else { setcvar "cg_thunder" 0" }
+	thread unflash
+	wait 1
+	thread thunder
+
+	if(game.medic != NIL) { thread medicchanger }
+	else { thread weatherchanger }
+
+	thread treemovement
+	thread weatherpattern
+	thread rainvar
+	thread rain_inout
+end
+
+////////////////////////////////////////////////////////////////////////
+
+weatherloop:
+
+	if(level.raindensity <= 0) { level.rain_density = 0 }
+	else if(level.raindensity < 1) { level.rain_density = level.raindensity * 10 }
+	else if(level.raindensity < 10) { level.rain_density = level.raindensity }
+	else { level.rain_density = 0.003 }
+
+	level.rain_density = level.raindensity // WTF Mackey? 
+
+	if(level.raindensity < 5) { local.raindensity = 50 }
+	else { local.raindensity = 50 + ((level.raindensity - 5) * 8) }
+
+	level.rain_slant = local.raindensity
+
+	local.rainvolume = level.rainvolume - 0.3
+	local.rainvolume = local.rainvolume - level.rain
+
+	if(level.rainvolume > 0.4) { local.rainvolume = 0.4 - (level.rainvolume - 0.4) }
+	else { local.rainvolume = level.rainvolume }
+	
+	local.rainvolume = local.rainvolume - level.rain
+
+	for(local.i = 1; local.i <= $weather_volume_roof.size; local.i++)
+	{
+		if(level.rainvolume <= 0) { $weather_volume_roof[local.i] stoploopsound }
+		else { $weather_volume_roof[local.i] loopsound rainroof (level.rainvolume + 0.2) } // "levelwide"
+	}
+
+	for(local.i = 1; local.i <= $weather_volume_window.size; local.i++)
+	{
+		if(level.rainvolume <= 0) { $weather_volume_window[local.i] stoploopsound }
+		else { $weather_volume_window[local.i] loopsound rainwindow (level.rainvolume + 0.2) } // "levelwide"
+	}
+
+	for(local.i = 1; local.i <= $weather_volume_plant.size; local.i++)
+	{
+		if(level.rainvolume <= 0) { $weather_volume_plant[local.i] stoploopsound }
+		else { $weather_volume_plant[local.i] loopsound rainplant (level.rainvolume + 0.2) } // "levelwide"
+	}
+
+	for(local.i = 1; local.i <= $weather_volume_wind.size; local.i++)
+	{
+		if(level.rainvolume <= 0) { $weather_volume_wind[local.i] stoploopsound }
+		else if(level.rainvolume > 0.5) { $weather_volume_wind[local.i] loopsound windweak (level.rainvolume + 0.2) 192 }
+		else { $weather_volume_wind[local.i] loopsound windstrong level.rainvolume 192 }
+	}
+end
+
+rainvar:
+
+	local.raintime = level.time
+	if(level.rain < level.raindest)
+	{
+		thread weatherloop
+		level.rain += 0.1
+	}
+	else if(level.rain > level.raindest)
+	{
+		thread weatherloop
+		level.rain -= 0.1
+	}
+	else if(level.time > local.raintime)
+	{
+		thread weatherloop
+		local.raintime += 2
+	}
+
+	wait 0.1
+	thread rainvar
+end
+
+weatherpattern:
+
+	if(level.weatherpattern == 0)
+	{
+		local.windtime = 15.00
+		local.shuttertime = 0.80
+		local.rainvolume = 0.00
+		local.raindensity = 0.00
+		local.thundertime = 20.00
+	}
+	else if(level.weatherpattern == 1)
+	{
+		local.windtime = 5.00
+		local.shuttertime = 0.30
+		local.rainvolume = 0.20
+		local.raindensity = 0.80
+		local.thundertime = 8.00
+	}
+	else if(level.weatherpattern == 2)
+	{
+		local.windtime = 3.00
+		local.shuttertime = 0.20
+		local.rainvolume = 0.40
+		local.raindensity = 3.00
+		local.thundertime = 6.00
+	}
+	else if(level.weatherpattern == 3)
+	{
+		local.windtime = 1.50
+		local.shuttertime = 0.10
+		local.rainvolume = 1.00
+		local.raindensity = 10.00
+		local.thundertime = 4.00
+	}
+
+	// local.trans = 0.15
+	local.trans = 0.07
+	level.windtime = (local.windtime * local.trans + (level.windtime * (1 - local.trans)))
+	level.shuttertime = (local.shuttertime * local.trans + (level.shuttertime * (1 - local.trans)))
+	level.raindensity = (local.raindensity * local.trans + (level.raindensity * (1 - local.trans)))
+	level.rainvolume = (local.rainvolume * local.trans + (level.rainvolume * (1 - local.trans)))
+	level.thundertime = (local.thundertime * local.trans + (level.thundertime * (1 - local.trans)))
+	//println ("Current wind:" + level.windtime + " current shutter:" + level.shuttertime + " current raindensity:" + level.raindensity + " current rainvolume:" + level.rainvolume + " current thundertime:" + level.thundertime)
+
+	if(level.raindensity > 0.4 && level.rainvolume < 0.1) { level.rainvolume = 0.10 }
+
+	wait 1
+	thread weatherpattern
+end
+
+weatherchanger:
+
+	level.weatherpattern = 0
+	wait 4
+	thread w
+end
+
+w:
+	level.weatherpattern = 1
+	wait 10
+	level.weatherpattern = 2
+	wait 15
+	level.weatherpattern = 3
+
+	wait 60
+	level.weatherpattern = 2
+	wait 15
+	level.weatherpattern = 1
+	wait 60
+	// level.weatherpattern = 0
+	// wait 60
+	thread w
+end
+
+medicchanger:
+
+	level.weatherpattern = 0
+	wait 5
+	thread w2
+end
+
+w2:
+	level.weatherpattern = 1
+	wait 10
+	level.weatherpattern = 2
+	wait 15
+	level.weatherpattern = 3
+
+	wait 20
+	level.weatherpattern = 2
+	wait 5
+	level.weatherpattern = 0
+	wait 15
+	// level.weatherpattern = 0
+	// wait 60
+	thread w2
+end
+
+treemovement:
+
+	local.num = (level.raindensity + 1.5) / 2.5
+	for(local.i = 1; local.i <= $player.size; local.i++) { $player[local.i] stufftext ("r_static_shadermultiplier1 " + local.num) }
+	wait 1
+	thread treemovement
+end
+
+////////////////////////////////////////////////////////////////////////
+
+thunder:
+
+	level.weather_thundering = 0
+	wait (level.thundertime + randomint( (level.thundertime * 1.5) ))
+	level.weather_thundering = 1
+
+	local.r = randomint(2)
+	if(local.r == 0) { local.x = randomint(level.map_setsize1[0]) } // randomint is capable of randomizing negative numbers, and keeping the negative sign.
+	else { local.x = randomint(level.map_setsize2[0]) }
+	local.r = randomint(2)
+	if(local.r == 0) { local.y = randomint(level.map_setsize1[1]) }
+	else { local.y = randomint(level.map_setsize2[1]) }
+
+	$weather_thunder.origin = ( local.x local.y level.map_height )
+
+	local.num = randomint(3) + 1
+	if(local.num == 1)
+	{
+		thread flash
+		wait 0.2
+		thread unflash
+		wait 1
+		thread flash
+		wait 0.1
+		thread unflash
+		wait 0.1
+		thread flash
+		wait 0.1
+		thread unflash
+		wait (1 + (randomfloat(2)))
+	}
+	else if(local.num == 2)
+	{
+		thread flash
+		wait 0.1
+		thread unflash
+		wait 0.1
+		thread flash
+		wait 0.1
+		thread unflash
+		wait 1
+		thread flash
+		wait 0.2
+		thread unflash
+		wait (1 + (randomfloat(2)))
+	}
+	else if(local.num == 3)
+	{
+		thread flash
+		wait 0.1
+		thread unflash
+		wait 0.1
+		thread flash
+		wait 0.2
+		thread unflash
+		wait 0.5
+		thread flash
+		wait 0.1
+		thread unflash
+		wait (1 + (randomfloat(2)))
+	}
+
+	if(game.medic == NIL && getcvar("cg_thunder") == "1") { $weather_thunder playsound thunderclap }
+	thread thunder
+end
+
+flash:
+
+	if(getcvar("cg_thunder") != "1") { end }
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i].fastsky_value != 1) { $player[local.i] stufftext "r_fastsky 1" }
+	}
+	$world farplane_color (0.9 0.9 0.9)
+	$weather_thunder show
+end
+
+unflash:
+
+	if(getcvar("cg_thunder") != "1") { end }
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if($player[local.i].fastsky_value != 1) { $player[local.i] stufftext "r_fastsky 0" }
+	}
+	$world farplane_color level.farplane_color
+	$weather_thunder hide
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+rain_inout:
+
+	while(getcvar("cg_rain_sounds") != "1") { waitframe }
+	while(getcvar("cg_rain_sounds") == "1")
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i] != NULL && $player[local.i].weather_soundent != NIL && $player[local.i].weather_soundent != NULL && $player[local.i].weather_soundent2 != NIL && $player[local.i].weather_soundent2 != NULL)
+			{
+				if(level.water_volumes != NIL && level.water_volumes != 0)
+				{
+					for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
+					{
+						local.X_min[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][2][0] - 50 // check 50+ units beyond each volume's edges (player is near water).
+						local.X_max[local.v] = level.water_volumes[local.v][1][0] + level.water_volumes[local.v][3][0] + 50
+						local.Y_min[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][2][1] - 50
+						local.Y_max[local.v] = level.water_volumes[local.v][1][1] + level.water_volumes[local.v][3][1] + 50
+						local.Z_min[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][2][2] - 200
+						local.Z_max[local.v] = level.water_volumes[local.v][1][2] + level.water_volumes[local.v][3][2] + 200
+	
+						if(int($player[local.i].origin[0]) >= local.X_min[local.v] && int($player[local.i].origin[0]) <= local.X_max[local.v] && int($player[local.i].origin[1]) >= local.Y_min[local.v] && int($player[local.i].origin[1]) <= local.Y_max[local.v] && int($player[local.i].origin[2]) >= local.Z_min[local.v] && int($player[local.i].origin[2]) <= local.Z_max[local.v])
+						{
+							if(level.rainvolume > 0) { $player[local.i].weather_soundent2 loopsound rainpuddle level.weather_sound }
+							$player[local.i].weather_nearwater = 1
+							break
+						}
+						else
+						{
+							if(level.rainvolume > 0) { $player[local.i].weather_soundent2 loopsound rainplant level.weather_sound }
+							$player[local.i].weather_nearwater = 0
+						}
+					}
+				}
+				else
+				{
+					if(level.rainvolume > 0) { $player[local.i].weather_soundent2 loopsound rainplant level.weather_sound }
+					$player[local.i].weather_nearwater = 0
+				}
+
+				for(local.a = 1; local.a <= level.spawnamb.size; local.a++)
+				{
+					if(level.spawnamb[local.a][1] != 0 && level.spawnamb[local.a][2] != 0 && level.spawnamb[local.a][3] != 0 && level.spawnamb[local.a][4] != 0)
+					{
+						local.X_min[local.a] = level.spawnamb[local.a][1][0] + level.spawnamb[local.a][2][0]
+						local.X_max[local.a] = level.spawnamb[local.a][1][0] + level.spawnamb[local.a][3][0]
+						local.Y_min[local.a] = level.spawnamb[local.a][1][1] + level.spawnamb[local.a][2][1]
+						local.Y_max[local.a] = level.spawnamb[local.a][1][1] + level.spawnamb[local.a][3][1]
+						local.Z_min[local.a] = level.spawnamb[local.a][1][2] + level.spawnamb[local.a][2][2]
+						local.Z_max[local.a] = level.spawnamb[local.a][1][2] + level.spawnamb[local.a][3][2]
+
+						if(int($player[local.i].origin[0]) >= local.X_min[local.a] && int($player[local.i].origin[0]) <= local.X_max[local.a] && int($player[local.i].origin[1]) >= local.Y_min[local.a] && int($player[local.i].origin[1]) <= local.Y_max[local.a] && int($player[local.i].origin[2]) >= local.Z_min[local.a] && int($player[local.i].origin[2]) <= local.Z_max[local.a])
+						{
+							if($player.size == 1) { level.raindest = 1; level.weathering = 0 } // singleplayer only
+							if(level.rainvolume > 0)
+							{
+								$player[local.i].weather_soundent loopsound rainext (level.weather_sound * 0.5) // rainint 1 // sound changed too sharply between rainext and rainint.
+								$player[local.i].weather_soundent2 loopsound rainwindow level.weather_sound // rainwindow .5
+								$player[local.i].weather_inside = 1
+							}
+							break
+						}
+						else
+						{
+							if($player.size == 1) { level.raindest = 0; level.weathering = 1 } // singleplayer only
+							if(level.rainvolume > 0)
+							{
+								$player[local.i].weather_soundent loopsound rainext level.weather_sound
+								if($player[local.i].weather_nearwater == 1) { $player[local.i].weather_soundent2 loopsound rainpuddle level.weather_sound }
+								else { $player[local.i].weather_soundent2 loopsound rainplant level.weather_sound }
+								$player[local.i].weather_inside = 0
+							}
+						}
+					}
+					else
+					{
+						if($player.size == 1) { level.raindest = 0; level.weathering = 1 } // singleplayer only
+						if(level.rainvolume > 0)
+						{
+							$player[local.i].weather_soundent loopsound rainext level.weather_sound
+							if($player[local.i].weather_nearwater == 1) { $player[local.i].weather_soundent2 loopsound rainpuddle level.weather_sound }
+							else { $player[local.i].weather_soundent2 loopsound rainplant level.weather_sound }
+							$player[local.i].weather_inside = 0
+						}
+					}
+				}
+				if(level.spawnamb == NIL)
+				{
+					if($player.size == 1) { level.raindest = 0; level.weathering = 1 } // singleplayer only
+					if(level.rainvolume > 0)
+					{
+						$player[local.i].weather_soundent loopsound rainext level.weather_sound
+						if($player[local.i].weather_nearwater == 1) { $player[local.i].weather_soundent2 loopsound rainpuddle level.weather_sound }
+						else { $player[local.i].weather_soundent2 loopsound rainplant level.weather_sound }
+						$player[local.i].weather_inside = 0
+					}
+				}
+
+				if(level.map_height != NIL && $player[local.i].weather_inside != 1)
+				{
+					local.head = $player[local.i] gettagposition "Bip01 Head"
+					local.trace = trace local.head (local.head + ( 0 0 10248 )) 1 // pass through entities, but not $world.
+					local.dist = local.trace[2] - local.head[2]
+
+					local.headb = $player[local.i] gettagposition "Bip01 Head" + $player[local.i].forwardvector * -25
+					local.traceb = trace local.headb (local.headb + ( 0 0 10248 )) 1 // check middle and back, front, left, right 25 units away from player's head (avoids playing "rainroof" when standing over tiny objects).
+					local.distb = local.traceb[2] - local.headb[2]
+
+					local.headf = $player[local.i] gettagposition "Bip01 Head" + $player[local.i].forwardvector * 25
+					local.tracef = trace local.headf (local.headf + ( 0 0 10248 )) 1
+					local.distf = local.tracef[2] - local.headf[2]
+
+					local.headl = $player[local.i] gettagposition "Bip01 Head" + $player[local.i].leftvector * 25
+					local.tracel = trace local.headl (local.headl + ( 0 0 10248 )) 1
+					local.distl = local.tracel[2] - local.headl[2]
+
+					local.headr = $player[local.i] gettagposition "Bip01 Head" + $player[local.i].leftvector * -25
+					local.tracer = trace local.headr (local.headr + ( 0 0 10248 )) 1
+					local.distr = local.tracer[2] - local.headr[2]
+
+					if(local.dist < 600 && local.trace[2] < level.map_height && local.distb < 600 && local.traceb[2] < level.map_height && local.distf < 600 && local.tracef[2] < level.map_height && local.distl < 600 && local.tracel[2] < level.map_height && local.distr < 600 && local.tracer[2] < level.map_height)
+					{
+						$player[local.i].weather_soundent2 loopsound rainroof level.weather_sound
+					}
+					local.head = NIL
+					local.trace = NIL
+				}
+
+				if(level.rainvolume <= 0)
+				{
+					$player[local.i].weather_soundent stoploopsound
+					$player[local.i].weather_soundent2 stoploopsound
+				}
+			}
+		}
+
+		if($player.size > 1) // multiplayer only (don't change level's rain if there is more than 1 player).
+		{
+			level.raindest = 0
+			level.weathering = 1
+			if(getcvar("cg_rain_density") != "1" && getcvar("cg_weather") != "0") { setcvar "cg_rain_density" level.rain_density_init }
+		}
+		else if($player.size == 1) // singleplayer only.
+		{
+			if(getcvar("cg_weather") != "0")
+			{
+				if(level.weathering != 1)
+				{
+					if(getcvar("cg_rain_density") != "0") { setcvar "cg_rain_density" "0" }
+				}
+				else if(getcvar("cg_rain_density") != "1") { setcvar "cg_rain_density" level.rain_density_init }
+			}
+		}
+		waitframe
+	}
+	thread rain_inout
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+get_map_setsizes local.shrink_amount:
+
+	local.smallest = 9999999
+	for(local.c = 0; local.c <= 256; local.c++)
+	{
+		local.r1 = randomint(16384) - 8192
+		local.r2 = randomint(16384) - 8192
+		local.start = ( -8192 local.r1 local.r2 )
+		local.destination = trace local.start ( local.start + ( 16384 0 0 )) 0
+		local.dist = vector_length(local.start - local.destination)
+		if(local.dist < local.smallest) { local.smallest = local.dist }
+	}
+	local.X_min = local.smallest - 8192
+	local.smallest = 9999999
+	for(local.c = 0; local.c <= 256; local.c++)
+	{
+		local.r1 = randomint(16384) - 8192
+		local.r2 = randomint(16384) - 8192
+		local.start = ( local.r1 -8192 local.r2 )
+		local.destination = trace local.start ( local.start + ( 0 16384 0 )) 0
+		local.dist = vector_length(local.start - local.destination)
+		if(local.dist < local.smallest) { local.smallest = local.dist }
+	}
+	local.Y_min = local.smallest - 8192
+	local.smallest = 9999999
+	for(local.c = 0; local.c <= 256; local.c++)
+	{
+		local.r1 = randomint(16384) - 8192
+		local.r2 = randomint(16384) - 8192
+		local.start = ( local.r1 local.r2 -8192 )
+		local.destination = trace local.start ( local.start + ( 0 0 16384 )) 0
+		local.dist = vector_length(local.start - local.destination)
+		if(local.dist < local.smallest) { local.smallest = local.dist }
+	}
+	local.Z_min = local.smallest - 8192
+	local.smallest = 9999999
+	for(local.c = 0; local.c <= 256; local.c++)
+	{
+		local.r1 = randomint(16384) - 8192
+		local.r2 = randomint(16384) - 8192
+		local.start = ( 8192 local.r1 local.r2 )
+		local.destination = trace local.start ( local.start + ( -16384 0 0 )) 0
+		local.dist = vector_length(local.start - local.destination)
+		if(local.dist < local.smallest) { local.smallest = local.dist }
+	}
+	local.X_max = (local.smallest - 8192) * -1
+	local.smallest = 9999999
+	for(local.c = 0; local.c <= 256; local.c++)
+	{
+		local.r1 = randomint(16384) - 8192
+		local.r2 = randomint(16384) - 8192
+		local.start = ( local.r1 8192 local.r2 )
+		local.destination = trace local.start ( local.start + ( 0 -16384 0 )) 0
+		local.dist = vector_length(local.start - local.destination)
+		if(local.dist < local.smallest) { local.smallest = local.dist }
+	}
+	local.Y_max = (local.smallest - 8192) * -1
+	local.smallest = 9999999
+	for(local.c = 0; local.c <= 256; local.c++)
+	{
+		local.r1 = randomint(16384) - 8192
+		local.r2 = randomint(16384) - 8192
+		local.start = ( local.r1 local.r2 8192 )
+		local.destination = trace local.start ( local.start + ( 0 0 -16384 )) 0
+		local.dist = vector_length(local.start - local.destination)
+		if(local.dist < local.smallest) { local.smallest = local.dist }
+	}
+	local.Z_max = (local.smallest - 8192) * -1
+
+	if(local.shrink_amount == NIL) { local.shrink_amount = 0 }
+	local.map_setsizes[1] = ( (local.X_min + local.shrink_amount) (local.Y_min + local.shrink_amount) (local.Z_min + local.shrink_amount) )
+	local.map_setsizes[2] = ( (local.X_max - local.shrink_amount) (local.Y_max - local.shrink_amount) (local.Z_max - local.shrink_amount) )
+end local.map_setsizes

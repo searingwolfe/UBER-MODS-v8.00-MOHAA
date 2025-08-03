@@ -351,7 +351,7 @@ frozen_player local.mef_weaponclass:
 			if(self != NULL && self.useheld != 1 && self.stoppingwatch != 1) { self stopwatch 0; self.stoppingwatch = 1 }
 			if($player[local.i] != NULL && $player[local.i].useheld != 1 && $player[local.i].stoppingwatch != 1) { $player[local.i] stopwatch 0; $player[local.i].stoppingwatch = 1 }
 
-			while(self != NULL && isalive $player[local.i] && local.revivetrig != NULL && $player[local.i].useheld == 1 && ($player[local.i] istouching local.revivetrig || (level.newgametype == "ft" && $player[local.i].melter istouching local.revivetrig)) && $player[local.i].dead != 1 && local.ent != NULL && $player[local.i].dmteam == local.ent.team && level.change_team_score != 1) // melting the frozen player
+			while(self != NULL && isalive $player[local.i] && local.revivetrig != NULL && (($player[local.i] istouching local.revivetrig && ($player[local.i].useheld == 1 || level.newgametype == "ft")) || (level.newgametype == "ft" && $player[local.i].melter istouching local.revivetrig && $player[local.i].useheld == 1)) && $player[local.i].dead != 1 && local.ent != NULL && $player[local.i].dmteam == local.ent.team && level.change_team_score != 1) // melting the frozen player
 			{
 				if(self != NULL && $player[local.i] != NULL && local.holdtimer <= 0) 
 				{
@@ -696,7 +696,7 @@ melt_frozen_player local.ent local.mef_weaponclass:
 	self noclip
 
 	self tele local.ent.origin	   // teleport them back to their frozen bodies.
-	self.viewangles = local.ent.angles // matching viewangles does not work if the player was still dead and had to respawned with "self respawn".
+	//self.viewangles = local.ent.angles // this doesn't work until at least 0.1 seconds have passed after teleporting.
 	local.ent playsound med_canteen
 	self.dead = 0
 	self show
@@ -721,7 +721,10 @@ melt_frozen_player local.ent local.mef_weaponclass:
 	}
 
 	local.ent.revived = 1
-	wait 0.1
+	waitframe
+	if(self != NULL) { self.viewangles = local.ent.angles } // matching viewangles does not work if the player was still dead and had to respawned with "self respawn".
+
+	waitframe
 	if($("revivetrig" + local.ent.entnum) != NULL) { $("revivetrig" + local.ent.entnum) remove }
 	local.ent remove
 end
@@ -1820,7 +1823,7 @@ new_player_hud:
 				$player[local.i] thread huddraw_players
 				$player[local.i].HUDcybsnd = 1
 			}
-			if($player[local.i] getconnstate == 1) { $player[local.i].huddraw = 0 }
+			if($player[local.i] getconnstate == 1) { $player[local.i].HUDcybsnd = 0 }
 		}
 		wait 3
 	}

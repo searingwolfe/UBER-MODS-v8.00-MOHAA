@@ -656,7 +656,7 @@ Init_Lift_Builder local.player local.modelnumber:
 									//Work out the distance of where the lift has to travel
 									local.distance = (local.endpoint - local.startpoint)
 
-									goto Place_Object_Lift local.builder local.ent local.modelnumber
+									goto Place_Object_Lift local.builder local.ent local.modelnumber local.player
 								}
 							}
 						}
@@ -715,7 +715,7 @@ Init_Lift_Builder local.player local.modelnumber:
 	}
 end
 
-Place_Object_Lift local.builder local.ent local.modelnumber:
+Place_Object_Lift local.builder local.ent local.modelnumber local.player:
 
 	if(local.player.usinglaser == 1)
 	{
@@ -731,6 +731,7 @@ Place_Object_Lift local.builder local.ent local.modelnumber:
 	local.builder targetname "builder_object"
 	local.builder.islift = 1
 	local.builder.modelnumber = local.modelnumber
+	local.builder.playerowner = local.player
 
 	local.builder thread move_lift local.distance
 
@@ -936,32 +937,77 @@ Init_builder local.player local.modelnumber:
 					local.modelnumber = local.player.objectcarriednum
 				}
 
-				if((local.player getcontrollerangles 0)[2] <= 15 && (local.player getcontrollerangles 0)[2] >= -15)
+				if(local.player.leanleftheld == 0 && local.player.leanrightheld == 0)
 				{
 					if(local.player.leancount != NIL && local.player.leancount > 30 && local.builder.angles != local.angles_old && local.switch != 1) { local.player iprint ("Object angles = ( " + local.builder.angles[0] + " " + local.builder.angles[1] + " " + local.builder.angles[2] + " )") }
 					local.player.leaning = 0
 					local.player.leancount = 0
 				}
 				if(local.player.leaning == 1 && local.player.leancount <= 30) { local.player.leancount++ }
-				if(((local.player getcontrollerangles 0)[2] > 15 || (local.player getcontrollerangles 0)[2] < -15) && (local.holdcount == NIL || (local.holdcount != NIL && local.holdcount == 0)))
+				if((local.player.leanleftheld == 1 || local.player.leanrightheld == 1) && (local.holdcount == NIL || (local.holdcount != NIL && local.holdcount == 0)))
 				{
-					if(local.player.leaning != 1)
+					if(local.player.leaning != 1 && local.player.secfireheld != 1)
 					{
-						if((local.player getcontrollerangles 0)[2] > 15) { local.builder.angles = local.builder.angles + ( 90 0 0 ) }
-						if((local.player getcontrollerangles 0)[2] < -15) { local.builder.angles = local.builder.angles + ( 0 0 90 ) }
+						if(local.player.leanleftheld == 1) { local.builder.angles = local.builder.angles + ( 90 0 0 ) }
+						if(local.player.leanrightheld == 1) { local.builder.angles = local.builder.angles + ( 0 0 90 ) }
 						//local.player iprint ("Object angles = ( " + local.builder.angles[0] + " " + local.builder.angles[1] + " " + local.builder.angles[2] + " )")
 						local.player.leaning = 1
 					}
 					if(local.player.leancount > 30)
 					{
-						if((local.player getcontrollerangles 0)[2] > 15) { local.builder.angles = local.builder.angles + ( 1 0 0 ) }
-						if((local.player getcontrollerangles 0)[2] < -15) { local.builder.angles = local.builder.angles + ( 0 0 1 ) }
-						local.stop = 0
+						if(local.player.secfireheld != 1)
+						{
+							if(local.player.leanleftheld == 1) { local.builder.angles = local.builder.angles + ( 1 0 0 ) }
+							if(local.player.leanrightheld == 1) { local.builder.angles = local.builder.angles + ( 0 0 1 ) }
+							local.stop = 0
+						}
+						else
+						{
+							if(local.builder.switched != 1)
+							{
+								if(local.player.leanleftheld == 1) { local.builder.angles = local.builder.angles + ( 0 0 -1 ) }
+								if(local.player.leanrightheld == 1) { local.builder.angles = local.builder.angles + ( 0 0 1 ) }
+							}
+							else
+							{
+								if(local.player.leanleftheld == 1) { local.builder.angles = local.builder.angles + ( 1 0 0 ) }
+								if(local.player.leanrightheld == 1) { local.builder.angles = local.builder.angles + ( -1 0 0 ) }
+							}
+						}
 					}
 				}
 				local.angles_old = local.builder.angles
 
-				if(local.player.fireheld == 1 && local.fireheld_init != 1)
+				if(local.player.fireheld == 1 && local.player.secfireheld == 1 && (local.holdcount == NIL || (local.holdcount != NIL && local.holdcount == 0)) && local.fireheld_init != 1)
+				{
+					local.ent color ( 0 0 1 )
+					local.player.leancount = 31
+					if(local.builder.blue != 1) { local.player iprint "BLUE: Walk = inc/dec laser distance, Crouch = rotate 90 degrees, Lean Left/Right = trim angles." }
+					local.builder.blue = 1
+
+					if(local.player.legs_state_walkforward == 1) { local.player.basebuild_laserdist += 10 }
+					if(local.player.legs_state_walkbackward == 1) { local.player.basebuild_laserdist -= 10 }
+
+					if(local.player getposition == "crouching")
+					{
+						if(local.switch != 1)
+						{
+							local.builder.angles += ( 0 90 0 )
+							local.builder.switched++
+							if(local.builder.switched > 1) { local.builder.switched = 0 }
+						}
+						local.switch = 1
+					}
+					else { local.switch = 0 }
+				}
+				else
+				{
+					local.ent color ( 0 1 0 )
+					local.builder.switched = 0
+					local.builder.blue = 0
+				}
+
+				if(local.player.fireheld == 1 && local.player.secfireheld != 1 && local.fireheld_init != 1)
 				{
 					local.ent color ( 1 0 0 )
 
@@ -1026,7 +1072,7 @@ Init_builder local.player local.modelnumber:
 				if(local.badplacement != 1 && local.holdcount != NIL && (local.player.fireheld != 1 && local.holdcount > 0 && local.holdcount <= 60) || (local.player.fireheld == 1 && local.canceltoggle == 2 && local.fireheld_init != 1))
 				{
 					local.ent color ( 1 0 0 )
-					goto Place_Object local.builder local.ent local.modelnumber
+					goto Place_Object local.builder local.ent local.modelnumber local.player
 				}
 
 				local.laserorigin = (local.player gettagposition "eyes bone")
@@ -1074,35 +1120,18 @@ Init_builder local.player local.modelnumber:
 	}
 end
 
-Place_Object local.builder local.ent local.modelnumber:
+Place_Object local.builder local.ent local.modelnumber local.player:
 
 	if(local.player.usinglaser == 1)
 	{
 		local.removelaser = 1
 	}
-
 	local.player.usinglaser = 0
 
 	if(local.objectplacementorigin == NIL) { local.player iprint "Failed to place object. coords: ( NIL NIL NIL )."; end }
 
 	local.builder targetname "builder_object"
-
-	local.degrees = local.builder.angles[1]
-	if(local.builder.angles[1] >= 180) { local.degrees = local.builder.angles[1] - 360 }
-
-	local.tempstr = "coords: ( " + string(int(local.objectplacementorigin[0])) + " " 
-	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[1])) + " "
-	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[2])) + " ). "
-	local.tempstr = local.tempstr + "angles: ( " + string(int(local.builder.angles[0])) + " " 
-	local.tempstr = local.tempstr + string(int(local.degrees)) + " "
-	local.tempstr = local.tempstr + string(int(local.builder.angles[2])) + " ). "
-	local.tempstr = local.tempstr + local.player.objectcarried + "."
-	local.player iprint local.tempstr
-	
-	if(level.bb_printtoconsole == 1) { println(local.tempstr) }
-
 	level.objectlimitcount++
-
 	waitframe
 
 	if(local.removelaser == 1)
@@ -1137,6 +1166,7 @@ Place_Object local.builder local.ent local.modelnumber:
 		}
 		if(local.added != 1) { local.player.bb_ents[local.player.bb_ents.size + 1] = local.builder }
 		local.builder.modelnumber = local.modelnumber
+		local.builder.playerowner = local.player
 	}
 	else
 	{
@@ -1156,12 +1186,27 @@ Place_Object local.builder local.ent local.modelnumber:
 		}
 		if(local.added != 1) { local.player.bb_ents[local.player.bb_ents.size + 1] = local.mg }
 		local.mg.modelnumber = local.modelnumber
+		local.mg.playerowner = local.player
 	}
 	//if(local.player.objectcarried == "fx/searchlight.tik") 
 	//{
 	//	waitthread setup_searchlights local.builder
 	//	local.builder remove
 	//}
+
+	local.degrees = local.builder.angles[1]
+	if(local.builder.angles[1] >= 180) { local.degrees = local.builder.angles[1] - 360 }
+
+	local.tempstr = "coords: ( " + string(int(local.objectplacementorigin[0])) + " " 
+	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[1])) + " "
+	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[2])) + " ). "
+	local.tempstr = local.tempstr + "angles: ( " + string(int(local.builder.angles[0])) + " " 
+	local.tempstr = local.tempstr + string(int(local.degrees)) + " "
+	local.tempstr = local.tempstr + string(int(local.builder.angles[2])) + " ). "
+	local.tempstr = local.tempstr + local.player.objectcarried + "."
+	local.player iprint local.tempstr
+	
+	if(level.bb_printtoconsole == 1) { println(local.tempstr) }
 
 	local.player.buildingmapnow = 0
 end
@@ -1363,7 +1408,7 @@ Init_Builder_Teleporter local.player local.modelnumber:
 
 						local.x remove
 					
-						goto Place_Object_Teleporter local.builder local.modelnumber
+						goto Place_Object_Teleporter local.builder local.modelnumber local.player
 					
 					}
 					if(local.player.fireheld != 1) { local.fireheld = 0 }
@@ -1378,11 +1423,12 @@ Init_Builder_Teleporter local.player local.modelnumber:
 	}
 end
 
-Place_Object_Teleporter local.builder local.modelnumber:
+Place_Object_Teleporter local.builder local.modelnumber local.player:
 
 	//CREATE THE TELEPORTER
 	local.tele = waitthread make_teleporter local.startpoint local.endpoint
 	local.tele.modelnumber = local.modelnumber
+	local.tele.playerowner = local.player
 	local.tele.istele = 1
 
 	level.objectlimitcount++
@@ -1473,7 +1519,7 @@ builder_remover_laser:
 
 				if($player[local.i].useheld == 1)
 				{
-					if(($player[local.i].leanleftheld == 1 || $player[local.i].leanrightheld == 1) && $player[local.i].builder_leanhelding != 1)
+					if(($player[local.i].leanleftheld == 1 || $player[local.i].leanrightheld == 1) && $player[local.i].builder_leanhelding != 1 && $player[local.i].coord_pointer_given != 1 && $player[local.i].entity_pointer_given != 1 && $player[local.i].proximity_pointer_given != 1)
 					{
 						if($player[local.i].builder_remover_laser.active != 1)
 						{
@@ -1637,6 +1683,14 @@ builder_remover_laser:
 
 			if($player[local.i].fireheld == 1) { $player[local.i].builder_firehelding = 1 }
 			else { $player[local.i].builder_firehelding = 0 }
+
+			if($player[local.i].builder_remover_laser != NIL && $player[local.i].builder_remover_laser != NULL && $player[local.i].builder_remover_laser.active == 1 && ($player[local.i].coord_pointer_given == 1 || $player[local.i].entity_pointer_given == 1 || $player[local.i].proximity_pointer_given == 1))
+			{
+				$player[local.i] iprint "Removed your Builder Remover Laser."
+				$player[local.i].builder_remover_laser.spot.model = "fx/dummy.tik"
+				$player[local.i].builder_remover_laser deactivate
+				$player[local.i].builder_remover_laser.active = 0
+			}
 		}
 		waitframe
 	}

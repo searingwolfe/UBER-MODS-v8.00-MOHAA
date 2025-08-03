@@ -212,7 +212,7 @@ main local.damage_origin1 local.damage_origin2 local.explosion_origin local.debr
 	if($exploder_trigproj != NULL) { $exploder_trigproj nottriggerable }
 
 	thread removestuff local.set // remove miscellaneous entities that are near the exploder ("cratesstuff", "red_tele", "mapwall" targetnames with same set number as local.set).
-	thread remove_ambiences local.set // remove any "level.spawnamb" sound ambiences that have the same set number as local.set.
+	thread remove_ambiences local.set // remove any "level.interior_volumes" sound ambiences that have the same set number as local.set.
 
 	if(level.exploder_killer_noprint != 1 && local.exploder.noprint != 1) { println("----- Blowing up $exploder[" + local.s + "] with '.set = " + local.set + "'") }
 
@@ -331,14 +331,14 @@ end
 
 remove_ambiences local.set:
 
-	for(local.a = 1; local.a <= level.spawnamb.size; local.a++)
+	for(local.a = 1; local.a <= level.interior_volumes.size; local.a++)
 	{
-		if(level.spawnamb[local.a].size >= 5 && level.spawnamb[local.a][5] == local.set)
+		if(level.interior_volumes[local.a].size >= 5 && level.interior_volumes[local.a][5] == local.set)
 		{
-			level.spawnamb[local.a][1] = 0
-			level.spawnamb[local.a][2] = 0
-			level.spawnamb[local.a][3] = 0
-			level.spawnamb[local.a][4] = 0
+			level.interior_volumes[local.a][1] = 0
+			level.interior_volumes[local.a][2] = 0
+			level.interior_volumes[local.a][3] = 0
+			level.interior_volumes[local.a][4] = 0
 		}
 	}
 end

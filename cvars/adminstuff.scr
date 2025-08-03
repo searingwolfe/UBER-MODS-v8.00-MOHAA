@@ -439,6 +439,9 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 	while(local.player != NIL && local.player != NULL && local.player getconnstate != 4) { waitframe } // make sure the player is CS_ACTIVE (in the game), not PRIMED, CONNECTED, ZOMBIE, or FREE.
 	while(local.player != NIL && local.player != NULL && local.player.IP_address_init == NIL) { waitframe } // wait for "IP_addresses" thread to finish obtaining an IP string.
 	while(local.player != NIL && local.player != NULL && local.player.using_OpenMOHAA == NIL) { waitframe } // wait for "using_OpenMOHAA" thread to finish determining if the player is running OpenMOHAA.
+	local.c = 0
+	while(local.player != NIL && local.player != NULL && local.c <= 40) { local.c++; waitframe } // wait 2 seconds after joining, to avoid false positives caused by pressing the "score" (tab) button.
+	while(local.player != NIL && local.player != NULL && level.time < 5) { waitframe } // wait 5 seconds after map begins, to avoid false positives.
 
 	if(local.player == NIL || local.player == NULL) { end }
 	if(local.player.using_OpenMOHAA == 1) { end }

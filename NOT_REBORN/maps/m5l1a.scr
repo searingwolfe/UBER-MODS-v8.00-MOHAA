@@ -65,6 +65,7 @@ level waittill prespawn
 	exec global/exploder.scr
 	exec global/shutter.scr
 	//exec global/barrel.scr::explosive_barrel
+	exec global/weather.scr "rain" 1 0.8
 
 	//setcvar "cg_rain" "1"
 	//exec global/weather.scr
@@ -197,7 +198,7 @@ thread airstrikes_alternate // map's skybox height is different for both halves 
 
 level waittill spawn
 
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -214,101 +215,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k7 ( 3072 -3761 234 ) ( 0 90 0 )
 	exec global/throwingknife.scr k8 ( 1995 -4413 27 ) ( -5 -90 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	local.interior = sound/amb_stereo/Amb_M5_TownInt.mp3	// inside all buildings
-	local.exterior = sound/amb_stereo/Amb_M5_Trees.mp3	// main level
-
-	// origin, setsize1, setsize2, music, set number.
-	level.spawnamb = makeArray
-		( 135 -912 725 ) ( -50 -400 -49 ) ( 50 0 0 ) local.interior 51
-		( 135 -912 675 ) ( -100 -400 -49 ) ( 100 0 0 ) local.interior 51
-		( 135 -912 625 ) ( -120 -400 -9 ) ( 137 0 0 ) local.interior 51
-		( 135 -912 615 ) ( -170 -400 -49 ) ( 137 0 0 ) local.interior 51
-		( 135 -912 565 ) ( -220 -400 -49 ) ( 137 0 0 ) local.interior 51
-		( 135 -912 515 ) ( -279 -400 -388 ) ( 137 0 0 ) local.interior 51
-
-		( -16 -1312 573 ) ( -50 -1280 -49 ) ( 50 0 0 ) local.interior
-		( -16 -1312 523 ) ( -100 -1280 -49 ) ( 100 0 0 ) local.interior
-		( -16 -1312 473 ) ( -150 -1280 -26 ) ( 150 0 0 ) local.interior
-		( -16 -1312 446 ) ( -175 -1280 -546 ) ( 175 0 0 ) local.interior // amb[10]
-		( -23 -1839 773 ) ( -393 -50 -49 ) ( 0 50 0 ) local.interior
-		( -23 -1839 723 ) ( -393 -100 -11 ) ( 0 100 0 ) local.interior
-		( -23 -1839 711 ) ( -393 -112 -811 ) ( 0 111 0 ) local.interior
-
-		( -1759 -1343 927 ) ( -688 -320 -927 ) ( 0 0 0 ) local.interior
-
-		( -2800 -895 1022 ) ( -50 -656 -49 ) ( 50 0 0 ) local.interior
-		( -2800 -895 972 ) ( -100 -656 -49 ) ( 100 0 0 ) local.interior
-		( -2800 -895 922 ) ( -150 -656 -49 ) ( 150 0 0 ) local.interior
-		( -2800 -895 872 ) ( -200 -656 -49 ) ( 200 0 0 ) local.interior
-		( -2800 -895 822 ) ( -250 -656 -49 ) ( 250 0 0 ) local.interior
-		( -2800 -895 772 ) ( -300 -656 -49 ) ( 300 0 0 ) local.interior // amb[20]
-		( -2800 -895 722 ) ( -337 -656 -722 ) ( 337 0 0 ) local.interior
-		( -2879 -894 942 ) ( -50 0 -49 ) ( 50 239 0 ) local.interior
-		( -2879 -894 892 ) ( -100 0 -49 ) ( 100 239 0 ) local.interior
-		( -2879 -894 842 ) ( -150 0 -49 ) ( 150 239 0 ) local.interior
-		( -2879 -894 792 ) ( -200 0 -49 ) ( 200 239 0 ) local.interior
-		( -2879 -894 742 ) ( -250 0 -22 ) ( 250 239 0 ) local.interior
-		( -2879 -894 719 ) ( -256 0 -432 ) ( 256 239 0 ) local.interior
-		( -2879 -894 431 ) ( -256 0 -431 ) ( 48 239 0 ) local.interior
-
-		( -3055 -239 831 ) ( -545 -415 -831 ) ( 0 0 0 ) local.interior
-
-		( -3584 175 351 ) ( -512 -414 -351 ) ( 0 0 0 ) local.interior // amb[30]
-
-		( 528 -2619 402 ) ( -272 -50 -49 ) ( 0 50 0 ) local.interior
-		( 528 -2619 352 ) ( -272 -100 -49 ) ( 0 100 0 ) local.interior
-		( 528 -2619 302 ) ( -272 -150 -45 ) ( 0 150 0 ) local.interior
-		( 528 -2619 256 ) ( -272 -196 -456 ) ( 0 196 0 ) local.interior
-
-		( 1040 -448 654 ) ( -65 0 -49 ) ( 65 193 0 ) local.interior
-		( 1040 -448 604 ) ( -130 0 -804 ) ( 130 193 0 ) local.interior
-
-		( 35.000 -3685 912 ) ( 0 -150 -400 ) ( 17.321 0 0 ) local.interior // This building is tilted by 30 degrees, not along X-Y axis.
-		( 52.321 -3715 912 ) ( 0 -110 -400 ) ( 17.321 0 0 ) local.interior // Since ambience volume setsizes are only along X-Y axis, numerous pancaked rectangles
-		( 69.642 -3745 912 ) ( 0 -70 -400 ) ( 17.321 0 0 ) local.interior // with heights + or - 17.321 units (not both simultaneously) are required to fill the internal space.
-		( 86.963 -3775 912 ) ( 0 -30 -400 ) ( 17.321 0 0 ) local.interior // Assuming 30-60-90 triangle rules, triangles (between volume & building's wall) with 17.321 X-height will have 30.000 Y-length on one side.
-		( -15.000 -3863 912 ) ( -17.321 0 -400 ) ( 0 150 0 ) local.interior // On the other side, triangles will have the same 17.321 X-height, but only 10.000 Y-length.
-		( -32.321 -3833 912 ) ( -17.321 0 -400 ) ( 0 110 0 ) local.interior // Start at left-most vertex (inside building). For top half: subtract each Y-origin by 30 per volume, and reduce each -Y setsize by 40.000.
-		( -49.642 -3803 912 ) ( -17.321 0 -400 ) ( 0 70 0 ) local.interior // Start at right-most vertex (inside building). For bottom half: add each Y-origin by 30 per volume, and reduce each +Y setsize by 40.000.
-		( -66.963 -3773 912 ) ( -17.321 0 -400 ) ( 0 30 0 ) local.interior // Any remaining space (within the tilted building) between the left-most & right-most vertices must be filled
-		( 35.000 -3685 912 ) ( -17.321 -160 -400 ) ( 0 0 0 ) local.interior // with more rectangular volumes of equal setsizes, but each shifted left or right 10 units.
-		( 17.679 -3695 912 ) ( -17.321 -160 -400 ) ( 0 0 0 ) local.interior // amb[46]
-		( 0.358 -3705 912 ) ( -17.321 -160 -400 ) ( 0 0 0 ) local.interior // NOTE: volume triangles extending outside the walls must be <= 30 units to avoid being triggered by players.
-
-		( 1703 -2072 383 ) ( -463 -87 -483 ) ( 0 0 0 ) local.interior
-		( 1592 -2335 173 ) ( 0 -72 -273 ) ( 111 0 0 ) local.interior
-		( 1592 -2334 173 ) ( -352 0 -273 ) ( 111 158 0 ) local.interior // amb[50]
-		( 1404 -2335 173 ) ( -164 -72 -273 ) ( 0 0 0 ) local.interior
-
-		( 1240 -2240 534 ) ( 0 -50 -49 ) ( 463 50 0 ) local.interior
-		( 1240 -2240 484 ) ( 0 -100 -49 ) ( 175 100 0 ) local.interior
-		( 1415 -2240 484 ) ( 0 -60 -49 ) ( 193 100 0 ) local.interior
-		( 1608 -2240 484 ) ( 0 -100 -49 ) ( 95 100 0 ) local.interior // amb[55]
-		( 1240 -2240 434 ) ( 0 -134 -34 ) ( 175 134 0 ) local.interior
-		( 1415 -2240 434 ) ( 0 -60 -34 ) ( 193 134 0 ) local.interior
-		( 1608 -2240 434 ) ( 0 -134 -34 ) ( 95 134 0 ) local.interior
-
-		( 2048 -3039 287 ) ( -432 -368 -387 ) ( 0 0 0 ) local.interior
-		( 2048 -3408 287 ) ( -176 -127 -387 ) ( 0 0 0 ) local.interior // amb[60]
-
-		( 3487 -3696 351 ) ( -239 -207 -451 ) ( 0 0 0 ) local.interior
-		( 3295 -3472 544 ) ( 0 -336 -49 ) ( 75 0 0 ) local.interior
-		( 3295 -3472 494 ) ( 0 -336 -49 ) ( 160 0 0 ) local.interior
-		( 3295 -3472 444 ) ( 0 -336 -49 ) ( 240 0 0 ) local.interior
-		( 3295 -3472 394 ) ( 0 -336 -10 ) ( 320 0 0 ) local.interior // amb[65]
-		( 3295 -3809 544 ) ( -75 -270 -49 ) ( 75 0 0 ) local.interior
-		( 3295 -3809 494 ) ( -160 -270 -49 ) ( 160 0 0 ) local.interior
-		( 3295 -3809 444 ) ( -240 -270 -49 ) ( 240 0 0 ) local.interior
-		( 3295 -3809 394 ) ( -320 -270 -10 ) ( 320 0 0 ) local.interior
-
-		( 1840 -4208 591 ) ( 0 -111 -200 ) ( 175 0 0 ) local.interior
-	endArray
-
-	exec global/ambience_mp.scr local.exterior 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

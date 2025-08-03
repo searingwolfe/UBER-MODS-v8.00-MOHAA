@@ -172,7 +172,7 @@ thread airstrikes_alternate
 level waittill spawn
 
 	thread consoleprint
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -185,17 +185,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( -5115 959 -23 ) ( 0 90 0 )
 	exec global/throwingknife.scr k4 ( -135 1151 -23 ) ( 0 -90 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-
-		( -5647 976 -120 ) ( 0 0 0 ) ( 479 431 223 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-		( -2879 6856 -200 ) ( 0 0 0 ) ( 351 474 335 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_Canyon_01.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

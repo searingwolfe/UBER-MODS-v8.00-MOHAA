@@ -66,6 +66,7 @@ level waittill prespawn
 	exec global/door_locked.scr
 	exec global/exploder.scr
 	//exec global/barrel.scr::explosive_barrel // not needed, even though there are 3 red explosive barrels.
+	exec global/weather.scr "rain" 1 0.8
 
 	setcvar "r_fastsky" "0"
 	exec global/fastsky.scr 0
@@ -215,7 +216,7 @@ thread airstrikes_alternate
 
 level waittill spawn
 
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -235,95 +236,6 @@ if(getcvar("g_throwingknives") == "1")
 		exec global/throwingknife.scr k8 ( 1029 472 224 ) ( 14 90 0 )
 	}
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	local.interior = sound/amb_stereo/Amb_M5_TownInt.mp3	// inside all buildings
-	local.exterior = sound/amb_stereo/Amb_M5_Field.mp3	// main level
-
-	level.spawnamb = makeArray
-		( 1031 120 663 ) ( -103 0 -256 ) ( 0 359 0 ) local.interior
-		( 1031 120 663 ) ( -103 -112 -256 ) ( 0 0 0 ) local.interior 12
-		( 1031 120 663 ) ( 0 -112 -256 ) ( 297 359 0 ) local.interior 12
-		( 1207 112 407 ) ( -279 0 -357 ) ( 121 367 0 ) local.interior 12
-		( 1207 112 407 ) ( -279 -104 -357 ) ( 0 0 0 ) local.interior 12 // amb[5]
-
-		( 2128 1519 407 ) ( 0 -364 -357 ) ( 115 0 0 ) local.interior
-		( 2128 1519 407 ) ( 0 -190 -357 ) ( 230 0 0 ) local.interior
-		( 2128 1519 407 ) ( 0 -124 -357 ) ( 307 0 0 ) local.interior
-		( 2128 1519 407 ) ( 0 -64 -357 ) ( 380 0 0 ) local.interior
-		( 2735 1219 407 ) ( -50 0 -357 ) ( 0 300 0 ) local.interior // amb[10]
-		( 2735 1219 407 ) ( -95 0 -357 ) ( 0 231 0 ) local.interior
-
-		( 4055 -479 367 ) ( 0 0 -317 ) ( 162 199 0 ) local.interior 11
-
-		( 3600 984 447 ) ( 0 0 -397 ) ( 239 293 0 ) local.interior 8
-
-		( 4800 80 468 ) ( 0 0 -418 ) ( 527 303 0 ) local.interior 15
-		( 5056 80 774 ) ( 0 0 -49 ) ( 125 303 0 ) local.interior 15 // amb[15]
-		( 5056 80 724 ) ( 0 0 -13 ) ( 250 303 0 ) local.interior 15
-		( 5056 80 710 ) ( 0 0 -242 ) ( 271 303 0 ) local.interior 15
-
-		( 4880 636 722 ) ( 0 -50 -49 ) ( 223 50 0 ) local.interior 16
-		( 4880 636 672 ) ( 0 -100 -49 ) ( 223 100 0 ) local.interior 16
-		( 4880 636 622 ) ( 0 -150 -49 ) ( 223 150 0 ) local.interior 16 // amb[20]
-		( 4880 636 572 ) ( 0 -196 -522 ) ( 223 196 0 ) local.interior 16
-
-		( 5103 848 622 ) ( -110 0 -49 ) ( 0 239 0 ) local.interior 17
-		( 5103 848 572 ) ( -220 0 -35 ) ( 0 239 0 ) local.interior 17
-		( 5103 848 537 ) ( -271 0 -487 ) ( 0 239 0 ) local.interior 17
-
-		( 5103 1104 572 ) ( -110 0 -49 ) ( 0 367 0 ) local.interior 18 // amb[25]
-		( 5103 1104 522 ) ( -220 0 -11 ) ( 0 367 0 ) local.interior 18
-		( 5103 1104 511 ) ( -235 0 -487 ) ( 0 367 0 ) local.interior 18
-
-		( 5103 1488 654 ) ( -110 0 -49 ) ( 0 319 0 ) local.interior 19
-		( 5103 1488 604 ) ( -220 0 -35 ) ( 0 319 0 ) local.interior 19
-		( 5103 1488 569 ) ( -271 0 -487 ) ( 0 319 0 ) local.interior 19 // amb[30]
-
-		( 3040 4848 559 ) ( 0 0 -509 ) ( 351 415 0 ) local.interior 12
-
-		( 2656 4704 468 ) ( 0 0 -418 ) ( 303 527 0 ) local.interior 13
-		( 2656 4959 774 ) ( 0 0 -49 ) ( 303 125 0 ) local.interior 13
-		( 2656 4959 724 ) ( 0 0 -13 ) ( 303 250 0 ) local.interior 13
-		( 2656 4959 710 ) ( 0 0 -242 ) ( 303 271 0 ) local.interior 13 // amb[35]
-
-		( 2404 4784 754 ) ( -50 0 -49 ) ( 50 159 0 ) local.interior 20
-		( 2404 4784 704 ) ( -100 0 -49 ) ( 100 159 0 ) local.interior 20
-		( 2404 4784 654 ) ( -150 0 -49 ) ( 150 159 0 ) local.interior 20
-		( 2404 4784 604 ) ( -196 0 -522 ) ( 196 159 0 ) local.interior 20
-
-		( 1952 4943 652 ) ( 0 -110 -49 ) ( 239 0 0 ) local.interior 22 // amb[40]
-		( 1952 4943 602 ) ( 0 -220 -35 ) ( 239 0 0 ) local.interior 22
-		( 1952 4943 567 ) ( 0 -271 -487 ) ( 239 0 0 ) local.interior 22
-
-		( 1568 4943 602 ) ( 0 -110 -49 ) ( 367 0 0 ) local.interior 23
-		( 1568 4943 552 ) ( 0 -220 -11 ) ( 367 0 0 ) local.interior 23
-		( 1568 4943 541 ) ( 0 -235 -487 ) ( 367 0 0 ) local.interior 23 // amb[45]
-
-		( 1232 4943 684 ) ( 0 -110 -49 ) ( 319 0 0 ) local.interior 24
-		( 1232 4943 634 ) ( 0 -220 -35 ) ( 319 0 0 ) local.interior 24
-		( 1232 4943 599 ) ( 0 -271 -487 ) ( 319 0 0 ) local.interior 24
-
-		( 1488 2248 702 ) ( -80 0 -49 ) ( 80 159 0 ) local.interior
-		( 1488 2248 652 ) ( -160 0 -28 ) ( 160 159 0 ) local.interior // amb[50]
-		( 1488 2248 624 ) ( -175 0 -574 ) ( 175 159 0 ) local.interior
-
-		( -6031 2560 590 ) ( 0 0 -49 ) ( 110 239 0 ) local.interior 29
-		( -6031 2560 540 ) ( 0 0 -35 ) ( 220 239 0 ) local.interior 29
-		( -6031 2560 505 ) ( 0 0 -487 ) ( 271 239 0 ) local.interior 29
-
-		( -6031 2176 540 ) ( 0 0 -49 ) ( 110 367 0 ) local.interior 28 // amb[55]
-		( -6031 2176 490 ) ( 0 0 -11 ) ( 220 367 0 ) local.interior 28
-		( -6031 2176 479 ) ( 0 0 -487 ) ( 235 367 0 ) local.interior 28
-
-		( -6031 1840 622 ) ( 0 0 -49 ) ( 110 319 0 ) local.interior 27
-		( -6031 1840 572 ) ( 0 0 -35 ) ( 220 319 0 ) local.interior 27
-		( -6031 1840 537 ) ( 0 0 -487 ) ( 271 319 0 ) local.interior 27 // amb[60]
-	endArray
-
-	exec global/ambience_mp.scr local.exterior 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

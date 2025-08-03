@@ -431,8 +431,8 @@ Init_Lift_Builder local.player local.modelnumber:
 	local.player.buildingmapnow = 1
 	local.player thread laserremove_fix
 
-	local.player iprint "You have selected a Lift."
-	local.player iprint "First set the lowest point. Then set the highest point."
+	local.player iprint "You have selected a Lift... First set the lowest point. Then set the highest point."
+	local.player iprint "To delete your lift: Hold FIRE, then Hold USE(e)."
 
 	if(level.base_build_object[local.modelnumber].modelname == "statweapons/mg42_gun.tik")
 	{
@@ -657,7 +657,7 @@ Init_Lift_Builder local.player local.modelnumber:
 									//Work out the distance of where the lift has to travel
 									local.distance = (local.endpoint - local.startpoint)
 
-									goto Place_Object_Lift local.builder local.ent local.modelnumber
+									goto Place_Object_Lift local.builder local.ent local.modelnumber local.player
 								}
 							}
 						}
@@ -716,7 +716,7 @@ Init_Lift_Builder local.player local.modelnumber:
 	}
 end
 
-Place_Object_Lift local.builder local.ent local.modelnumber:
+Place_Object_Lift local.builder local.ent local.modelnumber local.player:
 
 	if(local.player.usinglaser == 1)
 	{
@@ -732,6 +732,7 @@ Place_Object_Lift local.builder local.ent local.modelnumber:
 	local.builder targetname "builder_object"
 	local.builder.islift = 1
 	local.builder.modelnumber = local.modelnumber
+	local.builder.playerowner = local.player
 
 	local.builder thread move_lift local.distance
 
@@ -793,7 +794,7 @@ Init_builder local.player local.modelnumber:
 	local.player.buildingmapnow = 1
 	local.player thread laserremove_fix
 
-	local.player iprint "Object selected. hold USE(e) button (followed by FIRE) to place it. Hold FIRE (followed by USE(e) button) to delete it."
+	local.player iprint "You have selected an object... Hold USE(e) + FIRE to place it... Hold FIRE, then Hold USE(e) to delete it."
 
 	local.builder = spawn script_model
 	local.builder model level.base_build_object[local.modelnumber].modelname
@@ -1072,7 +1073,7 @@ Init_builder local.player local.modelnumber:
 				if(local.badplacement != 1 && local.holdcount != NIL && (local.player.fireheld != 1 && local.holdcount > 0 && local.holdcount <= 60) || (local.player.fireheld == 1 && local.canceltoggle == 2 && local.fireheld_init != 1))
 				{
 					local.ent color ( 1 0 0 )
-					goto Place_Object local.builder local.ent local.modelnumber
+					goto Place_Object local.builder local.ent local.modelnumber local.player
 				}
 
 				local.laserorigin = (local.player gettagposition "eyes bone")
@@ -1120,35 +1121,18 @@ Init_builder local.player local.modelnumber:
 	}
 end
 
-Place_Object local.builder local.ent local.modelnumber:
+Place_Object local.builder local.ent local.modelnumber local.player:
 
 	if(local.player.usinglaser == 1)
 	{
 		local.removelaser = 1
 	}
-
 	local.player.usinglaser = 0
 
 	if(local.objectplacementorigin == NIL) { local.player iprint "Failed to place object. coords: ( NIL NIL NIL )."; end }
 
 	local.builder targetname "builder_object"
-
-	local.degrees = local.builder.angles[1]
-	if(local.builder.angles[1] >= 180) { local.degrees = local.builder.angles[1] - 360 }
-
-	local.tempstr = "coords: ( " + string(int(local.objectplacementorigin[0])) + " " 
-	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[1])) + " "
-	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[2])) + " ). "
-	local.tempstr = local.tempstr + "angles: ( " + string(int(local.builder.angles[0])) + " " 
-	local.tempstr = local.tempstr + string(int(local.degrees)) + " "
-	local.tempstr = local.tempstr + string(int(local.builder.angles[2])) + " ). "
-	local.tempstr = local.tempstr + local.player.objectcarried + "."
-	local.player iprint local.tempstr
-	
-	if(level.bb_printtoconsole == 1) { println(local.tempstr) }
-
 	level.objectlimitcount++
-
 	waitframe
 
 	if(local.removelaser == 1)
@@ -1183,6 +1167,7 @@ Place_Object local.builder local.ent local.modelnumber:
 		}
 		if(local.added != 1) { local.player.bb_ents[local.player.bb_ents.size + 1] = local.builder }
 		local.builder.modelnumber = local.modelnumber
+		local.builder.playerowner = local.player
 	}
 	else
 	{
@@ -1202,12 +1187,27 @@ Place_Object local.builder local.ent local.modelnumber:
 		}
 		if(local.added != 1) { local.player.bb_ents[local.player.bb_ents.size + 1] = local.mg }
 		local.mg.modelnumber = local.modelnumber
+		local.mg.playerowner = local.player
 	}
 	//if(local.player.objectcarried == "fx/searchlight.tik") 
 	//{
 	//	waitthread setup_searchlights local.builder
 	//	local.builder remove
 	//}
+
+	local.degrees = local.builder.angles[1]
+	if(local.builder.angles[1] >= 180) { local.degrees = local.builder.angles[1] - 360 }
+
+	local.tempstr = "coords: ( " + string(int(local.objectplacementorigin[0])) + " " 
+	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[1])) + " "
+	local.tempstr = local.tempstr + string(int(local.objectplacementorigin[2])) + " ). "
+	local.tempstr = local.tempstr + "angles: ( " + string(int(local.builder.angles[0])) + " " 
+	local.tempstr = local.tempstr + string(int(local.degrees)) + " "
+	local.tempstr = local.tempstr + string(int(local.builder.angles[2])) + " ). "
+	local.tempstr = local.tempstr + local.player.objectcarried + "."
+	local.player iprint local.tempstr
+	
+	if(level.bb_printtoconsole == 1) { println(local.tempstr) }
 
 	local.player.buildingmapnow = 0
 end
@@ -1240,6 +1240,7 @@ setup_turretgun local.builder local.player:
 	local.bipod.angles = local.builder.angles
 	local.bipod.mg = local.mg
 	local.mg.bipod = local.bipod
+	local.bipod notsolid
 
 	local.builder remove
 	if(local.bipod istouching local.player) { local.player respawn }
@@ -1252,7 +1253,7 @@ turretgun_activate local.mg local.bipod:
 	while(level.bbactive == 1) { waitframe }
 
 	if(local.mg != NULL) { local.mg setplayerusable 1 }
-	if(local.bipod != NULL) { local.bipod notsolid } // keep this solid during building, so Builder Remover Lasers can touch turret guns if desired.
+	//if(local.bipod != NULL) { local.bipod notsolid } // keep this solid during building, so Builder Remover Lasers can touch turret guns if desired.
 end
 
 //###########################################################################################################
@@ -1261,8 +1262,8 @@ Init_Builder_Teleporter local.player local.modelnumber:
 
 	local.player.buildingmapnow = 1
 
-	local.player iprint "You have selected a Teleporter."
-	local.player iprint "First set the starting point. Then set the destination."
+	local.player iprint "You have selected a Teleporter... First set the starting point. Then set the destination."
+	local.player iprint "To delete your teleporter: Hold USE(e), then Hold FIRE."
 
 	local.builder = spawn script_model
 	local.builder model "fx/corona_red.tik"
@@ -1409,7 +1410,7 @@ Init_Builder_Teleporter local.player local.modelnumber:
 
 						local.x remove
 					
-						goto Place_Object_Teleporter local.builder local.modelnumber
+						goto Place_Object_Teleporter local.builder local.modelnumber local.player
 					
 					}
 					if(local.player.fireheld != 1) { local.fireheld = 0 }
@@ -1424,11 +1425,12 @@ Init_Builder_Teleporter local.player local.modelnumber:
 	}
 end
 
-Place_Object_Teleporter local.builder local.modelnumber:
+Place_Object_Teleporter local.builder local.modelnumber local.player:
 
 	//CREATE THE TELEPORTER
 	local.tele = waitthread make_teleporter local.startpoint local.endpoint
 	local.tele.modelnumber = local.modelnumber
+	local.tele.playerowner = local.player
 	local.tele.istele = 1
 
 	level.objectlimitcount++
@@ -1519,11 +1521,11 @@ builder_remover_laser:
 
 				if($player[local.i].useheld == 1)
 				{
-					if(($player[local.i].leanleftheld == 1 || $player[local.i].leanrightheld == 1) && $player[local.i].builder_leanhelding != 1)
+					if(($player[local.i].leanleftheld == 1 || $player[local.i].leanrightheld == 1) && $player[local.i].builder_leanhelding != 1 && $player[local.i].coord_pointer_given != 1 && $player[local.i].entity_pointer_given != 1 && $player[local.i].proximity_pointer_given != 1)
 					{
 						if($player[local.i].builder_remover_laser.active != 1)
 						{
-							$player[local.i] iprint "Builder Remover Laser: aim at your object, hold USE(e) and hold FIRE to remove it."
+							$player[local.i] iprint "Builder Remover Laser: Hold USE(e) + FIRE to find your nearest object. Hold FIRE(zoom) to remove it."
 							$player[local.i].builder_remover_laser.spot.model = "emitters/lanternflame.tik"
 							$player[local.i].builder_remover_laser activate
 							$player[local.i].builder_remover_laser.active = 1
@@ -1534,6 +1536,8 @@ builder_remover_laser:
 							$player[local.i].builder_remover_laser.spot.model = "fx/dummy.tik"
 							$player[local.i].builder_remover_laser deactivate
 							$player[local.i].builder_remover_laser.active = 0
+							$player[local.i].builder_remover_laser_c = 0
+							$player[local.i] stopwatch 0
 						}
 					}
 
@@ -1543,122 +1547,66 @@ builder_remover_laser:
 						$player[local.i].builder_remover_laser.spot.origin = trace $player[local.i].builder_remover_laser.origin ($player[local.i].builder_remover_laser.origin + ( angles_toforward($player[local.i].viewangles) * 35000 ))
 						$player[local.i].builder_remover_laser.spot.model = "emitters/lanternflame.tik"
 						$player[local.i].builder_remover_laser activate
-
 						$player[local.i].builder_remover_laser.touching = 0
-						$player[local.i].builder_remover_laser.ownedent = 0
-						for(local.e = 1; local.e <= $builder_object.size; local.e++)
+
+						if($player[local.i].fireheld == 1)
 						{
-							if($player[local.i].builder_remover_laser.spot istouching $builder_object[local.e])
+							if($player[local.i].secfireheld != 1) { $player[local.i] thread find_nearest_entity }
+							local.origin_old = $player[local.i].builder_remover_laser.spot.origin
+
+							if($player[local.i].builder_remover_laser.nearthing != NIL && $player[local.i].builder_remover_laser.nearthing != NULL && $player[local.i].secfireheld == 1 && $player[local.i].leanleftheld != 1 && $player[local.i].leanrightheld != 1)
 							{
-								if($player[local.i] isadmin == 1 || $player[local.i].admin_name_priority == 1)
-								{
-									$player[local.i].builder_remover_laser.ownedent = 1
-
-									if($player[local.i].fireheld == 1)
-									{
-										if($player[local.i].builder_remover_laser_c == NIL) { $player[local.i].builder_remover_laser_c = 0 }
-										$player[local.i].builder_remover_laser_c++
-										$player[local.i].builder_remover_laser color ( 1 0 0 )
-									}
-									else
-									{
-										$player[local.i].builder_remover_laser_c = 0
-										$player[local.i].builder_remover_laser color ( 1 1 0 )
-									}
-
-									if($player[local.i].builder_remover_laser_c >= 40)
-									{
-										$player[local.i].builder_remover_laser.spot remove
-										$player[local.i].builder_remover_laser remove
-										$player[local.i].objectcarried = $builder_object[local.e].model
-										if($builder_object[local.e].bipod != NIL && $builder_object[local.e].bipod != NULL)
-										{
-											$builder_object[local.e].bipod remove
-											level.objectlimitcount--
-										}
-										$builder_object[local.e] remove
-										level.objectlimitcount--
-
-										if($builder_object[local.e].islift != 1 && $builder_object[local.e].istele != 1)
-										{
-											thread Init_builder $player[local.i] $builder_object[local.e].modelnumber
-										}
-										if($builder_object[local.e].islift == 1)
-										{
-											thread Init_Lift_Builder $player[local.i] $builder_object[local.e].modelnumber
-										}
-										if($builder_object[local.e].istele == 1)
-										{
-											thread Init_Builder_Teleporter $player[local.i] $builder_object[local.e].modelnumber
-										}
-										break
-									}
-								}
-								else
-								{
-									for(local.b = 1; local.b <= $player[local.i].bb_ents.size; local.b++)
-									{
-										if($builder_object[local.e] == $player[local.i].bb_ents[local.b])
-										{
-											$player[local.i].builder_remover_laser.ownedent = 1
-
-											if($player[local.i].fireheld == 1)
-											{
-												if($player[local.i].builder_remover_laser_c == NIL) { $player[local.i].builder_remover_laser_c = 0 }
-												$player[local.i].builder_remover_laser_c++
-												$player[local.i].builder_remover_laser color ( 1 0 0 )
-											}
-											else
-											{
-												$player[local.i].builder_remover_laser_c = 0
-												$player[local.i].builder_remover_laser color ( 1 1 0 )
-											}
-
-											if($player[local.i].builder_remover_laser_c >= 40)
-											{
-												$player[local.i].builder_remover_laser.spot remove
-												$player[local.i].builder_remover_laser remove
-												$player[local.i].objectcarried = $player[local.i].bb_ents[local.b].model
-												if($player[local.i].bb_ents[local.b].bipod != NIL && $player[local.i].bb_ents[local.b].bipod != NULL)
-												{
-													$player[local.i].bb_ents[local.b].bipod remove
-													level.objectlimitcount--
-												}
-												$player[local.i].bb_ents[local.b] remove
-												level.objectlimitcount--
-
-												if($player[local.i].bb_ents[local.b].islift != 1 && $player[local.i].bb_ents[local.b].istele != 1)
-												{
-													thread Init_builder $player[local.i] $player[local.i].bb_ents[local.b].modelnumber
-												}
-												if($player[local.i].bb_ents[local.b].islift == 1)
-												{
-													thread Init_Lift_Builder $player[local.i] $player[local.i].bb_ents[local.b].modelnumber
-												}
-												if($player[local.i].bb_ents[local.b].istele == 1)
-												{
-													thread Init_Builder_Teleporter $player[local.i] $player[local.i].bb_ents[local.b].modelnumber
-												}
-												break
-											}
-										}
-									}
-								}
-
+								$player[local.i].builder_remover_laser color ( 1 0 0 )
+								$player[local.i].builder_remover_laser endpoint $player[local.i].builder_remover_laser.nearthing.origin
+								$player[local.i].builder_remover_laser.spot.origin = $player[local.i].builder_remover_laser.nearthing.origin
 								$player[local.i].builder_remover_laser.touching = 1
-								if($player[local.i].builder_remover_laser_c >= 40) { break }
+
+								if($player[local.i].builder_remover_laser_c == 0) { $player[local.i] stopwatch 3 }
+								if($player[local.i].builder_remover_laser_c >= 60)
+								{
+									$player[local.i].builder_remover_laser.spot remove
+									$player[local.i].builder_remover_laser remove
+									$player[local.i].objectcarried = $player[local.i].builder_remover_laser.nearthing.model
+									if($player[local.i].builder_remover_laser.nearthing.bipod != NIL && $player[local.i].builder_remover_laser.nearthing.bipod != NULL)
+									{
+										$player[local.i].builder_remover_laser.nearthing.bipod remove
+										level.objectlimitcount--
+									}
+									$player[local.i].builder_remover_laser.nearthing remove
+									level.objectlimitcount--
+
+									if($player[local.i].builder_remover_laser.nearthing.islift != 1 && $player[local.i].builder_remover_laser.nearthing.istele != 1)
+									{
+										thread Init_builder $player[local.i] $player[local.i].builder_remover_laser.nearthing.modelnumber
+									}
+									if($player[local.i].builder_remover_laser.nearthing.islift == 1)
+									{
+										thread Init_Lift_Builder $player[local.i] $player[local.i].builder_remover_laser.nearthing.modelnumber
+									}
+									if($player[local.i].builder_remover_laser.nearthing.istele == 1)
+									{
+										thread Init_Builder_Teleporter $player[local.i] $player[local.i].builder_remover_laser.nearthing.modelnumber
+									}
+									break
+								}
+								else { $player[local.i].builder_remover_laser_c++ }
+							}
+							else
+							{
+								$player[local.i].builder_remover_laser color ( 1 1 0 )
+								$player[local.i].builder_remover_laser_c = 0
+								$player[local.i].builder_remover_laser.touching = 0
+								$player[local.i] stopwatch 0
 							}
 						}
 
-						if($player[local.i].fireheld == 1 && $player[local.i].builder_remover_laser.ownedent == 0 && $player[local.i].builder_remover_laser.touching == 1 && ($player[local.i].builder_remover_laser.printed != 1 || $player[local.i].builder_firehelding != 1))
-						{
-							$player[local.i].builder_remover_laser.printed = 1
-							$player[local.i] iprint "Cannot remove objects that you did not place down."
-						}
 						if($player[local.i].builder_remover_laser.touching == 0)
 						{
 							$player[local.i].builder_remover_laser.printed = 0
 							$player[local.i].builder_remover_laser color ( 1 1 0 )
+							$player[local.i].builder_remover_laser_c = 0
+							$player[local.i].builder_remover_laser.touching = 0
+							$player[local.i] stopwatch 0
 						}
 					}
 				}
@@ -1683,10 +1631,81 @@ builder_remover_laser:
 
 			if($player[local.i].fireheld == 1) { $player[local.i].builder_firehelding = 1 }
 			else { $player[local.i].builder_firehelding = 0 }
+
+			if($player[local.i].builder_remover_laser != NIL && $player[local.i].builder_remover_laser != NULL && $player[local.i].builder_remover_laser.active == 1 && ($player[local.i].coord_pointer_given == 1 || $player[local.i].entity_pointer_given == 1 || $player[local.i].proximity_pointer_given == 1))
+			{
+				$player[local.i] iprint "Removed your Builder Remover Laser."
+				$player[local.i].builder_remover_laser.spot.model = "fx/dummy.tik"
+				$player[local.i].builder_remover_laser deactivate
+				$player[local.i].builder_remover_laser.active = 0
+			}
 		}
 		waitframe
 	}
 	if($builder_remover_laser != NULL) { $builder_remover_laser remove }
+end
+
+find_nearest_entity:
+
+	if(self.builder_remover_laser.finding == 1) { end }
+	self.builder_remover_laser.finding = 1
+	self.builder_remover_laser.nearthing = NIL
+	self.builder_remover_laser deactivate
+
+	local.smallest = 9999999
+	for(local.i = 0; local.i <= self.bb_ents.size; local.i++)
+	{
+		if(self.bb_ents[local.i] != NIL && self.bb_ents[local.i] != NULL)
+		{
+			if(self isadmin == 1 || self.admin_name_priority == 1 || (self.bb_ents[local.i].playerowner != NIL && self.bb_ents[local.i].playerowner != NULL && self.bb_ents[local.i].playerowner == self))
+			{
+				local.dist = vector_length(self.builder_remover_laser.spot.origin - self.bb_ents[local.i].origin)
+				if(local.dist < local.smallest)
+				{
+					local.smallest = local.dist
+					local.closest = self.bb_ents[local.i]
+				}
+			}
+		}
+	}
+
+	if(local.closest == NIL || local.closest == NULL)
+	{
+		if(self != NULL)
+		{
+			self iprint ("----- ERROR Builder Laser Remover: You have no objects placed on the map.")
+			self.builder_remover_laser.nearthing = NIL
+
+			while(self != NULL && self.fireheld == 1) { waitframe }
+			if(self != NULL) { self.builder_remover_laser.finding = 0 }
+		}
+	}
+	else
+	{
+		if(self isadmin == 1 || self.admin_name_priority == 1) { local.closest thread cvars/cvars.scr::entprint }
+		else
+		{
+			local.model = ""
+			for(local.s = 7; local.s < local.closest.model.size; local.s++) { local.model += local.closest.model[local.s] }
+
+			local.tempstr = "Object selected = coords: ( " + string(int(local.closest.origin[0])) + " " 
+			local.tempstr = local.tempstr + string(int(local.closest.origin[1])) + " "
+			local.tempstr = local.tempstr + string(int(local.closest.origin[2])) + " ). "
+			local.tempstr = local.tempstr + "angles: ( " + string(int(local.closest.angles[0])) + " " 
+			local.tempstr = local.tempstr + string(int(local.closest.angles[1])) + " "
+			local.tempstr = local.tempstr + string(int(local.closest.angles[2])) + " ). "
+			local.tempstr = local.tempstr + local.model + "."
+			self iprint local.tempstr
+		}
+
+		if(self != NULL)
+		{
+			self.builder_remover_laser.nearthing = local.closest
+
+			while(self != NULL && self.fireheld == 1) { waitframe }
+			if(self != NULL) { self.builder_remover_laser.finding = 0 }
+		}
+	}
 end
 
 //###########################################################################################################

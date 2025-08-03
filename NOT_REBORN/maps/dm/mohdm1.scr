@@ -144,7 +144,7 @@ exec maps/UBER_mapextras/dm1_cratesstuff.scr::smoke
 
 level waittill spawn
 
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -157,28 +157,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( 375 1269 432 ) ( 0 0 0 )
 	exec global/throwingknife.scr k4 ( 1139 2197 562 ) ( 0 270 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( -266 885 -125 ) ( -822 -741 0 ) ( 0 0 684 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-		( -1089 885 -125 ) ( -446 -613 0 ) ( 0 0 684 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-
-		( 1663 885 150 ) ( -949 -875 0 ) ( 0 0 425 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-		( 713 207 150 ) ( -31 -197 0 ) ( 0 0 425 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-		( 681 9 150 ) ( 0 -29 0 ) ( 229 0 425 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-
-		( -373 1162 -50 ) ( 0 0 0 ) ( 1082 491 809 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-		( 710 1162 -50 ) ( 0 0 0 ) ( 623 357 809 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-
-		( 1040 1936 400 ) ( 0 0 0 ) ( 293 287 203 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-
-		( 1535 2346 250 ) ( -501 0 0 ) ( 0 821 629 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-		( 1033 3167 250 ) ( -137 -181 0 ) ( 0 0 629 ) sound/amb_stereo/Amb_M4_CountryInt_02.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_01.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

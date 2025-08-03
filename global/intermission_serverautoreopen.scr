@@ -17,7 +17,10 @@ main local.type: // erase all playernames from the previous map, then save all p
 		{
 			for(local.i = 1; local.i <= $player.size; local.i++)
 			{
-				local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n")
+				if($player[local.i].IP_address_init != NIL)
+				{
+					local.result = fputs local.file ("name=" + netname $player[local.i] + "\n" + "IP=" + $player[local.i].IP_address_init + "\n")
+				}
 			}
 		}
 		local.result = fclose local.file

@@ -2,9 +2,11 @@
 // A 200 radius light with the same color as the beam's color is attached to the targeted player.
 // If the targeted player dies, changes teams, or leaves the game, the illumination is removed.
 
-spotted local.r local.g local.b:
+spotted local.r local.g local.b local.spotlight:
 
 	if(self == NULL || !isalive self || self.dead == 1 || self.dmteam == "spectator") { end }
+	if(local.spotlight != NIL && local.spotlight != NULL && local.spotlight.playerowner != NIL && local.spotlight.playerowner != NULL && local.spotlight.playerowner == self) { end }
+
 	if(self.packon == 1 && self.led_spotlight != NIL && self.led_spotlight != NULL)
 	{
 		self.led_spotlight light local.r local.g local.b 200

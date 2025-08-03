@@ -2,21 +2,18 @@ main:
 
 	while(int(getcvar("players")) != 1 && int(getcvar("players")) != 2) { waitframe }
 
-	local.maxclients = int(getcvar(sv_maxclients))
+	if(level.players_maxclients == NIL) { level.players_maxclients = int(getcvar(sv_maxclients)) }
 	local.players = 0
-	local.j = 0
-	
-	for(local.i = 1; local.i <= $player.size; local.i++)
+
+	if(int(getcvar("players")) == 2)
 	{
-		//waitframe
-		if(local.entity != NULL) { local.players++ }
-		if(int(getcvar("players")) == 2)
+		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			println("----- $player[" + ($player[local.i].entnum + 1) + "]")
+			println("client " + $player[local.i].entnum + " = $player[" + local.i + "]")
 		}
 	}
+
 	if(int(getcvar("players")) != 0) { setcvar "players" "0" }
-	println("----- Players in server: " + local.players + " / " + local.maxclients)
+	println("----- Players in server: " + $player.size + " / " + level.players_maxclients)
 	thread main
 end
-

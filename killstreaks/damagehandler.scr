@@ -127,7 +127,7 @@ assisted_suicide:
 			{
 				if($player[local.i].suicide_assister != NIL && $player[local.i].suicide_assister != NULL && $player[local.i].suicide_assist_c != NIL && $player[local.i].suicide_assist_team != NIL && $player[local.i].suicide_assister_team != NIL)
 				{
-					if($player[local.i].suicide_assist_c < 30 && $player[local.i].dmteam == $player[local.i].suicide_assist_team && $player[local.i].suicide_assister.dmteam == $player[local.i].suicide_assister_team)
+					if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].suicide_assist_c < 30 && $player[local.i].dmteam == $player[local.i].suicide_assist_team && $player[local.i].suicide_assister.dmteam == $player[local.i].suicide_assister_team && $player[local.i].suicide_assister.dmteam != "spectator")
 					{
 						if($player[local.i] getmovement != "falling") { $player[local.i].suicide_assist_c++ }
 					}
@@ -139,6 +139,14 @@ assisted_suicide:
 						$player[local.i].suicide_assister_team = NIL
 					}
 				}
+				else
+				{
+					$player[local.i].suicide_assist_c = NIL
+					$player[local.i].suicide_assist_team = NIL
+					$player[local.i].suicide_assister = NIL
+					$player[local.i].suicide_assister_team = NIL
+				}
+
 				if(isalive $player[local.i]) { $player[local.i].craterdeath = 0 }
 			}
 		}

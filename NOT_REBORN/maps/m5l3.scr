@@ -73,7 +73,7 @@ level waittill prespawn
 
 	setcvar "r_fastsky" "0"
 	exec global/fastsky.scr 0
-	$world farplane 6500 // 150000
+	$world farplane 4500 // 6500 // 150000
 	$world farplane_color ( 0.90196 0.78824 0.56078 ) //( 0.6784 0.8353 0.9686 ) // ( 0.25 0.15 0.1 )
 
 level waittill spawn	// allows lower entnums (overwriting NULL entnums).
@@ -214,9 +214,8 @@ exec guidedmissile/trigger.scr ( 4316 -3647 392 )
 
 thread airstrikes_alternate
 
-	thread ambience
-	thread water_volumes
-	exec global/water_wade_sounds.scr 1
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
+	//exec global/water_wade_sounds.scr 1
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -233,126 +232,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k7 ( -2250 -660 424 ) ( 0 60 0 )
 	exec global/throwingknife.scr k8 ( -253 16 384 ) ( 0 90 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	local.interior = sound/amb_stereo/Amb_M1_Bunker_03.mp3
-	local.exterior = sound/amb_stereo/Amb_M5_Bridge.mp3
-
-	level.spawnamb = makeArray
-		( 1128 5719 559 ) ( -272 0 -429 ) ( 0 472 0 ) local.interior
-		( 1128 5745 559 ) ( 0 0 -429 ) ( 79 446 0 ) local.interior
-		( 1207 6096 687 ) ( 0 0 -50 ) ( 16 95 0 ) local.interior
-		( 1207 6096 637 ) ( 0 0 -50 ) ( 82 95 0 ) local.interior
-		( 1207 6096 587 ) ( 0 0 -50 ) ( 133 95 0 ) local.interior // amb[5]
-		( 1207 6096 537 ) ( 0 0 -407 ) ( 192 95 0 ) local.interior
-
-		( 3023 5336 527 ) ( -181 0 -397 ) ( 0 165 0 ) local.interior
-		( 3023 5336 527 ) ( -88 0 -397 ) ( 0 307 0 ) local.interior
-
-		( 2176 5607 1010 ) ( -35 -571 -50 ) ( 60 0 0 ) local.interior
-		( 2176 5607 960 ) ( -70 -571 -50 ) ( 120 0 0 ) local.interior // amb[10]
-		( 2176 5607 910 ) ( -105 -571 -50 ) ( 180 0 0 ) local.interior
-		( 2176 5607 860 ) ( -140 -571 -50 ) ( 240 0 0 ) local.interior
-		( 2176 5607 810 ) ( -175 -571 -50 ) ( 300 0 0 ) local.interior
-		( 2176 5607 760 ) ( -210 -571 -50 ) ( 360 0 0 ) local.interior
-		( 2176 5607 710 ) ( -245 -571 -35 ) ( 420 0 0 ) local.interior // amb[15]
-		( 2176 5607 675 ) ( -257 -571 -545 ) ( 437 0 0 ) local.interior
-
-		( 2176 5036 1010 ) ( -35 -300 -50 ) ( 60 0 0 ) local.interior
-		( 2176 5036 960 ) ( -70 -300 -50 ) ( 120 0 0 ) local.interior
-		( 2176 5036 910 ) ( -105 -300 -50 ) ( 180 0 0 ) local.interior
-		( 2176 5036 860 ) ( -140 -300 -50 ) ( 242 0 0 ) local.interior // amb[20]
-		( 2176 5036 810 ) ( -175 -300 -50 ) ( 242 0 0 ) local.interior
-		( 2176 5036 760 ) ( -210 -300 -50 ) ( 242 0 0 ) local.interior
-		( 2176 5036 710 ) ( -245 -300 -35 ) ( 242 0 0 ) local.interior
-		( 2176 5036 675 ) ( -257 -300 -545 ) ( 242 0 0 ) local.interior
-
-		( 2418 5036 468 ) ( 0 -50 -338 ) ( 173 0 400 ) local.interior // amb[25]
-		( 2418 4986 468 ) ( 0 -50 -338 ) ( 130 0 400 ) local.interior
-		( 2418 4936 468 ) ( 0 -50 -338 ) ( 101 0 400 ) local.interior
-		( 2418 4886 468 ) ( 0 -50 -338 ) ( 72 0 400 ) local.interior
-		( 2418 4836 468 ) ( 0 -50 -338 ) ( 43 0 400 ) local.interior
-		( 2418 4786 468 ) ( 0 -50 -338 ) ( 23 0 400 ) local.interior // amb[30]
-
-		( 2111 4248 793 ) ( -50 0 -50 ) ( 50 463 0 ) local.interior
-		( 2111 4248 743 ) ( -100 0 -50 ) ( 100 463 0 ) local.interior
-		( 2111 4248 693 ) ( -150 0 -50 ) ( 150 463 0 ) local.interior
-		( 2111 4248 653 ) ( -160 0 -523 ) ( 160 342 0 ) local.interior
-		( 2271 4590 653 ) ( -240 0 -523 ) ( 0 121 0 ) local.interior // amb[35]
-
-		( 2076 4248 786 ) ( -86 -237 -50 ) ( 86 0 0 ) local.interior
-		( 2076 4248 736 ) ( -136 -237 -50 ) ( 136 0 0 ) local.interior
-		( 2076 4248 686 ) ( -186 -237 -50 ) ( 186 0 0 ) local.interior
-		( 2076 4248 636 ) ( -191 -237 -506 ) ( 191 0 0 ) local.interior
-
-		( 2010 4011 958 ) ( -20 -288 -50 ) ( 20 0 0 ) local.interior // amb[40]
-		( 2010 4011 908 ) ( -40 -288 -50 ) ( 40 0 0 ) local.interior
-		( 2010 4011 858 ) ( -60 -288 -50 ) ( 60 0 0 ) local.interior
-		( 2010 4011 808 ) ( -80 -288 -50 ) ( 80 0 0 ) local.interior
-		( 2010 4011 758 ) ( -100 -288 -50 ) ( 100 0 0 ) local.interior
-		( 2010 4011 708 ) ( -120 -288 -37 ) ( 120 0 0 ) local.interior // amb[45]
-		( 2010 4011 671 ) ( -146 -288 -541 ) ( 146 0 0 ) local.interior
-
-		( 1919 2511 999 ) ( -679 -927 -699 ) ( 0 0 0 ) local.interior
-
-		( 1232 1776 1443 ) ( -513 -37 -50 ) ( 0 37 0 ) local.interior
-		( 1232 1776 1393 ) ( -513 -74 -50 ) ( 0 74 0 ) local.interior
-		( 1232 1776 1343 ) ( -513 -111 -50 ) ( 0 111 0 ) local.interior // amb[50]
-		( 1232 1776 1293 ) ( -513 -148 -50 ) ( 0 148 0 ) local.interior
-		( 1232 1776 1243 ) ( -513 -185 -50 ) ( 0 185 0 ) local.interior
-		( 1232 1776 1193 ) ( -513 -222 -50 ) ( 0 222 0 ) local.interior
-		( 1232 1776 1143 ) ( -513 -259 -40 ) ( 0 259 0 ) local.interior
-		( 1232 1776 1103 ) ( -513 -265 -240 ) ( 0 265 0 ) local.interior // amb[55]
-
-		( 1215 2007 863 ) ( -479 -431 -563 ) ( 0 0 0 ) local.interior
-
-		( 719 1728 798 ) ( -576 -50 -50 ) ( 0 50 0 ) local.interior
-		( 719 1728 748 ) ( -576 -100 -50 ) ( 0 100 0 ) local.interior
-		( 719 1728 698 ) ( -576 -150 -398 ) ( 0 150 0 ) local.interior
-		( 168 1648 895 ) ( 0 0 -595 ) ( 159 159 0 ) local.interior // amb[80]
-
-		( -1247 1864 1175 ) ( 0 0 -875 ) ( 447 239 0 ) local.interior
-
-		( -1247 1864 876 ) ( 0 -60 -50 ) ( 192 0 0 ) local.interior
-		( -1247 1864 826 ) ( 0 -120 -50 ) ( 192 0 0 ) local.interior
-		( -1247 1864 776 ) ( 0 -180 -476 ) ( 192 0 0 ) local.interior
-
-		( -1055 1864 905 ) ( 0 -92 -50 ) ( 223 0 0 ) local.interior // amb[85]
-		( -1055 1864 855 ) ( 0 -152 -50 ) ( 223 0 0 ) local.interior
-		( -1055 1864 805 ) ( 0 -212 -20 ) ( 223 0 0 ) local.interior
-		( -1055 1864 785 ) ( 0 -272 -485 ) ( 223 0 0 ) local.interior
-		( -1055 1688 631 ) ( -192 -96 -331 ) ( 0 0 0 ) local.interior
-	endArray
-
-	exec global/ambience_mp.scr local.exterior 1 // 0 = no, 1 = keep players' music volume at max.
-end
-
-water_volumes: // these are for any airstrikes that drop bombs into the ocean.
-
-	level.water_volumes = makeArray
-		( -5317 3327 185 ) ( 0 -1151 -1000 ) ( 1606 0 0 )
-		( -5110 2176 185 ) ( 0 -512 -1000 ) ( 2038 0 0 )
-		( -4825 1664 185 ) ( 0 -1728 -1000 ) ( 7602 0 0 )
-		( 2777 -64 185 ) ( 0 0 -1000 ) ( 627 1286 0 )
-		( 3404 -64 185 ) ( 0 0 -1000 ) ( 580 959 0 )
-		( 3984 -64 185 ) ( 0 0 -1000 ) ( 626 659 0 )
-		( 5085 -64 185 ) ( -3339 -832 -1000 ) ( 0 0 0 )
-		( 3006 -896 185 ) ( 0 -2176 -1000 ) ( 3394 0 0 )
-		( 6400 -3072 185 ) ( -2050 -2560 -1000 ) ( 0 0 0 )
-	endArray
-
-/*
-	for(local.i = 1; local.i <= level.water_volumes.size; local.i++)
-	{
-		local.trig = spawn trigger_multiple targetname "water"
-		local.trig.origin = level.water_volumes[local.i][1] + ( 0 0 500 )
-		local.trig setsize level.water_volumes[local.i][2] level.water_volumes[local.i][3]
-		local.trig.setsize1 = level.water_volumes[local.i][2]
-		local.trig.setsize2 = level.water_volumes[local.i][3]
-	}
-*/
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -684,13 +563,20 @@ exploderfire_adjust:
 			$exploderfire[local.i].pause = 0.25
 			$exploderfire[local.i].origin += ( 0 0 -50 )
 		}
+
+		if($exploderfire[local.i].model == "models/emitters/concjibs_1.tik") // these emitters look weird since they don't stop emitting.
+		{
+			if($exploderfire[local.i].origin == ( 119.99 -1216.01 988.13 )) { $exploderfire[local.i].model = "models/emitters/mortar_higgins.tik" }
+			else { $exploderfire[local.i].model = "models/emitters/explosion_mine.tik" }
+			$exploderfire[local.i].pause = 0.25
+		}
 	}
 
 	local.exploderfire = spawn script_model targetname "exploderfire" // adding an $exploderfire for #set 5's largest $exploderchunk.
 	local.exploderfire model "emitters/mortar_higgins.tik"
 	local.exploderfire.origin = ( 2950 -925 393 )
 	local.exploderfire.angles = ( 270 0 0 )
-	local.exploderfire.scale = 1
+	local.exploderfire.scale = 1.2
 	local.exploderfire.set = 5
 	local.exploderfire.pause = 2.000
 	thread waitset local.exploderfire.origin local.exploderfire.pause
@@ -709,7 +595,7 @@ exploderfire_adjust:
 			}
 		}
 	}
-*/	
+*/
 end
 
 waitset local.origin local.time:

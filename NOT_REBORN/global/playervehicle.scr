@@ -373,6 +373,7 @@ playergetin:
 		local.driver stufftext "set phealth 100"
 	}
 	else { local.driver thread display }
+	local.stufftext_c = 0
 
 	local.c = 5.000 	// vehicle speed divisor; Higher = starting speed is much slower (total change is larger), Lower = starting speed is closer to max speed (total change is smaller).
 	local.decel_rate = 30 	// how many divisions of local.c for deceleration/acceleration. Higher = more time to reach max speed, Lower = less time to reach max speed.
@@ -529,7 +530,10 @@ playergetin:
 		else { local.firehelding = 0 }
 
 		local.drivervelocity_old = self.driver.velocity
-		local.driver stufftext ("set phealth " + int(local.driver.health))
+		if(local.stufftext_c == 10) { local.driver stufftext ("set phealth " + int(local.driver.health)) }
+
+		local.stufftext_c++
+		if(local.stufftext_c > 10) { local.stufftext_c = 0 } // twice every second.
 		waitframe
 	}
 

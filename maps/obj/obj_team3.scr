@@ -279,8 +279,7 @@ thread port4
 
 level waittill spawn
 
-	thread ambience
-	thread water_volumes
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -293,37 +292,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k3 ( -738 1418 392 ) ( 0 90 0 ) 
 	exec global/throwingknife.scr k4 ( 266 1581 320 ) ( 0 270 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( -1383 -504 232 ) ( 0 0 0 ) ( 519 569 183 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( -1407 -919 231 ) ( 0 0 -1055 ) ( 543 575 0 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( 328 -1001 -650 ) ( 0 0 0 ) ( 695 849 258 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 328 -151 -650 ) ( 0 0 0 ) ( 712 1222 490 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 1041 320 -400 ) ( 0 -399 0 ) ( 1038 751 431 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 2080 -472 -650 ) ( 0 0 0 ) ( 671 983 619 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( 768 512 32 ) ( 0 0 0 ) ( 855 1023 191 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 1312 511 32 ) ( 0 -590 0 ) ( 551 0 191 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 1312 -80 32 ) ( 0 -431 -262 ) ( 551 0 191 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-		( 1360 -112 224 ) ( 0 0 0 ) ( 503 569 191 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( 1624 858 32 ) ( 0 0 0 ) ( 487 549 351 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-
-		( 767 1226 -30 ) ( -559 0 0 ) ( 0 427 445 ) sound/amb_stereo/Amb_M1_Bunker_03.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
-end
-
-water_volumes: // these are for any airstrikes that drop bombs into the ocean.
-
-	level.water_volumes = makeArray
-		( 0 -4480 -455 ) ( -8000 -8000 -4000 ) ( 8000 0 1 )
-	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////

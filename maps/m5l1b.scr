@@ -67,9 +67,7 @@ level waittill prespawn
 	exec global/exploder.scr
 	exec global/shutter.scr
 	//exec global/barrel.scr::explosive_barrel
-
-	//setcvar "cg_rain" "1"
-	//exec global/weather.scr
+	exec global/weather.scr "rain" 1 0.8
 
 	setcvar "r_fastsky" "0"
 	exec global/fastsky.scr 0
@@ -193,7 +191,7 @@ thread airstrikes_alternate
 level waittill spawn
 
 	thread consoleprint
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -210,161 +208,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k7 ( 1106 688 673 ) ( 0 -90 0 )
 	exec global/throwingknife.scr k8 ( 385 1057 852 ) ( 0 0 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	local.interior = sound/amb_stereo/Amb_M5_TownInt.mp3	// inside all buildings
-	local.exterior = sound/amb_stereo/Amb_M5_Trees.mp3	// main level
-	local.exterior2 = sound/amb_stereo/Amb_M5_Field.mp3	// ending road
-
-	// origin, setsize1, setsize2, music, set number.
-	level.spawnamb = makeArray
-		( -16 -5664 594 ) ( -50 -639 -49 ) ( 50 0 0 ) local.interior 3
-		( -16 -5664 544 ) ( -100 -639 -49 ) ( 100 0 0 ) local.interior 3
-		( -16 -5664 494 ) ( -150 -639 -46 ) ( 150 0 0 ) local.interior 3
-		( -16 -5664 447 ) ( -175 -639 -444 ) ( 175 0 0 ) local.interior 3
-		( -40 -6192 794 ) ( -359 -50 -49 ) ( 0 50 0 ) local.interior // amb[5]
-		( -40 -6192 744 ) ( -359 -100 -31 ) ( 0 100 0 ) local.interior
-		( -40 -6192 712 ) ( -359 -112 -712 ) ( 0 112 0 ) local.interior
-
-		( -1776 -6015 927 ) ( -671 0 -927 ) ( 0 319 0 ) local.interior 1
-
-		( -2480 -5247 703 ) ( -1104 -448 -703 ) ( 0 0 0 ) local.interior
-		( -2623 -5007 703 ) ( -961 -240 -415 ) ( 0 0 0 ) local.interior // amb[10]
-		( -2831 -5007 287 ) ( -753 -240 -287 ) ( 0 0 0 ) local.interior
-		( -3072 -4591 815 ) ( -1024 -416 -815 ) ( 0 0 0 ) local.interior
-		( -3584 -4176 351 ) ( -495 -399 -351 ) ( 0 0 0 ) local.interior
-
-		( -4684.000 -4276 1175 ) ( 0 -150 -325 ) ( 17.321 0 0 ) local.interior // This building is tilted by 30 degrees, not along X-Y axis.
-		( -4666.679 -4306 1175 ) ( 0 -110 -325 ) ( 17.321 0 0 ) local.interior // Since ambience volume setsizes are only along X-Y axis, numerous pancaked rectangles
-		( -4649.358 -4336 1175 ) ( 0 -70 -325 ) ( 17.321 0 0 ) local.interior // with heights + or - 17.321 units (not both simultaneously) are required to fill the internal space.
-		( -4632.037 -4366 1175 ) ( 0 -30 -325 ) ( 17.321 0 0 ) local.interior // Assuming 30-60-90 triangle rules, triangles (between volume & building's wall) with 17.321 X-height will have 30.000 Y-length on one side.
-		( -4734.000 -4454 1175 ) ( -17.321 0 -325 ) ( 0 150 0 ) local.interior // On the other side, triangles will have the same 17.321 X-height, but only 10.000 Y-length.
-		( -4751.321 -4424 1175 ) ( -17.321 0 -325 ) ( 0 110 0 ) local.interior // Start at left-most vertex (inside building). For top half: subtract each Y-origin by 30 per volume, and reduce each -Y setsize by 40.000.
-		( -4768.642 -4394 1175 ) ( -17.321 0 -325 ) ( 0 70 0 ) local.interior // Start at right-most vertex (inside building). For bottom half: add each Y-origin by 30 per volume, and reduce each +Y setsize by 40.000.
-		( -4785.963 -4364 1175 ) ( -17.321 0 -325 ) ( 0 30 0 ) local.interior // Any remaining space (within the tilted building) between the left-most & right-most vertices must be filled
-		( -4684.000 -4276 1175 ) ( -17.321 -160 -325 ) ( 0 0 0 ) local.interior // with more rectangular volumes of equal setsizes, but each shifted left or right 10 units.
-		( -4701.321 -4286 1175 ) ( -17.321 -160 -325 ) ( 0 0 0 ) local.interior // amb[23]
-		( -4718.642 -4296 1175 ) ( -17.321 -160 -325 ) ( 0 0 0 ) local.interior // NOTE: volume triangles extending outside the walls must be <= 30 units to avoid being triggered by players.
-
-		( -2656 -3983 543 ) ( -291 0 -248 ) ( 0 175 0 ) local.interior // amb[25]
-		( -2947 -3953 543 ) ( -30 0 -248 ) ( 0 145 0 ) local.interior
-		( -2977 -3893 543 ) ( -30 0 -248 ) ( 0 85 0 ) local.interior
-		( -3007 -3833 543 ) ( -30 0 -248 ) ( 0 25 0 ) local.interior
-
-		( -2656 -2432.000 959 ) ( -446 -799.000 -759 ) ( 0 0 0 ) local.interior
-		( -3102 -2449.321 959 ) ( -30 -781.679 -759 ) ( 0 0 0 ) local.interior // amb[30]
-		( -3132 -2466.642 959 ) ( -30 -764.358 -759 ) ( 0 0 0 ) local.interior
-		( -3162 -2483.963 959 ) ( -30 -747.037 -759 ) ( 0 0 0 ) local.interior
-		( -3192 -2501.284 959 ) ( -30 -729.716 -759 ) ( 0 0 0 ) local.interior
-		( -3222 -2518.605 959 ) ( -30 -712.395 -759 ) ( 0 0 0 ) local.interior
-		( -3252 -2535.926 959 ) ( -30 -695.074 -759 ) ( 0 0 0 ) local.interior // amb[35]
-		( -3282 -2553.247 959 ) ( -30 -677.753 -759 ) ( 0 0 0 ) local.interior
-		( -3312 -2570.568 959 ) ( -30 -660.432 -759 ) ( 0 0 0 ) local.interior
-		( -3342 -2577.889 959 ) ( -30 -601.149 -759 ) ( 0 0 0 ) local.interior
-		( -3372 -2595.210 959 ) ( -30 -531.866 -759 ) ( 0 0 0 ) local.interior
-		( -3402 -2612.531 959 ) ( -30 -462.583 -759 ) ( 0 0 0 ) local.interior // amb[40]
-		( -3432 -2629.852 959 ) ( -30 -393.300 -759 ) ( 0 0 0 ) local.interior
-		( -3462 -2637.173 959 ) ( -30 -314.017 -759 ) ( 0 0 0 ) local.interior
-		( -3492 -2654.494 959 ) ( -30 -244.734 -759 ) ( 0 0 0 ) local.interior
-		( -3522 -2671.815 959 ) ( -30 -175.451 -759 ) ( 0 0 0 ) local.interior
-		( -3552 -2689.136 959 ) ( -20 -106.168 -759 ) ( 0 0 0 ) local.interior // amb[45]
-
-		( -1904 -2831 767 ) ( -111 0 -567 ) ( 0 511 0 ) local.interior
-		( -2088 -2831 934 ) ( -50 0 -49 ) ( 50 511 0 ) local.interior
-		( -2088 -2831 884 ) ( -100 0 -49 ) ( 100 511 0 ) local.interior
-		( -2088 -2831 834 ) ( -125 0 -55 ) ( 150 511 0 ) local.interior
-
-		( -592 -2135 990 ) ( -543 -77 -49 ) ( 0 77 0 ) local.interior // amb[50]
-		( -592 -2135 940 ) ( -543 -154 -49 ) ( 0 154 0 ) local.interior
-		( -592 -2135 890 ) ( -543 -231 -49 ) ( 0 231 0 ) local.interior
-		( -592 -2135 840 ) ( -543 -308 -49 ) ( 0 308 0 ) local.interior
-		( -592 -2135 790 ) ( -543 -385 -49 ) ( 0 385 0 ) local.interior
-		( -592 -2135 740 ) ( -543 -456 -540 ) ( 0 455 0 ) local.interior // amb[55]
-		( -1135 -2031 798 ) ( -192 -77 -49 ) ( 0 77 0 ) local.interior
-		( -1135 -2031 748 ) ( -192 -154 -49 ) ( 0 154 0 ) local.interior
-		( -1135 -2031 698 ) ( -192 -231 -49 ) ( 0 231 0 ) local.interior
-		( -1135 -2031 648 ) ( -192 -308 -448 ) ( 0 308 0 ) local.interior
-
-		( -1552 -1040 639 ) ( -351 -424 -439 ) ( 0 0 0 ) local.interior // amb[60]
-		( -1903 -1296 639 ) ( -128 -168 -439 ) ( 0 0 0 ) local.interior
-
-		( -2063 -752 1367 ) ( -30 -30 -49 ) ( 30 30 0 ) local.interior
-		( -2063 -752 1317 ) ( -50 -50 -49 ) ( 50 50 0 ) local.interior
-		( -2063 -752 1267 ) ( -70 -70 -267 ) ( 70 70 0 ) local.interior
-
-		( 4736 -1391 1174 ) ( -30 0 -49 ) ( 60 288 0 ) local.interior // amb[65]
-		( 4736 -1391 1124 ) ( -60 0 -49 ) ( 120 288 0 ) local.interior
-		( 4736 -1391 1074 ) ( -90 0 -49 ) ( 180 288 0 ) local.interior
-		( 4736 -1391 1024 ) ( -120 0 -49 ) ( 240 288 0 ) local.interior
-		( 4736 -1391 974 ) ( -150 0 -49 ) ( 300 288 0 ) local.interior
-		( 4736 -1391 924 ) ( -180 0 -49 ) ( 360 288 0 ) local.interior // amb[70]
-		( 4736 -1391 874 ) ( -210 0 -30 ) ( 420 288 0 ) local.interior
-		( 4736 -1391 844 ) ( -240 0 -544 ) ( 431 288 0 ) local.interior
-		( 4736 -1103 1074 ) ( -30 0 -49 ) ( 60 288 0 ) local.interior
-		( 4736 -1103 1024 ) ( -60 0 -49 ) ( 120 288 0 ) local.interior
-		( 4736 -1103 974 ) ( -90 0 -49 ) ( 180 288 0 ) local.interior // amb[75]
-		( 4736 -1103 924 ) ( -120 0 -49 ) ( 240 288 0 ) local.interior
-		( 4736 -1103 874 ) ( -150 0 -49 ) ( 300 288 0 ) local.interior
-		( 4736 -1103 824 ) ( -180 0 -49 ) ( 360 288 0 ) local.interior
-		( 4736 -1103 774 ) ( -210 0 -30 ) ( 420 288 0 ) local.interior
-		( 4736 -1103 744 ) ( -240 0 -444 ) ( 431 288 0 ) local.interior // amb[80]
-		( 5167 -815 1215 ) ( -639 0 -915 ) ( 0 287 0 ) local.interior
-		( 4528 -815 1165 ) ( -96 0 -865 ) ( 0 287 0 ) local.interior
-
-		( 1280 -255 860 ) ( 0 0 -300 ) ( 420 558 0 ) local.interior
-
-		( -176 1136 1150 ) ( 0 -60 -49 ) ( 511 60 0 ) local.interior
-		( -176 1136 1100 ) ( 0 -120 -49 ) ( 511 120 0 ) local.interior // amb[85]
-		( -176 1136 1050 ) ( 0 -180 -49 ) ( 511 180 0 ) local.interior
-		( -176 1136 1000 ) ( 0 -240 -700 ) ( 511 240 0 ) local.interior
-		( 335 1215 1422 ) ( 0 -60 -49 ) ( 465 60 0 ) local.interior
-		( 335 1215 1372 ) ( 0 -120 -49 ) ( 465 120 0 ) local.interior
-		( 335 1215 1322 ) ( 0 -180 -49 ) ( 465 180 0 ) local.interior // amb[90]
-		( 335 1215 1272 ) ( 0 -240 -972 ) ( 465 240 0 ) local.interior
-
-		( 816 863 863 ) ( 0 -95 -563 ) ( 591 0 0 ) local.interior
-		( 1280 768 863 ) ( 0 -304 -563 ) ( 688 0 0 ) local.interior
-		( 2448 663 647 ) ( -480 0 -347 ) ( 0 232 0 ) local.interior
-		( 2225 663 647 ) ( -257 -199 -347 ) ( 0 0 0 ) local.interior // amb[95]
-
-		( 2687 632 1118 ) ( 0 -218 -49 ) ( 1025 218 0 ) local.interior
-		( 2687 632 1068 ) ( 0 -268 -49 ) ( 1025 268 0 ) local.interior
-		( 2687 632 1018 ) ( 0 -318 -49 ) ( 1025 318 0 ) local.interior
-		( 2687 632 968 ) ( 0 -368 -49 ) ( 1025 368 0 ) local.interior
-		( 2687 632 918 ) ( 0 -424 -618 ) ( 1025 424 0 ) local.interior // amb[100]
-		( 2808 1384 1118 ) ( -155 -584 -49 ) ( 155 0 0 ) local.interior
-		( 2808 1384 1068 ) ( -205 -584 -49 ) ( 205 0 0 ) local.interior
-		( 2808 1384 1018 ) ( -255 -584 -49 ) ( 255 0 0 ) local.interior
-		( 2808 1384 968 ) ( -305 -584 -49 ) ( 305 0 0 ) local.interior
-		( 2808 1384 918 ) ( -355 -584 -618 ) ( 355 0 0 ) local.interior // amb[105]
-		( 3968 760 1118 ) ( -239 -90 -49 ) ( 0 90 0 ) local.interior
-		( 3968 760 1068 ) ( -239 -140 -49 ) ( 0 140 0 ) local.interior
-		( 3968 760 1018 ) ( -239 -190 -49 ) ( 0 190 0 ) local.interior
-		( 3968 760 968 ) ( -239 -240 -49 ) ( 0 240 0 ) local.interior
-		( 3968 760 918 ) ( -239 -290 -618 ) ( 0 290 0 ) local.interior // amb[110]
-		( 2687 760 1118 ) ( -239 -90 -49 ) ( 0 90 0 ) local.interior
-		( 2687 760 1068 ) ( -239 -140 -49 ) ( 0 140 0 ) local.interior
-		( 2687 760 1018 ) ( -239 -190 -49 ) ( 0 190 0 ) local.interior
-		( 2687 760 968 ) ( -239 -240 -49 ) ( 0 240 0 ) local.interior
-		( 2687 760 918 ) ( -239 -290 -618 ) ( 0 290 0 ) local.interior // amb[115]
-		( 3200 175 1118 ) ( -50 0 -49 ) ( 50 289 0 ) local.interior
-		( 3200 175 1068 ) ( -100 0 -49 ) ( 100 289 0 ) local.interior
-		( 3200 175 1018 ) ( -150 0 -49 ) ( 150 289 0 ) local.interior
-		( 3200 175 968 ) ( -200 0 -49 ) ( 200 289 0 ) local.interior
-		( 3200 175 918 ) ( -250 0 -618 ) ( 250 289 0 ) local.interior // amb[120]
-
-		( -1776 -6015 927 ) ( -671 0 -212 ) ( 0 319 0 ) local.interior // 1
-
-		( 159 -6063 168 ) ( -200 -240 0 ) ( 0 0 300 ) local.interior // 3
-
-		( -1327 880 594 ) ( 0 0 0 ) ( 175 127 197 ) local.interior
-
-		( 3000 1950 0 ) ( -8000 0 -4000 ) ( 8000 8000 4000 ) local.exterior2
-	endArray
-
-	exec global/ambience_mp.scr local.exterior 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

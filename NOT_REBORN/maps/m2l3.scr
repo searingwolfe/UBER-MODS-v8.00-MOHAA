@@ -134,7 +134,7 @@ exec global/playertank.scr tank01 vehicles/panzer_tank.tik ( 300 800 -400 ) ( 0 
 exec global/playertank.scr tank02 vehicles/panzer_tank_europe.tik ( -2430 115 -400 ) ( 0 0 0 ) 1000 45
 //exec global/playertank.scr tank03 vehicles/kingtank.tik ( 3200 3872 -400 ) ( 0 0 0 ) 1000 45
 
-exec global/playernebelwerfer.scr NIL 200 45 ( -5005 -163 960 ) ( 0 0 0 )
+//exec global/playernebelwerfer.scr NIL 200 45 ( -5005 -163 960 ) ( 0 0 0 ) // these may cause players to be unable to join after 10+ minutes (likely due to too many cached models/sounds).
 exec global/playerflak88.scr NIL 200 45 ( -3087 -1447 -120 ) ( 0 45 0 ) 0 ( 0 0 0 )
 
 exec server_planes/trigger.scr ( -293 2650 -488 ) "allies" 1 0 ( -284 2500 500 )	// team (only 1 per modelpair), flying plane scale, modelpair, starting origin (default = origin + 500)
@@ -180,7 +180,7 @@ thread twoswitch sw2 ( -374 3007 -436 ) ( 0 -90 0 ) 60 500 2 // axis side
 
 level waittill spawn
 
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -194,18 +194,6 @@ if(getcvar("g_throwingknives") == "1")
 	//exec global/throwingknife.scr k4 ( -327 5375 -511 ) ( 0 -90 0 )
 	//exec global/throwingknife.scr k5 ( 1074 3300 -651 ) ( 0 90 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( -591 4670 -527 ) ( -2673 -1626 -1000 ) ( 1934 0 740 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-		( -591 4671 -527 ) ( -8000 0 -1000 ) ( 1934 8000 454 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-		( -591 4671 -72 ) ( -8000 0 0 ) ( 1934 8000 248 ) sound/amb_stereo/Amb_M2_VentInt.mp3
-		( -3265 3327 -527 ) ( -8000 0 -1000 ) ( 0 8000 454 ) sound/amb_stereo/Amb_M2_SubFacility.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M2_SnowExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

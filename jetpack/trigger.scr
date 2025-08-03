@@ -93,6 +93,7 @@ jetpack local.jetpackfuel:
 	local.c = 0		
 	local.team = self.dmteam // Set team
 	local.isdog = self.isdog
+	local.stufftext_c = 0
 
   	while(isalive self && self.jetpack != NIL && self.jetpack != NULL && self.jetpack.fuel > 0 && self.dmteam == local.team && self.dmteam != "spectator" && self.isdog == local.isdog) //start main loop 
 	{
@@ -145,8 +146,11 @@ jetpack local.jetpackfuel:
 
 		if(self.jetpack.fuel <= 0 ) { self stufftext ("set fuel Empty") }
 
-		if(self.jetpack.fuel >= 0 && self.jetpack.fuel <= level.jetpack_max_fuel ) { self stufftext ("set fuel " + self.jetpack.fuel) }
+		if(self.jetpack.fuel >= 0 && self.jetpack.fuel <= level.jetpack_max_fuel && local.stufftext_c == 10) { self stufftext ("set fuel " + self.jetpack.fuel) }
 		local.jetpackfuel = self.jetpack.fuel
+
+		local.stufftext_c++
+		if(local.stufftext_c > 10) { local.stufftext_c = 0 } // twice every second.
 
 		wait 0.1
 		if(local.a >= level.fueltime_charge) { local.a = 0 }

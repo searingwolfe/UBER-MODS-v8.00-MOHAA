@@ -178,7 +178,7 @@ if(getcvar("g_ubermods") == "1")
 level waittill spawn
 
 	thread consoleprint
-	thread ambience
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 
 while(level.bbactive == 1) { wait 1 }
 
@@ -199,32 +199,6 @@ if(getcvar("g_ubermods") == "2")
 	iprintlnbold("*** Vehicle Convoy has arrived! ***")
 	println("----- Vehicle Convoy has arrived!")
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( -3971 -183 250 ) ( 0 0 0 ) ( 331 558 305 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-
-		( -4488 -183 250 ) ( -231 0 0 ) ( 0 206 275 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-
-		( -4863 960 350 ) ( 0 0 0 ) ( 407 247 285 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-
-		( -6987 1340 485 ) ( 0 0 0 ) ( 371 259 262 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-
-		( -7344 2224 550 ) ( -415 0 0 ) ( 0 143 225 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-
-		( -6983 2504 500 ) ( 0 0 0 ) ( 327 183 289 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-
-		( -5832 1903 300 ) ( -503 0 0 ) ( 0 640 531 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-		( -5831 1903 300 ) ( 0 -135 0 ) ( 199 144 485 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-		( -5832 1902 300 ) ( -369 -134 0 ) ( 0 0 485 ) sound/amb_stereo/Amb_M1_Interior_01.mp3
-
-		( -2176 -360 0 ) ( -16000 -16000 -8000 ) ( 0 0 8000 ) sound/amb_stereo/Amb_M1_Canyon_01.mp3
-		( -2175 -360 0 ) ( 0 -16000 -8000 ) ( 16000 16000 8000 ) sound/amb_stereo/Amb_M1_Canyon_01.mp3
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M1_TownExt.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 end
 
 ////////////////////////////////////////////////////////////////////////

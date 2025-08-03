@@ -68,6 +68,7 @@ level waittill prespawn
 	exec global/door_locked.scr
 	exec global/exploder.scr
 	exec global/barrel.scr::explosive_barrel
+	exec global/weather.scr "rain" 1 0.8
 
 	setcvar "r_fastsky" "0"
 	exec global/fastsky.scr 0
@@ -235,8 +236,7 @@ exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie3 ( 2558 -995 -15 ) 
 thread airstrikes_alternate
 
 	thread consoleprint
-	thread ambience
-	thread water_volumes
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 	exec global/water_wade_sounds.scr 1
 
 while(level.bbactive == 1) { wait 1 }
@@ -254,149 +254,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k7 ( -3142 1657 -3 ) ( 0 0 0 )
 	exec global/throwingknife.scr k8 ( -5834 634 15 ) ( 0 90 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	local.interior = sound/amb_stereo/Amb_M5_TownInt.mp3	// inside all buildings
-	local.exterior = sound/amb_stereo/Amb_M5_Field.mp3	// main level
-
-	// origin, setsize1, setsize2, music, set number.
-	level.spawnamb = makeArray
-		( -7496 373 380 ) ( 0 -50 -320 ) ( 675 0 0 ) local.interior 24 // starting at leftmost (lowest interior X value) corner of a building angled 30 degrees.
-		( -7466 323 380 ) ( 0 -50 -320 ) ( 660 0 0 ) local.interior 24 // going down Y - 50, going right X + 30, reducing setsize2 +X - 15, then - 60, then - 115.
-		( -7436 273 380 ) ( 0 -50 -320 ) ( 600 0 0 ) local.interior 24
-		( -7406 223 380 ) ( 0 -50 -320 ) ( 485 0 0 ) local.interior 24
-		( -7376 173 380 ) ( 0 -50 -320 ) ( 370 0 0 ) local.interior 24 // amb[5]
-		( -7346 123 380 ) ( 0 -50 -320 ) ( 255 0 0 ) local.interior 24
-		( -7316 73 380 ) ( 0 -50 -320 ) ( 140 0 0 ) local.interior 24
-		( -7286 23 380 ) ( 0 -25 -320 ) ( 20 0 0 ) local.interior 24
-		( -6830 373 380 ) ( -635 0 -320 ) ( 0 50 0 ) local.interior 24 // starting at X origin + 50 directly across from leftmost (lowest interior X value) corner of a building angled 30 degrees.
-		( -6860 423 380 ) ( -520 0 -320 ) ( 0 50 0 ) local.interior 24 // going up Y + 50, going left X - 30, reducing setsize1 -X - 40, then - 115.	amb[10]
-		( -6890 473 380 ) ( -405 0 -320 ) ( 0 50 0 ) local.interior 24
-		( -6920 523 380 ) ( -290 0 -320 ) ( 0 50 0 ) local.interior 24
-		( -6950 573 380 ) ( -175 0 -320 ) ( 0 50 0 ) local.interior 24
-		( -6980 623 380 ) ( -60 0 -320 ) ( 0 25 0 ) local.interior 24
-
-		( -6095 639 315 ) ( 0 -105 -50 ) ( 240 0 0 ) local.interior 25 // amb[15]
-		( -6095 639 265 ) ( 0 -210 -50 ) ( 240 0 0 ) local.interior 25
-		( -6095 639 215 ) ( 0 -287 -368 ) ( 240 0 0 ) local.interior 25
-
-		( -5839 639 270 ) ( 0 -105 -50 ) ( 367 0 0 ) local.interior 8
-		( -5839 639 220 ) ( 0 -210 -50 ) ( 367 0 0 ) local.interior 8
-		( -5839 639 170 ) ( 0 -255 -320 ) ( 367 0 0 ) local.interior 8 // amb[20]
-
-		( -5455 639 350 ) ( 0 -105 -50 ) ( 320 0 0 ) local.interior 7
-		( -5455 639 300 ) ( 0 -210 -50 ) ( 320 0 0 ) local.interior 7
-		( -5455 639 250 ) ( 0 -287 -320 ) ( 320 0 0 ) local.interior 7
-
-		( -4800 512 374 ) ( 0 -80 -50 ) ( 193 80 0 ) local.interior 23
-		( -4800 512 324 ) ( 0 -160 -50 ) ( 193 160 0 ) local.interior 23 // amb[25]
-		( -4800 512 274 ) ( 0 -193 -424 ) ( 193 193 0 ) local.interior 23
-
-		( -5975 -800 454 ) ( 0 -125 -50 ) ( 303 0 0 ) local.interior
-		( -5975 -800 404 ) ( 0 -250 -14 ) ( 303 0 0 ) local.interior
-		( -5975 -800 390 ) ( 0 -271 -540 ) ( 303 0 0 ) local.interior
-
-		( -5460 -807 402 ) ( -50 0 -50 ) ( 50 231 0 ) local.interior 27 // amb[30]
-		( -5460 -807 352 ) ( -100 0 -50 ) ( 100 231 0 ) local.interior 27
-		( -5460 -807 302 ) ( -150 0 -50 ) ( 150 231 0 ) local.interior 27
-		( -5460 -807 252 ) ( -196 0 -402 ) ( 196 231 0 ) local.interior 27
-
-		( -5247 -807 410 ) ( 0 0 -50 ) ( 239 105 0 ) local.interior 28
-		( -5247 -807 360 ) ( 0 0 -50 ) ( 239 210 0 ) local.interior 28 // amb[35]
-		( -5247 -807 310 ) ( 0 0 -463 ) ( 239 279 0 ) local.interior 28
-
-		( -4847 -1135 175 ) ( 0 0 -325 ) ( 351 415 0 ) local.interior 29
-
-		( -4415 -832 454 ) ( 0 -125 -50 ) ( 303 0 0 ) local.interior
-		( -4415 -832 404 ) ( 0 -250 -14 ) ( 303 0 0 ) local.interior
-		( -4415 -832 390 ) ( 0 -271 -540 ) ( 303 0 0 ) local.interior // amb[40]
-
-		( -3860 -827 402 ) ( -50 0 -50 ) ( 50 171 0 ) local.interior 1
-		( -3860 -827 352 ) ( -100 0 -50 ) ( 100 171 0 ) local.interior 1
-		( -3860 -827 302 ) ( -150 0 -50 ) ( 150 171 0 ) local.interior 1
-		( -3860 -827 252 ) ( -196 0 -402 ) ( 196 171 0 ) local.interior 1
-
-		( -3647 -827 315 ) ( 0 0 -50 ) ( 239 105 0 ) local.interior 4 // amb[45]
-		( -3647 -827 265 ) ( 0 0 -50 ) ( 239 210 0 ) local.interior 4
-		( -3647 -827 215 ) ( 0 0 -365 ) ( 239 299 0 ) local.interior 4
-
-		( -3648 -1728 502 ) ( 0 -80 -50 ) ( 193 80 0 ) local.interior
-		( -3648 -1728 452 ) ( 0 -160 -50 ) ( 193 160 0 ) local.interior
-		( -3648 -1728 402 ) ( 0 -193 -552 ) ( 193 193 0 ) local.interior // amb[50]
-
-		( -1280 -1280 342 ) ( 0 -80 -50 ) ( 193 80 0 ) local.interior
-		( -1280 -1280 292 ) ( 0 -160 -50 ) ( 193 160 0 ) local.interior
-		( -1280 -1280 242 ) ( 0 -193 -392 ) ( 193 193 0 ) local.interior
-
-		( -2079 511 345 ) ( 0 -105 -50 ) ( 319 0 0 ) local.interior 22
-		( -2079 511 295 ) ( 0 -210 -50 ) ( 319 0 0 ) local.interior 22 // amb[55]
-		( -2079 511 245 ) ( 0 -287 -395 ) ( 319 0 0 ) local.interior 22
-
-		( -2447 495 265 ) ( 0 -105 -50 ) ( 351 0 0 ) local.interior 21
-		( -2447 495 215 ) ( 0 -210 -50 ) ( 351 0 0 ) local.interior 21
-		( -2447 495 165 ) ( 0 -239 -365 ) ( 351 0 0 ) local.interior 21
-
-		( -2715 511 335 ) ( -50 -239 -50 ) ( 50 0 0 ) local.interior 20 // amb[60]
-		( -2715 511 285 ) ( -100 -239 -50 ) ( 100 0 0 ) local.interior 20
-		( -2715 511 235 ) ( -150 -239 -50 ) ( 150 0 0 ) local.interior 20
-		( -2715 511 185 ) ( -196 -239 -335 ) ( 196 0 0 ) local.interior 20
-
-		( -3247 495 420 ) ( 0 -105 -50 ) ( 319 0 0 ) local.interior 46
-		( -3247 495 370 ) ( 0 -210 -50 ) ( 319 0 0 ) local.interior 46 // amb[65]
-		( -3247 495 320 ) ( 0 -271 -475 ) ( 319 0 0 ) local.interior 46
-
-		( -3136 976 265 ) ( -105 0 -50 ) ( 0 351 0 ) local.interior 17
-		( -3136 976 215 ) ( -210 0 -50 ) ( 0 351 0 ) local.interior 17
-		( -3136 976 165 ) ( -255 0 -365 ) ( 0 351 0 ) local.interior 17
-
-		( -3136 1344 345 ) ( -105 0 -50 ) ( 0 319 0 ) local.interior 16 // amb[70]
-		( -3136 1344 295 ) ( -210 0 -50 ) ( 0 319 0 ) local.interior 16
-		( -3136 1344 245 ) ( -287 0 -445 ) ( 0 319 0 ) local.interior 16
-
-		( -3136 1875 335 ) ( -239 -50 -50 ) ( 0 50 0 ) local.interior 15
-		( -3136 1875 285 ) ( -239 -100 -50 ) ( 0 100 0 ) local.interior 15
-		( -3136 1875 235 ) ( -239 -150 -50 ) ( 0 150 0 ) local.interior 15 // amb[75]
-		( -3136 1875 185 ) ( -239 -196 -335 ) ( 0 196 0 ) local.interior 15
-
-		( -6430 750 510 ) ( -50 0 -50 ) ( 50 217 0 ) local.interior
-		( -6430 750 460 ) ( -100 0 -50 ) ( 100 217 0 ) local.interior
-		( -6430 750 410 ) ( -150 0 -50 ) ( 150 217 0 ) local.interior
-		( -6430 750 360 ) ( -200 0 -50 ) ( 200 217 0 ) local.interior // amb[80]
-		( -6430 750 310 ) ( -250 0 -50 ) ( 250 217 0 ) local.interior
-		( -6430 750 260 ) ( -280 0 -510 ) ( 280 217 0 ) local.interior
-
-		( -6040 -1631 519 ) ( -400 0 -224 ) ( 0 450 0 ) local.interior
-
-		( 2920 -1304 374 ) ( -385 -50 -50 ) ( 0 50 0 ) local.interior 10
-		( 2920 -1304 324 ) ( -385 -100 -50 ) ( 0 100 0 ) local.interior 10 // amb[85]
-		( 2920 -1304 274 ) ( -385 -150 -50 ) ( 0 150 0 ) local.interior 10
-		( 2920 -1304 224 ) ( -385 -200 -50 ) ( 0 200 0 ) local.interior 10
-		( 2920 -1304 174 ) ( -385 -250 -47 ) ( 0 250 0 ) local.interior 10
-
-		( 2760 -1999 238 ) ( -50 0 -50 ) ( 50 576 0 ) local.interior 9
-		( 2760 -1999 188 ) ( -100 0 -50 ) ( 100 576 0 ) local.interior 9 // amb[90]
-		( 2760 -1999 138 ) ( -150 0 -11 ) ( 150 576 0 ) local.interior 9
-		( 2760 -1999 127 ) ( -161 0 -377 ) ( 161 376 0 ) local.interior 9
-
-		( 2911 -1423 127 ) ( -303 -200 -159 ) ( 0 0 0 ) local.interior 10
-		( 2911 -992 127 ) ( -367 -431 -159 ) ( 0 0 0 ) local.interior 10
-		( 2911 -992 -32 ) ( -167 -503 -218 ) ( 0 0 0 ) local.interior // amb[95]
-
-		( 2911 -1495 -32 ) ( -192 -50 -218 ) ( 0 0 0 ) local.interior
-		( 2911 -1545 -32 ) ( -242 -50 -218 ) ( 0 0 0 ) local.interior
-		( 2911 -1595 -32 ) ( -292 -28 -218 ) ( 0 0 0 ) local.interior
-	endArray
-
-	exec global/ambience_mp.scr local.exterior 1 // 0 = no, 1 = keep players' music volume at max.
-end
-
-water_volumes: // these are for any airstrikes that drop bombs into the ocean.
-
-	level.water_volumes = makeArray
-		( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
-	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////

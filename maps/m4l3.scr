@@ -212,8 +212,7 @@ thread airstrikes_alternate
 level waittill spawn
 
 	thread consoleprint
-	thread ambience
-	thread water_volumes
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
 	exec global/water_wade_sounds.scr 1
 
 while(level.bbactive == 1) { wait 1 }
@@ -231,86 +230,6 @@ if(getcvar("g_throwingknives") == "1")
 	exec global/throwingknife.scr k7 ( -435 -371 262 ) ( 0 90 0 )
 	exec global/throwingknife.scr k8 ( 231 -1480 259 ) ( 0 180 0 )
 }
-end
-
-ambience: // make sure the spawnamb volumes are not overlapping!!!
-
-	level.spawnamb = makeArray
-		( -3999 -3855 78 ) ( 0 -40 -49 ) ( 975 40 0 ) sound/amb_stereo/Amb_M4_TrainTrackInt.mp3
-		( -3999 -3855 28 ) ( 0 -80 -49 ) ( 975 80 0 ) sound/amb_stereo/Amb_M4_TrainTrackInt.mp3
-		( -3999 -3855 -22 ) ( 0 -120 -23 ) ( 975 120 0 ) sound/amb_stereo/Amb_M4_TrainTrackInt.mp3
-		( -3999 -3855 -46 ) ( 0 -198 -375 ) ( 975 191 0 ) sound/amb_stereo/Amb_M4_TrainTrackInt.mp3
-
-		( -2928 768 750 ) ( -50 -1216 -49 ) ( 50 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -2928 768 700 ) ( -100 -1216 -49 ) ( 100 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -2928 768 650 ) ( -150 -1216 -49 ) ( 150 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -2928 768 600 ) ( -200 -1216 -49 ) ( 200 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -2928 768 550 ) ( -250 -1216 -49 ) ( 250 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -2928 768 500 ) ( -300 -1216 -49 ) ( 300 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav // amb[10]
-		( -2928 768 450 ) ( -350 -1216 -50 ) ( 350 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -2598 768 399 ) ( -666 -1216 -407 ) ( 0 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -2598 768 -9 ) ( -666 -1216 -277 ) ( 0 0 0 ) sound/amb_stereo/Amb_M4_Basement_01.mp3
-
-		( -2215 -1704 511 ) ( -400 0 -622 ) ( 400 993 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-
-		( -1884 56 658 ) ( -50 -888 -49 ) ( 50 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1884 56 608 ) ( -100 -888 -49 ) ( 100 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1884 56 558 ) ( -150 -888 -49 ) ( 150 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1884 56 508 ) ( -200 -888 -49 ) ( 200 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1884 56 458 ) ( -250 -888 -74 ) ( 250 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1884 56 383 ) ( -260 -888 -503 ) ( 250 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav // amb[20]
-
-		( -2328 -23 423 ) ( 0 -688 -543 ) ( 200 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav // new ambience_mp.scr update allows volumes with the same music file to overlap.
-
-		( -1367 -1239 720 ) ( -457 -35 -49 ) ( 0 35 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1367 -1239 692 ) ( -457 -80 -49 ) ( 0 80 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1367 -1239 642 ) ( -457 -140 -49 ) ( 0 140 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1367 -1239 592 ) ( -457 -185 -49 ) ( 0 185 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1367 -1239 592 ) ( -457 -190 -16 ) ( 0 190 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1303 -714 575 ) ( -513 -860 -695 ) ( 0 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-
-		( 432 -1408 606 ) ( -929 -50 -49 ) ( 0 50 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( 432 -1408 556 ) ( -929 -100 -49 ) ( 0 100 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( 432 -1408 506 ) ( -929 -150 -49 ) ( 0 150 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav // amb[30]
-		( 432 -1408 456 ) ( -929 -200 -49 ) ( 0 200 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( 432 -1408 406 ) ( -929 -250 -22 ) ( 0 250 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( 432 -1408 383 ) ( -929 -272 -503 ) ( 0 272 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -359 -1023 208 ) ( -120 -129 -328 ) ( 0 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-
-		( -832 -1680 790 ) ( -50 0 -59 ) ( 50 1225 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -832 -1680 730 ) ( -100 0 -59 ) ( 100 1225 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -832 -1680 670 ) ( -150 0 -59 ) ( 150 1225 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -832 -1680 610 ) ( -200 0 -59 ) ( 200 1225 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -832 -1680 550 ) ( -200 0 -59 ) ( 250 1225 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -832 -1680 490 ) ( -300 0 -74 ) ( 300 1225 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav // amb[40]
-		( -832 -1680 415 ) ( -335 0 -535 ) ( 336 1225 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-
-		( -1168 -224 598 ) ( 0 -45 -49 ) ( 1248 45 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1168 -224 548 ) ( 0 -90 -49 ) ( 1248 90 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1168 -224 498 ) ( 0 -135 -49 ) ( 1248 135 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1168 -224 448 ) ( 0 -180 -49 ) ( 1248 180 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1168 -224 398 ) ( 0 -208 -14 ) ( 1248 208 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1168 -224 383 ) ( 0 -208 -200 ) ( 1248 208 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1168 -224 182 ) ( 0 -232 -302 ) ( 865 208 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -1168 -434 383 ) ( 0 -22 -200 ) ( 873 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-
-		( -720 -15 230 ) ( -303 0 -70 ) ( 0 65 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav // amb[50]
-		( -1026 144 159 ) ( 0 -158 -279 ) ( 395 0 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-
-		( -703 -14 420 ) ( 0 0 -512 ) ( 255 142 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -703 129 420 ) ( 0 0 -512 ) ( 255 31 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -666 161 420 ) ( 0 0 -512 ) ( 185 20 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-		( -575 -100 526 ) ( -50 0 -105 ) ( 50 240 0 ) sound/amb_stereo/Amb_M4_BunkerInt_01.wav
-	endArray
-
-	exec global/ambience_mp.scr sound/amb_stereo/Amb_M4_CountryExt_03.mp3 1 // 0 = no, 1 = keep players' music volume at max.
-end
-
-water_volumes: // these are for any airstrikes that drop bombs into the ocean.
-
-	level.water_volumes = makeArray
-		( -5000 3000 -190 ) ( 0 0 -1000 ) ( 12000 4500 0 )
-	endArray
 end
 
 ////////////////////////////////////////////////////////////////////////
