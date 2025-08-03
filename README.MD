@@ -1349,9 +1349,10 @@ Server auto-reopen script fixes (Windows)
 	- The server auto-reopen .bat script for Windows will now also reopen the server if a DLL initialization routine failed, or simply failed to load while switching maps.
 	- The Windows and older Linux .bat scripts are only available from xNULL website's version of UBER MODS download (newer Linux scripts coming soon).
 
-New map modded: m6l1a
+New map modded: m6l1a <br>
 New map modded: m6l1b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
