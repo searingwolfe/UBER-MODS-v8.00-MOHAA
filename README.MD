@@ -1,4 +1,4 @@
-	*Current Version: 7.991 - Updated: 8/3/2025*
+	*Current Version: 7.991 - Updated: 8/4/2025*
 
 ### Table of Contents
 
@@ -1240,7 +1240,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.991 (8-3-2025):
+v7.991 (8-4-2025):
 
 New Weather Mod created (global/weather.scr).
 
@@ -1353,6 +1353,7 @@ New map modded: m6l1a <br>
 New map modded: m6l1b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
