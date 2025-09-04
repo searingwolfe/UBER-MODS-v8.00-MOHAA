@@ -596,13 +596,16 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 ---------------
 
 Vehicle Driver Controls:
+
 	For Reborn / Nightfall:
+
 		- For drivable vehicles: Hold FIRE = look behind, JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights, only if "noheadlights" parameter != 1.
 		- For drivable tanks: Press FIRE = shoot turret, JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret = repair tank's health.
 		- For drivable boats: Hold FIRE = look behind. JUMP = exit, Lean Left/Right = close/open higgins door.
 		- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, JUMP = exit, Lean Left/Right (while not moving) = look behind, Lean Left/Right (while moving) = aim up/down the tank shell's trajectory.
 
 	For original AA-SH-BT:
+
 		- For drivable vehicles: Hold FIRE = look behind, JUMP = exit, press A (left key) = honk horn, press R (right key) = turn on/off headlights, only if "noheadlights" parameter != 1.
 		- For drivable tanks: Press FIRE = shoot turret, JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret = repair tank's health.
 		- For drivable boats: Hold FIRE = look behind. JUMP = exit, press A - D (left-right keys) = close/open higgins door.
@@ -647,11 +650,14 @@ Vehicle Driver Controls:
 ---------------
 
 Statweapon User Controls:
+
 	For Reborn / Nightfall:
+
 		- For flak88: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE(zoom) = look around.
 		- For nebelwerfers: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE(zoom) = reload & look around.
 
 	For original AA-SH-BT:
+
 		- For flak88: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE + USE(e) = look around.
 		- For nebelwerfers: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE + USE(e) = reload & look around.
 
@@ -1419,6 +1425,7 @@ Misc map changes & bug fixes
 New map modded: m6l1c
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
