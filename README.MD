@@ -1,4 +1,4 @@
-	*Current Version: 7.991 - Updated: 8/4/2025*
+	*Current Version: 7.992 - Updated: 9/4/2025*
 
 ### Table of Contents
 
@@ -583,31 +583,8 @@ velocity of additional mines spawned, bullet damage for sentry turrets, turret l
 - Available drivable vehicles: bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
 gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
 
-- Passenger seats per vehicle (not including driver seat); can only carry teammates (none if in Free-For-All):
-- 2 for bmwbike & jeeps, 3 for european_cars & european_delivery_trucks & mercedes, 4 for gmctrucks & opeltrucks & sdkfzs & m3s, 1 for shermantank, 9 for higgins boats, 5 for uboats.
-
-- For Reborn:
-	- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights, only if "noheadlights" parameter != 1.
-	- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
-	- For drivable boats: Hold FIRE = look behind. Press JUMP = exit, Lean Left/Right = close/open higgins door.
-	- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, Press JUMP = exit, Lean Left/Right (while not moving) = look behind, Lean Left/Right (while moving) = aim up/down the tank shell's trajectory.
-
-- For AA-SH-BT:
-	- For drivable vehicles: Hold FIRE = look behind, Press JUMP = exit, press A (left key) = honk horn, press R (right key) = turn on/off headlights, only if "noheadlights" parameter != 1.
-	- For drivable tanks: Press FIRE = shoot turret, Press JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret to slowly repair tank's health.
-	- For drivable boats: Hold FIRE = look behind. Press JUMP = exit, press A - D (left-right keys) = close/open higgins door.
-	- For drivable uboats: Primary FIRE = shoot tank shell, FIRE + USE(e) = throw grenade, Press JUMP = exit, press A - D (left-right keys) = aim up/down the tank shell's trajectory.
-
-- Drivable tanks now have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
-- Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
-
-- Players using drivable vehicles & boats can be shot and killed by enemy players (not including SDKFZs). Given the math behind the damage dealt to drivers, all passengers will likely be killed first before the driver does.
-- Players using drivable vehicles & boats can see a secondary health bar, representing their actual player's health (when in vehicles/boats/tanks, the health bar changes to the vehicle's health).
-- Players using drivable tanks can now see a secondary health bar, representing the tank's current health (the health bar always starts at 100 when entering tanks, even though the tank & driver have different healths).
-- Tanks will emit smoke if they are damaged. The smoke's scale increases as the tank's health decreases.
-
-		Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time.
-		Tank Example: exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -680 2788 -257 ) ( 0 270 0 ) 1000 60
+Tank Parameters: targetname (must not exist yet), model path, origin, angles, health, reset time
+Tank Example: exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -680 2788 -257 ) ( 0 270 0 ) 1000 60
 
 		Vehicle Parameters: targetname (must not exist yet), model path, origin, angles, health, vehicle speed, reset time, initial headlights (0 = off, 1 = on), no headlights (1 = keep them off).
 		Vehicle Example: exec global/playervehicle.scr jeep vehicles/jeep.tik ( -2541 2297 -255 ) ( 0 40 0 ) 250 400 45 1
@@ -618,23 +595,46 @@ gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgr
 
 ---------------
 
-- global/playerflak88.scr & global/playernebelwerfer.scr<br>
+Vehicle Driver Controls:
+For Reborn / Nightfall:
+	- For drivable vehicles: Hold FIRE = look behind, JUMP = exit, Lean Left = honk horn, Lean Right = turn on/off headlights, only if "noheadlights" parameter != 1.
+	- For drivable tanks: Press FIRE = shoot turret, JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret = repair tank's health.
+	- For drivable boats: Hold FIRE = look behind. JUMP = exit, Lean Left/Right = close/open higgins door.
+	- For drivable uboats: Primary FIRE = shoot tank shell, Secondary FIRE = throw grenade, JUMP = exit, Lean Left/Right (while not moving) = look behind, Lean Left/Right (while moving) = aim up/down the tank shell's trajectory.
+
+For original AA-SH-BT:
+	- For drivable vehicles: Hold FIRE = look behind, JUMP = exit, press A (left key) = honk horn, press R (right key) = turn on/off headlights, only if "noheadlights" parameter != 1.
+	- For drivable tanks: Press FIRE = shoot turret, JUMP = exit, Hold USE(e) for 3+ seconds while not moving the tank or turret = repair tank's health.
+	- For drivable boats: Hold FIRE = look behind. JUMP = exit, press A - D (left-right keys) = close/open higgins door.
+	- For drivable uboats: Primary FIRE = shoot tank shell, FIRE + USE(e) = throw grenade, JUMP = exit, press A - D (left-right keys) = aim up/down the tank shell's trajectory.
+
+- Press USE(e) to begin entering vehicle, taking 1 second to enter (instantly enter the vehicle's passenger seat or turret seat if a teammate is currently driving).
+- While entering an empty vehicle: press & let go of FIRE to enter turret seat instead of driver seat.
+- While entering an empty vehicle: JUMP to enter passenger seat instead of driver seat (or Stand & then Crouch to enter).
+
+- For an occupied vehicle: press USE(e) to enter turret seat if available, or enter passenger seat if the turret seat is occupied.
+- For an occupied vehicle: press USE(e) while Crouching to enter passenger seat instead of the turret seat.
+
+- For vehicle passengers: JUMP = exit, hold Secondary FIRE = look around, Lean Left/Right = change passenger seats.
+- For vehicle turret users: JUMP = exit, press FIRE = shoot turret.
+
+---------------
+
+- Driver seat, passenger seats, and turret seat can only be used by teammates of other players driving/riding in the vehicle (none if in Free-For-All):
+- Number of passenger seats: 2 for bmwbikes & jeeps, 4 for sdkfz halftracks, 3 for european_cars & european_delivery_trucks & mercedes, 7 for gmctrucks & opeltrucks & m3s, 1 for shermantank, 9 for higgins boats, 5 for uboats.
+
+- Drivable tanks have an additional 30cal turret gun seat, allowing a 2nd player to shoot the 30cal while the tank driver uses the main tank turret.
+- Drivable jeeps & SDKFZ halftracks also have a 30cal turret gun seat. Players using the 30cals can be shot at or killed by explosions, without necessarily destroying the vehicle.
+
+- Players using drivable vehicles & boats can be shot and killed by enemy players (not including SDKFZs). Given the math behind the damage dealt to drivers, all passengers will likely be killed first before the driver does.
+- Players using drivable vehicles & boats can see a secondary health bar, representing their actual player's health (when in vehicles/boats/tanks, the health bar changes to the vehicle's health).
+- Players using drivable tanks can see a secondary health bar, representing the tank's current health (the health bar always starts at 100 when entering tanks, even though the tank & driver have different healths).
+- Tanks will emit smoke if they are damaged. The smoke's scale increases as the tank's health decreases.
+
+---------------
+
+- global/playerflak88.scr & global/playernebelwerfer.scr
 - Place any script examples before "level waittill spawn". Change coords & angles as needed.
-
-- Press FIRE = shoot projectile. Press JUMP = exit. Hold Secondary FIRE(zoom) = look around. For nebelwerfers: Secondary FIRE(zoom) = reload (Non-Reborn: FIRE + USE(e) = reload).
-
-- With these two global scripts, players can now get into, rotate, and shoot with the flak88s & nebelwerfers (mainly for Allied Assault).<br>
-- The flak88s shoots one shell before waiting 5 seconds to reload. Player is invisible and cannot be killed unless the flak88 is destroyed.
-
-- The nebelwerfers shoot 6 rockets before waiting 6 seconds to reload. Player is visible and can be shot or killed without destroying the nebelwerfer, or killed after it is destroyed.<br>
-- After a specified amount of reset time, both scripts reset the destroyed turrets back to their initial states.
-
-- Flak88 shells and nebelwerfer rockets will not kill teammate or vehicles that they're riding in.<br>
-- Firing the nebelwerfer rockets too close to the nebelwerfer could blow it up and kill the turret player.
-
-- To prevent the turrets from ever resetting, set the reset time to 99999.<br>
-- Ideally, health should be 250, so only two grenades or a direct shotgun blast can destroy the turrets (damage scale below):<br>
-shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage.
 
 		Flak88 Parameters: existing flak88 targetname (NIL, if spawning a new one), health, reset time, new flak88 origin, new flak88 angles, remove turret base (0 = no, 1 = yes), turret base angles (if NIL, default = flak88 angles)
 		Flak88 Example (a): exec global/playerflak88.scr $flak88_weapon1 250 60
@@ -644,12 +644,41 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 		Nebelwerfer Example (a): exec global/playernebelwerfer.scr $nebelwerfer_1 250 60
 		Nebelwerfer Example (b): exec global/playernebelwerfer.scr NIL 250 60 ( 859 186 282 ) ( 0 -90 0 )
 
+---------------
+
+Statweapon User Controls:
+For Reborn / Nightfall:
+	- For flak88: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE(zoom) = look around.
+	- For nebelwerfers: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE(zoom) = reload & look around.
+
+For original AA-SH-BT:
+	- For flak88: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE + USE(e) = look around.
+	- For nebelwerfers: Press FIRE = shoot projectile. JUMP = exit. Hold FIRE + USE(e) = reload & look around.
+
+---------------
+
+- With these two global scripts, players can get into, rotate, and shoot with the flak88s & nebelwerfers.
+- The flak88s shoots one shell before waiting 5 seconds to reload. Player is invisible and cannot be killed unless the flak88 is destroyed.
+
+- The nebelwerfers shoot 6 rockets before waiting 6 seconds to reload. Player is visible and can be shot or killed without destroying the nebelwerfer, or killed after it is destroyed.
+- After a specified amount of reset time, both scripts reset the destroyed turrets back to their initial states.
+
+- Flak88 shells and nebelwerfer rockets will not kill teammate or vehicles that they're riding in.
+- Firing the nebelwerfer rockets too close to the nebelwerfer could blow it up and kill the turret player.
+
+- To prevent the turrets from ever resetting, set the reset time to 99999.
+- Ideally, health should be 250, so only two grenades or a direct shotgun blast can destroy the turrets (damage scale below):
+shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage.
+
+
+
+
 #
 
 # Singleplayer Maps Mods
 
 Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3,
-M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B.
+M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B, M6L1C.
 
 ---------------
 
@@ -1234,123 +1263,160 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+- M6L1C fully modded.
+
+- Added "hail" weather ("snow" and "blizzard" don't work very well, since the map is too tall; "func_rain" entities must be spawned with custom setsizes lower than the map's height for these weather types).
+
+- The final underground StG44 room can be blown up with grenades/rockets.
+- The hidden vents on this level can now be accessed via red teles, and also provides a secondary path between the StG44 room and the transformer room.
+
+- 2 white laser walls in the Allies/Axis spawns outline invisible walls, which blocks players but allows bullets/projectiles to fly through. Shooting these walls causes them to briefly flash brighter.
+- Green lasers on the building rooftops outline the skybox walls from the map's .BSP. These walls extend to the map's ceiling, block players/entities, and cannot be shot through.
+
+- Various papers, blueprints, uniform and coffee kettle (kettle only work in Reborn/Nightfall since it has no targetname), can be blown up with grenades.
+- 3 radios can cycle through off, static 1, static 2, radio music, static 3 sounds by pressing USE(e).
+- 5 water drip, 14 air vent, 12 transformer, 2 generator, 3 tower wood creak, 4 small missile room, 1 large missile room sounds added to the map (the missile room sounds provide a deep rumbling ambience).
+- A generator switch box in the corner of the transformer room with the large brown oil container can turn/on off the 2 generators, causing red alarm ceiling lights to flash periodically when the switch is off.
+- 3 ladders added to climb into the wooden spotlight towers.
+
+- For "g_ubermods 2":
+	- 2 tanks, 3 vehicles, 2 jetpacks, 4 radiobomb walkies, 8 extra throwing knives added to the map (removed if "g_ubergametype bb", base-builder, is set).
+	- 4 vehicle teles added for passing through metal fences & barbedwire (most metal fences can already be driven through).
+	- Some teles to rooftops are removed.
+- For "g_ubermods 1":
+	- 4 auto-spotlights in the 3 wooden towers will follow loops of SplinePath nodes on the map, following any player that gets too close to the lights.
+	- 6 sets of bangalore wallbombs added.
+	- All red teleporters are added.
+
+---------------
+
 - All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
 
 # Updates & Bug Fixes
 
-v7.991 (8-4-2025):
+v7.992 (9-4-2025):
 
-New Weather Mod created (global/weather.scr).
+Drivable Vehicles/Tanks/Boats upgraded (global/playervehicle.scr, playertank, playerboat).
 
-	- This mod can create weather on any map. Much better rain sounds: interior/exterior, plant, near puddle, under roof, random location thunder sounds.
-	- Available weather types (add more or modify as needed in the script's switch statement):
+	- Players can now enter any vehicle seats, not just the driver seat, with or without a driver present:
+		- Press USE(e) to begin entering vehicle, taking 1 second to enter (instantly enter the vehicle's passenger seat or turret seat if a teammate is currently driving).
+		- While entering an empty vehicle: press & let go of FIRE to enter turret seat instead of driver seat.
+		- While entering an empty vehicle: JUMP to enter passenger seat instead of driver seat (or Stand & then Crouch to enter).
+		- For an occupied vehicle: press USE(e) to enter turret seat if available, or enter passenger seat if the turret seat is occupied.
+		- For an occupied vehicle: press USE(e) while Crouching to enter passenger seat instead of the turret seat.
+
+	- Passengers can now Lean Left/Right to change seats if other seats are available (cycle up/down seats respectively).
+	- Dogs can now use turret seats.
+
+	- Passengers and turret players will no longer auto-exit vehicles when the driver exits the vehicle (they get auto-reseated back into their seats instead).
+	- Turret players (30 Cal turrets) will no longer get auto-killed if only the driver/passengers are killed (players must independently shoot & kill turret players).
+	- Players can no longer kill their teammates driving/riding in vehicles, including if the player is also riding with their teammates (only works in Reborn/Nightfall).
+	- Dogs can now kill drivers and passengers instantly by biting their vehicle, with kills counting towards the dog player's score (dogs will have to bite directly near turret players to kill them).
+
+	- Prevented drivers & passengers from respawning back to their vehicle when switching teams, now respawning normally.
+	- Cleaned up the "main" thread and created "vehicle_settings" thread at the bottom of each script for "desmodel", "outheight", "outout" sound, higgins_door or turret gun adjustments, model caches, 	etc.
+	- Fixed "move_stuck_players" thread to run continuously until all players are not underneath any newly-spawned vehicles or destroyed-vehicle models.
+	- Fixed players shooting vehicles that were not getting kills when killing some vehicle passengers (mainly for Reborn/Nightfall).
+	- Fixed vehicles that were instantly respawning when flooded with players still inside (vehicles will flood if hit by a Light Bomb).
+	- Readjusted setsizes for vehicle damage triggers (to allow shooters to shoot drivers/passengers heads), vehicle models, and destroyed-vehicle models.
+	- Updated fire and smoke emitters for all destroyed vehicles.
+	- Removed team avatars above vehicles.
+
+Weather Mod fixed & improved (global/weather.scr). More details provided inside the script.
 
 	- "snow", "snow_fast", "blizzard", "hail", "snow_original", "rain", "drizzle", "monsoon", "rain_original", "0" or "off".
 
 	- Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
 	- Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
 
-	---------------
-
-	- To use this mod, add "exec global/weather.scr" to any map .scr script after "level waittill prespawn" with given parameters below.
+	- Adjust the weather's sound volume anytime with the "cg_rain_volume" cvar. Example: "cg_weather 0.5" in console, or any decimal between 0 and 1.
+	- To change "cg_rain_density", use the "cg_weather_density" cvar instead. Example: "cg_weather_density 0.35" in console, or any number between 0 and 9.
 
 	- The 2 original weathers have the exact values given to the game's original "snow" and "rain".
 	- If the "thunder" parameter = 1, the sky will occasionally flash white and thunder sounds will play.
-	- Adjust the max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5, or set "level.weather_sound = 0.5" instead of 1.
+	- Adjust the initial max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5 instead of 1.
 
-	- Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no).
+	---------------
+
+	- Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no), optional initial "cg_rain_density" value (0 to 9).
 	- Example: exec global/weather.scr "snow"
 	- Example: exec global/weather.scr "snow_fast" 0
 	- Example: exec global/weather.scr "rain" 1 0.8
 	- Example: exec global/weather.scr "snow_fast" 0 1 0 // m6l1b
+	- Example: exec global/weather.scr "blizzard" 1 1 1 0.06 // anything < 0.06 causes 0 density weather, or "off".
 
-	- Set the "spawn_funcrain" parameter to 0 to prevent spawning in "func_rain" entities,
-	- only use this if there's already "Rain" classname entities/brushes on the map, and if the script's "func_rain" entities are causing weather to not appear fast enough.
-
-	---------------
-
-	- In order to have more dynamic weather sounds in custom maps, 2 level variable arrays must be created:
-	- level.interior_volumes (array of interior ambience volumes), level.water_volumes (array of water volumes).
-
-	- The level.variables above have already been created for all fully modded maps (latest UBER MODS version).
-	- See "ambience" & "water_volumes" threads in each map's .scr
-
-	- Without ambience volumes, the weather will not play any interior sounds.
-	- Without water volumes, the weather will not play any exterior water droplet sounds.
-
-	- level.map_height, level_map_setsize1 & level.map_setsize2 are all auto-created by the script if they don't exist already.
-	- These variables control randomized location for thunder sounds, and allow under-roof rain sounds that play if not near the map's skybox ceiling.
-
-	- If playing singleplayer or if there's only 1 player in a server, the weather will turn off/on while going inside/outside ambience volumes.
+	- NOTE: if the script's spawned "func_rain" entities cause some snowy weather effects to fall down in large clusters (not uniformly & steadily falling down),
+	- the "optional initial cg_rain_density value" parameter must be given any smaller value >= 0.06 that allows the particles to fall more uniformly (i.e. using "blizzard" on tall maps).
 
 	---------------
 
-	- NOTE: if the map's height is very high and the weather has a slow "cg_rain_speed" value (such as snow),
-	- players will not see the weather falling down in time if they are traveling fast across the map.
-	- In this case (i.e. maps m6l1a & m6l1b), do not run "removeclass Rain", but instead keep them to help the map spawn weather particles further below the map's height.
-	- Set "spawn func_rain entities" parameter to 0 if the script's ents cause weather to spawn too high up, too slow, etc (i.e. map m6l1b).
+	- Fixed "hail" to precipitate more uniformly by reducing its "cg_rain_density" value (can only be changed by admins with "cg_weather_density" cvar).
+	- Fixed "drizzle" and "monsoon" not always working due to "cg_rain_density" not updating properly.
+	- Fixed weather & rain density not updating when weather is initially on, then set to "off", then back on again.
+	- Greatly reduced sound distance for player rain sounds, to prevent players from hearing overlapping sounds when 2+ players are in the server and near each other.
+	- If spectators or dead players are spectating other players (or within 320 units of each other), the spectator/dead player's rain sounds will turn off, to prevent overlapping sounds with the living player.
+
+	---------------
+
+- "level.interior_volumes" sound ambience volumes can now have a decimal number (0 to 0.999) indicating how much to multiply the sound volume by (reducing the volume heard by players).
+
+	- Example "level.interior_volumes" from m6l1a for interior sounds (these are found in the "weather" folder):
+
+			level.interior_volumes = makeArray
+				( 0 0 -128 ) ( -10000 -10000 -10000 ) ( 10000 10000 0 ) sound/amb_stereo/Amb_M6_FacilityInt.mp3 0 // adding a 0 here will turn off the player's rain sounds while inside this volume.
+
+				( 4215 1827 191 ) ( 0 0 -291 ) ( 1101 1125 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+				( 4519 1111 191 ) ( 0 0 -291 ) ( 788 716 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+				( 4215 1111 191 ) ( 0 0 -291 ) ( 304 181 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+
+				( 2459 791 103 ) ( 0 0 -203 ) ( 777 997 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
+				( 2648 1788 103 ) ( 0 0 -203 ) ( 220 635 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
+				( 2455 2423 103 ) ( 0 0 -203 ) ( 945 429 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
+
+				( -256 719 207 ) ( 0 0 -307 ) ( 1424 821 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 7	// adding any other number will remove this volume
+				( 167 576 207 ) ( 0 0 -307 ) ( 433 143 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 7 	// after the corresponding $exploder.set = 7 blows up or gets removed.
+			endArray
+			exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_01.mp3 1 1 // 0 = no, 1 = keep players' music volume at max.
 
 	---------------
 
 	- Example "level.interior_volumes" from m6l1a for interior sounds: // these are found in the "weather" folder. For custom maps, a new [mapname].txt file must be made in this folder.
 
-		level.interior_volumes = makeArray
-			( -1007 5663 5583 ) ( 0 -104 -191 ) ( 287 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // origin, setsize1, setsize2, music filepath.
-			( -700 5559 5583 ) ( -325 -160 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // make sure interior_volumes volumes with different sounds are not overlapping.
-			( -717 5399 5583 ) ( -293 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-			( -747 5369 5583 ) ( -233 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+			level.interior_volumes = makeArray
+				( -1007 5663 5583 ) ( 0 -104 -191 ) ( 287 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // origin, setsize1, setsize2, music filepath.
+				( -700 5559 5583 ) ( -325 -160 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // make sure interior_volumes volumes with different sounds are not overlapping.
+				( -717 5399 5583 ) ( -293 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+				( -747 5369 5583 ) ( -233 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
 
-			( -2128 -143 5583 ) ( -287 0 -191 ) ( 0 104 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-			( -2435 -39 5583 ) ( 0 0 -191 ) ( 325 160 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-			( -2418 121 5583 ) ( 0 0 -191 ) ( 293 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-			( -2388 151 5583 ) ( 0 0 -191 ) ( 233 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-		endArray
-		exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
+				( -2128 -143 5583 ) ( -287 0 -191 ) ( 0 104 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+				( -2435 -39 5583 ) ( 0 0 -191 ) ( 325 160 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+				( -2418 121 5583 ) ( 0 0 -191 ) ( 293 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+				( -2388 151 5583 ) ( 0 0 -191 ) ( 233 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+			endArray
+			exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
 
 
 
 	- Example "level.water_volumes" from m5l2b for water sounds:
 
-		level.water_volumes = makeArray
-			( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
-		endArray
+			level.water_volumes = makeArray
+				( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
+			endArray
 
 Misc map changes & bug fixes
 
-	- For Reborn version of Base-Builder UBER only ("g_ubergametype bb"): changed Builder Remover Laser from an entity-pointer to a proximity-pointer, to allow players to pick up their own non-solid objects.
-	- Lean Left/Right to activate the Builder Remover Laser, Hold USE(e) + FIRE to find your nearest object/lift/tele, then Hold FIRE(zoom) to pick up your object.
+	- Added global/spawnladder.scr ladders to all singleplayer maps with wooden spotlight towers.
+	- Added more vent sounds for maps with vents, and added global/doorlocked.scr triggers that were missing in M2L3.
+	- Added a generator switch trigger in M2L3 in the Allies spawn room with generator sounds, for turning them off and flashing periodically any red alarm ceiling lights ($alarmlight entities).
 
-	- Players in Freeze Tag UBER ("g_ubergametype ft") will now auto-melt their teammates if standing near their frozen bodies (same as original Freeze Tag).
-	- Players that get melted/revived in Cyber Attack UBER ("g_ubergametype cyb") will now face the same yaw-angle that they were looking at when frozen/died.
+	- Admins can now change the weather in any multiplayer map with "cg_weather" or turn on/off thunder sounds with "cg_thunder".
+	- Most singleplayer maps still not included yet, since their entity counts are almost maxed out. Add "exec global/weather.scr rain 1" or similar in the map's .scr file to enable weather for those singleplayer maps.
 
-	- The stufftext hack detection script in cvars/adminstuff.scr now waits 2 extra seconds after a player joins before beginning the stufftext test, and waits 5 seconds of "level.time" after the map begins.
-	- This should help avoid false positives caused by players pressing the "score" (Tab) button immediately when joining, kicking them for failing the test when they should've passed.
+	- Updated the "void" map with new wall entities, player spawns, lasers, and extra UBER triggers.
 
-	- Slowed down the updating of a player's health/jetpack fuel secondary HUD meter to 2x per second for drivable vehicles/boats/tanks, jetpacks, and guided missiles.
-	- Without this, the server could crash trying to send stufftexts to update the player's 2nd HUD meter if that player's game crashed, but the in-game player somehow did not leave the server.
-
-	- Fixed Assisted Suicides mod that allowed players to get score for an enemy's death that they shot at a long time ago, since the script wasn't clearing some player variables.
-	- Players can no longer get illuminated by the same spotlight that they are currently using.
-	- Fixed global/respawn_stuck_fix.scr to stop running dozens of times for one player respawn iteration.
-
-	- The "players" cvar & "entities" cvar will now print players' clientnums along with their $player[index] number & netname.
-	- Added $world "farplane", "farplane_color", and "farplane_cull" data when using the "find" cvar to find "$world" (i.e. "find world" in console).
-	- Reduced farplane fog in M5L3 from 6500 to 4500 to reduce FPS lag and/or high ping from some players.
-	- Fixed some ambience volumes in M5L1B.
-
-	- Added "rain" weather with thunder in maps: M5L1A, M5L1B, M5L2A, M5L2B.
-	- Added "snow_fast" weather in DM/MOHDM5 (Snowy Park), M6L1A, M6L1B.
-	- Moved all "ambience" and "water_volumes" threads into a new "weather" folder with [mapname].txt files for each map (each containing "level.interior_volumes" & "level.water_volumes" arrays).
-
-Server auto-reopen script fixes (Windows)
-
-	- The server auto-reopen .bat script for Windows will now also reopen the server if a DLL initialization routine failed, or simply failed to load while switching maps.
-	- The Windows and older Linux .bat scripts are only available from xNULL website's version of UBER MODS download (newer Linux scripts coming soon).
-
-New map modded: m6l1a <br>
-New map modded: m6l1b
+New map modded: m6l1c
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
 

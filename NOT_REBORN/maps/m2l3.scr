@@ -204,9 +204,9 @@ setup:
 	local.master aliascache transformer_humming1 sound/amb/Amb_LightHum_01.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
 	local.master aliascache transformer_humming2 sound/amb/Amb_LightHum_02.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
 	local.master aliascache transformer_humming3 sound/amb/Amb_LightHum_03.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
-	local.master aliascache movingobject sound/mechanics/M1_LightTurn.wav soundparms 0.8 0.0 1.0 0.0 400 3000 item loaded maps level.mapname
+	local.master aliascache generator_humming sound/mechanics/M1_LightTurn.wav soundparms 0.8 0.0 1.0 0.0 200 2500 item loaded maps level.mapname
 	local.master aliascache airvent sound/mechanics/Mec_GeneratorRun_01.wav soundparms 1.0 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
-	local.master aliascache vent_gate_locked sound/mechanics/gate_iron_locked.wav soundparms 1.2 0.0 1.1 0.0 160 1600 item loaded maps level.mapname
+	local.master aliascache generator_stop sound/mechanics/Mec_GeneratorOff_01.wav soundparms 0.5 0.0 1.0 0.0 200 2500 item loaded maps level.mapname
 
 	local.master aliascache train_start sound/vehicle/veh_truck_shiftin.wav soundparms 1.5 0.0 1.0 0.0 500 3000 auto loaded maps level.mapname
 	local.master aliascache train_rolling sound/vehicle/veh_train_m6l3a_move.wav soundparms 1.8 0.0 1.0 0.0 3000 6000 auto loaded maps level.mapname
@@ -234,7 +234,7 @@ setup:
 	$trainguy1spot remove
 	$trainguy4spot remove
 	$alarmcorona remove // [1] - [3]
-	$alarmlight remove // [1] - [3]
+	//$alarmlight remove // [1] - [3]
 	$alarm_sound remove // [1] - [4]
 	$spawntrigger remove // [1] - [24]
 	$triggerduck remove
@@ -273,8 +273,11 @@ setup:
 		thread train_initialize
 
 		thread generator ( 33 6776 -255 )
-		thread generator ( -370 5330 -190 )
-		thread generator ( -435 6771 -199 )
+		thread generator ( -575 6740 -199 )
+		thread generator ( -575 6875 -199 )
+		thread generator ( -92 6740 -199 )
+		thread generator ( -92 6875 -199 )
+		thread generator_switch ( -28 7013 -205 )
 
 		thread transformer ( -510 5215 -145 )
 		thread transformer ( -374 5215 -145 )
@@ -297,10 +300,18 @@ setup:
 		thread airvent ( 81 5613 -95 )
 		thread airvent ( -126 5881 -95 )
 		thread airvent ( 1126 6513 -95 )
-		//thread airvent ( -34 3072 -250 )
-		//thread airvent ( 704 3072 -250 )
-		//thread airvent ( 701 4671 45 )
-		//thread airvent ( -25 4671 49 )
+		thread airvent ( -34 3072 -250 )
+		thread airvent ( 704 3072 -250 )
+		thread airvent ( 701 4671 45 )
+		thread airvent ( -25 4671 49 )
+		thread airvent ( -2145 5944 142 )
+		thread airvent ( -1122 6912 93 )
+		//thread airvent ( -354 6912 93 )
+		thread airvent ( -1024 6815 -31 )
+		thread airvent ( 350 6912 -32 )
+		thread airvent ( -546 6272 93 )
+		thread airvent ( -417 5696 92 )
+		thread airvent ( 606 5274 140 )
 	}
 	else
 	{
@@ -310,6 +321,24 @@ setup:
 		//$trainfront remove
 		//$choochootrain remove
 	}
+
+	exec global/doorlocked.scr ( -1983 6686 -61 ) vent
+	exec global/doorlocked.scr ( -1761 7041 -61 ) vent
+	exec global/doorlocked.scr ( -1121 7041 -61 ) vent
+	exec global/doorlocked.scr ( -273 7070 -61 ) vent
+	exec global/doorlocked.scr ( 660 5854 -61 ) vent
+	exec global/doorlocked.scr ( -352 6879 -61 ) vent
+	exec global/doorlocked.scr ( -544 6431 -61 ) vent
+	exec global/doorlocked.scr ( -417 5856 -61 ) vent
+	exec global/doorlocked.scr ( -880 6528 -255 ) metal 1
+	exec global/doorlocked.scr ( 687 5973 -255 ) metal 1
+	exec global/doorlocked.scr ( 292 6432 -511 ) metal 1
+	exec global/doorlocked.scr ( 1317 4352 -527 ) garagedoor 1
+	exec global/doorlocked.scr ( 1317 3391 -527 ) garagedoor 1
+	exec global/doorlocked.scr ( -1072 2848 -500 ) metal 1
+	exec global/doorlocked.scr ( -2652 -670 -447 ) metal 1
+	exec global/doorlocked.scr ( -3088 -1647 -447 ) garagedoor 1
+	exec global/doorlocked.scr ( -3932 3312 -511 ) garagedoor 1
 
 	level.springfield = 1
 	level.bar = 1
@@ -995,8 +1024,8 @@ end
 
 generator local.origin:
 
-	local.generator = thread soundent local.origin
-	local.generator loopsound movingobject
+	local.generator = thread soundent local.origin "generator_sound"
+	local.generator loopsound generator_humming
 end
 
 transformer local.origin:
@@ -1011,14 +1040,68 @@ airvent local.origin:
 	local.airvent loopsound airvent
 end
 
-soundent local.origin:
+soundent local.origin local.targetname:
 
 	local.ent = spawn script_model
 	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
 	local.ent.origin = local.origin
 	local.ent notsolid
 	local.ent.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
 end local.ent
+
+////////////////////////////////////////////////////////////////////////
+
+generator_switch local.origin:
+
+	if($generator_sound == NULL) { end }
+
+	local.trig = spawn trigger_use
+	local.trig.origin = local.origin
+	local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+	local.trig message "*** Turning off the generators. ***"
+	local.trig.turned_off = 0
+	local.trig waittill trigger
+
+	local.trig nottriggerable
+	$generator_sound stoploopsound
+	$generator_sound playsound generator_stop
+	local.trig.turned_off = 1
+	local.trig thread alarmlights_flash
+
+	wait 3
+	local.trig triggerable
+	local.trig message "*** Turning on the generators. ***"
+	local.trig waittill trigger
+
+	local.trig nottriggerable
+	$generator_sound loopsound generator_humming
+	local.trig.turned_off = 0
+
+	wait 3
+	local.trig remove
+	thread generator_switch local.origin
+end
+
+alarmlights_flash:
+
+	while(self != NULL && self.turned_off == 1 && $alarmlight != NULL)
+	{
+		for(local.i = 1; local.i <= $alarmlight.size; local.i++)
+		{
+			$alarmlight[local.i].model = "lights/lightbulb_caged_red-lit.tik"
+			$alarmlight[local.i] light .3 0 0 64
+		}
+		wait 0.1
+
+		for(local.i = 1; local.i <= $alarmlight.size; local.i++)
+		{
+			$alarmlight[local.i].model = "lights/lightbulb_caged_red.tik"
+			$alarmlight[local.i] light 0 0 0 0
+		}
+		wait 2.25
+	}
+end
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1547,6 +1630,8 @@ UBER_teleporters:
 
 	exec map_triggers/tele.scr ( -2622 534 -511 ) ( -2713 535 -511 ) 1
 	exec map_triggers/tele.scr ( 502 459 -511 ) ( 569 459 -511 ) 1
+
+	exec map_triggers/telecrouch.scr ( 698 4656 -127 ) ( 606 5289 112 ) 1 1 0
 
 if(getcvar("g_ubergametype") != "bb")
 {

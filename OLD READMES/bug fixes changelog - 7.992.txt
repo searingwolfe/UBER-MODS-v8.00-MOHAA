@@ -1,0 +1,129 @@
+v7.992 (9-4-2025): - Drivable Vehicles/Tanks/Boats upgraded (global/playervehicle.scr, playertank, playerboat).
+
+- Players can now enter any vehicle seats, not just the driver seat, with or without a driver present:
+- Press USE(e) to begin entering vehicle, taking 1 second to enter (instantly enter the vehicle's passenger seat or turret seat if a teammate is currently driving).
+- While entering an empty vehicle: press & let go of FIRE to enter turret seat instead of driver seat.
+- While entering an empty vehicle: JUMP to enter passenger seat instead of driver seat (or Stand & then Crouch to enter).
+- For an occupied vehicle: press USE(e) to enter turret seat if available, or enter passenger seat if the turret seat is occupied.
+- For an occupied vehicle: press USE(e) while Crouching to enter passenger seat instead of the turret seat.
+
+- Passengers can now Lean Left/Right to change seats if other seats are available (cycle up/down seats respectively).
+- Dogs can now use turret seats.
+
+- Passengers and turret players will no longer auto-exit vehicles when the driver exits the vehicle (they get auto-reseated back into their seats instead).
+- Turret players (30 Cal turrets) will no longer get auto-killed if only the driver/passengers are killed (players must independently shoot & kill turret players).
+- Players can no longer kill their teammates driving/riding in vehicles, including if the player is also riding with their teammates (only works in Reborn/Nightfall).
+- Dogs can now kill drivers and passengers instantly by biting their vehicle, with kills counting towards the dog player's score (dogs will have to bite directly near turret players to kill them).
+
+- Prevented drivers & passengers from respawning back to their vehicle when switching teams, now respawning normally.
+- Cleaned up the "main" thread and created "vehicle_settings" thread at the bottom of each script for "desmodel", "outheight", "outout" sound, higgins_door or turret gun adjustments, model caches, etc.
+- Fixed "move_stuck_players" thread to run continuously until all players are not underneath any newly-spawned vehicles or destroyed-vehicle models.
+- Fixed players shooting vehicles that were not getting kills when killing some vehicle passengers (mainly for Reborn/Nightfall).
+- Fixed vehicles that were instantly respawning when flooded with players still inside (vehicles will flood if hit by a Light Bomb).
+- Readjusted setsizes for vehicle damage triggers (to allow shooters to shoot drivers/passengers heads), vehicle models, and destroyed-vehicle models.
+- Updated fire and smoke emitters for all destroyed vehicles.
+- Removed team avatars above vehicles.
+
+---------------
+
+- Weather Mod fixed and improved (global/weather.scr). More details provided inside the script.
+
+- "snow", "snow_fast", "blizzard", "hail", "snow_original", "rain", "drizzle", "monsoon", "rain_original", "0" or "off".
+
+- Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
+- Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
+
+- Adjust the weather's sound volume anytime with the "cg_rain_volume" cvar. Example: "cg_weather 0.5" in console, or any decimal between 0 and 1.
+- To change "cg_rain_density", use the "cg_weather_density" cvar instead. Example: "cg_weather_density 0.35" in console, or any number between 0 and 9.
+
+- The 2 original weathers have the exact values given to the game's original "snow" and "rain".
+- If the "thunder" parameter = 1, the sky will occasionally flash white and thunder sounds will play.
+- Adjust the initial max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5 instead of 1.
+
+- Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no), optional initial "cg_rain_density" value (0 to 9).
+- Example: exec global/weather.scr "snow"
+- Example: exec global/weather.scr "snow_fast" 0
+- Example: exec global/weather.scr "rain" 1 0.8
+- Example: exec global/weather.scr "snow_fast" 0 1 0 // m6l1b
+- Example: exec global/weather.scr "blizzard" 1 1 1 0.06 // anything < 0.06 causes 0 density weather, or "off".
+
+- NOTE: if the script's spawned "func_rain" entities cause some snowy weather effects to fall down in large clusters (not uniformly & steadily falling down),
+- the "optional initial cg_rain_density value" parameter must be given any smaller value >= 0.06 that allows the particles to fall more uniformly (i.e. using "blizzard" on tall maps).
+
+- Fixed "hail" to precipitate more uniformly by reducing its "cg_rain_density" value (can only be changed by admins with "cg_weather_density" cvar).
+- Fixed "drizzle" and "monsoon" not always working due to "cg_rain_density" not updating properly.
+- Fixed weather & rain density not updating when weather is initially on, then set to "off", then back on again.
+- Greatly reduced sound distance for player rain sounds, to prevent players from hearing overlapping sounds when 2+ players are in the server and near each other.
+- If spectators or dead players are spectating other players (or within 320 units of each other), the spectator/dead player's rain sounds will turn off, to prevent overlapping sounds with the living player.
+
+- "level.interior_volumes" sound ambience volumes can now have a decimal number (0 to 0.999) indicating how much to multiply the sound volume by (reducing the volume heard by players).
+
+- Example "level.interior_volumes" from m6l1a for interior sounds (these are found in the "weather" folder):
+	level.interior_volumes = makeArray
+		( 0 0 -128 ) ( -10000 -10000 -10000 ) ( 10000 10000 0 ) sound/amb_stereo/Amb_M6_FacilityInt.mp3 0 // adding a 0 here will turn off the player's rain sounds while inside this volume.
+
+		( 4215 1827 191 ) ( 0 0 -291 ) ( 1101 1125 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		( 4519 1111 191 ) ( 0 0 -291 ) ( 788 716 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+		( 4215 1111 191 ) ( 0 0 -291 ) ( 304 181 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+
+		( 2459 791 103 ) ( 0 0 -203 ) ( 777 997 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
+		( 2648 1788 103 ) ( 0 0 -203 ) ( 220 635 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
+		( 2455 2423 103 ) ( 0 0 -203 ) ( 945 429 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
+
+		( -256 719 207 ) ( 0 0 -307 ) ( 1424 821 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 7	// adding any other number will remove this volume
+		( 167 576 207 ) ( 0 0 -307 ) ( 433 143 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 7 	// after the corresponding $exploder.set = 7 blows up or gets removed.
+	endArray
+	exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_01.mp3 1 1 // 0 = no, 1 = keep players' music volume at max.
+
+---------------
+
+- New script created: "global/custom_deaths.scr", which contains all custom death animations for Deathcams Mod and/or other mods.
+- New multiplayer animations not implemented in the original game: "death_left", "death_right", "death_prone", "death_explosion_back".
+- These custom anims are mainly for crouching, grenade/rocket/explosion, vehicle run-over, falling/crushed/telefragged, impaling/skewering, and fire deaths.
+
+- Recreated all death animation conditions from "global/mike_torso.st" for the Deathcams Mod (global/deathcam.scr).
+- The Deathcams Mod originally removed all dead bodies when they spawned, since floating spectators were visible behind players, but now dead bodies are visible again.
+
+- Players will now do an arm-throwing animation when throwing knives.
+- Fixed players not getting a new throwing knife when they are killed by other players, while the server is running Deathcams Mod.
+- Fixed players not dropping their extra knives when killed by other players, while using Deathcams Mod.
+
+---------------
+
+- Added global/spawnladder.scr ladders to all singleplayer maps with wooden spotlight towers.
+- Added more vent sounds for maps with vents, and added global/doorlocked.scr triggers that were missing in M2L3.
+- Added a generator switch trigger in M2L3 in the Allies spawn room with generator sounds, for turning them off and flashing periodically any red alarm ceiling lights ($alarmlight entities).
+
+- Admins can now change the weather in any multiplayer map with "cg_weather" or turn on/off thunder sounds with "cg_thunder".
+- Most singleplayer maps still not included yet, since their entity counts are almost maxed out. Add "exec global/weather.scr rain 1" or similar in the map's .scr file to enable weather for those singleplayer maps.
+
+- Updated the "void" map with new wall entities, player spawns, lasers, and extra UBER triggers.
+
+---------------
+
+- M6L1C fully modded.
+
+- Added "hail" weather ("snow" and "blizzard" don't work very well, since the map is too tall; "func_rain" entities must be spawned with custom setsizes lower than the map's height for these weather types).
+
+- The final underground StG44 room can be blown up with grenades/rockets.
+- The hidden vents on this level can now be accessed via red teles, and also provides a secondary path between the StG44 room and the transformer room.
+
+- 2 white laser walls in the Allies/Axis spawns outline invisible walls, which blocks players but allows bullets/projectiles to fly through. Shooting these walls causes them to briefly flash brighter.
+- Green lasers on the building rooftops outline the skybox walls from the map's .BSP. These walls extend to the map's ceiling, block players/entities, and cannot be shot through.
+
+- Various papers, blueprints, uniform and coffee kettle (kettle only work in Reborn/Nightfall since it has no targetname), can be blown up with grenades.
+- 3 radios can cycle through off, static 1, static 2, radio music, static 3 sounds by pressing USE(e).
+- 5 water drip, 14 air vent, 12 transformer, 2 generator, 3 tower wood creak, 4 small missile room, 1 large missile room sounds added to the map (the missile room sounds provide a deep rumbling ambience).
+- A generator switch box in the corner of the transformer room with the large brown oil container can turn/on off the 2 generators, causing red alarm ceiling lights to flash periodically when the switch is off.
+- 3 ladders added to climb into the wooden spotlight towers.
+
+- For "g_ubermods 2":
+	- 2 tanks, 3 vehicles, 2 jetpacks, 4 radiobomb walkies, 8 extra throwing knives added to the map (removed if "g_ubergametype bb", base-builder, is set).
+	- 4 vehicle teles added for passing through metal fences & barbedwire (most metal fences can already be driven through).
+	- Some teles to rooftops are removed.
+- For "g_ubermods 1":
+	- 4 auto-spotlights in the 3 wooden towers will follow loops of SplinePath nodes on the map, following any player that gets too close to the lights.
+	- 6 sets of bangalore wallbombs added.
+	- All red teleporters are added.
+
+<><><> <><><>

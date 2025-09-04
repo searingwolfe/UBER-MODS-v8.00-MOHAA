@@ -36,7 +36,10 @@ local.thing.targetname = ("dogtrig" + local.thing.entnum)
 local.thing2.name = local.thing.targetname
 
 local.thing thread dog_anims
-end
+
+local.things[1] = local.thing
+local.things[2] = local.thing2
+end local.things
 
 dog_anims:
 
@@ -577,7 +580,7 @@ get_movement:
 				end
 			}
 
-			if(self != NULL && self.dog != NULL && self.fireheld == 1 && self.useheld == 0 && self.held != 1 && self.legs_state_using_turret != 1 && self.legs_state_ladder_getofftop != 1 && self.legs_state_ladder_getoffbottom != 1)
+			if(self != NULL && self.dog != NULL && self.fireheld == 1 && self.useheld == 0 && self.held != 1 && self.legs_state_using_turret != 1 && self.legs_state_ladder_getofftop != 1 && self.legs_state_ladder_getoffbottom != 1 && self.enteringvehicle != 1)
 			{
 				if(local.onladder == 1) { self.dog.angles += ( -90 0 0 ) }
 				local.dog_anim = self.dog_anim
@@ -599,7 +602,7 @@ get_movement:
 				}
 			}
 
-			if(self != NULL && self.fireheld == 1 && self.useheld == 1 && self.held2 != 1) // if player is Left/Right-clicking while holding USE, only bark.
+			if(self != NULL && self.fireheld == 1 && self.useheld == 1 && self.held2 != 1 && self.enteringvehicle != 1) // if player is Left/Right-clicking while holding USE, only bark.
 			{
 				local.dog_anim = self.dog_anim
 				self.held2 = 1
@@ -611,15 +614,18 @@ get_movement:
 			if(self != NULL && self.fireheld != 1) { self.held = 0; self.held2 = 0 }
 			if(self != NULL && self.passenger == 1) { self.dog_anim = dog_stand_idle } // if dog is a passenger of a vehicle, don't run
 
-			if(self.legs_state_using_ladder == 1)
+			if(self != NULL)
 			{
-				self.dog_onladder = 1
-				if(self.legs_state_ladder_moving == 1) { self.dog_anim = dog_walk_leash }
-				else { self.dog_anim = dog_stand_idle }
+				if(self.legs_state_using_ladder == 1)
+				{
+					self.dog_onladder = 1
+					if(self.legs_state_ladder_moving == 1) { self.dog_anim = dog_walk_leash }
+					else { self.dog_anim = dog_stand_idle }
+				}
+				else { self.dog_onladder = 0 }
 			}
-			else { self.dog_onladder = 0 }
 
-			if(self.legs_state_using_turret == 1)
+			if(self != NULL && self.legs_state_using_turret == 1)
 			{
 				if(self.fireheld == 1) { self.dog_anim = dog_bark }
 				else { self.dog_anim = dog_stand_idle }

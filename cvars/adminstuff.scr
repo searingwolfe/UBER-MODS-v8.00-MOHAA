@@ -160,8 +160,8 @@ kick_for_using_cvar_hacks:
 	wait 3
 	if(self != NULL)
 	{
-		println("----- Auto-kicked " + netname self + " for joining with cvar hacks.")
-		stuffsrv("clientkickr " + (getclientnum self) + " \"joining with cvar hacks.\"")
+		println("----- Auto-kicked " + netname self + " for joining with cvar hacks (walls/chams/aimbot).")
+		stuffsrv("clientkickr " + (getclientnum self) + " \"joining with cvar hacks (walls/chams/aimbot).\"")
 	}
 end
 
@@ -231,7 +231,7 @@ samename_fix:
 				}
 			}
 		}
-		wait 0.15 // keeping the loop slow enough so console doesn't print 2 or 3 times.
+		wait 0.25 // keeping the loop slow enough so console doesn't print 2 or 3 times.
 	}
 	thread samename_fix
 end
@@ -245,16 +245,16 @@ changename:
 
 	local.name = netname self
 	local.name2 = ""
-	local.playernum = string(self.entnum + 1)
-	local.namestring = netname self + "_" + local.playernum
+	local.clientnum = string(getclientnum self)
+	local.namestring = netname self + "_" + local.clientnum
 
 	for(local.f = 1; local.f <= level.file_playernames.size && level.file_playernames != 0; local.f++)
 	{
-		if(local.namestring == level.file_playernames[local.f][1]) { local.playernum++; local.f = 0 } // keep making a new name until it doesn't match another name in "cvars/playernames.txt", before sending stufftext to player.
-		local.namestring = netname self + "_" + local.playernum
+		if(local.namestring == level.file_playernames[local.f][1]) { local.clientnum++; local.f = 0 } // keep making a new name until it doesn't match another name in "cvars/playernames.txt", before sending stufftext to player.
+		local.namestring = netname self + "_" + local.clientnum
 	}
 
-	if(local.name[local.name.size - 2] != "_" && local.name[local.name.size - 1] != local.playernum) // add "_[playernum]" to the player's name.
+	if(local.name[local.name.size - 2] != "_" && local.name[local.name.size - 1] != local.clientnum) // add "_[clientnum]" to the player's name.
 	{
 		local.n = 0
 		local.a = 1
@@ -266,7 +266,7 @@ changename:
 			local.namearray[local.a] += local.namestring[local.s]
 		}
 
-		while(self != NULL && netname self == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
+		while(self != NULL && netname self == local.name && local.n <= 16) // 16 attempts to change the player's name. 12 * 0.25 = 4 seconds.
 		{
 			if(local.namearray[2] != NIL)
 			{
@@ -277,12 +277,12 @@ changename:
 			else { self stufftext ("name " + local.namestring) }
 
 			local.n++
-			wait 0.15
+			wait 0.25
 		}
 	}
 	else
 	{
-		for(local.n = 0; local.n < local.name.size - 2; local.n++) { local.name2 += local.name[local.n] } // remove "_[playernum]" from the player's name.
+		for(local.n = 0; local.n < local.name.size - 2; local.n++) { local.name2 += local.name[local.n] } // remove "_[clientnum]" from the player's name.
 		local.n = 0
 		local.a = 1
 		for(local.s = 0; local.s < local.name2.size; local.s++)
@@ -293,7 +293,7 @@ changename:
 			local.namearray2[local.a] += local.name2[local.s]
 		}
 
-		while(self != NULL && netname self == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
+		while(self != NULL && netname self == local.name && local.n <= 16) // 16 attempts to change the player's name. 12 * 0.25 = 4 seconds.
 		{
 			if(local.namearray2[2] != NIL)
 			{
@@ -304,31 +304,31 @@ changename:
 			else { self stufftext ("name " + local.name2) }
 
 			local.n++
-			wait 0.15
+			wait 0.25
 		}
 	}
-	wait 0.15
 
+	wait 0.25
 	if(self != NULL && netname self == local.name) // secondary check for stufftext hacks, in case a hacker joins without them first (i.e. copying admin's name after joining with a different name).
 	{
-		println("----- Auto-kicked " + netname self + " for joining with stufftext hacks.")
-		stuffsrv("clientkickr " + (getclientnum self) + " \"joining with stufftext hacks.\"")
+		println("----- Auto-kicked " + netname self + " for joining with stufftext hacks (modded/hexed .DLL files).")
+		stuffsrv("clientkickr " + (getclientnum self) + " \"joining with stufftext hacks (modded/hexed .DLL files).\"")
 		end
 	}
 
-	if(self != NULL) { self thread cprint local.playernum }
+	if(self != NULL) { self thread cprint local.clientnum }
 end
 
 ////////////////////////////////////////////////////////////////////////
 
-cprint local.playernum:
+cprint local.clientnum:
 
 	if(self == NULL || self getconnstate == 1) { end }
 
 	if(self.adminstuff_namefix == NIL) { self.adminstuff_namefix = 0 }
 	self.adminstuff_namefix++
 
-	println("----- NAME FIX: $player[" + local.playernum + "]: " + netname self + ": " + self.adminstuff_namefix)
+	println("----- NAME FIX: client " + local.clientnum + ": " + netname self + ": " + self.adminstuff_namefix)
 	local.attempts = 20
 
 	if(self.adminstuff_namefix > 3) { self iprint ("SAME NAME FIX - Attempts remaining: " + (local.attempts - self.adminstuff_namefix)) 1 }
@@ -435,13 +435,10 @@ end
 check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
 
 	local.c = 0
-	while(local.player == NIL || local.player == NULL || local.c <= 40) { local.c++; waitframe } // make sure the player actually exists first.
 	while(local.player != NIL && local.player != NULL && local.player getconnstate != 4) { waitframe } // make sure the player is CS_ACTIVE (in the game), not PRIMED, CONNECTED, ZOMBIE, or FREE.
 	while(local.player != NIL && local.player != NULL && local.player.IP_address_init == NIL) { waitframe } // wait for "IP_addresses" thread to finish obtaining an IP string.
 	while(local.player != NIL && local.player != NULL && local.player.using_OpenMOHAA == NIL) { waitframe } // wait for "using_OpenMOHAA" thread to finish determining if the player is running OpenMOHAA.
-	local.c = 0
-	while(local.player != NIL && local.player != NULL && local.c <= 40) { local.c++; waitframe } // wait 2 seconds after joining, to avoid false positives caused by pressing the "score" (tab) button.
-	while(local.player != NIL && local.player != NULL && level.time < 5) { waitframe } // wait 5 seconds after map begins, to avoid false positives.
+	while(local.player == NIL || local.player == NULL || local.c <= 20) { local.c++; waitframe } // make sure the player actually exists, not loading the map (1 second timer).
 
 	if(local.player == NIL || local.player == NULL) { end }
 	if(local.player.using_OpenMOHAA == 1) { end }
@@ -471,7 +468,7 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 
 	local.name = netname local.player
 	local.n = 0
-	while(local.player != NULL && netname local.player == local.name && local.n <= 20) // 20 attempts to change the player's name. 20 * 0.15 = 3 seconds.
+	while(local.player != NULL && netname local.player == local.name && local.n <= 16) // 16 attempts to change the player's name. 12 * 0.25 = 4 seconds.
 	{
 		local.name = netname local.player // putting this inside the while-loop too, in case the player's name somehow changes before the stufftext name-change below, causing false-positives.
 		local.a = 1
@@ -491,14 +488,23 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 		else { local.player stufftext ("name " + local.name + "_" + getclientnum local.player) }
 
 		local.n++
-		wait 0.15
+		wait 0.25
 	}
 
-	wait 0.15
+	wait 0.25
 	if(local.player != NULL && netname local.player == local.name)
 	{
-		println("----- Auto-kicked " + netname local.player + " for joining with stufftext hacks.")
-		stuffsrv("clientkickr " + (getclientnum local.player) + " \"joining with stufftext hacks.\"")
+		local.clnum = getclientnum local.player
+		local.plname = netname local.player
+		local.player stufftext "reconnect" // if somehow the player received a false-positive, this gives them one final attempt to join the server without kicking them.
+		wait 1
+
+		if(local.player != NULL)
+		{
+			println("----- Auto-kicked " + netname local.player + " for joining with stufftext hacks (modded/hexed .DLL files).")
+			stuffsrv("clientkickr " + (getclientnum local.player) + " \"joining with stufftext hacks (modded/hexed .DLL files).\"")
+		}
+		else { println("Reconnecting client " + local.clnum + ": " + local.plname + " due to a false positive from the stufftext test.") }
 		end
 	}
 	else
@@ -513,7 +519,7 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 			local.namearray2[local.a] += local.name[local.s]
 		}
 
-		while(local.player != NULL && netname local.player != local.name && local.n <= 20)
+		while(local.player != NULL && netname local.player != local.name && local.n <= 16)
 		{
 			if(local.namearray2[2] != NIL)
 			{
@@ -527,13 +533,33 @@ check_player_stufftexts local.player: // when a player connects, check if their 
 			local.player.netname_time = level.time
 			local.player.netname_old = local.name
 			local.n++
-			wait 0.15
+			wait 0.25
 		}
 	}
 
-	wait 0.15
 	if(local.player != NULL) { local.player.checking_stufftexts = 0 }
 	println(local.name + " passed the stufftext test.")
+
+	wait 1
+	if(local.player != NULL)
+	{
+		local.name = netname local.player
+		if(local.name[local.name.size - 1] == string(getclientnum local.player) && local.name[local.name.size - 2] == "_") // fix their name if somehow they still have "_[clientnum]" at the end of their name.
+		{
+			if(local.namearray2[2] != NIL)
+			{
+				local.textstringnew = ""
+				for(local.g = 1; local.g < local.textstring.size - 1; local.g++) { local.textstringnew += local.textstring[local.g] }
+				local.player stufftext local.textstring
+			}
+			else
+			{
+				local.namenew = ""
+				for(local.g = 1; local.g < local.name.size - 1; local.g++) { local.namenew += local.name[local.g] }
+				local.player stufftext ("name " + local.name)
+			}
+		}
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -864,10 +890,38 @@ coord2:
 		if(local.angle > 180) { local.angle = local.angle - 360 }
 
 		if(getcvar("coord2") != "spawn")
-		{ 
+		{
+			local.temp0 = $player[1].origin[0] - int($player[1].origin[0]) // rounding up & down
+			if(local.temp0 >= 0)
+			{
+				if(local.temp0 > 0.5) { local.add0 = 1 }
+				else { local.add0 = 0 }
+			}
+			else
+			{
+				if(local.temp0 < -0.5) { local.add0 = -1 }
+				else { local.add0 = 0 }
+			}	
+
+			local.temp1 = $player[1].origin[1] - int($player[1].origin[1])
+			if(local.temp1 >= 0)
+			{
+				if(local.temp1 > 0.5) { local.add1 = 1 }
+				else { local.add1 = 0 }
+			}
+			else
+			{
+				if(local.temp1 < -0.5) { local.add1 = -1 }
+				else { local.add1 = 0 }
+			}
+
+			local.temp2 = $player[1].origin[2] - int($player[1].origin[2]) // only round up
+			if(local.temp2 > 0.5) { local.add2 = 1 }
+			else { local.add2 = 0 }
+
 			local.tempstr = "( "
-			local.tempstr = local.tempstr + string(int($player[1].origin[0])) + " " 
-			local.tempstr = local.tempstr + string(int($player[1].origin[1])) + " "
+			local.tempstr = local.tempstr + string(int($player[1].origin[0]) + local.add0) + " " 
+			local.tempstr = local.tempstr + string(int($player[1].origin[1]) + local.add1) + " "
 
 			if(getcvar("coord2") == "mapwall")
 			{
@@ -876,7 +930,7 @@ coord2:
 			}
 			else
 			{		
-				local.tempstr = local.tempstr + string(int($player[1].origin[2])) + " ) "
+				local.tempstr = local.tempstr + string(int($player[1].origin[2]) + local.add2) + " ) "
 			}
 
 			if(getcvar("coord2") == "entity" || getcvar("coord2") == "1")

@@ -1,82 +1,64 @@
-
 main:
 
-setcvar "g_obj_alliedtext1" "m6l1c" 
-setcvar "g_obj_alliedtext3" ""
-setcvar "g_obj_axistext1" "Created by:"
-setcvar "g_obj_axistext2" "Searingwolfe"
-setcvar "g_obj_axistext3" ""
+exec cvars/cvars.scr			// <><><> UBER MODS <><><>
+exec ubermods/runspeed.scr 350 		// set the server's player run speed here (default = 250).
+exec ubermods/hardcode_list.scr		// set the "g_ubergametype" for each map in "hardcode_list.scr" (only if "g_uberhardcode 1" cvar is set, default = "0").
+					
+//setcvar "g_ubergametype" "0"		// "cyb", "snd", "bb", "ft", "0" (normal TDM or FFA, based on "g_gametype" being "2" or "1" respectively).
+					// cyber attack, search & destroy, base-builder, freze tag, none (this cvar is usually placed in server.cfg).
+setcvar "g_obj_alliedtext1" "m6l1c"
+setcvar "g_obj_axistext1" ""
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" "By: Searingwolfe"
 
 setcvar "g_scoreboardpic" "m6l1c"
 
 setcvar "fraglimit" "0"
-setcvar "timelimit" "50"
-
-setcvar "cheats" "0"
-setcvar "thereisnomonkey" "0"
-setcvar "maxentities" "5000"
+setcvar "timelimit" "20"
+setcvar "maxentities" "2000"
 
 setcvar "dmrespawning" "1" 
 setcvar "dmroundlimit" "20" 
-setcvar "level.clockside" "kills" 
+setcvar "level.clockside" "kills"
+local.v = exec ubermods/uberversion.scr
 
-//exec alienx/basebuild.scr::main 800 1000 250 1 1 0 0
+if(getcvar("g_throwingknives") != "1") { setcvar "g_obj_alliedtext3" "" }
+if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing Knives Mod" }
 
-if((getcvar("g_gametype") == "2"))
-{
-	setcvar "g_obj_alliedtext2" "UBER Team Deathmatch v7.0"
-	setcvar "g_gametypestring" "Team-Match UBER"
-	setcvar "g_gametype" "2"
-	thread tdm_spawns	
-	spawn info_player_deathmatch "origin" "-1612 1642 158" "angle" "-37" // for spectators when joining game
-	spawn info_player_deathmatch "origin" "4964 5729 -600" "angle" "-124"
-	spawn info_player_deathmatch "origin" "157 1626 -517" "angle" "-27"
+if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1"; thread ffa_spawns }
+if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"; thread tdm_spawns
+						spawn info_player_deathmatch "origin" "-1612 1642 158" "angle" "-37" // for spectators when joining game
+						spawn info_player_deathmatch "origin" "4964 5729 -600" "angle" "-124"
+						spawn info_player_deathmatch "origin" "157 1626 -517" "angle" "-27"
 }
-else
-{
-	setcvar "g_obj_alliedtext2" "UBER Free-For-All v7.0"
-	setcvar "g_gametypestring" "Free-For-All UBER"
-	setcvar "g_gametype" "1"
-	thread ffa_spawns
+if(getcvar("g_ubergametype") == "cyb") {	setcvar "g_obj_alliedtext2" ("UBER Cyber Attack " + local.v);	setcvar "g_gametypestring" "Cyber Attack UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "snd") {	setcvar "g_obj_alliedtext2" ("UBER Search-Destroy " + local.v);	setcvar "g_gametypestring" "Search & Destroy UBER";	setcvar "g_gametype" "2"; thread snd }
+if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread cyb }
+if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
+setcvar "g_obj_axistext1" "Build a base &"; setcvar "g_obj_axistext2" "kill enemy players."
+
+exec alienx/basebuild.scr::main 800 1000 500 1 1 0 0 1 // buildtime objectlimit buildspeed buildtakeweaps buildfalldamage countdownhide hudhide consoleprint
+//level.basebuild_laserdist = 700
 }
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+exec global/aliascache_triggersounds.scr airstrikes
+exec global/aliascache_triggersounds.scr explode_building_small
+exec global/aliascache_triggersounds.scr explode_building_large
+exec global/aliascache_triggersounds.scr explode_wood_small
+exec global/aliascache_triggersounds.scr woodcreak
+exec global/aliascache_triggersounds.scr radio_music2
+//exec global/aliascache_triggersounds.scr valve_switch
+//exec global/aliascache_triggersounds.scr pipesteam
+exec global/aliascache_triggersounds.scr bathroom
+exec global/aliascache_triggersounds.scr machines_humming // transformer_humming1,2,3, generator_humming, generator_stop, airvent, missileroom_amb_large,small. 
+}
+exec global/aliascache_triggersounds.scr arty_exp_sand
 
 waitthread setup
 
 level waittill prespawn
-
-//allies
-exec alienx/basebuild.scr::basebuild ( -1630.94 1978.62 8.81 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -1530.94 1978.62 8.81 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( -1430.94 1978.62 8.81 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -1330.94 1978.62 8.81 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -1230.94 1978.62 8.81 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( -1130.94 1978.62 8.81 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
-exec alienx/basebuild.scr::basebuild ( -1030.94 1978.62 8.81 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -930.94 1978.62 8.81 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -830.94 1978.62 8.81 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( -730.94 1978.62 8.81 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( -630.94 1978.62 8.81 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( -530.94 1978.62 8.81 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( -430.94 1978.62 8.81 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
-exec alienx/basebuild.scr::basebuild ( -330.94 1978.62 8.81 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
-
-//axis
-exec alienx/basebuild.scr::basebuild ( 4149 3074 0 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2974 0 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2874 0 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2774 0 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2674 0 ) "static/bodies_tarp.tik" 1 1 0 1 90 .5 1 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2574 0 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1
-exec alienx/basebuild.scr::basebuild ( 4149 2474 0 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2374 0 ) "static/cabinet_large.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2274 0 ) "static/sandbag_longsegment.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2174 0 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 2074 0 ) "static/static_naziflag1.tik" 1 1 1 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 1974 0 ) "static/bookcase.tik" 1 1 0 1 90 .2 0 0 1
-exec alienx/basebuild.scr::basebuild ( 4149 1874 0 ) "static/bush_full.tik" 1 0 1 1 90 .5 0 0 1end
-exec alienx/basebuild.scr::basebuild ( 4149 1774 0 ) "static/banquet_table.tik" 1 1 0 0 90 .5 0 0 1
-
-exec global/dog.scr ( 2090 1967 0 ) ( 0 0 0 ) 15 10
 
 	exec global/DMprecache.scr
 	exec alienx/hud.scr
@@ -87,73 +69,1404 @@ exec global/dog.scr ( 2090 1967 0 ) ( 0 0 0 ) 15 10
 	exec global/ambient.scr m6l1c
 	exec global/door_locked.scr
 	exec global/exploder.scr
-	exec global/barrel.scr::explosive_barrel
-	exec global/bomber.scr
+	//exec global/barrel.scr::explosive_barrel
+	exec global/weather.scr "hail" "1"
 
 	setcvar "r_fastsky" "0"
+	exec global/fastsky.scr 0
 	$world farplane 150000
-	$world farplane_color ( 0.04314 0.05882 0.16471 )
+	$world farplane_color ( .10 .12 .20 ) //( 0.04314 0.05882 0.16471 ) // ( .2 .2 .3 )
 
-exec map_triggers/grenade_ammo.scr ( 227 1344 -543 ) ( 1107 875 -511 ) ( 2247 2798 -543 ) ( 1909 3151 -521 ) ( 2246 3792 -631 ) ( 3848 5437 -719 ) ( 4281 5788 -591 ) ( 4118 4714 -605 ) ( 4775 3613 -719 ) ( 4752 2912 -564 )
+	exec global/victory_podium.scr ( -950 1088 -15 ) 180 auto auto 5 //( 3600 2084 0 ) 0
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
+{
+	exec global/dog.scr ( 4406 1401 4 ) ( 0 140 0 ) 15 10
+
+	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
+	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
+	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
+	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
+
+	if(getcvar("g_ubermods") == "1")
+	{
+		thread UBER_mapextras
+		thread UBER_teleporters
+	}
+
+	thread UBER_mapextras2
+	thread UBER_teleporters2
+}
+
+if(getcvar("g_ubermods") == "1")
+{
+	level.autospot_trigdist = 300 // distance until spotlight tracks player
+	level.autospot_movespeed = 2.5
+	// origin, color, name, health, base angle, mountwall (0 = floor, 1 = left wall, 2 = ceiling, 3 = right wall), orient (0 = x-axis, 1 = y-axis, only for mountwall = 1 or 3), removeafterdeath (0 = no, 1 = remove spotlight keep base, 2 = remove everything), initial spot angles, pathname to follow automatically.
+	exec global/player_spotlight.scr ( 2918.58 588.09 449 ) ( 1 0 0 ) s_auto1 9999 270 0 0 1 ( 0 0 0 ) spotpath3_4
+	exec global/player_spotlight.scr ( 1810.29 2796.25 448 ) ( 0 1 0 ) s_auto2 9999 90 0 0 1 ( 0 0 0 ) spotpath2_3
+	exec global/player_spotlight.scr ( 2750.58 588.09 449 ) ( 1 1 0 ) s_auto3 9999 270 0 0 1 ( 0 0 0 ) spotpath2_2
+	exec global/player_spotlight.scr ( -720.42 1400.09 424 ) ( 0 0 1 ) s_auto4 9999 270 0 0 1 ( 0 0 0 ) spotpath1_1
+
+	exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( 4523 1728 133 ) ( 60 180 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 4864 1859 77 ) ( 0 0 0 ) bb1 60 450 2   // alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
+	exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 383 543 96 ) ( 60 -90 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 495 960 -1 ) ( 0 90 0 ) bb2 60 450 2
+	exec maps/training_mapscripts/bangalore_wallbomb.scr bb3 ( 2052 3141 -410 ) ( 60 0 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 1946 2926 -479 ) ( 0 90 0 ) bb3 60 450 2
+	exec maps/training_mapscripts/bangalore_wallbomb.scr bb4 ( 4381 5268 -574 ) ( 60 90 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 4196 5215 -650 ) ( 0 -90 0 ) bb4 60 450 2
+	exec maps/training_mapscripts/bangalore_wallbomb.scr bb5 ( 4961 3244 -486 ) ( 60 90 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 4704 3189 -563 ) ( 0 -90 0 ) bb5 60 450 2
+	local.name1[1] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb6 ( 2615 2084 179 ) ( 60 180 0 ) 100 0
+	local.name1[2] = exec maps/training_mapscripts/bangalore_wallbomb.scr bb7 ( 2888 2084 179 ) ( 60 0 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 2704 2416 0 ) ( 0 0 0 ) local.name1 60 450 2
+}
+
+if(getcvar("g_ubermods") == "2")
+{
+	exec map_triggers/joint.scr ( 300 1457 -304 )
+
+exec map_triggers/lightbomb.scr ( 2832 586 608 ) ( 1806 2867 608 ) ( -723 1490 584 ) ( 4639 1081 240 ) ( -271 1087 240 ) ( 3358 2464 304 ) ( -3282 857 416 ) ( 1129 1058 -497 ) ( 1765 3153 -497 ) ( 5544 2917 0 )
+exec map_triggers/bomb.scr ( 5422 364 219 ) ( 1463 346 224 ) ( -1686 97 242 ) ( -2486 1534 288 ) ( 1455 2065 224 ) ( 4238 3124 219 ) ( -4262 -805 200 ) ( 6897 4220 29 ) ( 4376 5726 -591 ) ( 1837 1488 -543 )
+exec map_triggers/grenade_ammo.scr ( 4863 1327 4 ) ( 2703 2457 -63 ) ( 498 1133 -31 ) ( 1509 1666 130 ) ( 294 975 -543 ) ( 1493 2061 -543 ) ( 2261 3138 -543 ) ( 2895 5084 -631 ) ( 4992 4985 -655 ) ( 4638 2899 -631 )
+exec map_triggers/rocket_ammo.scr ( 4731 2092 4 ) ( 2801 1519 -63 ) ( -213 1468 164 ) ( 4536 -2591 5 ) ( 1061 914 40 ) ( -489 1563 -527 ) ( 2331 2799 -543 ) ( 4667 4500 -631 ) ( 4713 3000 -503 ) ( 1708 893 -439 )
+exec map_triggers/snowball_ammo.scr ( -3698 -1505 312 ) ( -1689 2041 222 ) ( 5038 534 216 ) ( -1331 789 216 ) ( 5205 2919 240 ) ( 2809 1265 304 ) ( 438 1100 304 ) ( 338 1180 304 ) ( 4497 2852 -317 ) ( 3901 4437 -364 )
+exec map_triggers/health.scr ( 4561 4002 -451 ) ( 4561 3424 -451 ) ( -3087 -1731 0 ) ( -2242 2069 0 ) ( -766 -369 50 ) ( 4047 -2127 0 ) ( 5775 4043 0 ) ( 5253 3121 0 ) ( 6189 39 0 ) ( 2552 -11 25 )
+
+exec map_triggers/led_trap.scr ( 4237 -760 0 ) led1 1
+exec map_triggers/led_trap.scr ( 5456 -1217 15 ) led2 1
+exec map_triggers/led_trap.scr ( 206 2577 0 ) led3 1
+exec map_triggers/led_trap.scr ( 300 987 -304 ) led4 2
+
+if(getcvar("g_ubergametype") != "bb")
+{
+	// Available playervehicle models:
+	// bmwbike, european_car_grey, european_car_silver, european_car_tan, european_delivery_truck_green, european_delivery_truck_grey, european_delivery_truck_red3,
+	// gmctruck, jeep, jeep_bench, m3, mercedes, opeltruck, opeltruckgreen, opeltruckgreen_canopy, sdkfz, sdkfz_afrika, shermantank.
+	//
+	// Vehicle speeds: trucks/boats = 250, jeeps/euro_vehicles/mercedes = 400, bikes = 500, halftracks/uboats = 40
+	//
+	exec global/playervehicle.scr bmwbike1 vehicles/bmwbike.tik ( 5655 2944 50 ) ( 359 266 356 ) 250 500 45 0
+	exec global/playervehicle.scr bmwbike2 vehicles/bmwbike.tik ( 5065 -1311 50 ) ( 0 101 0 ) 250 500 45 0
+	exec global/playervehicle.scr jeep1 vehicles/jeep.tik ( -3636 -840 50 ) ( 0 91 1 ) 250 400 45 0
+	//exec global/playervehicle.scr jeep2 vehicles/jeep.tik ( -2170 576 50 ) ( 357 85 0 ) 250 400 45 0
+
+	// Available playertank models:
+	// kingtank, panzer_tank, panzer_tank_europe.
+	//
+	exec global/playertank.scr tank01 vehicles/panzer_tank_europe.tik ( -4095 -1865 50 ) ( 0 91 0 ) 1000 45
+	//exec global/playertank.scr tank02 vehicles/panzer_tank.tik ( 4423 -2365 50 ) ( 0 54 0 ) 1000 45
+	exec global/playertank.scr tank03 vehicles/panzer_tank.tik ( 6010 4637 50 ) ( 0 327 0 ) 1000 45
+
+	//exec global/playernebelwerfer.scr NIL 200 45 ( 5922 3573 23 ) ( 8 -96 0 )
+	//exec global/playernebelwerfer.scr NIL 200 45 ( 4928 -1992 0 ) ( 0 98 0 )
+	//exec global/playernebelwerfer.scr NIL 200 45 ( -4298 -1898 2 ) ( 0 78 0 )
+	//exec global/playerflak88.scr NIL 200 45 ( 2770 2084 304 ) ( 0 180 0 ) 0 ( 0 -135 0 )
+	//exec global/playerflak88.scr NIL 200 45 ( 990 899 304 ) ( 0 -45 0 ) 0 ( 0 135 0 )
+	//exec global/playerflak88.scr NIL 200 45 ( -75 892 304 ) ( 0 -135 0 ) 0 ( 0 -135 0 )
+
+	exec global/vehicle_tele.scr ( -1667 1088 0 ) ( -20 -45 -50 ) ( 20 45 192 ) NIL NIL 50
+	exec global/vehicle_tele.scr ( 4576 380 0 ) ( -35 -20 -50 ) ( 35 20 192 ) NIL NIL 50
+	exec global/vehicle_tele.scr ( 3978 120 0 ) ( -100 -248 -50 ) ( 100 248 192 ) NIL 0 50
+	exec global/vehicle_tele.scr ( 5223 -335 0 ) ( -970 -100 -50 ) ( 100 144 192 ) NIL 1 50
+	// local.lasers (NIL = none), teleporting alignment (NIL = none, 0 = 0-180 axis, 1 = 90-270 axis), height after teleporting, teleporting speed (default/NIL = 25, max = 300), spawn solid floor (0 or NIL = no, 1 = yes), ...
+	// ... height_1 after teleporting if facing 0 or 90 degrees (only if alignment = 0 or 1), height_2 after teleporting if facing 180 or 270 degrees (only if alignment = 0 or 1, ignores "height" parameter).
+	// if spawning solid floor, make sure that tele's origin is <= the height of the floors at both ends, otherwise solid floor may get in the way of players/vehicles going through/across it.
+
+	//thread vehicles_undermap
+}
+
+exec jetpack/trigger.scr ( 4864 453 0 ) // allies
+exec jetpack/trigger.scr ( -1608 1505 0 ) // axis
+
+exec guidedmissile/trigger.scr ( -2432 919 24 ) // allies
+exec guidedmissile/trigger.scr ( 5520 580 2 ) // axis
+
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( 4547 1108 64 ) ( 0 -90 0 ) ( 4735 1108 64 ) ( 0 0 0 ) 500 1 1 8
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( -235 1180 64 ) ( 0 180 0 ) ( -235 993 64 ) ( 0 -90 0 ) 500 1 1 8
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie3 ( 1475 966 -543 ) ( 0 0 0 ) ( 1475 1117 -543 ) ( 0 90 0 ) 500 1 1 8
+exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie4 ( 4924 2787 -631 ) ( 0 90 0 ) ( 4816 2943 -631 ) ( 0 0 0 ) 500 1 1 8
+}
+
+thread airstrikes_alternate
 
 level waittill spawn
+
+	thread consoleprint
+	exec ("weather/" + getcvar("mapname") + ".txt") // load all "level.interior_volumes" & "level.water_volumes" for indoor/outdoor ambiences & dynamic weather sounds.
+
+while(level.bbactive == 1) { wait 1 }
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
+
+	exec global/throwingknife.scr k1 ( 5010 1537 52 ) ( 0 0 0 )
+	exec global/throwingknife.scr k2 ( 2691 2397 -63 ) ( 0 90 0 )
+	exec global/throwingknife.scr k3 ( 778 1204 -11 ) ( 0 0 0 )
+	exec global/throwingknife.scr k4 ( 575 1238 -19 ) ( 0 180 0 )
+	exec global/throwingknife.scr k5 ( 387 1109 -543 ) ( 0 -90 0 )
+	exec global/throwingknife.scr k6 ( 1712 1023 -543 ) ( 0 0 0 )
+	exec global/throwingknife.scr k7 ( 1700 4118 -631 ) ( 0 0 0 )
+	exec global/throwingknife.scr k8 ( 4731 2924 -631 ) ( 0 90 0 )
+}
 end
 
 ////////////////////////////////////////////////////////////////////////
 
 setup:
 
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	//local.master aliascache pickup_uniform sound/items/Item_UniformPU_03.wav soundparms 1.2 0.0 1.0 0.0 100 2000 item loaded maps level.mapname
+	//local.master aliascache pickup_papers1 sound/items/Item_PaperPU_01.wav soundparms 1.5 0.0 1.0 0.0 100 2000 item loaded maps level.mapname
+	//local.master aliascache pickup_papers2 sound/items/Item_PaperPU_02.wav soundparms 1.5 0.0 1.0 0.0 100 2000 item loaded maps level.mapname
+	//local.master aliascache pickup_papers3 sound/items/Item_PaperPU_03.wav soundparms 1.5 0.0 1.0 0.0 100 2000 item loaded maps level.mapname
+	local.master aliascache pickup_clipboard1 sound/items/Item_PaperPU_03.wav soundparms 1.2 0.0 1.0 0.0 100 2000 item loaded maps level.mapname
+
 	removeclass actor
+	//removeclass TurretGun
+	removeclass AmmoEntity
+	removeclass Weapon // also removes all "TurretGun" entities; removes $weapon and $weapon1 - $weapon8 STG44 guns.
+	removeclass Health
+	removeclass InfoNotNull
+	removeclass TouchField
+	removeclass TriggerAll
+	removeclass TriggerUse
+	removeclass TriggerUseOnce
+	removeclass TriggerRelay
+	removeclass ScriptOrigin
+	//removeclass SplinePath // removes 4 auto-spotlight paths.
+
+	//removeclass CrateObject // 102 entities.
+	//removeclass BarrelObject // 33 entities.
+
+	$explosiveplacement remove
+	$explosiveplacementplaced remove
+	$machinehum1 remove
+	$machinehum2 remove
+	$spotlight remove // [1] - [4]
+	$alarmcorona remove // [1] - [14]
+	//$alarmlight remove // [1] - [14]
+	$alarm_sound remove // [1] - [30]
+	$t1547 remove // alarm switches
+	$t1549 remove
+	$t1552 remove
+	$t1555 remove
+	$t1557 remove
+	$t1559 remove
+
+	//$snowmitter remove // [1] - [3]
+	//$blueprints remove
+	//$suit remove
+	//$papers1 remove
+	//$papers2 remove
+
+	for(local.e = 0; local.e <= 868; local.e++) // remove some entities that don't have targetnames.
+	{
+		local.entity = getentity(local.e)
+		if(local.entity != NULL)
+		{
+			if(local.entity.classname == Trigger)
+			{
+				local.entity remove
+			}
+			else if(local.entity.classname == ScriptModel && local.entity.targetname == "")
+			{
+				//local.entity remove // removes "miscobj/coffee_kettle.tik" entity.
+				local.entity.targetname = "coffeekettle"
+			}
+		}
+	}
+
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
+	{
+		//$exploder remove
+		$explodersmashed remove
+		removeclass SplinePath
+	}
+	else
+	{
+		thread laserwall_allies ( 0.263 0.275 0.369 )
+		thread laserwall_axis ( 0.263 0.275 0.369 )
+
+		//thread pipesteam_init ( 0 -48 0 ) ( 90 0 0 ) ( 90 0 0 ) // angles1, angles2, angles3
+		//thread pipesteam_valveswitch 1 ( 4863 1501 30 ) ( 0 107 0 ) 2 90 0 0.50 // $pipesteam_[int] number, origin, angles, rotate time, rotate amount, ...
+		//thread pipesteam_valveswitch 2 ( -2102 2418.5 2164 ) ( 0 -72 0 ) 2 90 0 0.50 // ... clockwise (keep clockwise = 0 when initializing this valve), valve scale, steam scale, growtime, shrinktime.
+		//thread pipesteam_valveswitch 3 ( -2102 2418.5 2164 ) ( 0 -72 0 ) 2 90 0 0.50
+		//thread pipesteam_valveswitch 4 ( -2102 2418.5 2164 ) ( 0 -72 0 ) 2 90 0 0.50
+
+		thread documents_blowup papers1 paper
+		thread documents_blowup papers2 paper
+		thread documents_blowup blueprints paper
+		thread documents_blowup suit uniform
+		thread documents_blowup coffeekettle clipboard
+
+		thread radio_music ( 4965 1335 52 ) ( 0 135 0 )
+		thread radio_music ( 739 1392 -15 ) ( 0 0 0 )
+		thread radio_music ( 1200 1176 -499 ) ( 0 315 0 )
+		thread waterspigot ( 4848 1488 4 )
+		thread waterspigot ( 1079 1078 -63 )
+		thread waterspigot ( 719 1241 -63 )
+		thread waterspigot ( 1088 1058 -543 )
+		thread waterspigot ( 1724 3154 -543 )
+		thread airvent ( 1071 1157 89 )
+		thread airvent ( 823 1455 87 )
+		thread airvent ( 629 1319 -436 )
+		thread airvent ( 1711 1173 -446 )
+		thread airvent ( 1503 2033 -428 )
+		thread airvent ( 2339 2647 -428 )
+		thread airvent ( 2295 4016 -464 )
+		thread airvent ( 3942 5264 -528 )
+		thread airvent ( 4314 4422 -446 )
+		thread airvent ( 4814 3254 -422 )
+		thread airvent ( 4904 2462 -464 )
+		thread airvent ( 4510 2454 -288 )
+		thread airvent ( 4510 3190 -288 )
+		thread airvent ( 4566 4224 -360 )
+		thread transformer ( 274 1691 -453 )
+		thread transformer ( 1065 1691 -453 )
+		thread transformer ( 1125 1560 -453 )
+		thread transformer ( 1100 1158 -472 )
+		thread transformer ( 2140 2612 -453 )
+		thread transformer ( 2291 3720 -473 )
+		thread transformer ( 4043 4450 -525 )
+		thread transformer ( 3973 4450 -525 )
+		thread transformer ( 3910 4509 -525 )
+		thread transformer ( 3910 4577 -525 )
+		thread transformer ( 3910 4645 -525 )
+		thread transformer ( 272 1353 11 )
+		thread generator ( 4637 4806 -687 )
+		thread generator ( 4637 5030 -687 )
+		thread tower_woodcreak ( -719 1488 368 )
+		thread tower_woodcreak ( 1808 2864 392 )
+		thread tower_woodcreak ( 2836 587 392 )
+		thread missileroom_small ( -425 1920 -468 )
+		thread missileroom_small ( 2340 4829 -500 )
+		thread missileroom_small ( 2890 5122 -500 )
+		thread missileroom_small ( 3550 5406 -500 )
+		thread missileroom_large ( 3886 4422 -296 )
+		thread generator_switch ( 4654 4692 -602 )
+
+		// origin, ladder angle, height, width, thickness (going into wall), spawn solid clip (0 = no, 1 = yes), spawn lasers (1 = 1 laser, 2 = 2 lasers for ladder, 3 = ladder with rungs), laser color (R G B).
+		exec global/spawnladder.scr ( -604 1487 -10 ) 90 378 13.5 1 1 2 ( 0 0 1 )
+		exec global/spawnladder.scr ( 1808 2980 1 ) 180 391 13.5 1 1 2 ( 0 0 1 )
+		exec global/spawnladder.scr ( 2835 472 16 ) 0 376 13.5 1 1 2 ( 0 0 1 )
+
+		//local.test = 1
+ 		// radiusdamage1 origin, radiusdamage2 origin, explosion origin, debris origin, debris angle, smoke1 origin, smoke2 origin, trig setsize1, trig setsize2, ::explode set number, ... 
+		// ... damage, radius, smaller (1 = smaller earthquake), trig origin (default = explosion origin), test (1 = spawn lasers around trigger box & emitters at all the origins).
+		//
+		// Example template: exec global/exploder_killer.scr ( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 0 	( 0 0 0 ) ( 0 0 0 ) 	( 0 0 0 ) ( 0 0 0 ) 1 500 600 0 	( 0 0 0 ) local.test
+		//
+		// Parameters after "set number" are optional, and will auto-default if left blank.
+		//
+		exec global/exploder_killer.scr ( 4714 2991 -400 ) ( 5002 2720 -400 ) ( 4825 2856 -631 ) ( 4825 2856 -453 ) -90 ( 4698 2928 -631 ) ( 5002 2720 -631 ) ( -324 -251 0 ) ( 323 250 178 ) 1 500 600 0 ( 4825 2856 -631 ) local.test
+
+		if(getcvar("g_ubermods") == "2")
+		{
+			removeclass SplinePath
+		}
+	}
+
+	exec global/doorlocked.scr ( 5000 1872 4 ) metal 1
+	exec global/doorlocked.scr ( 4512 2461 -631 ) metal 1
+	exec global/doorlocked.scr ( 4619 1265 64 ) metal 1
+	exec global/doorlocked.scr ( -40 1625 -539 ) gateiron 1
+	exec global/doorlocked.scr ( 1028 116 0 ) gateiron 1
+
+	level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1
+	level.panzer = 1 
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+airstrikes_alternate:
+
+	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { end }
+
+	level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane_nospline.scr
+	level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
+	level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
+	level.bomberplane_bombspawntime = 0.2	// time between spawning bombs; lower = bombs spawn less often.
+	level.bomberplane_speed = 2350		// lower = planes move slower.
+								// keep setsize1 height = 0, unless setsize2 height is < 0. Keep setsize2 height at least 40 units below skybox height.
+	level.bomberplane_map_setsize1 = ( -4558 -2766 0 )	// just like a .tik file, adjust these map_setsizes so the planes aren't dropping bombs outside of the map (also includes skybox height).
+	level.bomberplane_map_setsize2 = ( 7054 5396 1431 )	// setsize1 should be corner of 3rd quadrant (-x min and -y min). setsize2 should be corner of 1st quadrant (+x max and +y max).
+
+	while(1) //parameters: team (allies, axis, c47), number of planes, off time, bombs off (0 = no, 1 = yes), amount of bombs, time until bombs drop, end (1 = only do 1 airstrike)
+	{
+		local.rtime = randomint(90) + 60	// randomize time between 90 and 180 seconds. NOTE: any offtime between 1 and 2 is essentially waiting 0 seconds.
+		local.r = randomint(2)
+		if(getcvar("g_ubermods") == "2") { local.bombs = 25; local.timetodrop = 0.1 }	// these are NIL if g_ubermods = 1, preventing bombs from dropping.
+
+		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime local.bombs local.timetodrop 1 }	// axis = 50% chance
+		if(local.r == 1)												// allies = 33% chance
+		{														// c47 = 17% chance
+			local.r2 = randomint(5)
+			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
+			if(local.r2 == 5) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+pipesteam_init local.angles1 local.angles2 local.angles3:
+
+	thread emitterstuff emitters/pipe_steam.tik ( 4865 1488 30 ) local.angles1 0.1 stop "pipesteam_1"
+	local.emitter1 = thread emitterstuff emitters/pipe_steam.tik ( 4865 1488 79 ) local.angles1 0.1 stop "pipesteam_1"
+	thread emitterstuff emitters/pipe_steam.tik ( 4865 1488 128 ) local.angles1 0.1 stop "pipesteam_1"
+	local.emitter2 = thread emitterstuff emitters/pipe_steam.tik ( 5216 1730 187 ) local.angles2 0.1 stop "pipesteam_1"
+	local.emitter3 = thread emitterstuff emitters/pipe_steam.tik ( 4641 1217 187 ) local.angles3 0.1 stop "pipesteam_1"
+	local.emitter1.playsound = 1
+	local.emitter2.playsound = 1
+	local.emitter3.playsound = 1
+end
+
+pipesteam_valveswitch local.int local.origin local.angles local.rotatetime local.rotateamount local.clockwise local.scale local.steamscale local.growtime local.shrinktime:
+
+	if(local.steamscale == NIL) { local.steamscale = 4 } // setting some defaults
+	if(local.growtime == NIL) { local.growtime = 7 }
+	if(local.shrinktime == NIL) { local.shrinktime = 3 }
+
+	local.valve = spawn script_model
+	local.valve model "animate/redvalve_nopulse.tik"
+	local.valve.origin = local.origin
+	local.valve.angles = local.angles
+	if(local.scale == NIL) { local.valve.scale = 1 }
+	else { local.valve.scale = local.scale }
+	local.valve notsolid
+
+	local.valvetrig = spawn trigger_use
+	local.valvetrig.origin = local.valve.origin
+	local.valvetrig setsize ( -20 -20 -20 ) ( 20 20 20 )
+
+	local.valvetrig waittill trigger
+	local.valvetrig nottriggerable
+	local.valve.model = animate/redvalve_pulse.tik
+
+	if($("pipesteam_" + local.int) == NULL) { end }
+
+	local.player = parm.other
+	if(local.clockwise == 0) { local.valvetrig message ("*** Turning off steam control. ***") }
+	if(local.clockwise == 1) { local.valvetrig message ("*** Turning on steam control. ***") }
+
+	local.valve time (local.rotatetime)
+	if(local.clockwise == 0) { local.valve rotateZup local.rotateamount }
+	if(local.clockwise == 1) { local.valve rotateZdown local.rotateamount }
+	local.valve playsound valve_switch
+	local.valve thread waitmove
+
+	local.scaleinc = local.steamscale * 10.000000 - 1.000000 // by default, this = 39 increments to grow from a scale of 0.1 to 4.
+
+	if(local.clockwise == 0)
+	{
+		for(local.i = 1; local.i <= $("pipesteam_" + local.int).size; local.i++)
+		{
+			$("pipesteam_" + local.int)[local.i] anim start
+		}
+
+		while($("pipesteam_" + local.int)[1].scale <= 4)
+		{
+			for(local.i = 1; local.i <= $("pipesteam_" + local.int).size; local.i++)   // make the steam grow over 7 seconds. 0.1795 * 39 = 7 seconds
+			{
+				$("pipesteam_" + local.int)[local.i].scale += 0.1 // grows to scale = 4, starting from 0.1
+				if($("pipesteam_" + local.int)[local.i].playsound == 1) { $("pipesteam_" + local.int)[local.i] loopsound pipesteam ($("pipesteam_" + local.int)[local.i].scale / 4) }
+			}
+			wait (local.growtime / local.scaleinc)      // 0.1795 for 7 seconds by default
+		}
+	}
+	if(local.clockwise == 1)
+	{
+		while($("pipesteam_" + local.int)[1].scale >= 0.1)
+		{
+			for(local.i = 1; local.i <= $("pipesteam_" + local.int).size; local.i++) // make the steam shrink over 3 seconds. .0769 * 39 = 3 seconds
+			{
+				$("pipesteam_" + local.int)[local.i].scale -= 0.1 // shrinks to scale = 0.1, starting from 4
+				if($("pipesteam_" + local.int)[local.i].playsound == 1) { $("pipesteam_" + local.int)[local.i] loopsound pipesteam ($("pipesteam_" + local.int)[local.i].scale / 4) }
+			}
+			wait (local.shrinktime / local.scaleinc)  // 0.0769 for 3 seconds by default
+		}
+
+		for(local.i = 1; local.i <= $("pipesteam_" + local.int).size; local.i++)
+		{
+			$("pipesteam_" + local.int)[local.i] anim stop
+			if($("pipesteam_" + local.int)[local.i].playsound == 1) { $("pipesteam_" + local.int)[local.i] stoploopsound }
+		}
+	}
+
+	local.clockwise++
+	if(local.clockwise >= 2) { local.clockwise = 0 } // binary alternating number that controls valve rotation.
+
+	local.angles = local.valve.angles
+	waitframe // need waitframe here, otherwise trigger's message will not appear.
+	local.valve remove
+	local.valvetrig remove
+	thread pipesteam_valveswitch local.int local.origin local.angles local.rotatetime local.rotateamount local.clockwise local.scale local.steamscale local.growtime local.shrinktime
+end
+
+waitmove:
+
+	self waitmove
+	self.model = animate/redvalve_nopulse.tik
+end
+
+////////////////////////////////////////////////////////////////////////
+
+laserwall_allies local.color:
+
+	local.lasers[1] = thread spawnlaser ( -3488 320 256 ) ( -4288 320 256 ) local.color 3	// origin, endpoint, initial color, scale
+	local.lasers[2] = thread spawnlaser ( -3488 384 256 ) ( -4288 384 256 ) local.color 3
+	local.lasers[3] = thread spawnlaser ( -3488 320 55 ) ( -4288 320 55 ) local.color 3
+	local.lasers[4] = thread spawnlaser ( -3488 384 55 ) ( -4288 384 55 ) local.color 3
+	local.lasers[5] = thread spawnlaser ( -4288 320 256 ) ( -3488 320 256 ) local.color 3
+
+	local.trigshot = spawn trigger_multiple spawnflags 128
+	local.trigshot.origin = ( -3888 352 256 )
+	local.trigshot setsize ( -400 -32 -300 ) ( 400 32 0 )
+	local.trigshot setthread trigshot
+	local.trigshot.lasers = local.lasers
+	local.trigshot.color = local.color
+end
+
+laserwall_axis local.color:
+
+	local.lasers[1] = thread spawnlaser ( 5696 3456 256 ) ( 6336 3264 256 ) local.color 3	// origin, endpoint, initial color, scale
+	local.lasers[2] = thread spawnlaser ( 5696 3456 15 ) ( 6336 3264 15 ) local.color 3
+	local.lasers[3] = thread spawnlaser ( 5696 3520 256 ) ( 6392 3328 256 ) local.color 3
+	local.lasers[4] = thread spawnlaser ( 5696 3520 15 ) ( 6392 3328 15 ) local.color 3
+
+	local.trigshot = spawn trigger_multiple spawnflags 128
+	local.trigshot.origin = ( 6009 3369 256 )
+	local.trigshot setsize ( -220 -121 -300 ) ( 220 121 0 )
+	local.trigshot setthread trigshot
+	local.trigshot.lasers = local.lasers
+	local.trigshot.color = local.color
+end
+
+trigshot:
+
+	self nottriggerable
+	self.lasers color ( 1 1 1 )
+	waitframe
+	self.lasers color self.color
+	self triggerable
+end
+
+////////////////////////////////////////////////////////////////////////
+
+radio_music local.origin local.angles local.radiotype:
+
+	local.radio = spawn script_model targetname "radio_music"
+	if(local.radiotype == "civilian") { local.radio model "miscobj/radio_civilian.tik" }
+	else { local.radio model "animate/military_radio.tik" }
+	local.radio.origin = local.origin
+	local.radio.angles = local.angles
+	local.radio notsolid
+	local.radio.scale = 1 // 0.01 // cannot "hide" radio model, otherwise "loopsound" will not work.
+
+	local.trig = spawn trigger_use
+	local.trig.origin = local.radio.origin
+	local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic3
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic2
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound
+	local.radio loopsound radiomusic
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio loopsound radiostatic1
+
+	wait 0.5
+	local.trig waittill trigger
+	local.radio stoploopsound	
+	local.radio remove
+	local.trig remove
+
+	thread radio_music local.origin local.angles local.radiotype
+end
+
+////////////////////////////////////////////////////////////////////////
+
+tower_woodcreak local.origin: // occasionally play some wood creaking sounds at the top of the tower.
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	//local.ent.scale = 0.01	// don't use "hide", otherwise loopsound will not work.
+	local.ent hide			// hide works if only using playsounds.
+
+	while(1)
+	{
+		local.r = (randomint(18) + 7)
+		local.ent playsound wood_creak
+		wait local.r
+	}
+	local.ent remove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+waterspigot local.origin:
+
+	local.spigot = thread soundent local.origin
+	local.spigot loopsound faucetwateron
+end
+
+generator local.origin:
+
+	local.generator = thread soundent local.origin
+	local.generator.targetname = "generator_sound"
+	local.generator loopsound generator_humming
+end
+
+transformer local.origin:
+
+	local.transformer = thread soundent local.origin
+	local.transformer loopsound transformer_humming // randomize 1 of 3 sounds
+end
+
+airvent local.origin:
+
+	local.airvent = thread soundent local.origin
+	local.airvent loopsound airvent
+end
+
+missileroom_small local.origin:
+
+	local.mroom = thread soundent local.origin
+	local.mroom loopsound missileroom_amb_small
+end
+
+missileroom_large local.origin:
+
+	local.mroom = thread soundent local.origin
+	local.mroom loopsound missileroom_amb_large
+end
+
+soundent local.origin:
+
+	local.ent = spawn script_model
+	local.ent model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.ent.origin = local.origin
+	local.ent notsolid
+	local.ent.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+end local.ent
+
+////////////////////////////////////////////////////////////////////////
+
+generator_switch local.origin:
+
+	if($generator_sound == NULL) { end }
+
+	local.trig = spawn trigger_use targetname "generator_switch"
+	local.trig model "static/static_powerpanel.tik"
+	local.trig show
+	local.trig.origin = local.origin
+	local.trig.angles = ( 0 -90 0 )
+	local.trig setsize ( -20 -20 -20 ) ( 20 20 20 )
+	local.trig message "*** Turning off the generators. ***"
+	local.trig.turned_off = 0
+	local.trig waittill trigger
+
+	local.trig nottriggerable
+	$generator_sound stoploopsound
+	$generator_sound playsound generator_stop
+	local.trig.turned_off = 1
+	local.trig thread alarmlights_flash
+
+	wait 3
+	local.trig triggerable
+	local.trig message "*** Turning on the generators. ***"
+	local.trig waittill trigger
+
+	local.trig nottriggerable
+	$generator_sound loopsound generator_humming
+	local.trig.turned_off = 0
+
+	wait 3
+	local.trig remove
+	thread generator_switch local.origin
+end
+
+alarmlights_flash:
+
+	while(self != NULL && self.turned_off == 1 && $alarmlight != NULL)
+	{
+		for(local.i = 1; local.i <= $alarmlight.size; local.i++)
+		{
+			$alarmlight[local.i].model = "lights/lightbulb_caged_red-lit.tik"
+			$alarmlight[local.i] light .3 0 0 64
+		}
+		wait 0.1
+
+		for(local.i = 1; local.i <= $alarmlight.size; local.i++)
+		{
+			$alarmlight[local.i].model = "lights/lightbulb_caged_red.tik"
+			$alarmlight[local.i] light 0 0 0 0
+		}
+		wait 2.25
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+documents_blowup local.document local.pickupsound:
+
+	if($(local.document) == NULL) { end }
+
+	local.trig = spawn trigger_multiple spawnflags 128
+	local.trig.origin = $(local.document).origin
+	local.trig setsize ( -50 -50 -50 ) ( 50 50 50 )
+	local.trig.health = 125
+	local.trig thread trig_healthboost
+
+	while(local.trig.health > 0) { waitframe }
+
+	local.trig remove
+	$(local.document) hide
+
+	if(local.pickupsound == "clipboard") { $(local.document) playsound pickup_clipboard }
+	else if(local.pickupsound == "uniform") { $(local.document) playsound pickup_uniform }
+	else { $(local.document) playsound pickup_papers }
+
+	wait 1
+	$(local.document) remove
+end
+
+trig_healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0) // prevent regular bullets from killing trigger (i.e. if 250 health, trigger can still be killed by 2 grenades or a shotgun blast)
+	{
+		self.health = local.health
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+vehicles_undermap:
+
+	while(1)
+	{
+		for(local.a = 0; local.a <= level.drivable_entities.size; local.a++)
+		{
+			for(local.s = 1; $(level.drivable_entities[local.a]) != NULL && local.s <= $(level.drivable_entities[local.a]).size; local.s++)
+			{
+				if($(level.drivable_entities[local.a])[local.s].origin[2] <= -46 || $(level.drivable_entities[local.a])[local.s].origin[2] >= 900)
+				{
+					$(level.drivable_entities[local.a])[local.s] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+			}
+		}
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
 
 tdm_spawns:
 
-	spawn info_player_axis "origin" "5364 715 10" "angle" "58" "targetname" "ax_1"
-	spawn info_player_axis "origin" "5264 715 10" "angle" "30" "targetname" "ax_2"
-	spawn info_player_axis "origin" "5164 715 10" "angle" "7" "targetname" "ax_3"
-	spawn info_player_axis "origin" "5064 715 10" "angle" "99" "targetname" "ax_4"
-	spawn info_player_axis "origin" "4964 715 10" "angle" "3" "targetname" "ax_5"
-	spawn info_player_axis "origin" "4864 715 10" "angle" "162" "targetname" "ax_6"
-	spawn info_player_axis "origin" "4764 715 10" "angle" "-32" "targetname" "ax_7"
-	spawn info_player_axis "origin" "4664 715 10" "angle" "-10" "targetname" "ax_8"
-	spawn info_player_axis "origin" "4564 715 10" "angle" "-7" "targetname" "ax_9"
-	spawn info_player_axis "origin" "4464 715 10" "angle" "-81" "targetname" "ax_10"
-
-	spawn info_player_allied "origin" "-1630.94 172.64 1.40" "angle" "-179" "targetname" "Al_1"
-	spawn info_player_allied "origin" "-1630.94 272.64 1.40" "angle" "158" "targetname" "Al_2"
-	spawn info_player_allied "origin" "-1630.94 372.64 1.40" "angle" "143" "targetname" "Al_3"
-	spawn info_player_allied "origin" "-1630.94 472.64 1.40" "angle" "119" "targetname" "Al_4"
-	spawn info_player_allied "origin" "-1630.94 572.64 1.40" "angle" "130" "targetname" "Al_5"
-	spawn info_player_allied "origin" "-1630.94 672.64 1.40" "angle" "101" "targetname" "Al_6"
-	spawn info_player_allied "origin" "-1630.94 772.64 1.40" "angle" "82" "targetname" "Al_7"
-	spawn info_player_allied "origin" "-1630.94 872.64 1.40" "angle" "58" "targetname" "Al_8"
-	spawn info_player_allied "origin" "-1630.94 972.64 1.40" "angle" "86" "targetname" "Al_9"
-	spawn info_player_allied "origin" "-1630.94 1072.64 1.40" "angle" "103" "targetname" "Al_10"
+	local.team1 = "allied" // do not use "allies"
+	local.team2 = "axis"
+	thread player_spawns local.team1 local.team2
 end
 
 ffa_spawns:
 
-	spawn info_player_deathmatch "origin" "5364 715 10" "angle" "58" "targetname" "ax_1"
-	spawn info_player_deathmatch "origin" "5264 715 10" "angle" "30" "targetname" "ax_2"
-	spawn info_player_deathmatch "origin" "5164 715 10" "angle" "7" "targetname" "ax_3"
-	spawn info_player_deathmatch "origin" "5064 715 10" "angle" "99" "targetname" "ax_4"
-	spawn info_player_deathmatch "origin" "4964 715 10" "angle" "3" "targetname" "ax_5"
-	spawn info_player_deathmatch "origin" "4864 715 10" "angle" "162" "targetname" "ax_6"
-	spawn info_player_deathmatch "origin" "4764 715 10" "angle" "-32" "targetname" "ax_7"
-	spawn info_player_deathmatch "origin" "4664 715 10" "angle" "-10" "targetname" "ax_8"
-	spawn info_player_deathmatch "origin" "4564 715 10" "angle" "-7" "targetname" "ax_9"
-	spawn info_player_deathmatch "origin" "4464 715 10" "angle" "-81" "targetname" "ax_10"
+	local.team1 = "deathmatch"
+	local.team2 = "deathmatch"
+	thread player_spawns local.team1 local.team2
+end
 
-	spawn info_player_deathmatch "origin" "-1630.94 172.64 1.40" "angle" "-179" "targetname" "Al_1"
-	spawn info_player_deathmatch "origin" "-1630.94 272.64 1.40" "angle" "158" "targetname" "Al_2"
-	spawn info_player_deathmatch "origin" "-1630.94 372.64 1.40" "angle" "143" "targetname" "Al_3"
-	spawn info_player_deathmatch "origin" "-1630.94 472.64 1.40" "angle" "119" "targetname" "Al_4"
-	spawn info_player_deathmatch "origin" "-1630.94 572.64 1.40" "angle" "130" "targetname" "Al_5"
-	spawn info_player_deathmatch "origin" "-1630.94 672.64 1.40" "angle" "101" "targetname" "Al_6"
-	spawn info_player_deathmatch "origin" "-1630.94 772.64 1.40" "angle" "82" "targetname" "Al_7"
-	spawn info_player_deathmatch "origin" "-1630.94 872.64 1.40" "angle" "58" "targetname" "Al_8"
-	spawn info_player_deathmatch "origin" "-1630.94 972.64 1.40" "angle" "86" "targetname" "Al_9"
-	spawn info_player_deathmatch "origin" "-1630.94 1072.64 1.40" "angle" "103" "targetname" "Al_10"
-end    
+player_spawns local.team1 local.team2:
+
+	spawn ("info_player_" + local.team1) "origin" "-4338.759 -2096.867 2.125" "angle" "75" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3087.125 -2096.875 4.125" "angle" "145" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3087.125 -1729.569 4.125" "angle" "-162" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3503.834 -1729.572 4.125" "angle" "167" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4457.391 -1207.125 2.125" "angle" "-22" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4059.233 -2096.874 2.125" "angle" "84" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4222.361 -726.282 20.036" "angle" "68" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3469.690 -362.683 1.010" "angle" "116" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4155.527 399.125 6.752" "angle" "31" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3503.125 399.125 16.187" "angle" "105" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-4157.881 844.902 2.125" "angle" "5" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-3690.260 1482.176 2.125" "angle" "-18" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-2987.339 1597.169 0.221" "angle" "-41" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-2356.096 449.623 3.813" "angle" "20" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-2223.420 1864.875 0.289" "angle" "-33" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-1699.125 1864.874 8.230" "angle" "-109" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-1699.125 186.789 11.702" "angle" "91" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-1630.012 171.761 1.244" "angle" "33" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-1630.945 1978.615 8.895" "angle" "-36" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-1303.125 767.126 0.125" "angle" "106" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-926.003 131.629 2.976" "angle" "36" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-1038.322 2001.216 -2.769" "angle" "-33" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "802.875 2008.874 0.125" "angle" "-156" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "802.875 1567.125 1.269" "angle" "150" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "148.875 688.875 26.382" "angle" "-145" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-275.115 880.775 24.688" "angle" "-175" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-271.125 1289.462 64.668" "angle" "-178" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-247.125 1487.355 73.983" "angle" "-170" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "718.875 704.874 48.125" "angle" "-114" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "631.125 704.875 54.685" "angle" "-78" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "755.125 1264.875 -55.875" "angle" "-61" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "996.875 1264.875 -55.875" "angle" "-130" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "968.772 939.125 -63.875" "angle" "160" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "748.072 929.521 -63.875" "angle" "86" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-180.875 1480.875 64.125" "angle" "-78" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-247.125 999.125 64.125" "angle" "141" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-247.125 1176.970 64.125" "angle" "-142" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-123.125 1055.125 64.125" "angle" "142" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "83.125 987.126 -63.875" "angle" "32" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "91.128 1512.875 -63.875" "angle" "-45" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "491.125 1173.931 -63.875" "angle" "62" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "692.986 1129.741 -63.875" "angle" "104" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "808.949 1315.126 -63.875" "angle" "159" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "812.874 1476.875 -63.875" "angle" "-175" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "227.125 1338.875 -63.875" "angle" "-56" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "227.126 1344.875 -543.875" "angle" "-24" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-8.874 1684.875 -543.875" "angle" "-43" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-16.874 975.125 -543.875" "angle" "43" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "620.874 975.125 -543.875" "angle" "135" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "764.301 1490.381 -543.875" "angle" "26" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-476.345 1904.874 -543.875" "angle" "-71" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-370.870 1904.874 -543.875" "angle" "-104" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-479.056 1571.212 -543.875" "angle" "6" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "1107.127 1236.875 -543.875" "angle" "-28" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "1143.002 903.128 -543.875" "angle" "41" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "1664.875 875.126 -543.875" "angle" "116" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "1808.875 1299.126 -543.875" "angle" "131" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "1483.125 1323.126 -543.875" "angle" "55" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "1836.875 1684.874 -543.875" "angle" "-151" "targetname" (local.team1 + "_spawn")
+
+	spawn ("info_player_" + local.team2) "origin" "5779.700 3857.450 28.264" "angle" "57" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5775.125 4848.873 0.125" "angle" "-41" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "6289.993 4841.393 0.125" "angle" "-75" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5905.569 4848.873 0.125" "angle" "-47" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "6618.212 4575.103 0.125" "angle" "-114" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "6896.642 4215.769 29.626" "angle" "-136" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "6804.740 3692.124 7.793" "angle" "-175" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "6102.804 3832.970 43.140" "angle" "-105" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5904.123 3765.427 69.434" "angle" "-96" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "6123.249 3312.034 0.176" "angle" "-114" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5798.964 3409.320 2.644" "angle" "-95" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5546.118 2921.257 0.230" "angle" "-89" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5332.957 2145.938 2.419" "angle" "-71" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5335.126 1847.125 22.439" "angle" "28" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5335.125 1812.875 20.911" "angle" "-88" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5874.032 137.170 47.425" "angle" "148" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5266.656 -390.543 2.366" "angle" "114" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4251.712 -239.808 0.125" "angle" "88" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4064.163 -104.490 0.125" "angle" "30" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4047.125 352.871 0.125" "angle" "-19" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5396.875 1018.590 0.301" "angle" "-166" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5364.105 432.342 0.125" "angle" "142" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3560.477 387.125 0.125" "angle" "77" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4847.125 1092.875 0.125" "angle" "-92" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4432.875 1092.873 0.125" "angle" "-135" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5072.875 560.874 4.125" "angle" "-164" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4479.240 -683.854 0.125" "angle" "70" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5189.437 -1688.864 21.546" "angle" "109" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4590.929 -1489.780 0.125" "angle" "34" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4388.462 -1959.511 0.125" "angle" "22" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5020.589 -2097.836 0.125" "angle" "97" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4734.515 -2539.312 30.983" "angle" "86" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4047.125 -2676.306 0.125" "angle" "49" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4048.826 -2370.336 0.125" "angle" "26" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3127.126 387.125 0.125" "angle" "35" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3127.126 772.874 0.125" "angle" "-32" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4728.875 1096.875 64.125" "angle" "-129" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4548.919 1092.012 64.125" "angle" "-50" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4603.128 1264.875 64.125" "angle" "-33" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5112.875 1167.125 4.125" "angle" "118" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4887.125 1343.125 4.125" "angle" "23" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4918.651 1552.875 4.125" "angle" "-38" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5112.875 1558.875 4.125" "angle" "-114" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5264.875 1371.125 4.125" "angle" "124" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5264.875 1784.874 4.125" "angle" "-176" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4719.125 1843.125 4.125" "angle" "58" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4820.874 1843.125 4.125" "angle" "105" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4731.126 2104.875 4.125" "angle" "-59" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5292.874 2104.875 4.125" "angle" "-157" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5292.874 1967.125 4.125" "angle" "166" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4367.125 2469.128 -631.737" "angle" "48" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4641.730 2912.875 -631.737" "angle" "-93" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5200.875 2469.126 -631.737" "angle" "127" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4367.125 3174.874 -631.875" "angle" "-37" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5200.873 3174.875 -631.875" "angle" "-149" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4509.370 2461.127 -631.748" "angle" "56" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4759.125 3265.126 -631.748" "angle" "64" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5128.875 3265.126 -631.748" "angle" "99" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4775.125 3613.125 -719.875" "angle" "83" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5008.871 3613.125 -719.875" "angle" "97" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5124.875 4138.875 -719.875" "angle" "-125" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "5004.875 5788.875 -719.875" "angle" "-144" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4620.571 5788.875 -719.875" "angle" "-90" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3920.126 5275.126 -719.875" "angle" "54" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4266.875 5788.875 -719.875" "angle" "-153" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4673.875 5172.875 -719.875" "angle" "-149" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3901.125 5188.875 -719.875" "angle" "-30" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4673.875 4725.125 -719.875" "angle" "146" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4033.125 4770.863 -707.875" "angle" "2" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4502.875 4518.125 -719.875" "angle" "129" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "4095.128 4437.125 -631.875" "angle" "62" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3901.125 4731.125 -631.875" "angle" "58" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "3977.125 4514.125 -631.875" "angle" "53" "targetname" (local.team2 + "_spawn")
+end
+
+////////////////////////////////////////////////////////////////////////
+
+UBER_teleporters2:
+
+	//exec map_triggers/undermap.scr ( 208 1104 -47 ) ( -8200 -8200 -53 ) ( 0 8200 1 ) undermap_tele1
+	//exec map_triggers/undermap.scr ( 208 1359 -47 ) ( -8200 0 -53 ) ( 8200 8200 1 ) undermap_tele2
+	//exec map_triggers/undermap.scr ( 391 1359 -47 ) ( 0 -8200 -53 ) ( 8200 8200 1 ) undermap_tele3
+	//exec map_triggers/undermap.scr ( 391 1104 -47 ) ( -8200 -8200 -53 ) ( 8200 0 1 ) undermap_tele4
+
+	exec map_triggers/tele.scr ( -4130 399 7 ) ( -4130 304 16 ) 1
+	exec map_triggers/tele.scr ( -3549 304 32 ) ( -3546 399 26 ) 1
+	exec map_triggers/tele.scr ( -3829 304 12 ) ( -3829 399 8 ) 1
+	exec map_triggers/tele.scr ( 6067 3433 1 ) ( 6037 3338 0 ) 1
+	exec map_triggers/tele.scr ( 5812 3406 3 ) ( 5840 3496 10 ) 1
+
+	exec map_triggers/tele.scr ( 2907 2283 6 ) ( 2801 2283 -63 ) 1
+	exec map_triggers/tele.scr ( 2703 2283 -63 ) ( 2633 2283 17 ) 1
+	exec map_triggers/tele.scr ( 2633 1885 17 ) ( 2703 1885 -63 ) 1
+	exec map_triggers/tele.scr ( 2801 1885 -63 ) ( 2907 1885 0 ) 1
+
+	exec map_triggers/tele.scr ( 837 1820 0 ) ( 799 1820 5 ) 1
+	exec map_triggers/tele.scr ( 2465 580 0 ) ( 2503 580 0 ) 1
+	exec map_triggers/tele.scr ( 3089 580 0 ) ( 3127 580 0 ) 1
+
+	exec map_triggers/tele.scr ( -3522 -1730 4 ) ( -3520 -1674 296 ) 0
+	exec map_triggers/tele.scr ( -4414 -1207 2 ) ( -4414 -1160 200 ) 0
+	exec map_triggers/tele.scr ( -3304 360 240 ) ( -3299 412 384 ) 0
+	exec map_triggers/tele.scr ( -3758 1455 200 ) ( -3701 1511 352 ) 0
+	exec map_triggers/tele.scr ( -2608 619 272 ) ( -2645 622 384 ) 0
+	exec map_triggers/tele.scr ( -2139 2325 8 ) ( -2139 2325 208 ) 1
+	exec map_triggers/tele.scr ( -1586 2215 0 ) ( -1625 2206 208 ) 0
+	exec map_triggers/tele.scr ( -1657 2081 3 ) ( -1725 2020 5 ) 1
+	exec map_triggers/tele.scr ( 824 2479 0 ) ( 864 2450 0 ) 1
+	exec map_triggers/tele.scr ( 2228 3444 75 ) ( 2230 3507 75 ) 1
+	exec map_triggers/tele.scr ( 4711 3150 0 ) ( 4673 3112 0 ) 1
+	exec map_triggers/tele.scr ( -1652 41 50 ) ( -1731 49 242 ) 0
+	exec map_triggers/tele.scr ( -1687 -134 50 ) ( -1746 -130 242 ) 0
+	exec map_triggers/tele.scr ( -2371 9 242 ) ( -2447 63 272 ) 1
+	exec map_triggers/tele.scr ( -934 -156 50 ) ( -927 -94 50 ) 1
+	exec map_triggers/tele.scr ( 2052 176 25 ) ( 2019 222 25 ) 1
+	exec map_triggers/tele.scr ( 4158 -197 0 ) ( 4202 -147 0 ) 1
+	exec map_triggers/tele.scr ( 4064 82 0 ) ( 3945 86 25 ) 1
+	exec map_triggers/tele.scr ( 4660 -192 0 ) ( 4668 -335 0 ) 1
+	exec map_triggers/tele.scr ( 5021 -2099 0 ) ( 5077 -2121 0 ) 1
+	exec map_triggers/tele.scr ( 5874 138 47 ) ( 5927 104 40 ) 1
+	exec map_triggers/tele.scr ( 6063 2910 15 ) ( 6004 2927 12 ) 1
+	exec map_triggers/tele.scr ( 5442 2271 1 ) ( 5483 2268 2 ) 1
+	exec map_triggers/tele.scr ( 6799 4447 1 ) ( 6762 4422 0 ) 1
+	exec map_triggers/tele.scr ( 5823 3712 52 ) ( 5879 3689 56 ) 1
+	exec map_triggers/tele.scr ( 5766 3516 25 ) ( 5736 3428 25 ) 1
+	exec map_triggers/tele.scr ( 6310 3366 0 ) ( 6208 3287 0 ) 1
+	exec map_triggers/tele.scr ( 5431 1723 5 ) ( 5397 1723 7 ) 1
+	exec map_triggers/tele.scr ( 5293 2040 4 ) ( 5331 2041 8 ) 1
+	exec map_triggers/tele.scr ( 1029 131 0 ) ( 1029 97 50 ) 1
+	exec map_triggers/tele.scr ( 1473 2047 0 ) ( 1515 2011 0 ) 1
+	exec map_triggers/tele.scr ( 3315 391 0 ) ( 3316 353 25 ) 1
+	exec map_triggers/tele.scr ( -844 135 0 ) ( -844 97 50 ) 1
+	exec map_triggers/tele.scr ( -844 2009 -2 ) ( -844 2047 0 ) 1
+	exec map_triggers/tele.scr ( 3932 3097 16 ) ( 3932 3135 50 ) 1
+	exec map_triggers/tele.scr ( 5001 1873 4 ) ( 5062 1967 4 ) 1
+	exec map_triggers/tele.scr ( -1797 1865 8 ) ( -1797 1935 5 ) 1
+
+	exec map_triggers/tele.scr ( 705 1131 -55 ) ( 743 1253 -55 ) 1
+	exec map_triggers/tele.scr ( -25 1626 -539 ) ( -57 1626 -539 ) 1
+	exec map_triggers/tele.scr ( 4503 4437 -719 ) ( 4508 44370 -631 ) 0
+	exec map_triggers/tele.scr ( 4003 4880 -585 ) ( 4073 4880 -505 ) 0
+	exec map_triggers/tele.scr ( 4090 4909 -505 ) ( 4067 4909 -362 ) 0
+	exec map_triggers/tele.scr ( 3903 4719 -394 ) ( 3901 4667 -387 ) 1
+	exec map_triggers/telecrouch.scr ( 4521 4437 -403 ) ( 4564 4438 -327 ) 0 1 0
+	exec map_triggers/tele.scr ( 4555 5173 -719 ) ( 4503 5161 -441 ) 0
+	exec map_triggers/telecrouch.scr ( 4759 3426 -631 ) ( 4561 3426 -451 ) 1 1 0
+	exec map_triggers/telecrouch.scr ( 4759 3998 -627 ) ( 4561 3998 -451 ) 1 1 0
+	exec map_triggers/telecrouch.scr ( 4367 2469 -631 ) ( 4510 2469 -317 ) 1 1 0
+	exec map_triggers/telecrouch.scr ( 4510 3175 -317 ) ( 4565 4239 -389 ) 1 1 1
+	exec map_triggers/telecrouch.scr ( 4619 4429 -391 ) ( 4570 4429 -389 ) 0 1 0
+	exec map_triggers/tele.scr ( 300 1073 -543 ) ( 300 1073 -359 ) 0
+
+	exec map_triggers/tele.scr ( 4512 2461 -631 ) ( -427 1905 -543 ) 1
+
+if(getcvar("g_ubergametype") != "bb")
+{
+}
+end
+
+UBER_teleporters:
+
+	exec map_triggers/tele.scr ( -4239 -101 2 ) ( -4301 -95 200 ) 0
+	exec map_triggers/tele.scr ( -3465 -384 0 ) ( -3382 -379 240 ) 0
+	exec map_triggers/tele.scr ( -2356 449 3 ) ( -2415 407 272 ) 0
+	exec map_triggers/tele.scr ( -2223 1864 0 ) ( -2255 1859 208 ) 0
+	exec map_triggers/tele.scr ( 4582 2967 0 ) ( 4583 2929 301 ) 0
+	exec map_triggers/tele.scr ( 5262 2176 0 ) ( 5262 2176 304 ) 0
+	exec map_triggers/tele.scr ( 5335 1880 23 ) ( 5285 1880 304 ) 0
+	exec map_triggers/tele.scr ( 2788 2871 0 ) ( 2788 2820 304 ) 0
+	exec map_triggers/tele.scr ( 2748 773 0 ) ( 2748 819 301 ) 0
+	exec map_triggers/tele.scr ( 153 697 240 ) ( 230 776 304 ) 0
+	exec map_triggers/tele.scr ( 615 697 240 ) ( 532 777 304 ) 0
+	exec map_triggers/tele.scr ( 1096 1535 240 ) ( 1092 1437 304 ) 0
+	exec map_triggers/tele.scr ( -142 1535 240 ) ( -145 1431 304 ) 0
+	exec map_triggers/tele.scr ( 4291 1081 240 ) ( 4294 1174 304 ) 0
+	exec map_triggers/tele.scr ( 4185 2871 240 ) ( 4281 2869 304 ) 0
+	exec map_triggers/tele.scr ( 5237 1081 240 ) ( 5237 1180 304 ) 0
+	exec map_triggers/tele.scr ( 3267 864 240 ) ( 3168 866 304 ) 0
+	exec map_triggers/tele.scr ( 2429 869 240 ) ( 2552 869 304 ) 0
+	exec map_triggers/tele.scr ( 2621 2393 240 ) ( 2703 2484 304 ) 0
+	exec map_triggers/tele.scr ( 2619 1813 240 ) ( 2691 1742 304 ) 0
+	exec map_triggers/tele.scr ( 2919 2393 240 ) ( 2843 2467 304 ) 0
+	exec map_triggers/tele.scr ( 2919 1811 240 ) ( 2860 1728 304 ) 0
+	exec map_triggers/tele.scr ( -1331 729 -7 ) ( -1331 748 216 ) 0
+	exec map_triggers/tele.scr ( -767 1553 368 ) ( -767 1553 561 ) 0
+	exec map_triggers/tele.scr ( 1871 2914 392 ) ( 1871 2914 585 ) 0
+	exec map_triggers/tele.scr ( 2772 536 392 ) ( 2772 536 584 ) 0
+	exec map_triggers/tele.scr ( 160 1571 35 ) ( 160 1477 302 ) 0
+	exec map_triggers/tele.scr ( 672 705 51 ) ( 672 763 304 ) 0
+end
+
+UBER_mapextras2:
+
+	thread mg42spawn ( -792.00 1436.00 440.00 ) ( 0 180 0 ) // origin, angles, spawn bipod (0 or 1), targetname, pitchcaps [default = ( -45 45 0 )], max yaw offset (default = 80).
+	thread mg42spawn ( 4530.00 992.00 143.00 ) ( 0 225 0 )
+	thread mg42spawn ( 4690.00 955.00 144.00 ) ( 0 295 0 )
+	thread mg42spawn ( 2223.00 2740.00 -474.00 ) ( 0 180 0 )
+	thread mg42spawn ( 4931.00 1937.00 90.00 ) ( 0 270 0 )
+	thread mg42spawn ( -401.00 1089.00 144.00 ) ( 0 180 0 )
+	thread mg42spawn ( 2751.00 636.00 461.00 ) ( 0 180 0 )
+	thread mg42spawn ( 2919.00 632.00 465.00 ) ( 0 0 0 )
+	thread mg42spawn ( 1853.00 2788.00 463.00 ) ( 0 270 0 )
+
+	thread solidclip ( -1653 97 50 ) ( -725 -500 -100 ) ( 3116 0 0 ) 0
+	thread solidclip ( 1463 353 25 ) ( 0 -500 -100 ) ( 2482 0 0 ) 0
+	thread solidclip ( 4225 3115 50 ) ( -3725 0 -100 ) ( 0 500 0 ) 0
+	thread solidclip ( 5247 2176 25 ) ( -300 0 -100 ) ( 0 200 0 ) 0
+	thread solidclip ( 5760 3327 25 ) ( -200 0 -100 ) ( 0 300 0 ) 0
+	thread solidclip ( 5248 -767 15 ) ( 0 -2000 0 ) ( 300 0 0 ) 0
+
+	thread solidclip ( 4264 1159 304 ) ( 0 0 -10 ) ( 1077 1745 0 ) 0
+	thread spawnlaser ( 5342 2175 304 ) ( 5342 2330 304 ) ( 1 0 0 ) 0.5
+
+	thread solidclip ( 3188 843 304 ) ( -681 0 -10 ) ( 0 889 0 ) 0
+	thread solidclip ( 2840 1732 304 ) ( -141 0 -10 ) ( 0 739 0 ) 0
+	thread solidclip ( 3353 2471 304 ) ( -850 0 -10 ) ( 0 333 0 ) 0
+
+	thread solidclip ( -168 1456 304 ) ( 0 -56 -10 ) ( 1280 0 0 ) 0
+	thread solidclip ( -192 1400 304 ) ( 0 -625 -10 ) ( 1304 0 0 ) 0
+	thread solidclip ( 231 775 304 ) ( 0 -168 -10 ) ( 305 0 0 ) 0
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -1855 2340 144 ) ( 0 0 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -1880 2139 144 ) ( 0 0 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -1935 2004 144 ) ( 0 0 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -2173 2281 144 ) ( 0 70 0 ) 1
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( 3936 2821 -48 ) ( 0 -90 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( 4116 2821 -48 ) ( 0 -90 0 ) 1
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( 2353 1069 -48 ) ( 0 90 0 ) 1
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( 2803 474 -48 ) ( 0 180 0 ) 1
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -3482 -1909 -60 ) ( 0 -90 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -3302 -1909 -60 ) ( 0 -90 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -3122 -1909 -60 ) ( 0 -90 0 ) 1
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( 4020 -2217 -64 ) ( 0 180 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( 4020 -2037 -64 ) ( 0 180 0 ) 1
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -2136 -90 178 ) ( 0 172 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -2010 -102 178 ) ( 0 172 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -1992 120 178 ) ( 0 172 0 ) 1
+	exec maps/gen_mapscripts/mapwall.scr ( -1676 -46 175 ) ( -1738 -244 175 ) 300 0 10 0
+
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -1590 1674 -64 ) ( 0 90 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -1770 1674 -46 ) ( 3 90 0 ) 1
+	thread cratesstuff vehicles/higginsxtrahull.tik ( -1950 1674 -56 ) ( 3 90 0 ) 1
+
+	thread cratesstuff static/banquet_table.tik ( 2602 1795 -28 ) ( 0 90 0 ) 1
+	thread cratesstuff static/banquet_table.tik ( 2602 2371 -28 ) ( 0 90 0 ) 1
+
+	exec maps/gen_mapscripts/mapwall.scr ( -1595 2268 205 ) ( -1610 2163 205 ) 300 0 10 0
+	exec maps/gen_mapscripts/mapwall.scr ( -1610 2163 205 ) ( -1699 2055 205 ) 300 0 10 0
+
+	exec maps/gen_mapscripts/mapwall.scr ( -3264 -1152 976 ) ( -3008 -1152 976 ) 1500 0 0 64 // depth, width (both sides), width (right side), width (left side), length to extend beyond endpoint.
+	exec maps/gen_mapscripts/mapwall.scr ( -3264 -1152 976 ) ( -3200 280 976 ) 1500 0 64 0
+
+	exec maps/gen_mapscripts/mapwall.scr ( 4160 -2112 976 ) ( 4032 -2112 976 ) 1500 0 64 0
+
+	exec maps/gen_mapscripts/mapwall.scr ( 5760 3968 976 ) ( 5760 3840 976 ) 1500 0 64 0
+
+	thread spawnlaser ( -3601 -1697 297 ) ( -3692 -1544 297 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -3601 -1697 297 ) ( -2796 -1696 297 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -3601 -1697 297 ) ( -3585 -1666 168 ) ( 0 1 0 ) 0.5
+	thread spawnlaser ( -3585 -1666 168 ) ( -3585 -1729 -24 ) ( 0 1 0 ) 0.5
+	thread spawnlaser ( -3692 -1528 232 ) ( -3665 -1503 168 ) ( 0 1 0 ) 0.5
+	thread spawnlaser ( -3665 -1503 168 ) ( -3677 -1534 3 ) ( 0 1 0 ) 0.5
+
+	thread spawnlaser ( -4264 -1193 200 ) ( -4776 -1192 200 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -4264 -1193 200 ) ( -4264 -1193 -50 ) ( 0 1 0 ) 0.5
+
+	//thread spawnlaser ( -2198 2065 208 ) ( -2714 2363 208 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -1624 2032 209 ) ( -1595 2268 209 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -1599 2269 209 ) ( -1599 2430 209 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -1676 1880 209 ) ( -2240 1880 209 ) ( 0.263 0.275 0.369 ) 0.5
+	thread spawnlaser ( -2240 1920 209 ) ( -1676 1920 209 ) ( 0.263 0.275 0.369 ) 0.5
+
+	thread spawnlaser ( -2389 1778 289 ) ( -2365 1819 232 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -2365 1819 232 ) ( -2365 1819 0 ) ( 0 1 0 ) 0.5
+	thread spawnlaser ( -2389 1778 289 ) ( -2508 1569 289 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -2508 1569 289 ) ( -2726 1511 289 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -2726 1511 289 ) ( -3087 1719 289 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -2556 1782 257 ) ( -2428 1708 257 ) ( 1 0 0 ) 0.5
+
+	thread spawnlaser ( -3163 1549 353 ) ( -3003 1709 353 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -3163 1549 353 ) ( -3836 1549 353 ) ( 1 0 0 ) 0.5
+
+	thread spawnlaser ( -4176 656 273 ) ( -4176 427 273 ) ( 1 0 0 ) 0.5
+	thread spawnlaser ( -3544 -1528 313 ) ( -3544 -1296 313 ) ( 1 0 0 ) 0.5
+
+	thread spawnlaser ( 4833 1983 305 ) ( 4833 1111 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 4833 1111 305 ) ( 4767 1111 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 4767 1111 305 ) ( 4767 2049 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 4767 2049 305 ) ( 5289 2049 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 5289 2049 305 ) ( 5289 1983 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 5289 1983 305 ) ( 4833 1983 305 ) ( 0 1 0 ) 1
+
+	thread spawnlaser ( 2503 2806 305 ) ( 3354 2806 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 3354 2806 305 ) ( 3354 2612 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 3354 2612 305 ) ( 2774 2612 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2774 2612 305 ) ( 2774 2267 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2774 2267 305 ) ( 2751 2267 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2751 2267 305 ) ( 2751 2612 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2751 2612 305 ) ( 2503 2612 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2503 2612 305 ) ( 2503 2806 305 ) ( 0 1 0 ) 1
+
+	thread spawnlaser ( 2823 1901 305 ) ( 2841 1901 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2841 1901 305 ) ( 2841 843 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2841 843 305 ) ( 2823 843 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 2823 843 305 ) ( 2823 1901 305 ) ( 0 1 0 ) 1
+
+	thread spawnlaser ( 367 1127 305 ) ( -193 1127 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( -193 1127 305 ) ( -193 1153 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( -193 1153 305 ) ( 367 1153 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 367 1153 305 ) ( 367 1541 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 367 1541 305 ) ( 409 1541 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 409 1541 305 ) ( 409 1153 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 409 1153 305 ) ( 1113 1153 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 1113 1153 305 ) ( 1113 1127 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 1113 1127 305 ) ( 409 1127 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 409 1127 305 ) ( 409 607 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 409 607 305 ) ( 367 607 305 ) ( 0 1 0 ) 1
+	thread spawnlaser ( 367 607 305 ) ( 367 1127 305 ) ( 0 1 0 ) 1
+
+	thread spawnlaser ( -3073 -2110 5 ) ( -3456 -2110 5 ) ( 0 1 0 ) 1
+	thread spawnlaser ( -3073 -2110 5 ) ( -3073 -1697 5 ) ( 0 1 0 ) 1
+	thread spawnlaser ( -3073 -1697 5 ) ( -3073 -1697 297 ) ( 0 1 0 ) 0.5
+
+	thread spawnlaser ( -3263 -1153 976 ) ( -3263 -1153 200 ) ( 0 1 0 ) 0.5
+
+if(getcvar("g_ubergametype") != "bb")
+{
+}
+end
+
+UBER_mapextras:
+end
+
+cratesstuff local.model local.origin local.angles local.hide local.scale local.targetname:
+
+	local.ent = spawn script_model
+	local.ent model local.model
+	local.ent.origin = local.origin
+	if(local.angles[2] != NIL) { local.ent.angles = local.angles }
+	if(local.hide == 1) { local.ent hide }
+	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
+	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
+end
+
+emitterstuff local.model local.origin local.angles local.scale local.anim local.targetname:
+
+	local.emitter = spawn script_model
+	local.emitter model local.model
+	if(local.emitter.model == "models/emitters/inferno.tik") { local.emitter.origin = local.origin + ( 0 0 50 ) }
+	else { local.emitter.origin = local.origin }
+	if(local.angles[2] != NIL) { local.emitter.angles = local.angles }
+	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
+	if(local.anim != NIL) { local.emitter anim local.anim }
+	if(local.targetname != NIL) { local.emitter.targetname = local.targetname }
+	local.emitter notsolid
+end local.emitter
+
+solidclip local.origin local.setsize1 local.setsize2 local.angle local.targetname:
+
+	local.clip = spawn script_object
+	local.clip.origin = local.origin
+	local.clip setsize local.setsize1 local.setsize2
+	local.clip.angle = local.angle
+	local.clip solid
+	local.clip nodamage
+	if(local.targetname != NIL) { local.clip.targetname = local.targetname }
+end
+
+spawnlaser local.origin local.endpoint local.color local.scale:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
+
+mg42spawn local.origin local.angles local.spawnbipod local.targetname local.pitchcaps local.maxyawoffset:
+
+	local.mg = spawn models/statweapons/mg42_gun.tik
+	local.mg.origin = local.origin
+	local.mg.angles = local.angles
+	local.mg setplayerusable 1
+	local.mg yawcenter local.angles[1]
+	if(local.pitchcaps == NIL) { local.mg pitchcaps ( -45 45 0 ) }
+	else { local.mg pitchcaps local.pitchcaps }
+	if(local.maxyawoffset == NIL) { local.mg maxyawoffset 80 }
+	else { local.mg maxyawoffset local.maxyawoffset }
+	if(local.targetname != NIL) { local.mg.targetname = local.targetname }
+
+	if(local.spawnbipod == 1)
+	{
+		local.bipod = spawn script_model 
+		local.bipod model "statweapons/mg42_bipod_nonstatic.tik"
+		local.bipod.origin = local.mg.origin + ( 0 0 17.09 ) - local.mg.leftvector * 1.325
+		local.bipod.angles = local.mg.angles
+		local.bipod.mg = local.mg
+		local.mg.bipod = local.bipod
+		local.mg.origin += ( 0 0 15 )
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+cyb:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.keepsamesides = 1
+	level.bombcamera = 1
+
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4644 4921 -719 ) 180 axis    // for cyber attack only
+  	waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1760 1418 -543 ) 180 allies
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( 0 0 0 ) 0 ( 0 0 0 ) 0 ( 1954 4049 -567 ) 0 		// allies bomb (snd), axis bomb (snd), radiobomb (cyb).
+	exec global/cyberattack_searchdestroy.scr								// none of these can be NIL. instead, use ( 0 0 0 ) 0 if not being used.
+end
+
+////////////////////////////////////////////////////////////////////////
+
+snd:
+
+level waittill spawn
+
+	level.round_starttime = 8
+	level.rounds_towin = 6
+ 	level.changesides = 0
+	level.bombcamera = 1
+	//level.cameradistance = 200 // this can be changed for each "changesides" if a bombsite is inside a small room, so the camera is not inside of a wall
+
+	if(level.changesides == 0) // allies are planting (axis bombsite origins)
+	{
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4644 4921 -719 ) 180		// for search & destroy only, team parameter doesn't matter
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4891 1870 4 ) 0		// make sure to include initial bombsites before the while-loop begins.
+	}
+	if(level.changesides == 1) // axis are planting (allies bombsite origins)
+	{
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1760 1418 -543 ) 180
+  		waitthread global/cyberattack_searchdestroy.scr::bombsite ( 894 1228 -63 ) -90
+	}
+
+  	thread global/cyberattack_searchdestroy.scr::bomb ( -1808 1429 25 ) -90 ( 4358 299 0 ) 0 ( 0 0 0 ) 0
+	exec global/cyberattack_searchdestroy.scr // begin the main script
+
+//-----------------------------------------------------------------------------
+
+	local.sides = level.changesides	// when the sides change each 3 rounds, old bombsites are removed and 2 ones are added closer to the defending team's spawn.
+	while(1)
+	{
+		if(level.changesides != local.sides)
+		{
+			waitthread global/cyberattack_searchdestroy.scr::bombsites_remove
+
+			if(level.changesides == 0)
+			{
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4644 4922 -719 ) 180
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 4891 1870 4 ) 0
+			}
+			if(level.changesides == 1)
+			{
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 1760 1418 -543 ) 180
+  				waitthread global/cyberattack_searchdestroy.scr::bombsite ( 894 1228 -63 ) -90
+			}
+			local.sides = level.changesides
+		}
+		waitframe
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+bb_objects:
+
+level waittill prespawn
+
+//allies
+exec alienx/basebuild.scr::basebuild ( -1600 1960 5 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1500 1960 0 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1400 1960 0 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1300 1960 -6 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -1200 1960 -9 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( -1100 1960 -8 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( -1000 1960 -7 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( -900 1960 -3 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -800 1960 -7 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -700 1960 0 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -600 1960 16 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -500 1960 23 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -400 1960 19 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+//exec alienx/basebuild.scr::basebuild ( -300 1960 7 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+
+//axis
+exec alienx/basebuild.scr::basebuild ( 4149 3074 32 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4149 2974 35 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4149 2874 32 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4149 2774 15 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4149 2674 5 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( 4149 2574 10 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( 4149 2474 22 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 4149 2374 30 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 4149 2274 25 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 4149 2174 18 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 4149 2074 3 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 4149 1974 0 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 4149 1874 0 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 4149 1774 0 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+
+//underground
+exec alienx/basebuild.scr::basebuild ( 1457 3437 -631 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1457 3537 -631 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1457 3637 -631 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1457 3737 -631 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1657 3737 -631 ) "static/indycrate.tik" 1 1 0 1 90 .5 1 0 1 // lift
+exec alienx/basebuild.scr::basebuild ( 1757 3737 -631 ) "static/bunkertable.tik" 1 1 1 0 90 .5 0 1 1 // tele
+exec alienx/basebuild.scr::basebuild ( 1369 3842 -631 ) "static/banquet_table.tik" 1 0 1 1 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 1569 3842 -631 ) "static/bodies_tarp.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1669 3842 -631 ) "static/bookcase.tik" 1 0 1 0 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1369 3942 -631 ) "static/static_naziflag1.tik" 1 1 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1369 4042 -631 ) "static/barbwire.tik" 1 0 1 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1369 4292 -631 ) "static/sandbag_longsegment.tik" 1 0 0 1 90 .5 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1369 4392 -631 ) "static/cabinet_large.tik" 1 1 1 1 90 .6 0 0 1
+//exec alienx/basebuild.scr::basebuild ( 1369 4492 -631 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
+end
+
+////////////////////////////////////////////////////////////////////////
+
+consoleprint:
+
+	wait 1
+	if(level.objectlimit != NIL && level.build_number != NIL) { end }
+
+	local.maxclients = int(getcvar(sv_maxclients))
+	local.nullent = 0
+	local.e = 0
+	for(local.i = 0; local.i <= 868; local.i++) // getentity() only goes up to 868 (869 entities).
+	{
+		if(local.i % 14 == 0) { waitframe } // every 62 entites (if local.i / 14 has remainder of 0), do a waitframe (speeds up counting).
+
+		local.entity = getentity(local.i) // $player[1] = entity 0		
+		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
+		if(local.entity != NULL) { local.e++ }
+		if(local.e >= 650 - local.maxclients) { local.warning = 1 }
+	}
+	if(local.entity == NULL) // if entity 868 = NULL
+	{
+		println("----- Entities in map: " + (1024 - local.nullent - 155) + " / 1024")
+		println("----- Entities remaining: " + (local.nullent + 155))
+	}
+	if(local.entity != NULL)
+	{
+		println("----- Entities in map: " + "more than 869" + " / 1024")
+		println("----- Entities remaining: less than 155 entities.")
+	}
+	if(local.warning == 1)
+	{
+		wait 1
+		println("----- WARNING: Keep below 650 entities on SP maps for Reborn servers!")
+		println("----- Players may soon be unable to join! (stuck connecting to sever)")
+	}
+end
+
+clickitem_fail:
+end
+
+alarmthread:
+end
+letmeby:
+end
+letmeby2:
+end
+unholsterthread:
+end
+lockedmetaldoor:
+end
+alarmall:
+end
+playerisnotinbombroom:
+end
+playerisinbombroom:
+end
+stealingpapers:
+end
+papers2pickup:
+end
+suitpickup:
+end
+metalgate:
+end
+blueprintobj:
+end

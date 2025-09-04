@@ -99,23 +99,32 @@ scan_player local.name local.originold local.anglesold:
 	
 	self.turreting_toggle = 0
 	local.team = self.dmteam
+	local.c = 0
+	local.z = 10 // local.z * 0.05 = min time (seconds) between each knife throw.
+
 	while(isalive self && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
  	{
-		if(self != NULL && (self.useheld != 1 || self.fireheld != 1)) { local.holding = 0 }
+		if(self != NULL && (self.useheld != 1 || self.fireheld != 1 || self.secfireheld != 1)) { local.holding = 0 }
 
 		if(self.turreting == 1 && self.turreting_toggle != 1) { $("knife_1" + self.entnum) hide; self.turreting_toggle = 1 } // hide the knife attachmodel if using a vehicle turret.
 		if(self.turreting != 1 && self.turreting_toggle == 1) { $("knife_1" + self.entnum) show; self.turreting_toggle = 0 }
 
-		while(isalive self && local.holding != 1 && self.useheld == 1 && self.fireheld == 1 && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
+		while(isalive self && self.dead != 1 && local.holding != 1 && self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1 && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
 		{
-			if(self != NULL && self.knivesheld >= 1 && self.knivesheld <= 3 && self.driving != 1 && self.flying != 1 && self.isfiredboomerweenie != 1 && self.placing_killstreak_old != 1)
+			if(self != NULL && self.knivesheld >= 1 && self.knivesheld <= 3 && self.driving != 1 && self.flying != 1 && self.isfiredboomerweenie != 1 && self.placing_killstreak_old != 1 && local.c >= local.z)
 			{
 				self thread throw_knife // slowed down slightly by wait 0.1, boomerweenie is for Giant Bomb and Light Bomb UBER mods.
+				local.c = 0
 			}
 			wait 0.1
 			local.holding = 1
+			local.c += 2
+			if(local.c >= local.z) { local.c = local.z }
 			break
 		}
+
+		local.c++
+		if(local.c >= local.z) { local.c = local.z }
   		waitframe
  	}	
 	if(self == NULL) { goto main local.name local.originold local.anglesold 1 1 } 		   	// "goto" ends this thread immediately, if player left or switched teams.
@@ -123,7 +132,7 @@ scan_player local.name local.originold local.anglesold:
 
 	local.r = randomint(360)
 	local.anglesrandom = self.angles + ( 0 local.r 0 )
-	if(self != NULL && !isalive self) { thread main local.name self.origin local.anglesrandom 1 1 1 } // if player dies, randomize all dropped knives' angles; looks like multiple knives are on the ground.
+	if(self != NULL && (!isalive self || self.dead == 1)) { thread main local.name self.origin local.anglesrandom 1 1 1 } // if player dies, randomize all dropped knives' angles; looks like multiple knives are on the ground.
 end
 
 scan_player2 local.name local.originold local.anglesold: // need 3 separate "scan_player" threads, so all held knives can reset to their map-inital origins/angles.
@@ -141,7 +150,7 @@ scan_player2 local.name local.originold local.anglesold: // need 3 separate "sca
 
 	local.r = randomint(360)
 	local.anglesrandom = self.angles + ( 0 local.r 0 )
-	if(self != NULL && !isalive self) { thread main local.name self.origin local.anglesrandom 1 1 }
+	if(self != NULL && (!isalive self || self.dead == 1)) { thread main local.name self.origin local.anglesrandom 1 1 }
 end
 
 scan_player3 local.name local.originold local.anglesold:
@@ -159,7 +168,7 @@ scan_player3 local.name local.originold local.anglesold:
 
 	local.r = randomint(360)
 	local.anglesrandom = self.angles + ( 0 local.r 0 )
-	if(self != NULL && !isalive self) { thread main local.name self.origin local.anglesrandom 1 1 }
+	if(self != NULL && (!isalive self || self.dead == 1)) { thread main local.name self.origin local.anglesrandom 1 1 }
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -169,6 +178,8 @@ throw_knife:
 	self.knivesheld--
 	local.name = self.knifename[self.knivesheld]
 	self.knifename[self.knivesheld] = NIL
+
+	self forcetorsostate RELEASE_ATTACK_GRENADE_SECONDARY
 
 	local.fwd_vec = angles_toforward self.viewangles // fwd_vec[2] = 0 when player looks horizontal, -0.999 looking down, 0.999 looking up.
 

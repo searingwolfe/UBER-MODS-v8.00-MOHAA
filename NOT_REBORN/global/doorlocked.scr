@@ -1,6 +1,6 @@
 // Simple script for adding simulated $door_locked triggers, but without spawning any entities.
 //
-// Parameters: trigger origin (standing on ground in front of a door), door type (wood, metal, gateiron, gatelarge, gatemetal, garagedoor), ...
+// Parameters: trigger origin (standing on ground in front of a door), door type (wood, metal, gateiron, gatelarge, gatemetal, garagedoor, vent), ...
 // ... extra sounds (0 = no, 1 = yes for "wood", "metal", "gatelarge" only), set number (doorlocked gets removed if an exploder with the #set explodes).
 // Example: exec global/doorlocked.scr ( 234 -2453 129 ) wood
 // Example: exec global/doorlocked.scr ( 234 -2453 129 ) gatelarge 1
@@ -9,7 +9,7 @@ main local.trigorigin local.type local.extra local.set:
 
 	if(local.trigorigin == NIL || (local.trigorigin != NIL && local.trigorigin[2] == NIL)) { wait 1; println("----- ERROR doorlocked.scr: 'origin' parameter is missing!"); end }
 	if(local.type == NIL) { wait 1; println("----- ERROR doorlocked.scr: 'door type' parameter is missing!"); end }
-	else if(local.type != "wood" && local.type != "metal" && local.type != "gateiron" && local.type != "gatelarge" && local.type != "gatemetal" && local.type != "garagedoor") { wait 1; println("----- ERROR doorlocked.scr: 'door type' parameter must be 'wood', 'metal', 'gatelarge', 'gatemetal', or 'garagedoor'."); end }
+	else if(local.type != "wood" && local.type != "metal" && local.type != "gateiron" && local.type != "gatelarge" && local.type != "gatemetal" && local.type != "garagedoor" && local.type != "vent") { wait 1; println("----- ERROR doorlocked.scr: 'door type' parameter must be 'wood', 'metal', 'gatelarge', 'gatemetal', 'garagedoor', or 'vent'."); end }
 
 	level waittill spawn // need this for script to find any "local.explodertrig" with the #set "local.set", if it exists.
 
@@ -69,6 +69,7 @@ doorsound local.type:
 		case "gatelarge": self playsound gatelargelocked; break
 		case "gatemetal": self playsound gatemetallocked; break
 		case "garagedoor": self playsound garagedoorlocked; break
+		case "vent": self playsound gateventlocked; break
 		default: break
 	}
 end
@@ -106,6 +107,10 @@ doorlocked_scriptmaster local.type local.extra:
 
 		case "garagedoor":
 			local.master aliascache garagedoorlocked sound/mechanics/Gate_Metal_Locked.wav soundparms 1.3 0.0 0.8 0.2 160 1600 item loaded maps level.mapname
+			break
+
+		case "vent":
+			local.master aliascache gateventlocked sound/mechanics/gate_iron_locked.wav soundparms 1.2 0.0 1.1 0.0 160 1600 item loaded maps level.mapname
 			break
 
 		default:

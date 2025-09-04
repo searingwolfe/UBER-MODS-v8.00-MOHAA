@@ -27,9 +27,10 @@ if(getcvar("g_throwingknives") == "1") { setcvar "g_obj_alliedtext3" "+ Throwing
 
 if(getcvar("g_gametype") == "1") { 		setcvar "g_obj_alliedtext2" ("UBER Free-For-All " + local.v);	setcvar "g_gametypestring" "Free-For-All UBER";		setcvar "g_gametype" "1"; thread ffa_spawns }
 if(getcvar("g_gametype") != "1") { 		setcvar "g_obj_alliedtext2" ("UBER Team-Match " + local.v);	setcvar "g_gametypestring" "Team-Match UBER";		setcvar "g_gametype" "2"; thread tdm_spawns
-						spawn info_player_deathmatch "origin"
-						spawn info_player_deathmatch "origin"
-						spawn info_player_deathmatch "origin"
+						spawn info_player_deathmatch "origin" "113 113 650" "angle" "-135"
+						spawn info_player_deathmatch "origin" "113 -113 650" "angle" "135"
+						spawn info_player_deathmatch "origin" "-113 -113 650" "angle" "45"
+						spawn info_player_deathmatch "origin" "-113 113 650" "angle" "-45"
 }
 if(getcvar("g_ubergametype") == "ft") {		setcvar "g_obj_alliedtext2" ("UBER Freeze Tag " + local.v);	setcvar "g_gametypestring" "Freeze Tag UBER";		setcvar "g_gametype" "2"; thread freezetag }
 if(getcvar("g_ubergametype") == "bb") {		setcvar "g_obj_alliedtext2" ("UBER Base-Builder " + local.v);	setcvar "g_gametypestring" "Base-Builder UBER"; 	thread bb_objects
@@ -66,33 +67,56 @@ level waittill prespawn
 	$world farplane 150000
 	$world farplane_color ( 0 0 0 )
 
-exec global/victory_podium.scr ( 113 0 608 ) 180 ( -113 0 635 ) ( -15 0 0 ) 5
+exec global/victory_podium.scr ( 55 -55 608 ) 135 ( -123 123 635 ) ( -15 -45 0 ) 5
 
 if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2")
 {
-	exec global/dog.scr ( -71 -71 608 ) ( 0 45 0 ) 15 10
-	exec map_triggers/joint.scr ( 113 113 860 )
-
 	exec killstreaks/claymores.scr 3 2		// number of kills, number of claymores given (max = 5)
 	exec killstreaks/airstrikes.scr	5 8		// number of kills, number of bullets to kill a plane
 	exec killstreaks/cluster_mines.scr 7 5		// number of kills, number of additional mines spawned (max = 15)
 	exec killstreaks/sentry_turret.scr 9 180	// number of kills, time until sentry turret dies
 
-	thread UBER_mapextras
 	thread UBER_teleporters
+
+	thread UBER_mapextras	// only use one of these.
+	//thread UBER_mapextras_4
+	//thread UBER_mapextras_3
+	//thread UBER_mapextras_2
+	//thread UBER_mapextras_old
 }
 
 level waittill spawn
 
 	thread consoleprint
 	thread music
+
+if(getcvar("g_ubermods") == "1" || getcvar("g_ubermods") == "2") // placed after "level waittill spawn" so ents inside are not stuck illuminated by UBER triggers.
+{
+	exec map_triggers/joint.scr ( 113 113 855 )
+	exec map_triggers/snowball_ammo.scr ( 113 -113 855 )
+	exec map_triggers/bomb.scr ( -113 113 855 )
+	exec map_triggers/lightbomb.scr ( -113 -113 855 )
+
+	local.ents = exec global/dog.scr ( -75 -75 611 ) ( 0 45 0 ) 15 10
+	local.ents[1] light 0 0 0 0
+	local.ents[2] light 0 0 0 0 // turn off dog lights.
+}
+
+if(getcvar("g_throwingknives") == "1")
+{
+	exec global/give_players_knives.scr 1 // spawn everyone with one throwing knife (hold USE + Right-click to throw)
+}
 end
 
 ////////////////////////////////////////////////////////////////////////
 
 music:
 
-	local.STUFFSTRING = "tmstartloop sound/music/mus_15a_mystery.mp3" //; seta s_volume 0.50; seta s_musicvolume 0.50"
+	//local.STUFFSTRING = "tmstartloop sound/music/mus_15a_mystery.mp3" //; seta s_volume 0.50; seta s_musicvolume 0.50"
+	local.r = randomint(2)
+	if(local.r == 0) { local.STUFFSTRING = "tmstartloop sound/music/mus_SniperTown_01a.mp3" }
+	if(local.r == 1) { local.STUFFSTRING = "tmstartloop sound/music/mus_SniperTown_01b.mp3" }
+
 	while(1)
 	{
 		for(local.i = 1; local.i <= $player.size; local.i++)
@@ -110,6 +134,36 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
+colorchange local.faster local.lasers:
+
+	local.intensity = 1.0 // any decimal from 0 to 1.
+	local.num = local.intensity * 100.000
+
+	if(local.faster == 1) { local.num2 = 50 }
+	else { local.num2 = 500 }
+
+	while(self != NULL)
+	{
+		if(self.classname == FuncBeam) { self color ( (randomint(local.num) / 100.000) (randomint(local.num) / 100.000) (randomint(local.num) / 100.000) ) }
+		else { self light (randomint(local.num) / 100.000) (randomint(local.num) / 100.000) (randomint(local.num) / 100.000) 300 }
+
+		if(local.lasers != NIL && local.lasers[1] != NULL)
+		{
+			for(local.i = 1; local.i <= local.lasers.size; local.i++)
+			{
+				local.lasers[local.i] color ( (randomint(local.num) / 100.000) (randomint(local.num) / 100.000) (randomint(local.num) / 100.000) )
+			}
+		}
+
+
+		local.r = randomint(local.num2)
+		if(local.r == 0) { waitframe }
+		else { wait (local.r / 100.000) }
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
 tdm_spawns:
 
 	local.team1 = "allied" // do not use "allies"
@@ -117,32 +171,25 @@ tdm_spawns:
 	thread player_spawns local.team1 local.team2
 end
 
-ffa_spawns:
-
-	local.team1 = "deathmatch"
-	local.team2 = "deathmatch"
-	thread player_spawns local.team1 local.team2
-end
-
 player_spawns local.team1 local.team2:
 
-	spawn ("info_player_" + local.team2) "origin" "-101 112 790" "angle" "58" "targetname" (local.team2 + "_spawn")
-	spawn ("info_player_" + local.team2) "origin" "-101 82 790" "angle" "30" "targetname" (local.team2 + "_spawn")
-	spawn ("info_player_" + local.team2) "origin" "-101 52 790" "angle" "7" "targetname" (local.team2 + "_spawn")
-	spawn ("info_player_" + local.team2) "origin" "-101 22 790" "angle" "99" "targetname" (local.team2 + "_spawn")
-	spawn ("info_player_" + local.team2) "origin" "-101 -2 790" "angle" "3" "targetname" (local.team2 + "_spawn")
-	spawn ("info_player_" + local.team2) "origin" "-101 -32 790" "angle" "3" "targetname" (local.team2 + "_spawn")
-	spawn ("info_player_" + local.team2) "origin" "-101 -62 790" "angle" "3" "targetname" (local.team2 + "_spawn")
-	spawn ("info_player_" + local.team2) "origin" "-101 -92 790" "angle" "3" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-107.512 107.512 613.488" "angle" "-45" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "107.512 107.512 613.488" "angle" "-135" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "107.512 -107.512 613.488" "angle" "135" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team1) "origin" "-107.512 -107.512 613.488" "angle" "45" "targetname" (local.team2 + "_spawn")
 
-	spawn ("info_player_" + local.team1) "origin" "101 -92 790" "angle" "-179" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "101 -62 790" "angle" "158" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "101 -32 790" "angle" "143" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "101 -2 790" "angle" "119" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "101 22 790" "angle" "130" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "101 52 790" "angle" "130" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "101 82 790" "angle" "130" "targetname" (local.team1 + "_spawn")
-	spawn ("info_player_" + local.team1) "origin" "101 112 790" "angle" "130" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-107.512 0.000 613.488" "angle" "0" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-107.512 50.000 613.488" "angle" "-15" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-107.512 -50.000 613.488" "angle" "15" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "0.000 107.511 613.488" "angle" "-90" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "50.000 107.511 613.488" "angle" "-105" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-50.000 107.511 613.488" "angle" "-75" "targetname" (local.team1 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "107.512 0.000 613.488" "angle" "180" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "107.512 50.000 613.488" "angle" "-165" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "107.512 -50.000 613.488" "angle" "165" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "0.000 -107.512 613.488" "angle" "90" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "50.000 -107.512 613.488" "angle" "105" "targetname" (local.team2 + "_spawn")
+	spawn ("info_player_" + local.team2) "origin" "-50.000 -107.512 613.488" "angle" "75" "targetname" (local.team2 + "_spawn")
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -154,6 +201,226 @@ end
 
 UBER_mapextras:
 
+	thread cratesstuff static/static_nazibanner.tik ( 127 0 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 62 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 124 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 -62 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 -124 603 ) ( 0 180 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( 0 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 62 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 124 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -62 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -124 -127 603 ) ( 0 90 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( -127 0 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 62 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 124 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 -62 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 -124 603 ) ( 0 0 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( 0 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 62 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 124 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -62 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -124 127 603 ) ( 0 -90 0 ) 0 1.1 1
+
+	local.scaleceiling = 3
+	local.scalecross = 0.5
+	local.scalefloor = 6
+	local.scalewall = 3
+
+	local.lasers[1] = thread spawnlaser ( 127 127 894 ) ( 127 -127 894 ) ( 1 0 0 ) local.scaleceiling
+	local.lasers[2] = thread spawnlaser ( 127 -127 894 ) ( -127 -127 894 ) ( 1 0 0 ) local.scaleceiling
+	local.lasers[3] = thread spawnlaser ( -127 -127 894 ) ( -127 127 894 ) ( 1 0 0 ) local.scaleceiling
+	local.lasers[4] = thread spawnlaser ( -127 127 894 ) ( 127 127 894 ) ( 1 0 0 ) local.scaleceiling
+
+	local.lasers[5] = thread spawnlaser ( 127 127 609 ) ( 127 -127 609 ) ( 1 0 0 ) local.scalefloor
+	local.lasers[6] = thread spawnlaser ( 127 -127 609 ) ( -127 -127 609 ) ( 1 0 0 ) local.scalefloor
+	local.lasers[7] = thread spawnlaser ( -127 -127 609 ) ( -127 127 609 ) ( 1 0 0 ) local.scalefloor 
+	local.lasers[8] = thread spawnlaser ( -127 127 609 ) ( 127 127 609 ) ( 1 0 0 ) local.scalefloor
+
+	local.lasers[9] = thread spawnlaser ( 127 127 894 ) ( -127 -127 894 ) ( 1 0 0 ) local.scalecross
+	local.lasers[10] = thread spawnlaser ( 127 -127 894 ) ( -127 127 894 ) ( 1 0 0 ) local.scalecross
+	local.lasers[11] = thread spawnlaser ( -127 127 609 ) ( 127 -127 609 ) ( 1 0 0 ) local.scalecross
+	local.lasers[12] = thread spawnlaser ( -127 -127 609 ) ( 127 127 609 ) ( 1 0 0 ) local.scalecross
+
+	local.lasers[13] = thread spawnlaser ( 127 127 894 ) ( 127 127 609 ) ( 1 0 0 ) local.scalewall
+	local.lasers[14] = thread spawnlaser ( 127 -127 894 ) ( 127 -127 609 ) ( 1 0 0 ) local.scalewall
+	local.lasers[15] = thread spawnlaser ( -127 127 894 ) ( -127 127 609 ) ( 1 0 0 ) local.scalewall
+	local.lasers[16] = thread spawnlaser ( -127 -127 894 ) ( -127 -127 609 ) ( 1 0 0 ) local.scalewall
+
+	local.lasers[17] = thread spawnlaser ( 127 127 894 ) ( 127 -127 609 ) ( 1 0 0 ) local.scalecross
+	local.lasers[18] = thread spawnlaser ( 127 -127 894 ) ( -127 -127 609 ) ( 1 0 0 ) local.scalecross
+	local.lasers[19] = thread spawnlaser ( -127 -127 894 ) ( -127 127 609 ) ( 1 0 0 ) local.scalecross
+	local.lasers[20] = thread spawnlaser ( -127 127 894 ) ( 127 127 609 ) ( 1 0 0 ) local.scalecross
+	local.lasers[21] = thread spawnlaser ( 127 127 609 ) ( 127 -127 894 ) ( 1 0 0 ) local.scalecross
+	local.lasers[22] = thread spawnlaser ( 127 -127 609 ) ( -127 -127 894 ) ( 1 0 0 ) local.scalecross
+	local.lasers[23] = thread spawnlaser ( -127 -127 609 ) ( -127 127 894 ) ( 1 0 0 ) local.scalecross
+	local.lasers[24] = thread spawnlaser ( -127 127 609 ) ( 127 127 894 ) ( 1 0 0 ) local.scalecross
+
+	cache models/fx/dummy.tik
+	local.ent = thread cratesstuff fx/dummy.tik ( 0 0 650 ) ( 0 0 0 )
+	local.ent thread colorchange 0
+
+	for(local.i = 1; local.i <= local.lasers.size; local.i++)
+	{
+		local.lasers[local.i] thread colorchange 1
+	}
+end
+
+UBER_mapextras_4:
+
+	local.scale = 3
+
+	local.lasers[1] = thread spawnlaser ( 127 127 894 ) ( 127 127 609 ) ( 1 0 0 ) local.scale
+	local.lasers[2] = thread spawnlaser ( 127 -127 894 ) ( 127 -127 609 ) ( 1 0 0 ) local.scale
+	local.lasers[3] = thread spawnlaser ( -127 127 894 ) ( -127 127 609 ) ( 1 0 0 ) local.scale
+	local.lasers[4] = thread spawnlaser ( -127 -127 894 ) ( -127 -127 609 ) ( 1 0 0 ) local.scale
+
+	local.lasers[5] = thread spawnlaser ( 127 127 894 ) ( 127 -127 894 ) ( 1 0 0 ) local.scale
+	local.lasers[6] = thread spawnlaser ( 127 -127 894 ) ( -127 -127 894 ) ( 1 0 0 ) local.scale
+	local.lasers[7] = thread spawnlaser ( -127 -127 894 ) ( -127 127 894 ) ( 1 0 0 ) local.scale
+	local.lasers[8] = thread spawnlaser ( -127 127 894 ) ( 127 127 894 ) ( 1 0 0 ) local.scale
+
+	local.lasers[9] = thread spawnlaser ( 127 127 609 ) ( 127 -127 609 ) ( 1 0 0 ) local.scale
+	local.lasers[10] = thread spawnlaser ( 127 -127 609 ) ( -127 -127 609 ) ( 1 0 0 ) local.scale
+	local.lasers[11] = thread spawnlaser ( -127 -127 609 ) ( -127 127 609 ) ( 1 0 0 ) local.scale
+	local.lasers[12] = thread spawnlaser ( -127 127 609 ) ( 127 127 609 ) ( 1 0 0 ) local.scale
+
+	local.lasers[13] = thread spawnlaser ( 127 127 894 ) ( 127 -127 609 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[14] = thread spawnlaser ( 127 -127 894 ) ( -127 -127 609 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[15] = thread spawnlaser ( -127 -127 894 ) ( -127 127 609 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[16] = thread spawnlaser ( -127 127 894 ) ( 127 127 609 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[17] = thread spawnlaser ( 127 127 609 ) ( 127 -127 894 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[18] = thread spawnlaser ( 127 -127 609 ) ( -127 -127 894 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[19] = thread spawnlaser ( -127 -127 609 ) ( -127 127 894 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[20] = thread spawnlaser ( -127 127 609 ) ( 127 127 894 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[21] = thread spawnlaser ( 127 127 894 ) ( -127 -127 894 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[22] = thread spawnlaser ( 127 -127 894 ) ( -127 127 894 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[23] = thread spawnlaser ( -127 127 609 ) ( 127 -127 609 ) ( 1 0 0 ) (local.scale / 6)
+	local.lasers[24] = thread spawnlaser ( -127 -127 609 ) ( 127 127 609 ) ( 1 0 0 ) (local.scale / 6)
+
+	cache models/fx/dummy.tik
+	local.ent = thread cratesstuff fx/dummy.tik ( 0 0 650 ) ( 0 0 0 )
+	local.ent thread colorchange 1
+
+	for(local.i = 1; local.i <= local.lasers.size; local.i++)
+	{
+		local.lasers[local.i] thread colorchange 1
+	}
+end
+
+UBER_mapextras_3:
+
+	cache models/static/static_nazibanner.tik
+
+	thread cratesstuff static/static_nazibanner.tik ( 127 0 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 62 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 124 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 -62 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 -124 603 ) ( 0 180 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( 0 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 62 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 124 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -62 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -124 -127 603 ) ( 0 90 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( -127 0 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 62 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 124 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 -62 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 -124 603 ) ( 0 0 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( 0 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 62 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 124 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -62 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -124 127 603 ) ( 0 -90 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_naziflag1.tik ( 30 0 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 30 105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 30 -105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 90 0 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 90 105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 90 -105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -30 0 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -30 105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -30 -105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 150 0 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 150 105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 150 -105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -90 0 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -90 105 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -90 -105 609 ) ( -90 0 0 ) 0 1.2 1
+
+	thread cratesstuff static/static_naziflag1.tik ( 30 0 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 30 105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 30 -105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 90 0 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 90 105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 90 -105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -30 0 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -30 105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -30 -105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 150 0 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 150 105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( 150 -105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -90 0 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -90 105 895 ) ( 90 180 0 ) 0 1.2 1
+	thread cratesstuff static/static_naziflag1.tik ( -90 -105 895 ) ( 90 180 0 ) 0 1.2 1
+
+	cache models/fx/dummy.tik
+	local.ent = thread cratesstuff fx/dummy.tik ( 0 0 650 ) ( 0 0 0 )
+	local.ent thread colorchange
+end
+
+UBER_mapextras_2:
+
+	thread cratesstuff static/static_nazibanner.tik ( 127 0 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 62 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 124 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 -62 603 ) ( 0 180 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 127 -124 603 ) ( 0 180 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( 0 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 62 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 124 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -62 -127 603 ) ( 0 90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -124 -127 603 ) ( 0 90 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( -127 0 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 62 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 124 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 -62 603 ) ( 0 0 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -127 -124 603 ) ( 0 0 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( 0 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 62 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( 124 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -62 127 603 ) ( 0 -90 0 ) 0 1.1 1
+	thread cratesstuff static/static_nazibanner.tik ( -124 127 603 ) ( 0 -90 0 ) 0 1.1 1
+
+	thread cratesstuff static/static_nazibanner.tik ( -150 0 895 ) ( 90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( -150 68 895 ) ( 90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( -150 136 895 ) ( 90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( -150 -68 895 ) ( 90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( -150 -136 895 ) ( 90 0 0 ) 0 1.2 1
+
+	thread cratesstuff static/static_nazibanner.tik ( 150 0 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( 150 68 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( 150 136 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( 150 -68 609 ) ( -90 0 0 ) 0 1.2 1
+	thread cratesstuff static/static_nazibanner.tik ( 150 -136 609 ) ( -90 0 0 ) 0 1.2 1
+
+	cache models/fx/dummy.tik
+	local.ent = thread cratesstuff fx/dummy.tik ( 0 0 650 ) ( 0 0 0 )
+	local.ent thread colorchange
+end
+
+UBER_mapextras_old:
+
 	cache models/static/widepainting.tik
 	thread cratesstuff static/widepainting.tik ( 160 16 608 ) ( 270 0 0 ) 0 25
 	thread cratesstuff static/widepainting.tik ( 125 0 570 ) ( 0 180 0 ) 0 25
@@ -163,7 +430,7 @@ UBER_mapextras:
 	thread cratesstuff static/widepainting.tik ( -160 16 895 ) ( 90 0 0 ) 0 25
 end
 
-cratesstuff local.model local.origin local.angles local.hide local.scale local.targetname:
+cratesstuff local.model local.origin local.angles local.hide local.scale local.notsolid local.targetname:
 
 	local.ent = spawn script_model
 	local.ent model local.model
@@ -172,7 +439,26 @@ cratesstuff local.model local.origin local.angles local.hide local.scale local.t
 	if(local.hide == 1) { local.ent hide }
 	if(local.scale != NIL && local.scale > 0) { local.ent.scale = local.scale }
 	if(local.targetname != NIL) { local.ent.targetname = local.targetname }
-end
+	if(local.notsolid == 1) { local.ent notsolid }
+end local.ent
+
+spawnlaser local.origin local.endpoint local.color local.scale:
+
+	local.laser = spawn func_beam
+	local.laser minoffset 0.0
+	local.laser maxoffset 0.0
+	local.laser numsegments 1
+	local.laser life 0
+	local.laser color local.color
+	local.laser alpha 0.4
+	local.laser alwaysdraw
+	local.laser activate	
+	if(local.scale == NIL || local.scale <= 0) { local.laser scale 1 }	
+	else { local.laser scale local.scale }
+	local.laser notsolid
+	local.laser.origin = local.origin
+	local.laser endpoint local.endpoint
+end local.laser
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -195,7 +481,7 @@ level waittill prespawn
 exec alienx/basebuild.scr::basebuild ( -80 -82 608 ) "static/heat_crate.tik" 1 1 0 0 90 .3 0 0 1
 exec alienx/basebuild.scr::basebuild ( -80 82 615 ) "statweapons/mg42_gun.tik" 1 0 1 0 90 .3 0 0 1
 exec alienx/basebuild.scr::basebuild ( 80 82 615 ) "static/bodies_tarp.tik" 1 0 0 1 90 .7 0 1 1
-exec alienx/basebuild.scr::basebuild ( 80 -82 608 ) "static/static_naziflag1.tik" 1 1 1 0 90 .3 0 0 1
+exec alienx/basebuild.scr::basebuild ( 80 -82 608 ) "static/static_naziflag1.tik" 1 1 1 0 90 .3 1 0 1
 end
 
 ////////////////////////////////////////////////////////////////////////

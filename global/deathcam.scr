@@ -16,6 +16,11 @@ level.deathcam_time_until_spectate = 0.0	// time delay in seconds until killed p
 
 	if(level.deathcam_init == 1) { end }
 	level.deathcam_init = 1
+
+	if(level.check_player_deaths != 1) { local.result = registerev kill global/custom_deaths.scr::assign_killer }
+	exec global/custom_deaths.scr::remove_deadbodies // need this script for dead bodies to be visible.
+	level.check_player_deaths = 1
+
 	if(getcvar("g_ubergametype") == "cyb" || getcvar("g_ubergametype") == "snd" || getcvar("g_ubergametype") == "ft")
 	{
 		if(getcvar("g_deathcam") != "0") { setcvar "g_deathcam" "2" }
@@ -27,9 +32,6 @@ level.deathcam_time_until_spectate = 0.0	// time delay in seconds until killed p
 	if(getcvar("g_deathcam") == "0") { level.deathcam = 0 }
 	thread deathcam_cvar
 	thread deathcams_cvar
-
-	local.result = registerev kill global/deathcam.scr::assign_killer
-	if(level.deathcam_time_until_spectate < 1.6) { thread remove_deadbodies }
 
 	while(1)
 	{
@@ -45,13 +47,6 @@ level.deathcam_time_until_spectate = 0.0	// time delay in seconds until killed p
 		}
 		waitframe
 	}
-end
-
-//-----------------------------------------------------------------------------
-
-assign_killer local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.player:
-
-	if(local.player != local.attacker && local.attacker != $world && isalive local.attacker) { local.player.deathcam_killer = local.attacker } // if players did not kill themselves, and if $world did not kill the player.
 end
 
 //-----------------------------------------------------------------------------
@@ -73,7 +68,12 @@ spectate_killer:
 		local.respawnable = 1
 	}
 
-	if(self == NULL || self.dmteam != local.team || self.deathcam_killer == NIL || self.deathcam_killer == NULL || !isalive self.deathcam_killer || self.deathcam_killer.dmteam != local.killer_team || level.change_team_score == 1 || level.bbactive == 0) { end }
+	if(self == NULL || self.dmteam != local.team || self.deathcam_killer == NIL || self.deathcam_killer == NULL || !isalive self.deathcam_killer || self.deathcam_killer.dmteam != local.killer_team || level.change_team_score == 1 || level.bbactive == 0)
+	{
+		while(self != NULL && !isalive self) { waitframe }
+		if(self != NULL) { self.dead = 0; self.spectating_killer = 0; self.deathcam_killer = NIL }
+		end
+	}
 
 	self respawn
 	self notsolid
@@ -182,22 +182,4 @@ deathcams_cvar:
 
 	println("----- NOTE: The cvar for deathcams mod is: g_deathcam")
 	thread deathcams_cvar
-end
-
-//-----------------------------------------------------------------------------
-
-remove_deadbodies:
-
-	while(1)
-	{
-		for(local.e = 0; local.e <= 868; local.e++)
-		{
-			local.entity = getentity(local.e)
-			if(local.entity != NULL && local.entity.classname == Body)
-			{
-				local.entity remove
-			}
-		}
-		waitframe
-	}
 end

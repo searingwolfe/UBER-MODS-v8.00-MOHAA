@@ -1,17 +1,16 @@
 TIKI
 setup
 {
-	scale 0.52				// Set default scale to 16/30.5 since world is in 16 units per foot and model is in cm's
-	path models/vehicles/sdkfz_desert_d
-	skelmodel sdkfz_desert_d.skd
-	surface sdkfz_tredz_d2 shader static_sdkfz_tredz_d2
-     	surface sdkfz_i_cog_d2 shader static_sdkfz_i_cog_d2
- 	surface sdkfz_rims_d2 shader static_sdkfz_rims_d2
-	surface sdkfz_f_cog_d2 shader static_sdkfz_f_cog_d2
-	surface sdkfz_o_cog_d2 shader static_sdkfz_o_cog_d2
-	surface sdkfz_w_tred_d2 shader static_sdkfz_w_tred_d2
-	surface sdkfz_wheel_d2 shader static_sdkfz_wheel_d2
-	surface sdkfz_d2 shader static_sdkfz_d2
+	scale 0.52
+				// Set default scale to 16/30.5 since world is in 16 units per foot and model is in cm's
+	path models/vehicles/tigertank_d
+	skelmodel tigertank_d.skd
+	surface treads shader tiger_treads_d2
+	surface wheelfront shader frontwheel_d2
+     	surface innerwheel shader innerwheel_d2
+ 	surface outerwheel shader outerwheel_d2
+	surface wheelback shader backwheel_d2
+	surface tigertank1 shader tigertank_d2
 }
 
 init
@@ -19,11 +18,10 @@ init
 	server
 	{
 		classname animate
-        	setsize "-180 -72 0" "160 72 100"
+		setsize "-134 -85 0" "170 85 150"
 	}
 	client
 	{
-	
 		tagemitter tag_barrel sparks1a
 		(
 				spawnrate 4.00
@@ -69,8 +67,8 @@ init
 			accel 0.00 0.00 30.00
 			friction 1.00
 			offsetalongaxis crandom -10 crandom -10 crandom -10
-			scalemin 0.05
-			scalemax 0.12
+			scalemin 0.06
+			scalemax 0.13
 			fade
 			fadein 0.000000
 		)
@@ -90,8 +88,8 @@ init
 			offsetalongaxis range 7 -1 range 7 -1 range 1 -7
 			angles 110 10 110
 			avelocity random 110 110 110
-			scalemin 0.03
-			scalemax 0.09
+			scalemin 0.06
+			scalemax 0.11
 			fade
 			fadein 0.000000
 			randomroll
@@ -105,15 +103,20 @@ init
 
 animations
 {
-	idle     sdkfz_desert_d.skc
+	idle		tigertank_d.skc
 	{
 		client
 		{
 			entry loopsound fire_med
 		}
 	}	
+	idle_silent	tigertank_d.skc
+	
+	open		tigertank_d_open.skc
+	open_idle	tigertank_d_open_idle.skc
+
 }
 
-/*QUAKED vehicle_german_sdkfz_desert_d (0.0 .0 0.0) (-168 -64 0) (184 72 112)
-SDKFZ Halftrack
+/*QUAKED vehicle_german_tigertank-d (0.0 .0 0.0) (-60 -40 0) (60 40 128)
+Tiger Tank
 */

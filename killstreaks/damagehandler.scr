@@ -1,7 +1,7 @@
 main local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.entity:
 
 	// assisted suicide: give kills to players who damaged someone within 1.5 seconds of them beginning to fall off a cliff (all the way until they crater and die).
-	if(local.entity.classname == Player && local.inflictor != $world)
+	if(local.entity.classname == Player && local.inflictor != NULL && local.inflictor != $world)
 	{
 		if(local.inflictor != $world && local.inflictor != local.entity)
 		{
@@ -42,8 +42,24 @@ main local.target local.inflictor local.damage local.position local.direction lo
 	if(local.entity.classname == Player && local.entity.turretingent != NIL && local.inflictor == local.entity.turretingent) { local.entity nodamage }
 
 	// give score to players who destroy vehicles/tanks with players riding in them, using explosives of various types.
-	if((local.entity.classname == DrivableVehicle || local.entity.classname == VehicleTank) && local.inflictor != NULL && (local.entity.driver == NIL || local.entity.driver == NULL || (local.entity.driver != NIL && (local.entity.driver.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1"))))
+	if((local.entity.classname == DrivableVehicle || local.entity.classname == VehicleTank) && local.inflictor != NULL)
 	{
+		for(local.i = 1; local.i <= local.entity.passengers.size; local.i++)
+		{
+			if(local.entity.passengers[local.i] != NIL && local.entity.passengers[local.i].dmteam == local.inflictor.dmteam && getcvar("g_gametype") != "1")
+			{
+				local.entity.nodamage = 1
+				local.entity nodamage
+				end
+			}
+		}
+		if((local.entity.driver != NIL && local.entity.driver.dmteam == local.inflictor.dmteam && getcvar("g_gametype") != "1") || (local.entity.turretplayer != NIL && local.entity.turretplayer.dmteam == local.inflictor.dmteam && getcvar("g_gametype") != "1"))
+		{
+			local.entity.nodamage = 1
+			local.entity nodamage
+			end
+		}
+
 		if((local.inflictor.classname == DrivableVehicle || local.inflictor.classname == VehicleTank) && local.inflictor.shooter != NIL && local.inflictor.shooter != NULL)
 		{
 			if(local.inflictor.shooter.player_owner != NIL && local.inflictor.shooter.player_owner != NULL) { local.entity.shooter = local.inflictor.shooter.player_owner }

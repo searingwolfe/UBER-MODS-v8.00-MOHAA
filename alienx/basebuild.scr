@@ -1525,7 +1525,7 @@ builder_remover_laser:
 					{
 						if($player[local.i].builder_remover_laser.active != 1)
 						{
-							$player[local.i] iprint "Builder Remover Laser: Hold USE(e) + FIRE to find your nearest object. Hold FIRE(zoom) to remove it."
+							$player[local.i] iprint "Builder Remover Laser: Hold USE(e) + FIRE to find your nearest object. Hold FIRE(zoom) to pick it up."
 							$player[local.i].builder_remover_laser.spot.model = "emitters/lanternflame.tik"
 							$player[local.i].builder_remover_laser activate
 							$player[local.i].builder_remover_laser.active = 1
@@ -1695,6 +1695,9 @@ find_nearest_entity:
 			local.tempstr = local.tempstr + string(int(local.closest.angles[1])) + " "
 			local.tempstr = local.tempstr + string(int(local.closest.angles[2])) + " ). "
 			local.tempstr = local.tempstr + local.model + "."
+
+			if(local.closest.islift == 1) { local.tempstr += " *** Lift ***" }
+			if(local.closest.istele == 1) { local.tempstr += " *** Tele ***" }
 			self iprint local.tempstr
 		}
 

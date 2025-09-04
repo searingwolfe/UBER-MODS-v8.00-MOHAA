@@ -21,13 +21,10 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] != 1)) { wait 1; println("----- ERROR playerboat.scr: health must be greater than 0."); end }
 	if(local.health == NIL || (local.health != NIL && local.health <= 0 && level.vehiclescriptmaster[local.model] == 1)) { end } // end when in rare cases, a 2nd vehicle with local.health = 0 could spawn after getting destroyed
 
-	if(local.model == "models/vehicles/higginsxtrahull.tik") { local.desmodel = models/vehicles/higgins_damage.tik }
-
 	local.vehicle = spawn local.model targetname (local.name) // scriptmasters are already added in ubersound.scr
 	local.vehicle.name = local.name
 	local.vehicle.origin = local.origin
 	local.vehicle.angles = local.angles
-	local.vehicle.desmodel = local.desmodel
 	local.vehicle.health = local.health
 	local.vehicle.vehiclespeed = local.vehiclespeed
 	local.vehicle.vehiclespeed_max = local.vehiclespeed
@@ -41,67 +38,17 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 
 	if(local.vehicle.classname != "DrivableVehicle") { local.vehicle remove; wait 1; println("----- ERROR playerboat.scr: .tik model is not a DrivableVehicle."); end }
 
-	local.vehicle turnrate 5; local.vehicle.turningrate = 5.000
-	if(local.gotout == 1) { local.vehicle playsound sdkfz_snd_stop }
-
-	if(local.vehicle.model== "models/vehicles/uboat.tik") { local.vehicle.outheight = 180 }
-	else { local.vehicle.outheight = 120 } // if this is 100 or lower and the boat is still moving after the player gets out, the player will be run over by the boat and killed.
-
-	local.vehicle.seats = 1		// initialize this before adding seats in "seatstuff" thread to avoid NIL errors
+	local.vehicle thread vehicle_settings local.gotout local.door_open // includes seatstuff, gotout playsound, desmodel, outheight, turnrate, higgins_door stuff, etc.
 	local.vehicle thread vehiclereset
 	local.vehicle thread vehicledamage
 	local.vehicle thread vehicledeath
 	local.vehicle thread vehicletrigger
+	local.vehicle thread move_stuck_players // the vehicle might respawn on top of other players, move them onto the top of it.
 
 	if(level.boat_initorigin[local.name] == NIL) { level.boat_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
 	if(level.boat_initangles[local.name] == NIL) { level.boat_initangles[local.name] = local.angles }
 	if(level.boat_inithealth[local.name] == NIL) { level.boat_inithealth[local.name] = local.health }
 
-	if(level.vehiclescriptmaster[local.vehicle.model] != 1) // this only runs once
-	{
-		cache local.vehicle.model
-		cache local.desmodel
-		cache models/emitters/fancyfire.tik; cache models/emitters/thin_black_short.tik
-		cache models/emitters/mortar_higgins.tik
-		cache models/emitters/mortar_dirt_nosound.tik
-		cache models/static/jug.tik
-		if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik") { cache models/vehicles/higginsdoor.tik; cache models/vehicles/mercedes.tik; cache models/animate/fx_water_spray.tik }
-		else { cache models/static/corona_util.tik }
-		thread scriptmaster local.vehicle.model
-		level.vehiclescriptmaster[local.vehicle.model] = 1
-		level.vehiclescriptmaster[local.model] = 1
-	}
-
-	if(local.vehicle.model == "models/vehicles/uboat.tik")
-	{
-		local.vehicle turnrate 1; local.vehicle.turningrate = 1.000
-		local.vehicle thread boatstuck_inwall_fix
-	}
-	if(local.vehicle.model == "models/vehicles/higginsxtrahull.tik")
-	{
-		local.vehicle attachmodel models/static/jug.tik "Box01" 1 (local.name + "_doorglue") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
-		$(local.name + "_doorglue") notsolid
-		local.vehicle.doorglue = $(local.name + "_doorglue")
-		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (local.name + "_doorclosed") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
-		$(local.name + "_doorclosed").angles = ( 90 0 0 )
-		$(local.name + "_doorclosed") notsolid
-		local.vehicle.doorclosed = $(local.name + "_doorclosed")
-		$(local.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (local.name + "_dooropen") 1 -1 -1 -1 -1 ( 309 0 -225 ) //( +up -down, +left -right, -forward +backward )
-		$(local.name + "_dooropen").angles = ( 0 180 180 )
-		$(local.name + "_dooropen") notsolid
-		local.vehicle.dooropen = $(local.name + "_dooropen")
-
-		local.vehicle.door_open = local.door_open
-		if(local.door_open == 1) { $(local.name + "_doorclosed") hide; $(local.name + "_dooropen") show }
-		else { $(local.name + "_doorclosed") show; $(local.name + "_dooropen") hide }
-
-		local.doorclip = spawn script_model targetname (local.name + "_doorclip")
-		local.doorclip model "vehicles/mercedes.tik"
-		local.doorclip solid
-		local.doorclip hide
-		local.vehicle.doorclip = local.doorclip // do not use local.vehicle.doorclip = $(local.name + "_doorclip"), otherwise mysterious "array" console errors will occur, even though $(local.name + "_doorclip").size = 1, and even though only 1 entity is inside of .doorclip.
-		local.vehicle thread keep_at_door local.doorclip local.door_open
-	}
 										// "local.player.touching_playerboat" or "$player[1].touching_playerboat" can be included in trigger setthreads
 	if(level.touching_playerboat != 1) { thread touching_playerboat }	// to exclude teleporting players that are touching "$ocean" or similar water-surface triggers.
 
@@ -121,7 +68,6 @@ main local.name local.model local.origin local.angles local.health local.vehicle
 			}
 		}
 	}
-	local.vehicle thread move_stuck_players // the vehicle might respawn on top of other players, move them onto the top of it.
 
 	if(level.drivable_entities == NIL) { level.drivable_entities[1] = local.name }
 	else
@@ -140,18 +86,6 @@ chainreactors_remove local.c:
 	level.chainreactors[local.c] = NIL
 end
 
-shottrig:
-
-	local.player = parm.other
-	if(self.vehicle != NULL && (self.vehicle.driver == NIL || (self.vehicle.driver != NIL && (self.vehicle.driver.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.vehicle.shooter = local.player }
-end
-
-removetrig:
-
-	while(self != NULL && self.vehicle != NULL) { waitframe }
-	if(self != NULL) { self remove }
-end
-
 ////////////////////////////////////////////////////////////////////////
 
 vehiclereset:
@@ -164,15 +98,15 @@ end
 healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
 
 	local.health = self.health
-	while(self != NULL && self.health > 0 && (self.driver == NIL || self.damagetrig.health > 0))
+	while(self != NULL && self.health > 0)
 	{
-		if(self.driver != NIL && self.damagetrig.health < self.health) { self.health = self.damagetrig.health }
-		if(self.health < local.health && self.shooter != NIL && self.shooter != NULL)
+		if(self.damagetrig != NIL && self.damagetrig != NULL && self.damagetrig.health < local.health && self.damagetrig.health > 0) { self.health = self.damagetrig.health }
+		if(self.health < local.health)
 		{
-			if(self.passengers != NIL && self.passengers.size >= 1)
+			for(local.i = 1; local.i <= self.passengers.size; local.i++)
 			{
-				local.damage = ((local.health - self.health) / self.passengers.size)
-				for(local.i = 1; local.i <= self.passengers.size; local.i++)
+				local.damage = ((local.health - self.health) / (3 + self.passengers.size))
+				if(self.passengers[local.i] != NIL && self.passengers[local.i] != NULL && self.shooter != NIL)
 				{
 					self.passengers[local.i] takedamage
 					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.passengers[local.i] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
@@ -181,50 +115,66 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 					self.passengers[local.i] nodamage
 				}
 			}
-			if(self.driver != NIL && self.driver != NULL && self.model != "models/vehicles/uboat.tik")
+			if(self.driver != NIL && self.driver != NULL)
 			{
 				if(self.driver.health > 1)
 				{
 					self.driver takedamage
-					if(self.passengers != NIL && self.passengers.size >= 1) { local.damage = ((local.health - self.health) / (2 + self.passengers.size)) }
-					else { local.damage = ((local.health - self.health) / 2) }
+					if(self.passengers != NIL && self.passengers.size >= 1) { local.damage = ((local.health - self.health) / (3 + self.passengers.size)) }
+					else { local.damage = ((local.health - self.health) / 3) }
 
-					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-					else { self.driver damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					if(self.shooter != NIL)
+					{
+						if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else { self.driver damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					}
+					//else { self.driver damage $world local.damage $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 } // this may cause drivers to randomly die by running over stuff, even though "damagehandler.scr" script does not detect any damage dealt.
 					self.driver nodamage
 				}
 				else
 				{
 					self thread driverreset 1
 					self thread vehiclereset
-					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-					else { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+
+					if(self.shooter != NIL)
+					{
+						if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.driver damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.driver damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+						else { self.driver damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					}
+					//else { self.driver damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 } // this may cause drivers to randomly die by running over stuff, even though "damagehandler.scr" script does not detect any damage dealt.
 					self.driver = NIL
 				}
 			}
+		}
 
-			if(self.model != "models/vehicles/uboat.tik")
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if(self != NULL && $player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum) istouching self || (self.damagetrig != NIL && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig) || (self.trigshot != NIL && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.trigshot)) && $player[local.i].passenger != 1 && $player[local.i].turreting != 1 && $player[local.i].driving != 1)
 			{
-				for(local.i = 1; local.i <= $player.size; local.i++)
+				self.shooter = $player[local.i]
+				for(local.i = 1; local.i <= self.passengers.size; local.i++)
 				{
-					if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && $("dogmouthtrig_" + $player[local.i].entnum) istouching self && $player[local.i].passenger != 1)
-					{
-						for(local.i = 1; local.i <= self.passengers.size; local.i++)
-						{
-							self.passengers[local.i] damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
-						}
-					}
+					self.passengers[local.i] takedamage
+					self.passengers[local.i] damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+				}
+				if(self.driver != NIL && self.driver != NULL && self.model != "models/vehicles/sdkfz.tik" && self.model != "models/vehicles/sdkfz_afrika.tik" && self.model != "models/vehicles/shermantank.tik")
+				{
+					self.driver takedamage
+					self.driver damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
 				}
 			}
 		}
+
 		if(isalive self) // need "isalive" check to avoid "cannot give health to dead entities" error
 		{
 			self.health = local.health
-			if(self.driver != NIL) { self.damagetrig.health = local.health }
+			if(self.damagetrig != NIL && self.damagetrig != NULL && self.damagetrig.health > 0) { self.damagetrig.health = local.health }
 		}
+
 		if(self.shooter != NIL) { self thread shooter_NIL }
+		if(self.nodamage == 1) { self.nodamage = 0; self takedamage }
 		waitframe
 	}
 end
@@ -250,41 +200,85 @@ end
 triggered:
 
 	local.player = parm.other
-	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL || local.player.leanleftheld == 1 || local.player.leanrightheld == 1) { end }
+	if(local.player.classname != Player) { end }
+	if(self.vehicle == NULL || self.vehicle.dead == 1 || local.player == NIL || local.player == NULL || local.player.enteringvehicle == 1 || !isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL || local.player.leanleftheld == 1 || local.player.leanrightheld == 1) { end }
 
 	if(self.vehicle != NULL)
 	{
-		if(self.vehicle.driver != NIL && self.vehicle.passengers.size < self.vehicle.seats)
+		if(self.vehicle.driver != NIL)
 		{
-			self.vehicle thread passengers
+			if(self.vehicle.passengers.size < self.vehicle.seats) { self.vehicle thread passengers }
+			else { local.player iprint "There are no seats available." }
 		}
-		if(self.vehicle.driver == NIL)
-		{
-			if(local.player.isdog != 1) { self.vehicle thread playergetin }
-			if(local.player.isdog == 1) { local.player iprint ("Dogs cannot drive vehicles.") } // set other exceptions here
-		}
+		else { self.vehicle thread playergetin }
 	}
 end
 
 playergetin:
 
 	local.player = parm.other
+	if(local.player.classname != Player) { end }
 	local.team = local.player.dmteam
 	if(self.attachingdriver == 1) { end }
 	self.attachingdriver = 1
+	local.player.enteringvehicle = 1
+
+	local.player iprint "Entering vehicle... JUMP to use passenger seats."
+
+	for(local.s = 1; local.s <= self.seats; local.s++)
+	{
+		if(self.passengers[local.s] != NIL && self.passengers[local.s] != NULL && (self.passengers[local.s].dmteam != local.player.dmteam || getcvar("g_gametype") == "1")) { local.cancel = 1 }
+	}
+	if(local.cancel == 1)
+	{
+		local.player iprint "An enemy player is in this vehicle!"
+		local.player.enteringvehicle = 0
+		self.attachingdriver = 0
+		end
+	}
 
 	local.player safeholster 1
-	wait 1
-	if(self == NULL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || (self.turretplayer != NIL && self.turretplayer != NULL) || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL)
+	local.c = 0
+	local.standing = 0
+	while(self != NULL && local.player != NULL && local.c <= 20) // wait 1
+	{
+		for(local.s = 1; local.s <= self.seats; local.s++)
+		{
+			if(self.passengers[local.s] == NIL) { break }
+		}
+		if(local.player getposition != "standing" && local.standing == 1 && local.s <= self.seats && local.player getmovement != "falling")
+		{
+			local.player safeholster 0
+			local.player.enteringvehicle = 0
+			self.attachingdriver = 0
+			self thread passengers
+			end
+		}
+
+		if(local.player getposition == "standing") { local.standing = 1 }
+		local.c++
+		waitframe
+	}
+
+	if(self == NULL || self.dead == 1 || self.driver != NIL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL)
 	{
 		if(self != NULL) { self.attachingdriver = 0 }
+		if(local.player != NULL) { local.player.enteringvehicle = 0 }
 		end
 	}
 	if(local.player.leanleftheld == 1 || local.player.leanrightheld == 1)
 	{
 		if(self != NULL) { self.attachingdriver = 0 }
+		local.player.enteringvehicle = 0
 		local.player safeholster 0
 		local.player iprint "You canceled entering vehicle by leaning left/right."
+		end
+	}
+	if(local.player.isdog == 1)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		local.player.enteringvehicle = 0
+		local.player iprint ("Dogs cannot drive vehicles.")
 		end
 	}
 
@@ -293,9 +287,7 @@ playergetin:
 	self.driver.drivingent = self
 	local.driver = self.driver
 	self.player_owner = self.driver
-
-	self.passengers[1] = NIL // initialize as array to make size = 0 instead of size = -1
-	self thread seatstuff
+	self.passengers[0] = NIL // initialize as array to make size = 0 instead of size = -1
 
 	self.driver forcelegsstate STAND
 	//self.driver hide
@@ -338,7 +330,7 @@ playergetin:
 		local.driver stufftext "globalwidgetcommand june6 linkcvar phealth"
 		local.driver stufftext "globalwidgetcommand june6 statbar vertical 0 100"
 		local.driver stufftext "globalwidgetcommand charliesector linkcvar phealth"
-		local.driver stufftext "set phealth 100"
+		local.driver stufftext ("set phealth " + int(local.driver.health))
 	}
 	else { local.driver thread display }
 
@@ -360,8 +352,9 @@ playergetin:
 	self.movingbackward = 0
 	local.d = local.c	// vehicle turnrate will increase equally when accelerating, but will decrease 4x as fast when decelerating.
 
+	local.player.enteringvehicle = 0
 	self.attachingdriver = 0
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
+	while(self != NULL && self.dead != 1 && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
 		if(self.driver.driving_state_left == 1 && self.driver.driving_state_right != 1)
 		{
@@ -538,19 +531,6 @@ playergetin:
 			else { self.velocity = local.drivervelocity_old + self.forwardvector * self.vehiclespeed }
 		}
 
-		if(self.model != "models/vehicles/uboat.tik")
-		{
-			for(local.i = 1; local.i <= $player.size; local.i++)
-			{
-				if($player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig || $("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig))
-				{
-					self.shooter = $player[local.i]
-					self.driver takedamage
-					self.driver damage $player[local.i] 15000 $player[local.i] (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
-				}
-			}
-		}
-
 		local.drivervelocity_old = self.driver.velocity
 		if(local.stufftext_c == 10) { local.driver stufftext ("set phealth " + int(local.driver.health)) }
 
@@ -566,18 +546,21 @@ playergetin:
 		if(self.driver != NIL && self.driver != NULL)
 		{
 			if(self.driver.dmteam == local.team && level.change_team_score != 1 && level.bbactive != 0) { self thread driverreset }
-			else { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle.
+			else { self thread driverreset 2 } // if the player switched teams without dying, make sure they don't tele back to the vehicle
 			self thread vehiclereset
 		}
-		if(self.turretplayer != NIL && self.turretplayer != NULL) { self waitthread turretplayer_reset self.turretplayer.dmteam self.turretplayer }
 
-		self.driver = NIL // the old vehicle must be properly removed, otherwise the server will crash if anyone driving the vehicle leaves the game (becomes NULL).
-		self remove
+		if(self != NULL)
+		{
+			self.driver = NIL // the old vehicle must be properly removed, otherwise the server will crash if anyone driving the vehicle leaves the game (becomes NULL).
+			if(self.dead != 1) { self remove }
+		}
 	}
 	waitframe
 	if(local.driver != NULL)
 	{
 		local.driver.driving = 0
+		local.driver.passenger = 0
 		local.driver.drivingent = NIL
 		local.driver stoploopsound
 		if(!isalive local.driver) { local.driver stufftext ("set phealth 0") }
@@ -615,6 +598,8 @@ driverreset local.status:
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
 	if($("driver_seat_" + self.entnum) != NULL) { self.driver unglue }
 	self.driver exit	// not needed, but added as a redundancy.
+	self.driver.driving = 0
+	self.driver.passenger = 0
 
 	if(local.status != 2)
 	{
@@ -622,9 +607,11 @@ driverreset local.status:
 		if(local.status != 1) { self.driver solid }
 		self.driver takedamage
 		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
-		self.driver.origin = self.origin + (angles_toup self.angles * self.outheight)
+		self.driver forcelegsstate STAND
+		self.driver.origin += (angles_toup self.angles * self.outheight)
 		self.driver.viewangles = ( self.driver.viewangles[0] self.driver.viewangles[1] 0 )
 	}
+	else { self.driver respawn }
 end
 
 vehicledamage:
@@ -652,6 +639,7 @@ vehicledeath:
 	self waittill death // when waiting until "death", vehicle is not NULL yet
 	self stoploopsound
 	self playsound explode_truck
+	self.dead = 1
 
 	if(self.desmodel == NIL) { self.desmodel = self.model }
 	local.desvehicle = spawn script_model
@@ -659,6 +647,7 @@ vehicledeath:
 	local.desvehicle.scale = self.scale
 	local.desvehicle model self.desmodel
 	local.desvehicle playsound boatsinkwave
+	local.desvehicle thread move_stuck_players
 
 	local.died_touching_water = 0
 	local.waterheight = -9999
@@ -685,14 +674,6 @@ vehicledeath:
 	if(self.model != "models/vehicles/uboat.tik") { local.distance = -100 }
 	else { local.distance = 355; local.distance2 = 675 }
 
-	local.PI = 3.14159265359
-	local.degrees = self.angles[1]
-	if(local.degrees >= 180) { local.degrees -= 360 }
-	local.radians = local.degrees * (local.PI / 180)
-
-	local.sin = (sin local.radians) * local.distance * local.desvehicle.scale
-	local.cos = (cos local.radians) * local.distance * local.desvehicle.scale
-
 	if(self.angles[2] > 5 && self.angles[2] < 180) { local.one = 1 }
 	if(self.angles[2] > 180 && self.angles[2] < 355) { local.one = -1 }
 	if(self.angles[2] <= 5 || self.angles[2] >= 345)
@@ -715,10 +696,10 @@ vehicledeath:
 		local.fire notsolid
 		local.fire loopsound vehicledeathfire
 		local.smoke = spawn script_model
-		local.smoke model "models/emitters/thin_black_short.tik"
+		local.smoke model "models/emitters/linger_smoke.tik"
 		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
 		local.smoke.angles = ( 0 0 0 )
-		local.smoke.scale = 3.5 * local.desvehicle.scale
+		local.smoke.scale = 7.5 * local.desvehicle.scale
 		local.smoke anim start
 		local.smoke notsolid
 		local.fire2 = spawn script_model
@@ -730,10 +711,10 @@ vehicledeath:
 		local.fire2 notsolid
 		local.fire2 loopsound vehicledeathfire
 		local.smoke2 = spawn script_model
-		local.smoke2 model "models/emitters/thin_black_short.tik"
+		local.smoke2 model "models/emitters/linger_smoke.tik"
 		local.smoke2.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance2 * -1 + angles_toup local.desvehicle.angles * 150 * local.desvehicle.scale
 		local.smoke2.angles = ( 0 0 0 )
-		local.smoke2.scale = 3.5 * local.desvehicle.scale
+		local.smoke2.scale = 7.5 * local.desvehicle.scale
 		local.smoke2 anim start
 		local.smoke2 notsolid
 
@@ -772,15 +753,15 @@ vehicledeath:
 		local.fire model "models/emitters/fancyfire.tik"
 		local.fire.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 60
 		local.fire.angles = ( 0 0 0 )
-		local.fire.scale = 1
+		local.fire.scale = 2.5
 		local.fire anim start
 		local.fire notsolid
 		local.fire loopsound vehicledeathfire
 		local.smoke = spawn script_model
-		local.smoke model "models/emitters/thin_black_short.tik"
+		local.smoke model "models/emitters/linger_smoke.tik"
 		local.smoke.origin = local.desvehicle.origin + local.desvehicle.forwardvector * local.distance + angles_toup local.desvehicle.angles * 70
 		local.smoke.angles = ( 0 0 0 )
-		local.smoke.scale = .7
+		local.smoke.scale = 5
 		local.smoke anim start
 		local.smoke notsolid
 
@@ -804,15 +785,16 @@ vehicledeath:
 	self thread driverreset 1								// local.status = 1
 	self thread mainreset local.desvehicle local.fire local.smoke local.fire2 local.smoke2	// waiting self.resettime seconds until a new vehicle is spawned in
 
+	self thread driver_shooter
 	self thread kill_riders
 	self.driver = NIL
 
-	if($(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
+	if(self != NULL && $(self.name + "_trig") != NULL) { $(self.name + "_trig") remove }
 	exec global/earthquake.scr .35 2 0 0
 	if(local.desvehicle.model == "models/vehicles/uboat.tik") { local.radius = 1000 }
 	else { local.radius = 600 }
 
-	if(self.shooter != NIL && self.shooter != NULL)
+	if(self != NULL && self.shooter != NIL && self.shooter != NULL)
 	{
 		if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.shooter = self.shooter.player_owner }
 		else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.shooter = self.shooter.owner }
@@ -821,7 +803,7 @@ vehicledeath:
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) // use this instead of radiusdamage, so death explosions can count as score/kills.
 	{
-		if(vector_length(self.origin - $player[local.i].origin) <= local.radius) // "local.explode" emitters cannot be used with "cansee"
+		if(vector_length(local.desvehicle.origin - $player[local.i].origin) <= local.radius) // "local.explode" emitters cannot be used with "cansee"
 		{
 			if(local.shooter == NIL || local.shooter == NULL)
 			{
@@ -851,7 +833,7 @@ vehicledeath:
 			}
 		}
 	}
-	self remove
+	if(self != NULL) { self remove }
 
 	local.boom = spawn script_model
 	local.boom model "models/emitters/mortar_higgins.tik"
@@ -873,6 +855,16 @@ vehicledeath:
 	local.boom remove
 	local.debris remove
 	if(local.blewup == 1) { radiusdamage local.desvehicle.origin 500 local.radius } // this must be one frame after other damages in this thread, otherwise chain-reaction kills will not count.
+end
+
+driver_shooter:
+
+	if(self.driver == NIL || self.driver == NULL) { end }
+
+	local.driver = self.driver
+	local.driver.driver_shooter = self.shooter
+	waitframe
+	if(local.driver != NULL) { local.driver.driver_shooter = NIL }
 end
 
 kill_riders:
@@ -1001,38 +993,50 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-passengers:
+passengers local.player local.s:
 	
-	local.player = parm.other
+	if(local.player == NIL) { local.player = parm.other }
+	if(local.player.classname != Player) { end } // somehow the "self" DrivableVehicle entity was able to run this script as parm.other and crash the server; this line prevents that from ever happening.
+	if(local.s == NIL) { local.s_nil = 1 }
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & passenger could be attached to the same seat!
 
-	if(local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
+	if(self == NULL || self.dead == 1 || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
 
-	for(local.s = 1; local.s <= self.seats; local.s++)
+	if(local.s == NIL)
 	{
-		if(self.passengers[local.s] == NIL) { self.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
-	}
-	if(local.s > self.seats) { end } // no seats available.
+		for(local.s = 1; local.s <= self.seats; local.s++)
+		{
+			if(self.passengers[local.s] == NIL) { self.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
+		}
+		if(local.s > self.seats) { local.player iprint ("No more seats available."); end }
 
-	if(local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
-	{
-		self.passengers[local.s] = NIL
-		local.player iprint ("An enemy player is driving this vehicle!")
-		end
+		if(self.driver != NIL && self.driver != NULL && local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
+		{
+			self.passengers[local.s] = NIL
+			local.player iprint ("An enemy player is driving this vehicle!")
+			end
+		}
 	}
+	else if(self.passengers[local.s] != NIL && self.passengers[local.s] != local.player) { local.player iprint ("This seat is already occupied."); end }
+	else { self.passengers[local.s] = local.player }
 
+	self waitthread spawn_driver_seat_and_trigs
 	self waitthread spawn_passenger_seat local.s
 	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { local.player glue $("passenger_seat_" + local.s + "_" + self.entnum) }
 
-	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
+	if(local.s_nil == 1) { local.player take "models/items/binoculars.tik" } // using these will cause camera jittering again.
 	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
 	local.player forcelegsstate STAND
 	//local.player hide
 	//local.player noclip
 	local.player nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
 	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
-	local.player iprint ("Press JUMP = exit vehicle. Hold FIRE(zoom) = look around.")
+	if(local.s_nil == 1)
+	{
+		if(self.seats > 1) { local.player iprint ("JUMP = exit vehicle. Hold FIRE(zoom) = look around. Lean Left/Right = change seats.") }
+		else { local.player iprint ("JUMP = exit vehicle. Hold FIRE(zoom) = look around.") }
+	}
 	local.player.origin = self.origin
 	local.player.passenger = 1
 	local.player.ridingent = self
@@ -1041,9 +1045,10 @@ passengers:
 	local.PI = 3.14159265359
 	local.driver = self.driver
 	local.outheight = self.outheight
-	local.model = self.model
 
-	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0 && $("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
+	local.targetname = self.targetname
+	local.passenger_reattach = 0
+	while(self != NULL && self.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0 && $("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
 	{
 		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
 
@@ -1061,7 +1066,28 @@ passengers:
 		if(local.player.viewangles[0] > 180) { local.player.viewangles = ( (10 + (self.angles[0] - 360)) local.player.viewangles[1] local.player.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
 		if(local.player.viewangles[0] < -180) { local.player.viewangles = ( (local.player.viewangles[0] + 360) local.player.viewangles[1] local.player.viewangles[2] ) } // prevent camera from moving too far down.
 
-		if(local.player.driving_state_jump == 1) // Press JUMP to exit vehicle.
+		local.cycled = 0
+		local.changeseats = 0
+		local.newseat = 0
+		local.p = local.s
+		if(local.leaning == 0 && local.player.leanleftheld == 1 && local.player.leanrightheld != 1) // lean left to cycle upward through available passenger seats.
+		{
+			for(local.z = 1; local.z <= self.seats; local.z++)
+			{
+				if(local.p + local.z > self.seats && local.cycled != 1) { local.p = 1; local.z = 0; local.cycled = 1 }
+				if(self.passengers[local.p + local.z] == NIL) { local.changeseats = 1; local.newseat = local.p + local.z; break }
+			}
+		}
+		if(local.leaning == 0 && local.player.leanleftheld != 1 && local.player.leanrightheld == 1) // lean right to cycle downward through available passenger seats.
+		{
+			for(local.z = 1; local.z <= self.seats; local.z++)
+			{
+				if(local.p - local.z < 1 && local.cycled != 1) { local.p = self.seats; local.z = 0; local.cycled = 1 }
+				if(self.passengers[local.p - local.z] == NIL) { local.changeseats = 1; local.newseat = local.p - local.z; break }
+			}
+		}
+
+		if(local.player.driving_state_jump == 1 || local.changeseats == 1) // Press JUMP to exit vehicle.
 		{
 			local.player unglue
 			if(local.player.isdog != 1) { local.player show }
@@ -1070,7 +1096,8 @@ passengers:
 			local.player takedamage
 			//local.player noclip
 			local.player forcetorsostate STAND
-			local.player.origin += local.s_vec + angles_toup(self.angles) * self.outheight
+			local.player forcelegsstate STAND
+			if(local.changeseats != 1) { local.player.origin += angles_toup self.angles * self.outheight }
 			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 
 			local.player thread wallstuck_fix
@@ -1079,8 +1106,15 @@ passengers:
 			local.player.ridingent = NIL
 			local.player.driving = 0
 			if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+
+			if(local.changeseats == 1) { self thread passengers local.player local.newseat }
 			end
 		}
+		if(local.player.leanleftheld != 1 && local.player.leanrightheld != 1) { local.leaning = 0 }
+
+		local.driver = self.driver
+		local.angles = self.angles
+		if(self.driver != NIL && self.driver != NULL) { local.passenger_reattach = 1 }
 		waitframe
 	}
 	if(self != NULL)
@@ -1104,14 +1138,14 @@ passengers:
 			local.player takedamage
 			//local.player noclip
 			local.player forcetorsostate STAND
+			local.player forcelegsstate STAND
 			if(local.player.dmteam == local.team) // if the passenger did not switch teams
 			{
-				if(local.model != "models/vehicles/uboat.tik") { local.player.origin += local.s_vec * 1.5 + angles_toup(local.angles) * local.outheight }
-				else { local.player.origin = self.origin + (angles_toup self.angles * self.outheight) }
+				local.player.origin += angles_toup local.angles * local.outheight
 				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
 				local.player thread wallstuck_fix
 	
-				if(local.driver != NULL && (!isalive local.driver || local.driver.dead == 1))
+				if(local.driver != NIL && local.driver != NULL && (!isalive local.driver || local.driver.dead == 1))
 				{
 					if(self != NULL && self.shooter != NIL)
 					{
@@ -1119,9 +1153,19 @@ passengers:
 						else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 						else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
 					}
-					else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else if(local.driver.driver_shooter != NIL)
+					{
+						if(local.driver.driver_shooter.player_owner != NIL && local.driver.driver_shooter.player_owner != NULL) { local.player damage local.driver.driver_shooter.player_owner 9999999 local.driver.driver_shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else if(local.driver.driver_shooter.owner != NIL && local.driver.driver_shooter.owner != NULL) { local.player damage local.driver.driver_shooter.owner 9999999 local.driver.driver_shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else if(local.driver.driver_shooter != NIL && local.driver.driver_shooter != NULL) { local.player damage local.driver.driver_shooter 9999999 local.driver.driver_shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+						else { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					}
+
 				}
 			}
+			else { local.player respawn }
+
+			if(local.passenger_reattach == 1) { thread passenger_reattach local.player local.team local.targetname local.s }
 
 			local.origin = local.player.origin
 			while(local.player != NULL && !isalive local.player && local.player.dmteam != "spectator")
@@ -1132,6 +1176,18 @@ passengers:
 				waitframe
 			}
 		}
+	}
+end
+
+passenger_reattach local.player local.team local.targetname local.s:
+
+	if(isalive local.player && local.player.dmteam == local.team)
+	{
+		local.c = 0
+		while($(local.targetname) == NULL) { local.c++; waitframe } // wait until the vehicle respawns before reattaching player.
+		if(local.c > 20) { end }
+
+		if($(local.targetname) != NULL && isalive local.player && local.player.dmteam == local.team) { $(local.targetname) thread passengers local.player local.s }
 	}
 end
 
@@ -1373,55 +1429,46 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-seatstuff:
-
-	if(self.model == "models/vehicles/higginsxtrahull.tik")
-	{
-		self.seats = 9 // [1] = front passenger. [2] = back right, [3], [4], [5] = front right. [6] = front left, [7], [8], [9] = back left
-	}
-	else if(self.model == "models/vehicles/uboat.tik")
-	{
-		self.seats = 5 // [1], [2] = right, left front captain platform, [3] = back of captain platform, [4], [5] = right side (facing forward), left side of middle platform
-	}
-end
-
 spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwise initializing all seats when vehicle spawns will greatly increase map's entity count.
 
-	local.trig = spawn trigger_multiple spawnflags 128 // for calculating how much damage was given (triggers with health will not go to a setthread until it's fully dead).
+	if(self.damagetrig != NIL && self.damagetrig != NULL) { end }
+	if(self.trigshot != NIL && self.trigshot != NULL) { end }
+
+	local.trig = spawn trigger_multiple targetname (self.targetname + "_damagetrig") spawnflags 128 // for calculating how much damage was given (triggers with health will not go to a setthread until it's fully dead).
 	local.trig.origin = self.origin
-	local.trig.health = self.health
-	local.trig.vehicle = self
+	local.trig.health = self.health		// make sure triggers with health & "spawnflags 128" are slightly larger in setsizes than other "spawnflags 128" triggers,
+	local.trig.vehicle = self		// otherwise the overlapping trigger that was last spawned in will have bullet-triggering priority,
+	local.trig glue self			// preventing the trigger with health from taking any damage.
 	self.damagetrig = local.trig
-	local.trig glue self
 	local.trig thread removetrig
-	if(self.model == "models/vehicles/uboat.tik") { local.trig setsize ( -450 -450 0 ) ( 450 450 420 ) }
-	else { local.trig setsize ( -90 -90 0 ) ( 90 90 159 ) }
-	local.trig.model = self.model
-	local.trig.scale = self.scale
+	local.trig.model = self.model	// any entities that have attachmodels on them will crash the server if those entities do not have a specified model, since there is no "Box01" to attach to;
+	local.trig.scale = self.scale	// this also does not print any errors when crashing the server.
 	local.trig hide
 
-	local.trigshot = spawn trigger_multiple spawnflags 128 // instantly determine the vehicle's shooter (runs setthread each time it's triggered).
+	local.trigshot = spawn trigger_multiple targetname (self.targetname + "_trigshot") spawnflags 128 // instantly determine the vehicle's shooter (runs setthread each time it's triggered).
 	local.trigshot.origin = self.origin
 	local.trigshot.vehicle = self
-	self.trigshot = local.trigshot
 	local.trigshot glue self
+	self.trigshot = local.trigshot
 	local.trigshot thread removetrig
 	local.trigshot setthread shottrig
-	if(self.model == "models/vehicles/uboat.tik") { local.trigshot setsize ( -450 -450 0 ) ( 450 450 420 ) }
-	else { local.trigshot setsize ( -90 -90 0 ) ( 90 90 159 ) }
 	local.trigshot.model = self.model
 	local.trigshot.scale = self.scale
 	local.trigshot hide
 
-	if($("driver_seat_" + self.entnum) != NULL) { $("driver_seat_" + self.entnum) remove }
+	while($("driver_seat_" + self.entnum) != NULL) { $("driver_seat_" + self.entnum) remove; waitframe }
 
 	if(self.model == "models/vehicles/higginsxtrahull.tik") // "Box01", "Box02", or similar is determined by the model's .skc file.
 	{
 		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 120 50 58 ) // ( -forward +backward, +up -down, +left -right )
+		local.trig setsize ( -91 -91 -1 ) ( 91 91 160 )
+		local.trigshot setsize ( -90 -90 0 ) ( 90 90 159 )
 	}
 	else if(self.model == "models/vehicles/uboat.tik")
 	{
 		self attachmodel models/static/jug.tik "Box01" 1 ("driver_seat_" + self.entnum) 1 -1 -1 -1 -1 ( 0 323 40 ) // ( -right +left, +up -down, +forward -backward )
+		local.trig setsize ( -151 -151 -1 ) ( 151 151 419 )
+		local.trigshot setsize ( -150 -150 0 ) ( 150 150 418 )
 	}
 
 	if($("driver_seat_" + self.entnum) != NULL)
@@ -1432,9 +1479,23 @@ spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwi
 	}
 end
 
+shottrig:
+
+	local.player = parm.other
+	if(self.vehicle != NULL && (self.vehicle.driver == NIL || (self.vehicle.driver != NIL && (self.vehicle.driver.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.vehicle.shooter = local.player }
+end
+
+removetrig:
+
+	while(self != NULL && self.vehicle != NIL && self.vehicle != NULL && self.vehicle.dead != 1) { waitframe }
+	if(self != NULL) { self remove }
+end
+
+////////////////////////////////////////////////////////////////////////
+
 spawn_passenger_seat local.s: // only spawn seats when needed.
 
-	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+	while($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove; waitframe }
 
 	local.add = 0
 	if(self.model == "models/vehicles/higginsxtrahull.tik") //( +left -right, +up -down, +forward -backward )
@@ -1460,6 +1521,7 @@ spawn_passenger_seat local.s: // only spawn seats when needed.
 
 	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
 	{
+		if(local.add != 0) { self.playerang_offset[local.s] = local.add }
 		$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( 0 local.add 0 )
 		$("passenger_seat_" + local.s + "_" + self.entnum) bind self
 		$("passenger_seat_" + local.s + "_" + self.entnum) hide
@@ -1470,6 +1532,7 @@ end
 
 dummyavatar:
 
+/*
 	local.avatar = spawn func_beam
 	local.avatar attach self.driver "Bip01 Head"
 	local.avatar.origin = self.driver.origin + ( 0 0 100 )
@@ -1490,11 +1553,12 @@ dummyavatar:
 	local.team = self.driver.dmteam
 	while(self != NULL && isalive self.driver && self.driver.dmteam == local.team && self.driver.dead != 1 && level.change_team_score != 1 && level.bbactive != 0)
 	{
-		local.avatar.origin = self.driver.origin + ( 0 0 (100 + local.heightinc) )
+		local.avatar.origin = self.driver.origin + self.upvector * (100 + local.heightinc)
 		local.avatar endpoint (local.avatar.origin + ( 0 0 13 ))
 		waitframe
 	}
 	local.avatar remove
+*/
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -1595,12 +1659,19 @@ move_stuck_players:
 
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
-		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && ($player[local.i] istouching self || (self.model == "models/vehicles/higginsxtrahull.tik" && $player[local.i] istouching self.doorclip)))
+		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && ($player[local.i] istouching self || (self.doorclip != NIL && self.doorclip != NULL && $player[local.i] istouching self.doorclip)))
 		{
-			if($player[local.i] istouching self.doorclip) { local.add = 120 }
-			else { local.add = 0 }
-			$player[local.i].origin += (angles_toup self.angles * (self.outheight + local.add))
+			self thread moving_stuck_players $player[local.i]
 		}
+	}
+end
+
+moving_stuck_players local.player:
+
+	while(self != NULL && isalive local.player && local.player.dmteam != "spectator" && (local.player istouching self || (self.doorclip != NIL && self.doorclip != NULL && local.player istouching self.doorclip)))
+	{
+		local.player.origin += (angles_toup self.angles * 10)
+		//waitframe
 	}
 end
 
@@ -1753,7 +1824,85 @@ display:
 
 	self stufftext ("showmenu " + local.menu2)
 	self stufftext ("showmenu " + local.menu1)
-	self stufftext "set phealth 100"
+	self stufftext ("set phealth " + int(self.health))
+end
+
+////////////////////////////////////////////////////////////////////////
+
+vehicle_settings local.gotout local.door_open:
+
+	// if model == uboat, keep desmodel = current model
+	switch(self.model)
+	{
+		case "models/vehicles/higginsxtrahull.tik":
+			self.seats = 9 // [1] = front passenger. [2] = back right, [3], [4], [5] = front right. [6] = front left, [7], [8], [9] = back left
+			self.desmodel = models/vehicles/higgins_damage.tik
+			self.outheight = 1
+			self turnrate 5
+			self.turningrate = 5.000 // keep at least 3 decimals for better turnrate accuracy.
+			if(level.vehiclescriptmaster[self.model] != 1) { cache models/vehicles/jeep_30cal.tik; cache models/vehicles/jeep_30cal_viewmodel.tik }
+			if(local.gotout == 1) { self playsound sdkfz_snd_stop }
+			break
+
+		case "models/vehicles/uboat.tik":
+			self.seats = 5 // [1], [2] = right, left front captain platform, [3] = back of captain platform, [4], [5] = right side (facing forward), left side of middle platform
+			self.desmodel = NIL
+			self.outheight = -110
+			self turnrate 1
+			self.turningrate = 1.000
+			if(local.gotout == 1) { self playsound sdkfz_snd_stop }
+			self thread boatstuck_inwall_fix // blow up the uboat if the angles become too non-horizontal.
+			break
+
+		default:
+			self.seats = 0
+			self.desmodel = NIL
+			self.outheight = 100
+			self turnrate 5
+			self.turningrate = 5.000
+			if(local.gotout == 1) { self playsound sdkfz_snd_stop }
+			break
+	}
+
+	if(level.vehiclescriptmaster[self.model] != 1) // this only runs once
+	{
+		cache self.model
+		if(self.desmodel != NIL) { cache self.desmodel }
+		cache models/emitters/fancyfire.tik; cache models/emitters/linger_smoke.tik
+		cache models/emitters/mortar_higgins.tik
+		cache models/emitters/mortar_dirt_nosound.tik
+		cache models/static/jug.tik
+		if(self.model == "models/vehicles/higginsxtrahull.tik") { cache models/vehicles/higginsdoor.tik; cache models/vehicles/mercedes.tik; cache models/animate/fx_water_spray.tik }
+		else { cache models/static/corona_util.tik }
+		thread scriptmaster self.model
+		level.vehiclescriptmaster[self.model] = 1
+	}
+
+	if(self.model == "models/vehicles/higginsxtrahull.tik")
+	{
+		self attachmodel models/static/jug.tik "Box01" 1 (self.name + "_doorglue") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+		$(self.name + "_doorglue") notsolid
+		self.doorglue = $(self.name + "_doorglue")
+		$(self.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (self.name + "_doorclosed") 1 -1 -1 -1 -1 ( 0 0 0 ) //( -forward +backward, +up -down, +left -right )
+		$(self.name + "_doorclosed").angles = ( 90 0 0 )
+		$(self.name + "_doorclosed") notsolid
+		self.doorclosed = $(self.name + "_doorclosed")
+		$(self.name + "_doorglue") attachmodel models/vehicles/higginsdoor.tik "Box06" 1 (self.name + "_dooropen") 1 -1 -1 -1 -1 ( 309 0 -225 ) //( +up -down, +left -right, -forward +backward )
+		$(self.name + "_dooropen").angles = ( 0 180 180 )
+		$(self.name + "_dooropen") notsolid
+		self.dooropen = $(self.name + "_dooropen")
+
+		self.door_open = local.door_open
+		if(local.door_open == 1) { $(self.name + "_doorclosed") hide; $(self.name + "_dooropen") show }
+		else { $(self.name + "_doorclosed") show; $(self.name + "_dooropen") hide }
+
+		local.doorclip = spawn script_model targetname (self.name + "_doorclip")
+		local.doorclip model "vehicles/mercedes.tik"
+		local.doorclip solid
+		local.doorclip hide
+		self.doorclip = local.doorclip // do not use self.doorclip = $(self.name + "_doorclip"), otherwise mysterious "array" console errors will occur, even though $(self.name + "_doorclip").size = 1, and even though only 1 entity is inside of .doorclip.
+		self thread keep_at_door local.doorclip local.door_open
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

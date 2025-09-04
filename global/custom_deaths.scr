@@ -1,0 +1,205 @@
+// This script customizes some death animations for multiplayer, mainly for crouching, grenade/rocket/explosion, vehicle run-over, falling/crushed/telefragged, impaling/skewering, and fire deaths.
+// This mod only works for MOHAA Reborn 1.12.
+
+main:
+
+	if(level.check_player_deaths != 1) { local.result = registerev kill global/custom_deaths.scr::assign_killer }
+	thread remove_deadbodies
+end
+
+remove_deadbodies:
+
+	if(level.check_player_deaths == 1) { end }
+	level.check_player_deaths = 1
+
+	local.deathanims[0] = "death_fall_to_knees"
+	local.deathanims[1] = "death_fall_back"
+	local.deathanims[2] = "death_chest"
+	local.deathanims[3] = "death_choke"
+	local.deathanims[4] = "death_crotch"
+	local.deathanims[5] = "death_headpistol"
+	local.deathanims[6] = "death_frontchoke"
+	local.deathanims[7] = "death_twist"
+	local.deathanims[8] = "death_collapse"
+	local.deathanims[9] = "death_shoot"
+
+	while(1)
+	{
+		removeclass Body
+
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if((isalive $player[local.i] || $player[local.i].dmteam == "spectator") && $player[local.i].dead != 1 && $player[local.i].custom_deadbody != NIL && $player[local.i].custom_deadbody != NULL)
+			{
+				$player[local.i].custom_deadbody remove
+				$player[local.i].torso_state_killed = NIL
+			}
+
+			if($player[local.i] != NULL && !isalive $player[local.i] && ($player[local.i].custom_deadbody == NIL || $player[local.i].custom_deadbody == NULL))
+			{
+				local.ent = spawn script_model targetname "player_deadbody"
+				local.ent model $player[local.i].model
+				local.ent.origin = $player[local.i].origin
+				local.ent.angles = $player[local.i].angles
+				local.ent notsolid
+				$player[local.i] hide // if the killer blows himself & the player up at the same time, hide the player's actual dead body if still visible.
+				$player[local.i].custom_deadbody = local.ent
+
+				if($player[local.i].torso_state_killed != NIL) { local.ent anim $player[local.i].torso_state_killed }
+				else { local.ent anim local.deathanims[randomint(local.deathanims.size)] }
+			}
+
+			$player[local.i].playerspeed = sqrt (($player[local.i].velocity[0] * $player[local.i].velocity[0]) + ($player[local.i].velocity[1] * $player[local.i].velocity[1]) + ($player[local.i].velocity[2] * $player[local.i].velocity[2]))
+		}
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+assign_killer local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.player:
+
+	if(local.player != local.attacker && local.attacker.classname == Player && isalive local.attacker)
+	{
+		local.player.deathcam_killer = local.attacker // if players did not kill themselves, and if the attacker is a "Player" (not $world nor other nonplayer entities).
+	}
+
+		// from behind: direction = ( -1 0 0 )		// death anims added that aren't normally found in multiplayer deaths:
+		// from front: direction = ( 1 0 0 )		// "death_left", "death_right", "death_prone", "death_explosion_back"
+		// from left: direction = ( 0 1 0 )
+		// from right: direction = ( 0 -1 0 )		// this was replaced by "local.angles = vector_toangles..." since "local.direction" was not very accurate.
+		// from above: direction = ( 0 0 -1 )
+		// from below: direction = ( 0 0 1 )
+
+	local.angles = vector_toangles(local.attacker.origin - local.player.origin)
+	local.angles -= ( 0 local.player.angles[1] 0 )
+	if(local.angles[1] < 0) { local.angles += ( 0 360 0 ) }
+
+	if(local.angles[0] > 60) { local.pain_direction = "below" }
+	else if(local.angles[0] < -60) { local.pain_direction = "above" }
+	else
+	{
+		if(local.angles[1] <= 45 || local.angles[1] > 315) { local.pain_direction = "front" }
+		if(local.angles[1] > 45 && local.angles[1] <= 135) { local.pain_direction = "left" }
+		if(local.angles[1] > 135 && local.angles[1] <= 225) { local.pain_direction = "rear" }
+		if(local.angles[1] > 225 && local.angles[1] <= 315) { local.pain_direction = "right" }
+	}
+
+	local.r = randomint(100) + 1 // 1% chance to hit any integer from 1 to 100.
+	if(local.meansofdeath == 9 || local.meansofdeath == 14 || local.meansofdeath == 16) // explosions, grenades, rockets.
+	{
+		if(local.damage >= 150) { local.player.torso_state_killed = "death_explosion_large"; end }
+		if(local.pain_direction == "left") { local.player.torso_state_killed = "death_left"; end } // custom setting for death anims.
+		if(local.pain_direction == "right") { local.player.torso_state_killed = "death_right"; end } // custom setting for death anims.
+		if(local.pain_direction == "front") { local.player.torso_state_killed = "death_explosion_back"; end } // custom setting for death anims.
+		if(local.pain_direction == "rear") { local.player.torso_state_killed = "death_frontcrouch"; end } // custom setting for death anims.
+		if(local.pain_direction == "above") { local.player.torso_state_killed = "death_prone"; end } // custom setting for death anims.
+		local.player.torso_state_killed = "death_explosion_small"; end
+	}
+	if(local.meansofdeath == 20) // custom settings for death anims when player is run over by vehicles.
+	{
+		if(local.pain_direction == "front" && local.player getposition != "crouching") { local.player.torso_state_killed = "death_explosion_back"; end }
+		local.player.torso_state_killed = "death_prone"; end
+	}
+	if((local.meansofdeath == 7 && local.player.playerspeed > 1000) || local.meansofdeath == 2 || local.meansofdeath == 3 || local.meansofdeath == 4) // custom settings for death anims when player dies by falling, gets crushed, or gets telefragged.
+	{
+		local.player.torso_state_killed = "death_prone"; end
+	}
+	if(local.meansofdeath == 5 || local.meansofdeath == 21 || local.meansofdeath == 23) // custom settings for death anims when player dies by fire.
+	{
+		if(local.r <= 50 && local.player getposition != "crouching") { local.player.torso_state_killed = "death_fall_to_knees"; end }; local.r = randomint(100) + 1
+		if(local.r <= 50 && local.player getposition != "crouching") { local.player.torso_state_killed = "death_chest"; end }; local.r = randomint(100) + 1
+		if(local.r <= 50 && local.player getposition == "crouching") { local.player.torso_state_killed = "rifle_pain_kneestodeath"; end }; local.r = randomint(100) + 1
+		if(local.r <= 50 && local.player getposition == "crouching") { local.player.torso_state_killed = "death_frontcrouch"; end }; local.r = randomint(100) + 1
+		local.player.torso_state_killed = "death_choke"; end
+	}
+	if(local.meansofdeath == 25) // custom settings for death anims when player dies by impaling/skewering.
+	{
+		if(local.pain_direction == "rear" && local.player getposition != "crouching") { local.player.torso_state_killed = "death_fall_to_knees"; end }
+		if(local.pain_direction == "rear" && local.player getposition == "crouching") { local.player.torso_state_killed = "death_frontcrouch"; end }
+		if((local.pain_direction == "left" || local.pain_direction == "right") && local.player getposition != "crouching") { local.player.torso_state_killed = "death_chest"; end }
+		if((local.pain_direction == "left" || local.pain_direction == "right") && local.player getposition == "crouching") { local.player.torso_state_killed = "rifle_pain_kneestodeath"; end }
+		local.player.torso_state_killed = "death_choke"; end
+	}
+
+	if(local.player getposition != "crouching")
+	{
+		if(local.player.playerspeed >= int(getcvar("sv_runspeed")) - 50) // killed running
+		{
+			if(local.pain_direction == "front" && local.damage >= 50)
+			{
+				if(local.r <= 30) { local.player.torso_state_killed = "death_knockedup"; end }; local.r = randomint(100) + 1 // 30% chance
+				local.player.torso_state_killed = "death_chest"; end
+			}
+
+			if(local.pain_direction == "rear" && local.damage >= 50) // custom setting for death anims.
+			{
+				if(local.r <= 30) { local.player.torso_state_killed = "death_knockedup"; end }; local.r = randomint(100) + 1 // 30% chance // custom setting for death anims.
+				local.player.torso_state_killed = "death_frontcrouch"; end // custom setting for death anims.
+			}
+
+			local.player.torso_state_killed = "death_run"; end
+		}
+
+		// killed standing
+		if(local.location == 6 || local.location == 5) // killed lower torso
+		{
+			if(local.pain_direction == "front" && local.r <= 60) { local.player.torso_state_killed = "death_back"; end }; local.r = randomint(100) + 1
+			if(local.pain_direction == "rear" && local.r <= 35) { local.player.torso_state_killed = "death_knockedup"; end }; local.r = randomint(100) + 1
+			if(local.pain_direction == "rear" && local.r <= 70) { local.player.torso_state_killed = "death_run"; end }; local.r = randomint(100) + 1
+			if(local.r <= 60) { local.player.torso_state_killed = "death_crotch"; end }; local.r = randomint(100) + 1
+			local.player.torso_state_killed = "death_chest"; end
+		}
+		if(local.location == 2) // killed neck
+		{
+			if(local.r <= 50) { local.player.torso_state_killed = "death_frontchoke"; end }; local.r = randomint(100) + 1
+			local.player.torso_state_killed = "death_choke"; end
+		}
+		if(local.location == 0 || local.location == 1) // killed head
+		{
+			if(local.pain_direction == "front" && local.r <= 50) { local.player.torso_state_killed = "death_back"; end }; local.r = randomint(100) + 1
+			if(local.pain_direction == "rear" && local.r <= 30) { local.player.torso_state_killed = "death_head_flyforward"; end }; local.r = randomint(100) + 1
+			if(local.r <= 20) { local.player.torso_state_killed = "death_headpistol"; end }; local.r = randomint(100) + 1
+			if(local.r <= 25) { local.player.torso_state_killed = "death_twist"; end }; local.r = randomint(100) + 1
+			if(local.r <= 33) { local.player.torso_state_killed = "death_shoot"; end }; local.r = randomint(100) + 1
+			if(local.r <= 50) { local.player.torso_state_killed = "death_fall_to_knees"; end }; local.r = randomint(100) + 1
+			local.player.torso_state_killed = "death_collapse"; end
+		}
+		if(local.location == 7 || local.location == 11 || local.location == 15) // killed right arm
+		{
+			if(local.pain_direction == "rear" && local.r <= 50) { local.player.torso_state_killed = "death_twist"; end }; local.r = randomint(100) + 1
+			if(local.r <= 30) { local.player.torso_state_killed = "death_fall_back"; end }; local.r = randomint(100) + 1
+			if(local.r <= 50) { local.player.torso_state_killed = "death_shoot"; end }; local.r = randomint(100) + 1
+			local.player.torso_state_killed = "death_chest"; end
+		}
+		if(local.location == 8 || local.location == 12 || local.location == 16) // killed left arm
+		{
+			if(local.pain_direction == "front" && local.r <= 50) { local.player.torso_state_killed = "death_twist"; end }; local.r = randomint(100) + 1
+			if(local.r <= 30) { local.player.torso_state_killed = "death_fall_back"; end }; local.r = randomint(100) + 1
+			if(local.r <= 50) { local.player.torso_state_killed = "death_shoot"; end }; local.r = randomint(100) + 1
+			local.player.torso_state_killed = "death_chest"; end
+		}
+		if(local.location == 9 || local.location == 10 || local.location == 13 || local.location == 14 || local.location == 17 || local.location == 18) // killed leg
+		{
+			if(local.pain_direction == "rear" && local.r <= 50) { local.player.torso_state_killed = "death_knockedup"; end }; local.r = randomint(100) + 1
+			if(local.r <= 25) { local.player.torso_state_killed = "death_fall_back"; end }; local.r = randomint(100) + 1
+			if(local.r <= 33) { local.player.torso_state_killed = "death_shoot"; end }; local.r = randomint(100) + 1
+			if(local.r <= 50) { local.player.torso_state_killed = "death_fall_to_knees"; end }; local.r = randomint(100) + 1
+			local.player.torso_state_killed = "death_chest"; end
+		}
+
+		// killed upper torso [if location = 4, 3, -1, or anything else]; bash or explosion = -1.
+		if(local.pain_direction == "front" && local.r <= 20) { local.player.torso_state_killed = "death_knockedup"; end }; local.r = randomint(100) + 1
+		if(local.pain_direction == "front" && local.r <= 60) { local.player.torso_state_killed = "death_back"; end }; local.r = randomint(100) + 1
+		if(local.pain_direction == "rear" && local.r <= 40) { local.player.torso_state_killed = "death_run"; end }; local.r = randomint(100) + 1
+		if(local.r <= 30) { local.player.torso_state_killed = "death_frontchoke"; end }; local.r = randomint(100) + 1
+		if(local.r <= 60) { local.player.torso_state_killed = "death_shoot"; end }; local.r = randomint(100) + 1
+		local.player.torso_state_killed = "death_chest"; end
+	}
+
+	// killed crouching
+	//if(local.pain_direction == "rear") { local.player.torso_state_killed = "death_frontcrouch"; end } // removed original setting for death anims.
+	if(local.pain_direction == "rear") { local.player.torso_state_killed = "death_prone"; end } // custom setting for death anims.
+	if(local.pain_direction == "left" || local.pain_direction == "right") { local.player.torso_state_killed = "death_frontcrouch"; end } // custom setting for death anims.
+	local.player.torso_state_killed = "rifle_pain_kneestodeath"; end
+end
