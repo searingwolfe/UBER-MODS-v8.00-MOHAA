@@ -1,6 +1,7 @@
-// This script forces all bazooka/Panzerschreck rockets to face the correct angles.
+// This script forces all Bazooka/Panzerschreck rockets to face the correct angles.
 //
-// Add "exec global/rocketfix.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script.
+// Add "exec global/rocketfix.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script for multiplayer.
+// Add "exec global/rocketfix.scr" into "global/ambient.scr", or add it after "level waittill spawn" to use this script for singleplayer campaign.
 // This script only works for MOHAA Reborn 1.12 / Nightfall
 //
 // Set "local.rocket.playerowner = local.player" or similar (anything != NIL) in any other mod that uses "bazookashell.tik", "bazookashell_dm.tik", or "Panzerschreckshell.tik" models,
@@ -24,41 +25,17 @@ main:
 				local.new = spawn script_model
 				local.new model local.entity.model
 				local.new.origin = local.entity.origin
-				local.new.angles = ( (local.entity.angles[0] * -1) (local.entity.angles[1] + 180) local.entity.angles[2] )
-				local.new solid
-				local.new physics_on // without this, the rockets will not face the proper direction.
-				local.new glue local.entity
-				local.new thread removerocket local.entity
+				local.new.angles = ( local.entity.angles[0] (local.entity.angles[1] + 180) local.entity.angles[2] )
+				local.new bind local.entity
+				local.entity thread removerocket local.new
 			}
 		}
 		waitframe
 	}
 end
 
-removerocket local.entity:
+removerocket local.new:
 
-	self thread waittill_touch local
-	local.hitthing = self
-	while(local.hitthing == self || local.hitthing == local.entity)
-	{
-		self waittill touch
-		local.hitthing = parm.other
-	}
-	if(self != NULL) { self remove }
-end
-
-waittill_touch local.thread:
-
-	while(1)
-	{
-		if(self == NULL || vector_length(self.origin) > 12000) // if moving outside the map or NULL.
-		{
-			if(local.thread != NULL) { local.thread remove } // prematurely end "waittill touch" and its thread (nothing else runs after it).
-			if(self != NULL) { self remove }
-			end
-		}
-
-		if(self.velocity == ( 0 0 0 )) { end } // add any other conditions here to prematurely end "waittill touch".
-		waitframe
-	}
+	while(self != NULL) { waitframe }
+	if(local.new != NULL) { local.new remove }
 end
