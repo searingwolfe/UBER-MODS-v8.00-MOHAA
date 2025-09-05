@@ -1,4 +1,4 @@
-	*Current Version: 7.992 - Updated: 9/4/2025*
+	*Current Version: 7.992 - Updated: 9/5/2025*
 
 ### Table of Contents
 
@@ -1422,9 +1422,15 @@ Misc map changes & bug fixes
 
 	- Updated the "void" map with new wall entities, player spawns, lasers, and extra UBER triggers.
 
+New script created: "global/rocketfix.scr".
+
+	- By adding "exec global/rocketfix.scr" into "global/dmprecache.scr" or into any .scr map script, all rocket projectiles fired out of player's rocket launchers will fire with the correct angles.
+	- Previously, an unresolved game bug caused all rocket projectiles to fire backwards. Only MOHAA Reborn 1.12 / Nightfall can run this script.
+
 New map modded: m6l1c
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
