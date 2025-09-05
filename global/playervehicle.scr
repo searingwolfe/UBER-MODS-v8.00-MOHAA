@@ -1854,7 +1854,7 @@ move_stuck_players:
 	waitframe
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
-		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && self != NULL && $player[local.i] istouching self)
+		if(isalive $player[local.i] && $player[local.i].dead != 1 && $player[local.i].dmteam != "spectator" && self != NULL && $player[local.i] istouching self && $player[local.i].driving != 1 && $player[local.i].passenger != 1 && $player[local.i].turreting != 1 && $player[local.i].flying != 1 && $player[local.i].missile == NIL)
 		{
 			self thread moving_stuck_players $player[local.i]
 		}
@@ -1863,11 +1863,15 @@ end
 
 moving_stuck_players local.player:
 
-	while(self != NULL && isalive local.player && local.player.dmteam != "spectator" && local.player istouching self)
+	if(local.player.moving_stuck_players == 1) { end }
+	local.player.moving_stuck_players = 1
+
+	while(self != NULL && isalive local.player && local.player.dmteam != "spectator" && local.player istouching self && local.player.driving != 1 && local.player.passenger != 1 && local.player.turreting != 1 && local.player.flying != 1 && local.player.missile == NIL)
 	{
-		local.player.origin += (angles_toup self.angles * 10)
-		//waitframe
+		local.player.origin += (angles_toup self.angles * 20)
+		waitframe
 	}
+	if(local.player != NULL) { local.player.moving_stuck_players = 0 }
 end
 
 ////////////////////////////////////////////////////////////////////////
