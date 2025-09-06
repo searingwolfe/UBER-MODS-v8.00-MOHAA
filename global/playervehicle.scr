@@ -985,7 +985,8 @@ turretslot local.player:
 	self.gun lock
 	self lock
 	if(self.model != "models/vehicles/jeep.tik") { self.turretplayer.scale = 0.5 } // self.turretplayer hide
-	local.player glue self.gun // keep player's angles aligned with 30cal turret.
+
+	self thread spawn_turretgun_player_glue local.player
 
 	local.driver = self.driver
 	local.team = local.player.dmteam
@@ -996,6 +997,8 @@ turretslot local.player:
 	{
 		local.player.origin = self.gun.origin
 		if(local.player.fireheld == 1) { self.gun playsound sndfire30cal }
+
+		if($("turretglue_" + self.entnum) != NULL) { $("turretglue_" + self.entnum).angles = ( 0 (local.player.viewangles[1] + 180) 0 ) } // without this, SDKFZ turret will not rotate.
 
 		if(self.turretplayer.driving_state_jump == 1)
 		{
@@ -1076,6 +1079,7 @@ turretplayer_reset local.team local.player local.dead:
 			self.gun notsolid
 			self.gun pitchcaps ( -60 35 0 )
 			if(self.model != "models/vehicles/jeep.tik") { self.gun.scale = 0.5 }
+			if($("turretglue_" + self.entnum) != NULL) { self.gun glue $("turretglue_" + self.entnum) }
 		}
 	}
 	if(self != NULL && self.dead != 1) { self thread turretplayer_reattach local.player local.team }
@@ -1113,6 +1117,25 @@ remove_viewmodels:
 			waitframe
 		}
 		waitframe
+	}
+end
+
+spawn_turretgun_player_glue local.player:
+
+	while(self != NULL && self.gun != NIL && self.gun != NULL && $("turretgun_player_glue_" + self.gun.entnum) != NULL) { $("turretgun_player_glue_" + self.gun.entnum) remove; waitframe }
+
+	if(self != NULL && self.gun != NIL && self.gun != NULL)
+	{
+		local.offset = ( (self.gun.scale * 10) (self.gun.scale * 48) (self.gun.scale * -8) )
+		self.gun attachmodel models/static/jug.tik "Box01" 1 ("turretgun_player_glue_" + self.gun.entnum) 1 -1 -1 -1 -1 local.offset //( +left -right, +backward -forward, +up -down )
+		$("turretgun_player_glue_" + self.gun.entnum).angles = self.gun.angles
+		$("turretgun_player_glue_" + self.gun.entnum) bind self.gun
+		$("turretgun_player_glue_" + self.gun.entnum) hide
+	}
+
+	if(local.player != NULL && local.player.turreting == 1 && local.player.turretingent == self)
+	{
+		local.player glue $("turretgun_player_glue_" + self.gun.entnum) // keep player's angles aligned with 30cal turret.
 	}
 end
 
@@ -1416,8 +1439,7 @@ spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwi
 	{
 		$("driver_seat_" + self.entnum).angles = self.angles
 		$("driver_seat_" + self.entnum) bind self
-		$("driver_seat_" + self.entnum).scale = 2
-		$("driver_seat_" + self.entnum) show
+		$("driver_seat_" + self.entnum) hide
 	}
 	if($("rear_view_" + self.entnum) != NULL)
 	{
