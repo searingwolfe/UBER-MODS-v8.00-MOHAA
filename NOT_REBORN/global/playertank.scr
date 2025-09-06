@@ -807,7 +807,7 @@ turretslot_2nd local.player:
 	//if(local.player.isdog == 1) { local.player iprint ("Dogs cannot use vehicle turrets."); end }
 	if(self.driver != NIL && self.driver != NULL && local.player.dmteam != self.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
 	{
-		local.player iprint ("An enemy player is driving this vehicle!")
+		local.player iprint ("An enemy player is driving this tank!")
 		end
 	}
 
@@ -836,7 +836,8 @@ turretslot_2nd local.player:
 	self.gun lock
 	self lock
 	self.gun2 show
-	local.player glue self.gun2 // keep player's angles aligned with 30cal turret.
+
+	self thread spawn_turretgun_player_glue local.player
 
 	local.driver = self.driver
 	local.team = local.player.dmteam
@@ -959,6 +960,25 @@ turret_2nd_reset:
 
 	waitframe
 	local.groundtarget_gun2 remove
+end
+
+spawn_turretgun_player_glue local.player:
+
+	while(self != NULL && self.gun2 != NIL && self.gun2 != NULL && $("turretgun_player_glue_" + self.gun2.entnum) != NULL) { $("turretgun_player_glue_" + self.gun2.entnum) remove; waitframe }
+
+	if(self != NULL && self.gun2 != NIL && self.gun2 != NULL)
+	{
+		local.offset = ( (self.gun2.scale * 10) (self.gun2.scale * 48) (self.gun2.scale * -8) )
+		self.gun2 attachmodel models/static/jug.tik "Box01" 1 ("turretgun_player_glue_" + self.gun2.entnum) 1 -1 -1 -1 -1 local.offset //( +left -right, +backward -forward, +up -down )
+		$("turretgun_player_glue_" + self.gun2.entnum).angles = self.gun2.angles
+		$("turretgun_player_glue_" + self.gun2.entnum) bind self.gun2
+		$("turretgun_player_glue_" + self.gun2.entnum) hide
+	}
+
+	if(local.player != NULL && local.player.turreting == 1 && local.player.turretingent == self)
+	{
+		local.player glue $("turretgun_player_glue_" + self.gun2.entnum) // keep player's angles aligned with 30cal turret.
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////
