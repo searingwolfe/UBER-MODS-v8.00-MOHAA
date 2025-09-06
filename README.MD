@@ -1,4 +1,4 @@
-	*Current Version: 7.992 - Updated: 9/5/2025*
+	*Current Version: 7.992 - Updated: 9/6/2025*
 
 ### Table of Contents
 
@@ -1302,7 +1302,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 # Updates & Bug Fixes
 
-v7.992 (9-4-2025):
+v7.992 (9-6-2025):
 
 Drivable Vehicles/Tanks/Boats upgraded (global/playervehicle.scr, playertank, playerboat).
 
@@ -1329,6 +1329,8 @@ Drivable Vehicles/Tanks/Boats upgraded (global/playervehicle.scr, playertank, pl
 	- Readjusted setsizes for vehicle damage triggers (to allow shooters to shoot drivers/passengers heads), vehicle models, and destroyed-vehicle models.
 	- Updated fire and smoke emitters for all destroyed vehicles.
 	- Removed team avatars above vehicles.
+	- Fixed SDKFZ turrets not rotating with player's angles.
+	- All players using vehicle/tank 30 Cal turrets will now be glued further behind them, so players' hands are accurately holding the turret gun handles.
 
 Weather Mod fixed & improved (global/weather.scr). More details provided inside the script.
 
@@ -1430,6 +1432,7 @@ New script created: "global/rocketfix.scr".
 New map modded: m6l1c
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
