@@ -699,12 +699,14 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3,
-M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B, M6L1C, M6L2A.
+Singleplayer maps finished so far: [Training](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#training-fully-modded), M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3,
+M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B, M6L1C, M6L2A. 
 
 ---------------
 
-- Training fully modded [See READMES old/README 4 (training map mods).txt for mod-specific info].
+#### Training fully modded
+
+- [See READMES old/README 4 (training map mods).txt for mod-specific info].
 - g_ubergametype "0" or "": Main Training script mods, where blowing up the tank unlocks doors to the 1st gunrange, doing 4 objectives unlocks the 2nd gunrange, doing 2 more spawns the final key for the final door.
 - in the training.scr script, exec maps/training_mapscripts/tank_m3_replace.scr drive, the "drive" can be replaced with "static" for a nondrivable tank, spawning Allies explosives for them to blow up the tank.
 
@@ -718,7 +720,7 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 
 ---------------
 
-##### M1L1 fully modded.
+#### M1L1 fully modded
 
 - Crates, teles, tables added to walk inside of most buildings, on their rooftops, or on stairs between rooftops, including on top of the Axis-side tower and the Allies-side light house (tele to it behind the Axis spawn).
 - 2 drivable tanks (one arrives with vehicle convoy), one drivable opeltruck & jeep & bmwbike, one Radiobomb Walkie, and 2 throwing knives on the map initially.
@@ -743,7 +745,9 @@ For all modded maps so far:
 
 ---------------
 
-- M1L2A fully modded. Crates, teles, tables added to walk inside of most buildings, on their rooftops, or on stairs between rooftops.
+#### M1L2A fully modded
+
+- Crates, teles, tables added to walk inside of most buildings, on their rooftops, or on stairs between rooftops.
 - One drivable king tank, one drivable opeltruck, 2 drivable bmwbikes, one drivable jeep, 2 usable flak88s, 2 Radiobomb Walkies, and 4 throwing knives on the map.
 - The Axis main building has 3 auto-spotlights, each scanning on their own path. If a player gets too close to a beam, the spotlight follows the player until he goes out of sight.
 Any player that goes near the spotlight itself instantly converts it into a regular spotlight, following the player's viewangles. If that player moves away, the spotlight returns to an auto-spotlight (also turning back on).
@@ -760,7 +764,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M1L2B fully modded. Crates, teles, tables added to walk inside of most buildings, on their rooftops, or on stairs between rooftops.
+#### M1L2B fully modded
+
+- Crates, teles, tables added to walk inside of most buildings, on their rooftops, or on stairs between rooftops.
 - 3 drivable tanks, 2 drivable opeltrucks, one drivable jeep, 2 Radiobomb Walkies, and 4 throwing knives on the map.
 - There are 3 auto-spotlights in the Axis spawn, and 1 auto-spotlight in the middle of the map, each scanning on their own path.
 - 2 alarm switches for controlling all auto-spotlights' colors behind the middle auto-spotlight: turn on rapidly changing rainbow colors, or turn on slower changing rainbow colors.
@@ -779,7 +785,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M1L3A fully modded. 3 tanks, 7 drivable vehicles, and 4 flyable plane triggers added to the map. 2 sets of radiobomb-walkies, 4 extra throwing knives also added.
+#### M1L3A fully modded
+
+- 3 tanks, 7 drivable vehicles, and 4 flyable plane triggers added to the map. 2 sets of radiobomb-walkies, 4 extra throwing knives also added.
 - Laser roads across the back edge of the map allow vehicles via ramps to drive on/off the main part of the map, also connecting to the road at the far end of the map.
 - Any vehicle/tank that falls off the laser road, or is somehow pushed outside of the map, will explode.
 - NOTE: Tank treads should be roughly horizontal before going onto the laser road, otherwise the tank could fly up into the sky and explode!
@@ -812,7 +820,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M1L3B fully modded. 4 tanks, 8 drivable vehicles, and 4 flyable plane triggers added to the map. 2 sets of radiobomb-walkies, 4 extra throwing knives also added.
+#### M1L3B fully modded
+
+- 4 tanks, 8 drivable vehicles, and 4 flyable plane triggers added to the map. 2 sets of radiobomb-walkies, 4 extra throwing knives also added.
 - 1 Flak88 on the Axis side, and 1 Nebelwerfer on the Allies side. 2 sets of bangalore wallbombs: 1 above the Axis red-light bunker, and two above the Allies two-door building.
 
 - Airstrikes every 2 minutes, 50% chance Allies or Axis strike. For Allies strikes: 50% chance the planes will spawn from left or right side of the airstrip, and 33% chance for c47s flying. 
@@ -825,7 +835,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M1L3C fully modded. 2 drivable higgins boats, and 9 vehicles added to the map. 2 sets of radiobomb-walkies, 4 extra throwing knives also added.
+#### M1L3C fully modded
+
+- 2 drivable higgins boats, and 9 vehicles added to the map. 2 sets of radiobomb-walkies, 4 extra throwing knives also added.
 - 3 bangalore wallbombs in Allies spawn, and 2 sets of bangalore wallbombs in Axis spawn. No airstrikes on this map, since the road between both spawns is too skinny.
 - Any players that are touching a higgins boat will not be forcibly respawned if also touching the "$ocean" trigger.
 
@@ -847,7 +859,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M2L1 fully modded. 5 flyable planes, 1 flak88, 1 nebelwerfer, 4 tanks and 12 vehicles added to the map. 3 sets of radiobomb-walkies, 4 extra throwing knives also added.
+#### M2L1 fully modded
+
+- 5 flyable planes, 1 flak88, 1 nebelwerfer, 4 tanks and 12 vehicles added to the map. 3 sets of radiobomb-walkies, 4 extra throwing knives also added.
 - 5 bangalore wallbombs: 1 in Allies spawn, 2 in main center building, and 2 in Axis spawn. Airstrikes launch randomly between 90 and 180 seconds.
 - These airstrikes use global/bomberplane_nospline.scr and require level.bomberplane_map_setsizes to be defined before running these threads, since origin & angles are randomized per airstrike.
 
@@ -864,7 +878,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M2L2A fully modded. 3 flyable planes, 4 higgins boats, 4 uboats, 3 jetpacks, 2 flak88s, 1 nebelwerfer, 1 tank and 3 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
+#### M2L2A fully modded
+
+- 3 flyable planes, 4 higgins boats, 4 uboats, 3 jetpacks, 2 flak88s, 1 nebelwerfer, 1 tank and 3 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
 - 6 bangalore wallbombs mostly in Allies spawn; 2 of these alarm switches keep a nearby red light on until the switches have reset. Airstrikes are not included in this level, since half of the level is inside.
 
 - Drivable uboats added into global/playerboat.scr. Similar to drivable higgins boats, the uboats have 5 extra passenger seats that allow passengers to stand on the uboat's upper platforms.
@@ -884,7 +900,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M2L2B fully modded. 4 flyable planes, 4 higgins boats, 4 uboats, 4 jetpacks, 1 flak88, 1 nebelwerfer, 1 tank and 3 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
+#### M2L2B fully modded
+
+- 4 flyable planes, 4 higgins boats, 4 uboats, 4 jetpacks, 1 flak88, 1 nebelwerfer, 1 tank and 3 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
 - 4 bangalore wallbombs, 2 inside the uboat sub, and 2 between other uboat docks. 1 set of bangalore wallbombs triggered via detonator on top of the uboat sub. Airstrikes are not included in this level.
 
 - A vehicle tele allows vehicles to travel through a metal gate to a normally inaccessable uboat dock.
@@ -896,7 +914,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M2l2C fully modded. 4 flyable planes, 5 higgins boats, 4 uboats, 5 jetpacks, 2 flak88s, 2 nebelwerfers, 1 tank and 6 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
+#### M2l2C fully modded
+
+- 4 flyable planes, 5 higgins boats, 4 uboats, 5 jetpacks, 2 flak88s, 2 nebelwerfers, 1 tank and 6 vehicles added to the map. 2 sets of radiobomb-walkies, 8 extra throwing knives also added.
 - 3 bangalore wallbombs, 2 in Axis spawn, 1 in Allies spawn. 2 sets of bangalore wallbombs triggered via detonator on top of both uboat subs. Airstrikes are not included in this level.
 
 - A vehicle tele allows vehicles to travel through a metal gate to a normally inaccessable uboat dock.
@@ -925,7 +945,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M2L3 fully modded. 4 flyable planes, 1 flak88, 1 nebelwerfer, 3 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, 5 extra throwing knives also added.
+#### M2L3 fully modded
+
+- 4 flyable planes, 1 flak88, 1 nebelwerfer, 3 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, 5 extra throwing knives also added.
 - 1 set of bangalore wallbombs (two-way switch) between the truck garage and Axis spawn outdoors. Airstrikes are not included in this level.
 
 - The train's splinepath is extended along the curved railroad, and extended from the train tunnel. The tunnel itself is extended all the way to the map's edge.
@@ -953,7 +975,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M3L1A fully modded. 5 flyable planes, 2 jetpacks, 2 flak88s, 2 nebelwerfers, 4 tanks, 2 boats added to the map. 2 sets of radiobomb-walkies, extra throwing knives not added.
+#### M3L1A fully modded
+
+- 5 flyable planes, 2 jetpacks, 2 flak88s, 2 nebelwerfers, 4 tanks, 2 boats added to the map. 2 sets of radiobomb-walkies, extra throwing knives not added.
 - 1 bangalore wallbomb at the trench bunker entrance. Airstrikes occur at random times, and along any X-Y-axis direction on the map.
 
 - Random artillery explosions occur in the beach craters, at 6 $higgins_runup_mortar1 [mortar6] locations, and once per time-cycle at any random map location.
@@ -975,7 +999,9 @@ Any player that goes near the spotlight itself instantly converts it into a regu
 
 ---------------
 
-- M3L1B fully modded. 5 flyable planes, 3 flak88s, 2 nebelwerfers, 5 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, extra throwing knives not added.
+#### M3L1B fully modded
+
+- 5 flyable planes, 3 flak88s, 2 nebelwerfers, 5 tanks, 4 vehicles added to the map. 2 sets of radiobomb-walkies, extra throwing knives not added.
 - 3 bangalore wallbombs on Axis' side upper hill at 3 bunker door exits. Airstrikes occur at random times, and along any X-Y-axis direction on the map.
 
 - Random artillery explosions occur in the beach and hill craters, and once per time-cycle at any random map location.
@@ -995,7 +1021,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M3L2 fully modded. 5 jetpacks, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
+#### M3L2 fully modded
+
+- 5 jetpacks, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
 
 - NOTE: Tanks, vehicles, radiobomb-walkies, dog trigger were removed because the players' clients keep auto-disconnecting them with an "ERROR: MAX_GAMESTATE_CHARS exceeded" message in their consoles.
 	- So far, this error only occurs on this map if too many vehicles/tanks are spawned in (too much client data? too many sound aliases? not sure).
@@ -1016,7 +1044,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M3L3 fully modded. 4 vehicles, 4 tanks, 4 jetpacks, 3 flak88s, 4 nebelwerfers, 8 extra throwing knives added to the map.
+#### M3L3 fully modded
+
+- 4 vehicles, 4 tanks, 4 jetpacks, 3 flak88s, 4 nebelwerfers, 8 extra throwing knives added to the map.
 
 - 2 vehicle teles: one between the middle Allies road and the destroyed buildings, and one to travel through the Axis road barbwire.
 - Random explosions added within all mortar craters on the map.
@@ -1031,7 +1061,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M4L0 fully modded. 6 vehicles, 3 tanks, 4 flyable planes, 3 jetpacks, 3 flak88s, 5 nebelwerfers, 8 extra throwing knives added to the map.
+#### M4L0 fully modded
+
+- 6 vehicles, 3 tanks, 4 flyable planes, 3 jetpacks, 3 flak88s, 5 nebelwerfers, 8 extra throwing knives added to the map.
 
 - NOTE: The map's .BSP did not make the road fully solid for vehicles/tanks. They will fall through the road and explode if player try to drive across the road (too many entities required to fix it).
 	- 11 green laser bridges added to allow vehicles/tanks to cross the road.
@@ -1056,7 +1088,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M4L1 fully modded. 10 vehicles, 4 tanks, 3 flak88s, 3 nebelwerfers, 8 extra throwing knives added to the map.
+#### M4L1 fully modded
+
+- 10 vehicles, 4 tanks, 3 flak88s, 3 nebelwerfers, 8 extra throwing knives added to the map.
 
 - The altar can slide open/closed by pressing the USE(e) key near the pulsating red button on the altar.
 
@@ -1074,7 +1108,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M4L2 fully modded. 4 vehicles, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
+#### M4L2 fully modded
+
+- 4 vehicles, 3 flak88s, 2 nebelwerfers, 8 extra throwing knives added to the map.
 
 - A train travels across the train tracks from the Allies-side spawn towards the Axis-side spawn.
 	- Any player or vehicle that gets in front of the train will die/explode.
@@ -1105,7 +1141,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M4L3 fully modded. 4 vehicles, 1 flak88, 2 nebelwerfers, 8 extra throwing knives added to the map. Only drivable opeltrucks are included (speed increased to 400, only for this map).
+#### M4L3 fully modded
+
+- 4 vehicles, 1 flak88, 2 nebelwerfers, 8 extra throwing knives added to the map. Only drivable opeltrucks are included (speed increased to 400, only for this map).
 
 - NOTE: adding too many different vehicles/tanks, or adding vehicles with non-truck sounds (original map included truck sounds) while other mods are enabled, will cause players' game to disconnect with "ERROR: MAX_GAMESTATE_CHARS exceeed".
 
@@ -1130,7 +1168,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M5L1A fully modded. 4 vehicles, 1 flak88, 2 nebelwerfers, 8 extra throwing knives added to the map.
+#### M5L1A fully modded
+
+- 4 vehicles, 1 flak88, 2 nebelwerfers, 8 extra throwing knives added to the map.
 - Invisible higginsxtrahull.tik script_models added below the map's yellow dirt road to solidify it for vehicles to drive over, otherwise they would fall through.
 
 - Airstrikes occur at random times across any X-Y-axis direction on one half of the map (which half is randomized too), being split between the central origin ( -576 0 0 ) instead of ( 0 0 0 ).
@@ -1149,7 +1189,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M5L1B fully modded. 4 vehicles ("g_ubermods 2" only), 3 flak88, 3 nebelwerfers, 8 extra throwing knives added to the map.
+#### M5L1B fully modded
+
+- 4 vehicles ("g_ubermods 2" only), 3 flak88, 3 nebelwerfers, 8 extra throwing knives added to the map.
 
 - Airstrikes occur at random times across any X-Y-axis direction on the map.
 - The wooden door at the Allies spawn building can be opened/closed.
@@ -1183,7 +1225,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M5L2A fully modded.
+#### M5L2A fully modded
 
 - Airstrikes occur at random times across any X-Y-axis direction on the map.
 - One mortar dirt explosion will occur randomly on the map after a random short amount of time.
@@ -1205,7 +1247,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M5L2B fully modded.
+#### M5L2B fully modded
 
 - All "cache" models from dmprecache.scr are removed for this level, since too many precaches will cause players' games to crash (not sure why yet),
 - so loading this level will cause some "^~^~^ Add the following line to the *_precache.scr map script" console errors to print.
@@ -1234,7 +1276,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M5L3 fully modded.
+#### M5L3 fully modded
 
 - Airstrikes occur at random times across any X-Y-axis direction on the map.
 - One mortar dirt explosion will occur randomly on the map after a random short amount of time.
@@ -1265,7 +1307,9 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M6L1A fully modded. 7 drivable vehicles, 9 nebelwerfers, 2 flak88s added to the map.
+#### M6L1A fully modded
+
+- 7 drivable vehicles, 9 nebelwerfers, 2 flak88s added to the map.
 - 2 sets of bangalore wall bombs triggered by alarm switches, 3 sets of bangalore wall bombs triggered by detonators.
 
 - 2 20mm turrets can be blown up with grenades.
@@ -1287,7 +1331,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M6L1C fully modded.
+#### M6L1C fully modded
 
 - Added "hail" weather ("snow" and "blizzard" don't work very well, since the map is too tall; "func_rain" entities must be spawned with custom setsizes lower than the map's height for these weather types).
 
@@ -1314,7 +1358,7 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
-- M6L2A fully modded.
+#### M6L2A fully modded
 
 - Added "hail" weather ("snow" and "blizzard" don't work very well, since the map is too tall; "func_rain" entities must be spawned with custom setsizes lower than the map's height for these weather types).
 
@@ -1433,6 +1477,7 @@ New script created: "global/server_crashed.scr".
 New map modded: m6l2a
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
