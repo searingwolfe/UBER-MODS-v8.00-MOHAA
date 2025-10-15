@@ -9,6 +9,8 @@ setlocal enabledelayedexpansion
 ::
 set "search1=(global/intermission_serverautoreopen.scr,"
 
+set "dllfail=...reason: 'A dynamic link library (DLL) initialization routine failed."
+
 :: ////////////////////////////////////////////////////////////////////////
 
 echo Medal of Honor: Server Auto-Reopen Script
@@ -65,7 +67,7 @@ for %%F in (MOHAA LOGFILE SERVER_EXE) do (
 )
 
 set Filename=qconsole
-set a=1
+set a=0
 
 :: Check if the server process is running.
 tasklist | findstr /I "%SERVER_PROCESS%" >nul
@@ -86,52 +88,48 @@ echo Script initialized. Monitoring !SERVER_PROCESS!...
 :: Wait 3 seconds before checking again.
 timeout /t 3 /nobreak >nul
 
-:: Check if the error exists in the log file.
+:: Check if runtime errors exist in the log file.
 findstr /C:"%search1%" "%LOGFILE%" >nul
 if %errorlevel% equ 0 (
 	echo [ERROR] !SERVER_PROCESS! Runtime Error detected^^!
+	goto restart
+)
 
-	:: Kill the MOHAA_server.exe process if it's running.
-	taskkill /F /IM MOHAA_server.exe >nul 2>&1
-
-	:: Save a copy of the logfile to desktop before restarting server.
-	set /a a+=1
-	copy %LOGFILE% "%Destination%\%Filename%(%a%).log"
-	@echo Copied: %date% %time%
-
-	:: Wait 2 seconds before restarting.
-	timeout /t 2 /nobreak >nul
-
-	:: Restart the MOHAA Server.
-	echo Restarting !SERVER_PROCESS!...
-	start "" %MOHAA%
-    
-	:: Clear the log file after restart to avoid infinite loop detection.
-	echo. > "%LOGFILE%"
+:: Check if DLL errors exist in the log file.
+findstr /C:"%dllfail%" "%LOGFILE%" >nul
+if %errorlevel% equ 0 (
+	echo [ERROR] !SERVER_PROCESS! DLL initialization failed^^!
+	goto restart
 )
 
 :: Check if the server process is running
 tasklist | findstr /I "%SERVER_PROCESS%" >nul
 if %errorlevel% neq 0 (
 	echo [ERROR] !SERVER_PROCESS! is no longer running^^!
-
-	:: Kill the MOHAA_server.exe process if it's running.
-	taskkill /F /IM MOHAA_server.exe >nul 2>&1
-
-	:: Save a copy of the logfile to desktop before restarting server.
-	set /a a+=1
-	copy %LOGFILE% "%Destination%\%Filename%(%a%).log"
-	@echo Copied: %date% %time%
-
-	:: Wait 2 seconds before restarting.
-	timeout /t 2 /nobreak >nul
-
-	:: Restart the MOHAA Server.
-	echo Restarting !SERVER_PROCESS!...
-	start "" %MOHAA%
-
-	:: Clear the log file after restart to avoid infinite loop detection.
-	echo. > "%LOGFILE%"
+	goto restart
 )
+
+goto monitor
+
+:: Thread for restarting the server.
+:restart
+
+:: Kill the MOHAA_server.exe process if it's running.
+taskkill /F /IM MOHAA_server.exe >nul 2>&1
+
+:: Save a copy of the logfile to desktop before restarting server.
+set /a a+=1
+copy %LOGFILE% "%Destination%\%Filename%(%a%).log"
+@echo Copied: %date% %time%
+
+:: Wait 2 seconds before restarting.
+timeout /t 2 /nobreak >nul
+
+:: Restart the MOHAA Server.
+echo Restarting !SERVER_PROCESS!...
+start "" %MOHAA%
+    
+:: Clear the log file after restart to avoid infinite loop detection.
+echo. > "%LOGFILE%"
 
 goto monitor
