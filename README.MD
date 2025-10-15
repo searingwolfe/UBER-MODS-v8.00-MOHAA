@@ -1,4 +1,4 @@
-	*Current Version: 7.992 - Updated: 9/6/2025*
+	*Current Version: 7.993 - Updated: 10/15/2025*
 
 ### Table of Contents
 
@@ -66,6 +66,22 @@ To make an expanded "sv_maplist" in server.cfg (beyond 256 characters), make oth
 
 		seta sv_maplist "dm/mohdm6 dm/mohdm1 dm/mohdm6"	 // this will not work as intended;
 		seta sv_maplist2 "dm/mohdm1 dm/mohdm6 dm/mohdm3" // once loading dm/mohdm6 in the 2nd list, the script will think you are at the end of the 1st list.
+
+To make the server auto-change to the next map after the server's previous map when that was running when it last closed/crashed (only works in Reborn / Nightfall),<br>
+add the following line into server.cfg:
+
+		seta server_crashed "1"
+
+Also, add the following line into global/dmprecache.scr:
+
+		exec global/server_crashed.scr
+
+This script writes the server's current map to "cvars/mapname.txt".<br>
+When the server re-opens, the map will be changed to the "next map" (full list in "nextmap" thread inside "global/server_crashed.scr") after running the map initially set inside server.cfg.<br>
+For example, if the server crashed on dm/mohdm6 and then re-opens, the server will first run server.cfg, and will lastly change to dm/mohdm7.
+
+To use customized pink text death messages, make a folder called "global" directly in the "Medal of Honor/main" folder,<br>
+and copy-paste the "global/localization.txt" file from zzzzz_UBER...pk3 into the new "global" folder.
 
 #
 
@@ -684,7 +700,7 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 # Singleplayer Maps Mods
 
 Singleplayer maps finished so far: Training, M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3,
-M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B, M6L1C.
+M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B, M6L1C, M6L2A.
 
 ---------------
 
@@ -1296,142 +1312,126 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+- M6L2A fully modded.
+
+- Added "hail" weather ("snow" and "blizzard" don't work very well, since the map is too tall; "func_rain" entities must be spawned with custom setsizes lower than the map's height for these weather types).
+
+- 5 jetpacks added for players to fly onto any rooftop, since adding too many teles will max out the map's 1024 max entities.
+- 3 ladders added for the 2 wooden towers & in the Axis spawn for climbing up/down the snowy park building window near the edge of the map.
+- 5 hanging road signs ($swinger1 to 5) will swing back and forth with randomizing speeds. If swinging fast enough, the sign will play a "gate_iron_open" sound.
+- 2 wooden spotlight towers will occasionally play wood creaking sounds.
+
+- For "g_ubermods 2":
+	- 6 vehicles, 4 flyable planes, 1 radiobomb walkie, 8 extra throwing knives added to the map (removed if "g_ubergametype bb", base-builder, is set).
+	- 1 vehicle tele added for passing through the central metal fence.
+	- 6 radios inside the bunkers can turn on/off and cycle through playing 3 static sounds or music while turned on.
+	- 2 metal stoves inside the bunkers can turn on/off to play fireplace sounds with orange illumination.
+	- 1 fireplace has a valve switch next to it that can turn on/off black smoke emitting from the fire.
+	- 1 toilet can be flushed & 2 sink/tub faucets can turn on/off to play water drip sounds.
+	- 11 cabinets can be opened/closed.
+	- The cello & piano can temporarily play music.
+	- The 2 central bunkers can be separately blown up by rocket launchers (only while inside them) or by other radiusdamage explosions (objects inside them will disappear).
+	- Some lasers added to outline the map's edges and other invisible walls/edges.
+- For "g_ubermods 1":
+	- 2 auto-spotlights in the 2 wooden towers will follow loops of SplinePath nodes on the map, following any player that gets too close to the lights.
+	- 2 spotlight color switches can turn on/off the rapid color-changing of the auto-spotlights or turn on/off slower color-changing.
+	- 3 sets of bangalore wallbombs added.
+	- 4 radiobomb walkies added.
+	- All lasers added to outline the map's edges and other invisible walls/edges.
+
+---------------
+
 - All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
 
 # Updates & Bug Fixes
 
-v7.992 (9-6-2025):
+v7.993 (10-15-2025):
 
 Drivable Vehicles/Tanks/Boats upgraded (global/playervehicle.scr, playertank, playerboat).
 
-	- Players can now enter any vehicle seats, not just the driver seat, with or without a driver present:
-		- Press USE(e) to begin entering vehicle, taking 1 second to enter (instantly enter the vehicle's passenger seat or turret seat if a teammate is currently driving).
-		- While entering an empty vehicle: press & let go of FIRE to enter turret seat instead of driver seat.
-		- While entering an empty vehicle: JUMP to enter passenger seat instead of driver seat (or Stand & then Crouch to enter).
-		- For an occupied vehicle: press USE(e) to enter turret seat if available, or enter passenger seat if the turret seat is occupied.
-		- For an occupied vehicle: press USE(e) while Crouching to enter passenger seat instead of the turret seat.
+	- Passengers in drivable vehicles/boats will now rotate their bodies when holding FIRE(zoom) and looking around.
+	- Prevented passengers from damaging themselves if shooting at their vehicle/boat for all instances.
+	- Fixed SDKFZ mg42 turrets occasionally not shooting from the turret player's crosshairs.
+		- Removed SDKFZ mg42 turret glue entities for moving the turrets down a few units since they were not resetting properly, breaking the turrets (may re-add later if fixed).
+	- Fixed tank/vehicle turret players' cameras from getting messed up when killing a vehicle driver ("cuecamera" was causing problems, so it was removed from drivable vehicle/boat/tank scripts).
+	- Tank drivers that blow up players sitting in passenger & turret seats will now receive scorepoints for blowing them up.
+	- Players that get into vehicle/tank turrets (jeep_30cal.tik) will now be instantly rotated to the angles they were facing before getting in, by briefly rotating the entire vehicle's angles (may not work if vehicle/tank is near a wall).
+		- Players getting into vehicles/tanks can now also hold FIRE to use the 30_cal turret, instead of only pressing & releasing FIRE before being placed into the driver seat (easier for players to use turret seats).
+	- Prevented camera problems for tank drivers, VehicleTurretGun users, & TurretGun users when other tank drivers exit tanks (due to "cueplayer" affecting all players), by respawning the driver & moving him back to the tank when exiting it.
+	- Fixed players' invisible weapon & arm that occurs when exiting tanks, by adding "EXIT_TANK" & "RAISE_WEAPON_T" states to "global/[name]_torso.st" file, which puts weapon away, then raises it again after waiting until torso anims are done.
 
-	- Passengers can now Lean Left/Right to change seats if other seats are available (cycle up/down seats respectively).
-	- Dogs can now use turret seats.
+Other UBER mod upgrades/fixes.
 
-	- Passengers and turret players will no longer auto-exit vehicles when the driver exits the vehicle (they get auto-reseated back into their seats instead).
-	- Turret players (30 Cal turrets) will no longer get auto-killed if only the driver/passengers are killed (players must independently shoot & kill turret players).
-	- Players can no longer kill their teammates driving/riding in vehicles, including if the player is also riding with their teammates (only works in Reborn/Nightfall).
-	- Dogs can now kill drivers and passengers instantly by biting their vehicle, with kills counting towards the dog player's score (dogs will have to bite directly near turret players to kill them).
+	- Changed Incendiary Snowball Gun (Hi-Standard Silenced Pistol, map_triggers/snowball_ammo.scr) damaging emitter from "snowdrift" to "aircraft_explosion" (formerly named "Toxic Snowball Gun").
+		- For Reborn / Nightfall only: the Incendiary Snowball Gun will immolate nearby enemy players by gluing an "explosion_conflagration" emitter onto them for a few seconds.
+		- For Reborn / Nightfall only: if a player kills themselves with this weapon, the death message will print "was reduced to a pile of smoldering ashes" instead of "turned into pink mist".
 
-	- Prevented drivers & passengers from respawning back to their vehicle when switching teams, now respawning normally.
-	- Cleaned up the "main" thread and created "vehicle_settings" thread at the bottom of each script for "desmodel", "outheight", "outout" sound, higgins_door or turret gun adjustments, model caches, 	etc.
-	- Fixed "move_stuck_players" thread to run continuously until all players are not underneath any newly-spawned vehicles or destroyed-vehicle models.
-	- Fixed players shooting vehicles that were not getting kills when killing some vehicle passengers (mainly for Reborn/Nightfall).
-	- Fixed vehicles that were instantly respawning when flooded with players still inside (vehicles will flood if hit by a Light Bomb).
-	- Readjusted setsizes for vehicle damage triggers (to allow shooters to shoot drivers/passengers heads), vehicle models, and destroyed-vehicle models.
-	- Updated fire and smoke emitters for all destroyed vehicles.
-	- Removed team avatars above vehicles.
-	- Fixed SDKFZ turrets not rotating with player's angles.
-	- All players using vehicle/tank 30 Cal turrets will now be glued further behind them, so players' hands are accurately holding the turret gun handles.
+	- Players that throw knives will now do an arm-throwing animation when unarmed as well (previously only worked if holding a weapon).
+	- Players that throw Giant Bombs or Light Bombs will now do an arm-throwing animation.
+	- Added a readme in "global/throwingknife.scr", since this script now uses a new "THROW_OBJECT" state in "_torso.st" global file (also added a readme in "global/give_players_knives.scr").
+	- Throwing knives will now fall to the ground if hitting a player/entity and after that entity moves or disappears.
 
-Weather Mod fixed & improved (global/weather.scr). More details provided inside the script.
+	- For setting a map's "level.interior_volumes" array (in the "weather" folder) for global/ambience_mp.scr,
+		- The first number should not = 1 or greater, otherwise the script will remove it when exploder #set 1 gets removed.
+		- Since the first number can be a decimal to control the "rain sounds" volume for this volume, make this "0.99999" to maintain a max volume of "1".
+		- Setting the second number = 1 forces any weather to play "outside" sounds for this volume instead of "interior" sounds, allowing for multiple different "outside" ambiences. 
+		- Example:	( -3648 -3232 0 ) ( -10000 -10000 -10000 ) ( 0 1132 10000 ) sound/amb_stereo/Amb_M6_ParkAreaExt.mp3 0.99999 1
 
-	- "snow", "snow_fast", "blizzard", "hail", "snow_original", "rain", "drizzle", "monsoon", "rain_original", "0" or "off".
+	- "global/rocketfix.scr" (script for rotating by 180 degrees all rocket projectiles' angles) will now end before map intermission begins (when map time = 0), to prevent potential server crashes.
+	- Players with Radiobomb Walkies (maps/gen_mapscripts/radiobomb_walkietrig.scr) can now, by default, use walkies to blow up radiobombs without first moving the radiobombs from their initial origins.
+	- Updated "map_triggers/joint_trigger.scr" with more smoke emitters. Players holding USE(e) to smoke the joint will emit smoke from their mouths.
 
-	- Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
-	- Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
+	- The "find", "findent", "proximity_pointer", and "entity_pointer" cvars will also print ".setsize1" and ".setsize2" for the selected entity if they exist.
+	- Increased rocket launcher damage from 250 to 500 per rocket, allowing only 2+ rockets to blow up a drivable tank instead of 4+ rockets.
+	- Increased the size of flyable planes' rocket projectiles & bomb drops.
+	- Players that directly hit flyable planes with a tank shell or other projectiles will now receive scorepoints.
 
-	- Adjust the weather's sound volume anytime with the "cg_rain_volume" cvar. Example: "cg_weather 0.5" in console, or any decimal between 0 and 1.
-	- To change "cg_rain_density", use the "cg_weather_density" cvar instead. Example: "cg_weather_density 0.35" in console, or any number between 0 and 9.
+	- Players that blow themselves up with rocket launchers will print "rocketed himself" death message, instead of the normal "blew himself up" death message (Reborn / Nightfall only).
+	- Server will now print to console "Intermission... Changing maps shortly." when map time has ended.
 
-	- The 2 original weathers have the exact values given to the game's original "snow" and "rain".
-	- If the "thunder" parameter = 1, the sky will occasionally flash white and thunder sounds will play.
-	- Adjust the initial max volume (i.e. half volume) by setting the "weather volume" parameter to 0.5 instead of 1.
+New script created: "global/respawn_fix.scr".
 
-	---------------
+	- This script moves respawned players to a new "$allied_spawn" or "$axis_spawn" point (if they exist) that is furthest away from all enemies & not next to teammates.
+	- Sometimes, players can spawn camp enemies even if there's other further-away spawn points outside of the camp zone, since the game may prefer spawn points in map corners/edges or outside the original map's bounds.
+	- If 2+ teammates are stuck inside each other, the script will auto-respawn them.
 
-	- Parameters: weather type, thunder (0 or NIL = no, 1 = yes), weather volume (1 = max), spawn func_rain entities (1 or NIL = yes, 0 = no), optional initial "cg_rain_density" value (0 to 9).
-	- Example: exec global/weather.scr "snow"
-	- Example: exec global/weather.scr "snow_fast" 0
-	- Example: exec global/weather.scr "rain" 1 0.8
-	- Example: exec global/weather.scr "snow_fast" 0 1 0 // m6l1b
-	- Example: exec global/weather.scr "blizzard" 1 1 1 0.06 // anything < 0.06 causes 0 density weather, or "off".
+	- NOTE: Do not use this script if 2+ spawn points exist that don't have any targetnames in the map's original .BSP (i.e. map dm/mohdm1, dm/mohdm2 ... obj/obj_team1, obj/obj_team2...),
+	- since the players will only be moved to spawn points with "$[team]_spawn" targetnames ("$deathmath_spawn" for FFA gametypes).
 
-	- NOTE: if the script's spawned "func_rain" entities cause some snowy weather effects to fall down in large clusters (not uniformly & steadily falling down),
-	- the "optional initial cg_rain_density value" parameter must be given any smaller value >= 0.06 that allows the particles to fall more uniformly (i.e. using "blizzard" on tall maps).
+	- Add "exec global/respawn_fix.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script.
+	- For respawning to team-spawnpoints besides "allied_spawn", "axis_spawn", "deathmatch_spawn": add the example below instead with different names (each teams' spawnpoints all must have the same name):
+	- Parameters: allies spawnpoint targetname, axis spawnpoint targetname, free-for-all spawnpoint targetname
+	- Example: exec global/respawn_fix.scr "new_allies_spawn" "new_axis_spawn" "new_ffa_spawn"
 
-	---------------
+New script created: "global/player_taunts.scr".
 
-	- Fixed "hail" to precipitate more uniformly by reducing its "cg_rain_density" value (can only be changed by admins with "cg_weather_density" cvar).
-	- Fixed "drizzle" and "monsoon" not always working due to "cg_rain_density" not updating properly.
-	- Fixed weather & rain density not updating when weather is initially on, then set to "off", then back on again.
-	- Greatly reduced sound distance for player rain sounds, to prevent players from hearing overlapping sounds when 2+ players are in the server and near each other.
-	- If spectators or dead players are spectating other players (or within 320 units of each other), the spectator/dead player's rain sounds will turn off, to prevent overlapping sounds with the living player.
+	- This script allows players to press the USE(e) key 5 times within 1 second to perform a taunt for 3-6 seconds.
 
-	---------------
+	- The player will do a "show_papers" taunt if holding a weapon, or do a "selectionidle" taunt if not holding any weapons.
+	- Players can shoot or switch weapons to cancel the taunt.
+	- Players must not be holding FIRE when pressing USE(e) key 4 times.
+	- Players can only taunt once every 3 seconds.
 
-- "level.interior_volumes" sound ambience volumes can now have a decimal number (0 to 0.999) indicating how much to multiply the sound volume by (reducing the volume heard by players).
+	- Add "exec global/player_taunts.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script.
 
-	- Example "level.interior_volumes" from m6l1a for interior sounds (these are found in the "weather" folder):
+New script created: "global/server_crashed.scr".
 
-			level.interior_volumes = makeArray
-				( 0 0 -128 ) ( -10000 -10000 -10000 ) ( 10000 10000 0 ) sound/amb_stereo/Amb_M6_FacilityInt.mp3 0 // adding a 0 here will turn off the player's rain sounds while inside this volume.
+	- This script writes the server's current map to "cvars/mapname.txt".
+	- When the server crashes, the map will be changed to the "next map" after the map that was running when the server last crashed (full list in "nextmap" thread).
+	- For example, if the server crashed on dm/mohdm6, the server will auto-reopen and change to dm/mohdm7 (instead of staying on the map initially ran by server.cfg).
 
-				( 4215 1827 191 ) ( 0 0 -291 ) ( 1101 1125 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-				( 4519 1111 191 ) ( 0 0 -291 ) ( 788 716 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-				( 4215 1111 191 ) ( 0 0 -291 ) ( 304 181 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
+	- This script can run with other server auto-reopen scripts. Whenever the server closes & then reopens, the server will auto-change maps to the "next map".
+	- This script only works in Reborn / Nightfall.
 
-				( 2459 791 103 ) ( 0 0 -203 ) ( 777 997 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
-				( 2648 1788 103 ) ( 0 0 -203 ) ( 220 635 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
-				( 2455 2423 103 ) ( 0 0 -203 ) ( 945 429 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 0.5 // adding a decimal < 1 here will multiply the sound volume by this amount.
+	- Add [seta server_crashed "1"] in server.cfg.
+	- Add "exec global/server_crashed.scr" in global/dmprecache.scr for this script to work.
 
-				( -256 719 207 ) ( 0 0 -307 ) ( 1424 821 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 7	// adding any other number will remove this volume
-				( 167 576 207 ) ( 0 0 -307 ) ( 433 143 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 7 	// after the corresponding $exploder.set = 7 blows up or gets removed.
-			endArray
-			exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_01.mp3 1 1 // 0 = no, 1 = keep players' music volume at max.
-
-	---------------
-
-	- Example "level.interior_volumes" from m6l1a for interior sounds: // these are found in the "weather" folder. For custom maps, a new [mapname].txt file must be made in this folder.
-
-			level.interior_volumes = makeArray
-				( -1007 5663 5583 ) ( 0 -104 -191 ) ( 287 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // origin, setsize1, setsize2, music filepath.
-				( -700 5559 5583 ) ( -325 -160 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3 // make sure interior_volumes volumes with different sounds are not overlapping.
-				( -717 5399 5583 ) ( -293 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-				( -747 5369 5583 ) ( -233 -30 -191 ) ( 0 0 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-
-				( -2128 -143 5583 ) ( -287 0 -191 ) ( 0 104 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-				( -2435 -39 5583 ) ( 0 0 -191 ) ( 325 160 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-				( -2418 121 5583 ) ( 0 0 -191 ) ( 293 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-				( -2388 151 5583 ) ( 0 0 -191 ) ( 233 30 0 ) sound/amb_stereo/Amb_M6_BunkerInt_01.mp3
-			endArray
-			exec global/ambience_mp.scr sound/amb_stereo/Amb_M6_WoodsExt_02.mp3 1 // 0 = no, 1 = keep players' music volume at max.
-
-
-
-	- Example "level.water_volumes" from m5l2b for water sounds:
-
-			level.water_volumes = makeArray
-				( -152 -6976 -232 ) ( 0 0 -1000 ) ( 6936 768 0 )
-			endArray
-
-Misc map changes & bug fixes
-
-	- Added global/spawnladder.scr ladders to all singleplayer maps with wooden spotlight towers.
-	- Added more vent sounds for maps with vents, and added global/doorlocked.scr triggers that were missing in M2L3.
-	- Added a generator switch trigger in M2L3 in the Allies spawn room with generator sounds, for turning them off and flashing periodically any red alarm ceiling lights ($alarmlight entities).
-
-	- Admins can now change the weather in any multiplayer map with "cg_weather" or turn on/off thunder sounds with "cg_thunder".
-	- Most singleplayer maps still not included yet, since their entity counts are almost maxed out. Add "exec global/weather.scr rain 1" or similar in the map's .scr file to enable weather for those singleplayer maps.
-
-	- Updated the "void" map with new wall entities, player spawns, lasers, and extra UBER triggers.
-
-New script created: "global/rocketfix.scr".
-
-	- By adding "exec global/rocketfix.scr" into "global/dmprecache.scr" or into any .scr map script, all rocket projectiles fired out of player's rocket launchers will fire with the correct angles.
-	- Previously, an unresolved game bug caused all rocket projectiles to fire backwards. Only MOHAA Reborn 1.12 / Nightfall can run this script.
-
-New map modded: m6l1c
+New map modded: m6l2a
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
