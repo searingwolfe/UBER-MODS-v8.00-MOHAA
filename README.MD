@@ -718,7 +718,9 @@ Some mods added: airstrike radio triggrs, fire field detonators, field bombs det
 
 ---------------
 
-- M1L1 fully modded. Crates, teles, tables added to walk inside of most buildings, on their rooftops, or on stairs between rooftops, including on top of the Axis-side tower and the Allies-side light house (tele to it behind the Axis spawn).
+##### M1L1 fully modded.
+
+- Crates, teles, tables added to walk inside of most buildings, on their rooftops, or on stairs between rooftops, including on top of the Axis-side tower and the Allies-side light house (tele to it behind the Axis spawn).
 - 2 drivable tanks (one arrives with vehicle convoy), one drivable opeltruck & jeep & bmwbike, one Radiobomb Walkie, and 2 throwing knives on the map initially.
 
 - 3 sets of bangalore wallbombs that can blown up from alarm-switches: behind the Axis-side crate room, inside the Axis-side crate room, and inside the Allies-side tan building.
@@ -1431,6 +1433,7 @@ New script created: "global/server_crashed.scr".
 New map modded: m6l2a
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
