@@ -699,8 +699,35 @@ shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 d
 
 # Singleplayer Maps Mods
 
-Singleplayer maps finished so far: [Training](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#training-fully-modded), M1L1, M1L2A, M1L2B, M1L3A, M1L3B, M1L3C, M2l1, M2l2A, M2L2B, M2L2C, M2L3, M3l1A, M3L1B, M3L2, M3L3,
-M4L0, M4L1, M4L2, M4L3, M5L1A, M5L1B, M5L2A, M5L3, M6L1A, M6L1B, M6L1C, M6L2A. 
+Singleplayer maps finished so far: [Training](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#Training-fully-modded),
+[M1L1](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M1L1-fully-modded),
+[M1L2A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M1L2A-fully-modded),
+[M1L2B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M1L2B-fully-modded),
+[M1L3A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M1L3A-fully-modded),
+[M1L3B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M1L3B-fully-modded),
+[M1L3C](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M1L3C-fully-modded),
+[M2l1](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M2l1-fully-modded),
+[M2l2A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M2l2A-fully-modded),
+[M2L2B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M2L2B-fully-modded),
+[M2L2C](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M2L2C-fully-modded),
+[M2L3](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M2L3-fully-modded),
+[M3l1A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M3l1A-fully-modded),
+[M3L1B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M3L1B-fully-modded),
+[M3L2](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M3L2-fully-modded),
+[M3L3](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M3L3-fully-modded),
+[M4L0](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M4L0-fully-modded),
+[M4L1](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M4L1-fully-modded),
+[M4L2](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M4L2-fully-modded),
+[M4L3](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M4L3-fully-modded),
+[M5L1A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M5L1A-fully-modded),
+[M5L1B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M5L1B-fully-modded),
+[M5L2A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M5L2A-fully-modded),
+[M5L2B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M5L2B-fully-modded),
+[M5L3](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M5L3-fully-modded),
+[M6L1A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L1A-fully-modded),
+[M6L1B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L1B-fully-modded),
+[M6L1C](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L1C-fully-modded),
+[M6L2A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L2A-fully-modded)
 
 ---------------
 
@@ -1477,6 +1504,7 @@ New script created: "global/server_crashed.scr".
 New map modded: m6l2a
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
