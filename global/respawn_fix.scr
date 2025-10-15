@@ -1,0 +1,90 @@
+// This script moves respawned players to a new "$allied_spawn" or "$axis_spawn" point (if they exist) that is furthest away from all enemies & not next to teammates.
+// Sometimes, players can spawn camp enemies even if there's other further-away spawn points outside of the camp zone, since the game may prefer spawn points in map corners/edges or outside the original map's bounds.
+// If 2+ teammates are stuck inside each other, the script will auto-respawn them.
+//
+// NOTE: Do not use this script if 2+ spawn points exist that don't have any targetnames in the map's original .BSP (i.e. map dm/mohdm1, dm/mohdm2 ... obj/obj_team1, obj/obj_team2...),
+// since the players will only be moved to spawn points with "$[team]_spawn" targetnames ("$deathmath_spawn" for FFA gametypes).
+//
+// Add "exec global/respawn_fix.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script.
+// For respawning to team-spawnpoints besides "allied_spawn", "axis_spawn", "deathmatch_spawn": add the example below instead with different names (each teams' spawnpoints all must have the same name):
+//
+// 	Parameters: 	allies spawnpoint targetname, axis spawnpoint targetname, free-for-all spawnpoint targetname
+// 	Example: 	exec global/respawn_fix.scr "new_allies_spawn" "new_axis_spawn" "new_ffa_spawn"
+
+main local.allies_targetname local.axis_targetname local.ffa_targetname:
+
+	if(local.allies_targetname == NIL) { local.allies_targetname = "allied_spawn" }
+	if(local.axis_targetname == NIL) { local.allies_targetname = "axis_spawn" }
+	if(local.ffa_targetname == NIL) { local.allies_targetname = "deathmatch_spawn" }
+
+	while(1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			$player[local.i].respawnfix_spawnpoint = NIL
+			if($player[local.i].dead != 1 && ((isalive $player[local.i] && $player[local.i].respawnfix_dead == 1) || ($player[local.i].respawnfix_team != NIL && $player[local.i].dmteam != $player[local.i].respawnfix_team)))
+			{
+				if(getcvar("g_gametype") != "1")
+				{
+					if($player[local.i].dmteam == "allies") { $player[local.i] waitthread get_new_respawn_point local.allies_targetname }
+					if($player[local.i].dmteam == "axis") { $player[local.i] waitthread get_new_respawn_point local.axis_targetname }
+				}
+				else { $player[local.i] waitthread get_new_respawn_point local.ffa_targetname }
+			}
+
+			if($player[local.i].respawnfix_spawnpoint != NIL && $player[local.i].respawnfix_spawnpoint != NULL)
+			{
+				$player[local.i].origin = $player[local.i].respawnfix_spawnpoint.origin
+				$player[local.i] face ( 0 $player[local.i].respawnfix_spawnpoint.angles[1] 0 ) // use "face" instead of ".angles = " or ".viewangles = ", otherwise an extra waitframe may be required.
+
+				for(local.j = 1; local.j <= $player.size; local.j++) // if still touching any players, do a simple "respawn" and let "global/respawn_stuck_fix.scr" fix them later if required (stuck in a wall, object, etc).
+				{
+					if($player[local.i] != $player[local.j] && $player[local.i] istouching $player[local.j]) { $player[local.i] respawn }
+				}
+			}
+
+			if(!isalive $player[local.i] || $player[local.i].dead == 1) { $player[local.i].respawnfix_dead = 1 }
+			else { $player[local.i].respawnfix_dead = 0 }
+
+			if($player[local.i].dmteam != "spectator") { $player[local.i].respawnfix_team = $player[local.i].dmteam }
+		}
+		waitframe
+	}
+end
+
+get_new_respawn_point local.targetname:
+
+	if($(local.targetname) == NULL) { end }
+
+	for(local.s = 1; local.s <= $(local.targetname).size; local.s++)
+	{
+		local.dist_old = 9999999
+		for(local.j = 1; local.j <= $player.size; local.j++) // self = $player[local.i] from previous thread.
+		{
+			if($player[local.j] != self && isalive $player[local.j] && $player[local.j].dead != 1 && $player[local.j].dmteam != "spectator")
+			{
+				local.dist_player = vector_length($(local.targetname)[local.s].origin - $player[local.j].origin)
+				if((self.dmteam != $player[local.j].dmteam || getcvar("g_gametype") == "1") && local.dist_player < local.dist_old)
+				{
+					local.dist_array[local.s] = local.dist_player // find the shortest distance between all enemies' distances to the spawn being currently checked.
+				}
+				if(local.dist_player <= 42.5)
+				{
+					local.dist_array[local.s] = 0 // if any players are too close to the current spawn, make the distance = 0 (player's hitbox diagonally = 42.5 units max).
+				}
+				local.dist_old = local.dist_player
+			}
+		}
+	}
+
+	local.dist = 0
+	for(local.s = 1; local.s <= $(local.targetname).size; local.s++)
+	{
+		if(local.dist_array != NIL && local.dist_array[local.s] > local.dist)
+		{
+			local.dist = local.dist_array[local.s] // find the largest distance between all spawnpoints' distances.
+			self.respawnfix_spawnpoint = $(local.targetname)[local.s] // set the spawnpoint with the largest distance from any enemies as the new one.
+		}
+	}
+	if(local.dist == 0) { self.respawnfix_spawnpoint = NIL }
+end

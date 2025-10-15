@@ -1,3 +1,80 @@
+// This script allows players to pick up and throw knives (screwdriver models).
+//
+// Reborn/Nightfall only: 	Players can throw knives by holding USE(e) key + Secondary FIRE(zoom).
+// original MOH game: 		Players can throw knives by holding USE(e) key + FIRE.
+//
+// Thrown knives will spin in the air until landing on the ground. When landed, their angles always point towards ground/wall/ceiling they impacted.
+// Thrown knives will reset after 45 seconds.
+// If player dies while holding knives that they didn't spawn with, those knives will drop to the ground.
+// Knives will make a dirt sound if hitting the ground, metal sound if hitting vehicles, or bullet impact sound if hitting players.
+// Knives will not kill teammates.
+// Knives will kill enemies by "impaling" meansofdeath, including if they are driving/riding in vehicles.
+// 
+// To allow players to spawn with 1+ throwing knives, the "global/give_players_knives.scr" script is required.
+// After "level waittill spawn", add the line below to spawn players with 1 knife.
+//
+//	exec global/give_players_knives.scr 1 // number of knives (max = 3).
+//
+// To spawn 1+ throwing knives around the map for players to find and pick up,
+// add the example lines below after "level waittill spawn".
+//
+//	exec global/throwingknife.scr k1 ( -2831 -3708 61 ) ( 0 90 0 ) // knife name (each must have different names), origin, angles.
+//	exec global/throwingknife.scr k2 ( -3026 -2323 56 ) ( 0 90 0 )
+//	exec global/throwingknife.scr k3 ( -3572 -115 0 ) ( 0 90 0 )
+//	exec global/throwingknife.scr k4 ( -3284 -448 0 ) ( 0 -90 0 )
+//
+//
+////////////////////////////////////////////////////////////////////////
+//
+// Not compatible with other mods that have a "mike_torso.st" or similar torso state file.
+// To make compatible, add the "THROW_OBJECT" state below into the _torso.st file. For UBER MODS drivable vehicles, add the "THROW_OBJECT_V" state as well (do not add the "/*" "*/" characters).
+/*
+state THROW_OBJECT
+{
+	movetype legs
+
+	action
+	{
+		steilhandgranate_crouch_fire_secondary		: POSITION_TYPE "crouching"
+		steilhandgranate_stand_fire_secondary		: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+		STAND						: +JUMP
+		STAND 						: ANIMDONE_TORSO
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT					: +NEW_WEAPON
+	}
+}
+
+state THROW_OBJECT_V
+{
+	movetype legs
+
+	action
+	{
+		steilhandgranate_crouch_fire_secondary		: POSITION_TYPE "crouching"
+		steilhandgranate_stand_fire_secondary		: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+		VEHICLE_GETOUT					: +JUMP
+		VEHICLE_PASSENGER 				: ANIMDONE_TORSO
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT_V					: +NEW_WEAPON
+	}
+}
+*/
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
 main local.name local.origin local.angles local.light local.thrown local.remove:
 
 	if(local.origin == NIL || (local.name == NIL && local.remove == 1)) { end } // if player spawned with a knife from global/give_players_knives.scr, remove it instead of dropping it to the ground.
@@ -111,7 +188,7 @@ scan_player local.name local.originold local.anglesold:
 
 		while(isalive self && self.dead != 1 && local.holding != 1 && self.useheld == 1 && self.fireheld == 1 && self.secfireheld == 1 && self.knivesheld != NIL && self.knivesheld > 0 && self.dmteam == local.team)
 		{
-			if(self != NULL && self.knivesheld >= 1 && self.knivesheld <= 3 && self.driving != 1 && self.flying != 1 && self.isfiredboomerweenie != 1 && self.placing_killstreak_old != 1 && local.c >= local.z)
+			if(self != NULL && self.knivesheld >= 1 && self.knivesheld <= 3 && self.turreting != 1 && (self.driving != 1 || self.passenger == 1) && self.flying != 1 && self.missile == NIL && self.isfiredboomerweenie != 1 && self.placing_killstreak_old != 1 && local.c >= local.z)
 			{
 				self thread throw_knife // slowed down slightly by wait 0.1, boomerweenie is for Giant Bomb and Light Bomb UBER mods.
 				local.c = 0
@@ -179,7 +256,8 @@ throw_knife:
 	local.name = self.knifename[self.knivesheld]
 	self.knifename[self.knivesheld] = NIL
 
-	self forcetorsostate RELEASE_ATTACK_GRENADE_SECONDARY
+	if(self.passenger == 1) { self forcetorsostate THROW_OBJECT_V }
+	else { self forcetorsostate THROW_OBJECT }
 
 	local.fwd_vec = angles_toforward self.viewangles // fwd_vec[2] = 0 when player looks horizontal, -0.999 looking down, 0.999 looking up.
 
@@ -218,6 +296,10 @@ throw_knife:
 	}
 	local.knife.velocity = ( 0 0 0 ) // velocity = 0 works, but gives a "cannot cast integer to vector" console error.
 
+	local.rand = randomint(2)
+	if(local.rand == 0) { local.meansofdeath = 17 }
+	else { local.meansofdeath = 25 }
+
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
 		$player[local.i].originxy = ( $player[local.i].origin[0] $player[local.i].origin[1] 0 ) 	// check if knife's XY origin vector length is < 42.5 units from an enemy player's XY origin, prevents knife floating in air.
@@ -235,13 +317,13 @@ throw_knife:
 				{
 					if($player[local.i].driving != 1 && $player[local.i].flying != 1)
 					{
-						$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
+						$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 local.meansofdeath 0 // "damage" does not hurt teammates, but scriptbazookaexplosion.tik does
 						local.touchedplayer = 1
 					}
 					else if($player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL)
 					{
 						$player[local.i].drivingent.shooter = self
-						//if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0; local.touchedplayer = 1 } // planes are immune to knives.
+						//if($player[local.i].flying == 1) { $("planehit" + $player[local.i].entnum) damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 local.meansofdeath 0; local.touchedplayer = 1 } // planes are immune to knives.
 
 						if($player[local.i].flying != 1 && $player[local.i].turreting != 1) // turretplayers will always get hit by knives.
 						{
@@ -252,7 +334,7 @@ throw_knife:
 									if($player[local.i].drivingent.model != "models/vehicles/sdkfz.tik" && $player[local.i].drivingent.model != "models/vehicles/sdkfz_afrika.tik" && $player[local.i].drivingent.model != "models/vehicles/shermantank.tik")
 									{
 										$player[local.i] takedamage
-										$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+										$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 local.meansofdeath 0
 										local.touchedplayer = 1
 									}
 								}
@@ -264,14 +346,14 @@ throw_knife:
 										if($player[local.i].drivingent.model != "models/vehicles/sdkfz.tik" && $player[local.i].drivingent.model != "models/vehicles/sdkfz_afrika.tik" && $player[local.i].drivingent.model != "models/vehicles/shermantank.tik")
 										{
 											$player[local.i] takedamage
-											$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+											$player[local.i] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 local.meansofdeath 0
 											local.touchedplayer = 1
 										}
 									}
 									else
 									{
 										$player[local.i].drivingent.passengers[local.r - 1] takedamage
-										$player[local.i].drivingent.passengers[local.r - 1] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 25 0
+										$player[local.i].drivingent.passengers[local.r - 1] damage self 999999 self (0 0 0) (0 0 0) (0 0 0) 0 9 local.meansofdeath 0
 										local.touchedplayer = 1
 									}
 								}
@@ -412,11 +494,18 @@ end
 
 resettimer local.name local.light:
 
-	for(local.c = 0; local.c <= (level.knife_resettime * 10); local.c++) 
+	local.origin_old = self.origin
+	for(local.c = 0; local.c <= (level.knife_resettime * 20); local.c++) 
 	{
 		if(self == NULL) { end }		   	// if knife was picked up, end.
 		if(level.change_team_score == 1) { break } 	// for cyber attack / search & destroy mod, immediately reset all knives (not including those still held by living players).
-		wait 0.1
+
+		self droptofloor
+		if(self.origin != local.origin_old) { local.fell = 1 }
+		else if(local.fell == 1) { self.origin += ( 0 0 -30 ); local.fell = 0 }
+
+		local.origin_old = self.origin
+		waitframe
 	}
 	if(local.name == NIL || level.knife_origin[local.name] == NIL) { self remove; end }
 	if(self == NULL) { end }

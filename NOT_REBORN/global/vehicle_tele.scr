@@ -64,8 +64,8 @@ main local.origin local.setsize1 local.setsize2 local.lasers local.align local.h
 						if(local.degrees == -90 && local.height_2 != NIL) { local.height = local.height_2 }
 					}
 
-					local.sin = (waitthread global/math.scr::sine local.degrees) * 300 // 300 = maximum size of vehicles/tanks
-					local.cos = (waitthread global/math.scr::cosine local.degrees) * 300
+					local.sin = (waitthread global/math.scr::sine local.degrees)
+					local.cos = (waitthread global/math.scr::cosine local.degrees)
 					local.fwd_vec = (angles_toforward ( 0 local.degrees 0 ))
 					$(level.drivable_entities[local.a])[local.s].angle = local.degrees
 
@@ -99,7 +99,7 @@ end
 tele_shot:
 
 	local.player = parm.other
-	if(local.player.driving == 1) { end } // ensures that vehicles/tanks do not trigger the lasers to turn white, when they should be turning green.
+	if(local.player.driving == 1 && local.player.turreting != 1) { end } // ensures that vehicles/tanks do not trigger the lasers to turn white, when they should be turning green.
 
 	if(self.lasers_telesuccess == 1) { end }
 	self nottriggerable

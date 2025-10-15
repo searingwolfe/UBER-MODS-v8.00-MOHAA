@@ -38,8 +38,6 @@ main local.name local.model local.origin local.angles local.health local.resetti
 	local.tank thread tanktrigger
 	local.tank thread move_stuck_players // the vehicle might respawn on top of other players, move them onto the top of it.
 
-	if(level.mef_weaponclasses == NIL) { level.mef_weaponclasses = waitthread global/get_player_weaponclass.scr::setup_weapon_classes } // set up weaponclasses for "weaponfix" thread.
-
 	if(level.tank_initorigin[local.name] == NIL) { level.tank_initorigin[local.name] = local.origin } // store the initial origin/angles as level variable arrays
 	if(level.tank_initangles[local.name] == NIL) { level.tank_initangles[local.name] = local.angles }
 	if(level.tank_inithealth[local.name] == NIL) { level.tank_inithealth[local.name] = local.health }
@@ -184,7 +182,6 @@ playergetin:
 		end
 	}
 
-	local.player.mef_weaponclass = thread global/get_player_weaponclass.scr::main local.player // thread instead of waitthread, but mef_weaponclass should still update in time.
 	local.player safeholster 1
 	local.c = 0
 	local.fireholding = 0
@@ -222,6 +219,13 @@ playergetin:
 		if(self != NULL) { self.attachingdriver = 0 }
 		local.player.enteringvehicle = 0
 		local.player iprint ("Dogs cannot drive tanks.")
+		end
+	}
+	if(local.player.fireheld == 1 && self.gun2 != NIL && self.gun2 != NULL && (self.turretplayer == NIL || self.turretplayer == NULL)) // enter 30_cal turret slot if still holding FIRE.
+	{
+		local.player.enteringvehicle = 0
+		self.attachingdriver = 0
+		self thread turretslot_2nd local.player
 		end
 	}
 
@@ -363,30 +367,41 @@ driverreset local.death local.newteam local.changescore:
 
 	if(self.driver == NIL) { end } // if the tank blew up with nobody driving it, end this thread.
 
-	if(local.death != 1) { cueplayer } 				// reattaches camera to player's head
+	//if(local.death != 1) { cueplayer } // reattaches camera to player's head. removed due to causing camera problems for other tank drivers, VehicleTurretGun, & TurretGun users.
 	local.driver = self.driver
 	local.driver.driving = 0
 	local.driver.passenger = 0
+	local.playerangles = self.driver.viewangles
 
 	self detachdriverslot 0 self.driver
-	if(local.changescore != 1 && level.bbactive != 0) { self.driver thread weaponfix local.newteam } // player's weapon is invisible when they exit the tank. auto-switch their weapons to make them visible again (wait until they're alive)
-	else { self.driver thread weaponfix2 }
 
-	if(self.driver.dmteam != spectator)
+	if(local.death == 1)
 	{
-		self.driver show
+		self.driver show // respawning the driver does all of this automatically.
 		self.driver solid
-		self.driver takedamage
-		self.driver forcetorsostate STAND // without this, players will be stuck in noclip mode, even though noclip isn't used for drivers (doing "self.driver noclip; self driver noclip" also works).
-		self.driver forcelegsstate STAND
-		if(local.death != 1 && local.changescore != 1)
+		self.driver takedamage // if tank is dead, simply detatch & reset the driver so he can die.
+		end
+	}
+
+	self.driver respawn // use this instead of "cueplayer".
+	self.driver forcelegsstate STAND // this must be placed before "EXIT_TANK", otherwise "Tried to deactivate a non-active weapon in hand 0" errors will print.
+	self.driver forcetorsostate EXIT_TANK // fix player's weapon and arms being invisible when exiting tank by quickly putting away, then raising weapon again.
+
+	if(local.changescore != 1 && (local.newteam != 1 || self.driver.dmteam == "spectator")) // if "changescore = 1" players are already being respawned by a gametype mod ("freeze tag", "search & destroy", etc) and need a new origin/angles.
+	{
+		self.driver.origin = self.origin + (angles_toup self.angles * self.outheight) // move 170 units above kingtank, or 160 units above other tanks.
+		self.driver.viewangles = ( 0 local.playerangles[1] 0 ) // make sure player's camera is horizontal (in case they left while tank was on a sloped terrain.
+
+		for(local.a = 1; local.a <= 4; local.a++)
 		{
-			if(local.newteam != 1) { self.driver.origin = self.origin + (angles_toup self.angles * self.outheight) }
-			self.driver.viewangles = ( self.angles[0] self.angles[1] 0 )
+			waitframe // minimum = 0.20 seconds total.
+			if(local.driver != NULL)
+			{
+				local.driver.viewangles = ( 0 local.playerangles[1] 0 ) // need a few more iterations to bypass the new player angles given after the player is respawned.
+				if(local.driver.dmteam == "spectator" && local.toggle != 1) { local.driver stufftext "togglemenu selectprimaryweapon"; local.toggle = 1 } // remove the menu that appears when spectators are respawned.
+			}
 		}
 	}
-	waitframe
-	if(local.driver != NULL) { local.driver.viewangles = ( 0 local.driver.viewangles[1] 0 ) } // make sure player's camera is horizontal (in case they left while tank was on a sloped terrain.
 end
 
 fire_tank_sound:
@@ -826,6 +841,16 @@ turretslot_2nd local.player:
 	self.turretplayer forcetorsostate TURRET_START
 	self.turretplayer iprint ("JUMP = exit turret.")
 	self.turretplayer.turretingent = self // used with killstreaks/damagehandler.scr to properly give score to shooter if turretplayer's vehicle gets blown up by an enemy bazooka rocket.
+	self.turretplayer.drivingent = self
+
+	local.origin_init = self.origin
+	local.angles_init = self.angles
+	local.fwd_vec = angles_toforward self.turretplayer.viewangles
+	local.origin = self.turretplayer gettagposition "eyes bone" + ( 0 0 10000 )
+	local.groundtarget = spawn script_origin // need this entity to initially point the turret towards player's viewangles
+	local.groundtarget.origin = trace local.origin (local.origin + local.fwd_vec * 10240) 0 // when attaching to VehicleTurretGun entities, player's angles will always face the tank's angles initially.
+	self.origin += ( 0 0 10000 ) // this moves the tank away from any walls in order to find the correct turret angles (may not always work).
+	self.angles = vector_toangles(local.groundtarget.origin - self.origin) // without any waitframes, point the vehicle towards player's angles, attach the player, then move the tank's angles back to normal.
 
 	self unlock
 	self.gun unlock
@@ -838,6 +863,10 @@ turretslot_2nd local.player:
 	self.gun2 show
 
 	self thread spawn_turretgun_player_glue local.player
+
+	self.angles = local.angles_init // move the tank's angles back to where it was before attaching the player.
+	self.origin = local.origin_init
+	local.groundtarget remove
 
 	local.driver = self.driver
 	local.team = local.player.dmteam
@@ -896,6 +925,7 @@ turretplayer_reset local.team local.player local.dead:
 	//local.player forcelegsstate STAND // do not use this when exiting turrets; it will force players into noclip after exiting.
 	local.player takedamage // this prevents a rare bug that kept the turret player from ever dying again (player is somehow, but only sometimes given "nodamage"?)
 	local.player.turretingent = NIL
+	local.player.drivingent = NIL
 
 	if(isalive local.player && local.player.dmteam != "spectator")
 	{
@@ -979,41 +1009,6 @@ spawn_turretgun_player_glue local.player:
 	{
 		local.player glue $("turretgun_player_glue_" + self.gun2.entnum) // keep player's angles aligned with 30cal turret.
 	}
-end
-
-////////////////////////////////////////////////////////////////////////
-
-weaponfix local.newteam:
-
-	while(self != NULL && self.dmteam == spectator) { waitframe; local.spectator = 1 } // tank drivers who go to spectator still need their invisible weapons fixed if they join a team again.
-	if(local.spectator == 1)
-	{
-		while(self != NULL && self.inventory.size <= 1) { waitframe } // if spectator joined a team but hasn't chosen a weapon yet (not yet spawned), keep waiting until he does.
-	}
-	if(local.newteam == 1 || local.spectator == 1) { self thread weaponfix2; end } // go to a simpler weaponfix thread if tank driver switched teams or came out of spectator.
-
-	waitframe
-	if(self.dmteam == allies) { self give models/weapons/colt45.tik } // make sure they have a pistol to switch to. switching weaopns makes their guns visible again, so do it automatically.
-	if(self.dmteam == axis) { self give models/weapons/p38.tik }	// wait 0.5 cannot be any shorter in time, otherwise "useweaponclass" will not work (guns still invisible).
-	wait 0.1
-	self stufftext "useweaponclass pistol"
-	wait 0.55
-
-	if(self.mef_weaponclass != NIL) { self stufftext ("useweaponclass " + self.mef_weaponclass) } // if a player entered the tank with his main weapon (mg, smg, rifle, sniper, heavy), switch to main weapon.
-	if(self.mef_weaponclass == NIL)
-	{
-		if(self.dmteam == allies) { self give models/weapons/m2frag_grenade.tik } // if a player entered the tank with a pistol, grenade, or empty-handed,
-		if(self.dmteam == axis) { self give models/weapons/steilhandgranate.tik } // give him a grenade to switch to, after he switches to pistol and waits 0.5 seconds.
-		self stufftext ("useweaponclass grenade")
-	}
-end
-
-weaponfix2:
-
-	self.mef_weaponclass = waitthread global/get_player_weaponclass.scr::main self
-	self stufftext "useweaponclass pistol"
-	wait 0.55
-	self stufftext ("useweaponclass " + self.mef_weaponclass)
 end
 
 ////////////////////////////////////////////////////////////////////////

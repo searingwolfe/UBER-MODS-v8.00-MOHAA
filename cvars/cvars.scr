@@ -191,6 +191,9 @@ entprint local.targetname local.int:
 			if($(local.targetname).anglesy != NIL) { println("----- $" + local.targetname + ".anglesy = " + $(local.targetname).anglesy) }
 			if($(local.targetname).anglesz != NIL) { println("----- $" + local.targetname + ".anglesz = " + $(local.targetname).anglesz) }
 
+			if($(local.targetname).setsize1 != NIL) { println("----- $" + local.targetname + ".setsize1 = " + $(local.targetname).setsize1) }
+			if($(local.targetname).setsize2 != NIL) { println("----- $" + local.targetname + ".setsize2 = " + $(local.targetname).setsize2) }
+
 			if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname == "") { println("----- $" + local.targetname + ".gun = entity " + $(local.targetname).gun.entnum) }
 			if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname != "")
 			{
@@ -242,8 +245,19 @@ entprint local.targetname local.int:
 				else { println("----- $" + local.targetname + ".trigger = " + $(local.targetname).trigger2.targetname) }
 			}
 
-			if($(local.targetname).farplane != NIL) { println("----- $" + local.targetname + ".farplane = " + $(local.targetname).farplane) }
-			if($(local.targetname).farplane_color != NIL) { println("----- $" + local.targetname + ".farplane_color = " + $(local.targetname).farplane_color) }
+			if($(local.targetname).farplane != NIL)
+			{
+				local.farplane = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane
+				println("----- $" + local.targetname + ".farplane = " + local.farplane)
+			}
+			if($(local.targetname).farplane_color != NIL)
+			{
+				local.color_x = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane_color[0]
+				local.color_y = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane_color[1]
+				local.color_z = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane_color[2]
+				local.farplane_color = ( local.color_x local.color_y local.color_z )
+				println("----- $" + local.targetname + ".farplane_color = ( " + local.color_x + " " + local.color_y + " " + local.color_z + " )")
+			}
 			if($(local.targetname).farplane_cull != NIL) { println("----- $" + local.targetname + ".farplane_cull = " + $(local.targetname).farplane_cull) }
 
 			if($(local.targetname).owner != NIL && $(local.targetname).owner != NULL)
@@ -320,6 +334,9 @@ entprint local.targetname local.int:
 				if($(local.targetname).anglesy != NIL) { $player iprint ("----- $" + local.targetname + ".anglesy = " + $(local.targetname).anglesy) }
 				if($(local.targetname).anglesz != NIL) { $player iprint ("----- $" + local.targetname + ".anglesz = " + $(local.targetname).anglesz) }
 
+				if($(local.targetname).setsize1 != NIL) { $player iprint ("----- $" + local.targetname + ".setsize1 = " + $(local.targetname).setsize1) }
+				if($(local.targetname).setsize2 != NIL) { $player iprint ("----- $" + local.targetname + ".setsize2 = " + $(local.targetname).setsize2) }
+
 				if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname == "") { $player iprint ("----- $" + local.targetname + ".gun = entity " + $(local.targetname).gun.entnum) }
 				if($(local.targetname).gun != NIL && $(local.targetname).gun != NULL && $(local.targetname).gun.targetname != "")
 				{
@@ -371,8 +388,19 @@ entprint local.targetname local.int:
 					else { $player iprint ("----- $" + local.targetname + ".trigger = " + $(local.targetname).trigger2.targetname) }
 				}
 
-				if($(local.targetname).farplane != NIL) { $player iprint ("----- $" + local.targetname + ".farplane = " + $(local.targetname).farplane) }
-				if($(local.targetname).farplane_color != NIL) { $player iprint ("----- $" + local.targetname + ".farplane_color = " + $(local.targetname).farplane_color) }
+				if($(local.targetname).farplane != NIL)
+				{
+					local.farplane = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane
+					$player iprint ("----- $" + local.targetname + ".farplane = " + local.farplane)
+				}
+				if($(local.targetname).farplane_color != NIL)
+				{
+					local.color_x = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane
+					local.color_y = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane
+					local.color_z = waitthread global/math.scr::simplify_decimal $(local.targetname).farplane
+					local.farplane_color = ( local.color_x local.color_y local.color_z )
+					$player iprint ("----- $" + local.targetname + ".farplane_color = ( " + local.color_x + " " + local.color_y + " " + local.color_z + " )")
+				}
 				if($(local.targetname).farplane_cull != NIL) { $player iprint ("----- $" + local.targetname + ".farplane_cull = " + $(local.targetname).farplane_cull) }
 
 				if($(local.targetname).owner != NIL && $(local.targetname).owner != NULL)
@@ -467,6 +495,9 @@ entprint local.targetname local.int:
 			if($(local.targetname)[local.int].anglesy != NIL) { println("----- $" + local.targetname + "[" + local.int + "].anglesy = " + $(local.targetname)[local.int].anglesy) }
 			if($(local.targetname)[local.int].anglesz != NIL) { println("----- $" + local.targetname + "[" + local.int + "].anglesz = " + $(local.targetname)[local.int].anglesz) }
 
+			if($(local.targetname)[local.int].setsize1 != NIL) { println("----- $" + local.targetname + "[" + local.int + "].setsize1 = " + $(local.targetname)[local.int].setsize1) }
+			if($(local.targetname)[local.int].setsize2 != NIL) { println("----- $" + local.targetname + "[" + local.int + "].setsize2 = " + $(local.targetname)[local.int].setsize2) }
+
 			if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname == "") { println("----- $" + local.targetname + "[" + local.int + "].gun = entity " + $(local.targetname)[local.int].gun.entnum) }
 			if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname != "")
 			{
@@ -517,10 +548,6 @@ entprint local.targetname local.int:
 				}
 				else { println("----- $" + local.targetname + "[" + local.int + "].trigger = " + $(local.targetname)[local.int].trigger2.targetname) }
 			}
-
-			if($(local.targetname)[local.int].farplane != NIL) { println("----- $" + local.targetname + "[" + local.int + "].farplane = " + $(local.targetname)[local.int].farplane) }
-			if($(local.targetname)[local.int].farplane_color != NIL) { println("----- $" + local.targetname + "[" + local.int + "].farplane_color = " + $(local.targetname)[local.int].farplane_color) }
-			if($(local.targetname)[local.int].farplane_cull != NIL) { println("----- $" + local.targetname + "[" + local.int + "].farplane_cull = " + $(local.targetname)[local.int].farplane_cull) }
 
 			if($(local.targetname)[local.int].owner != NIL && $(local.targetname)[local.int].owner != NULL)
 			{
@@ -596,6 +623,9 @@ entprint local.targetname local.int:
 				if($(local.targetname)[local.int].anglesy != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].anglesy = " + $(local.targetname)[local.int].anglesy) }
 				if($(local.targetname)[local.int].anglesz != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].anglesz = " + $(local.targetname)[local.int].anglesz) }
 
+				if($(local.targetname)[local.int].setsize1 != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].setsize1 = " + $(local.targetname)[local.int].setsize1) }
+				if($(local.targetname)[local.int].setsize2 != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].setsize2 = " + $(local.targetname)[local.int].setsize2) }
+
 				if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname == "") { $player iprint ("----- $" + local.targetname + "[" + local.int + "].gun = entity " + $(local.targetname)[local.int].gun.entnum) }
 				if($(local.targetname)[local.int].gun != NIL && $(local.targetname)[local.int].gun != NULL && $(local.targetname)[local.int].gun.targetname != "")
 				{
@@ -646,10 +676,6 @@ entprint local.targetname local.int:
 					}
 					else { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger = " + $(local.targetname)[local.int].trigger2.targetname) }
 				}
-
-				if($(local.targetname)[local.int].farplane != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].farplane = " + $(local.targetname)[local.int].farplane) }
-				if($(local.targetname)[local.int].farplane_color != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].farplane_color = " + $(local.targetname)[local.int].farplane_color) }
-				if($(local.targetname)[local.int].farplane_cull != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].farplane_cull = " + $(local.targetname)[local.int].farplane_cull) }
 
 				if($(local.targetname)[local.int].owner != NIL && $(local.targetname)[local.int].owner != NULL)
 				{
@@ -753,6 +779,9 @@ entprint local.targetname local.int:
 		if(self.anglesx != NIL) { println("----- [" + self.entnum + "].anglesx = " + self.anglesx) }
 		if(self.anglesy != NIL) { println("----- [" + self.entnum + "].anglesy = " + self.anglesy) }
 		if(self.anglesz != NIL) { println("----- [" + self.entnum + "].anglesz = " + self.anglesz) }
+
+		if(self.setsize1 != NIL) { println("----- [" + self.entnum + "].setsize1 = " + self.setsize1) }
+		if(self.setsize2 != NIL) { println("----- [" + self.entnum + "].setsize2 = " + self.setsize2) }
 
 		if(self.gun != NIL && self.gun != NULL && self.gun.targetname == "") { println("----- [" + self.entnum + "].gun = entity " + self.gun.entnum) }
 		if(self.gun != NIL && self.gun != NULL && self.gun.targetname != "")
@@ -888,6 +917,9 @@ entprint local.targetname local.int:
 			if(self.anglesx != NIL) { $player iprint ("----- [" + self.entnum + "].anglesx = " + self.anglesx) }
 			if(self.anglesy != NIL) { $player iprint ("----- [" + self.entnum + "].anglesy = " + self.anglesy) }
 			if(self.anglesz != NIL) { $player iprint ("----- [" + self.entnum + "].anglesz = " + self.anglesz) }
+
+			if(self.setsize1 != NIL) { $player iprint ("----- [" + self.entnum + "].setsize1 = " + self.setsize1) }
+			if(self.setsize2 != NIL) { $player iprint ("----- [" + self.entnum + "].setsize2 = " + self.setsize2) }
 
 			if(self.gun != NIL && self.gun != NULL && self.gun.targetname == "") { $player iprint ("----- [" + self.entnum + "].gun = entity " + self.gun.entnum) }
 			if(self.gun != NIL && self.gun != NULL && self.gun.targetname != "")

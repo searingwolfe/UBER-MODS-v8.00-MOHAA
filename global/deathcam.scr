@@ -114,15 +114,23 @@ spectate_killer:
 			if((self.deathcam_killer getposition) == "crouching") { local.hoffset = 0; local.specorg = self.deathcam_killer.origin + ( 0 0 65 ) }
 			if((self.deathcam_killer getposition) != "crouching" && (self.deathcam_killer getposition) != NIL) { local.hoffset = 15; local.specorg = self.deathcam_killer.origin + ( 0 0 85 ) }
 
-			local.fwd_vec = angles_toforward self.deathcam_killer.viewangles
-			self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.deathcam_killer.viewangles) * -50)) 1) - ( 0 0 82.125 )
-			self face self.deathcam_killer.viewangles // does not work for players that are currently dead
+			if(self.deathcam_killer.turreting == 1)
+			{
+				self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.deathcam_killer.angles) * -50)) 1) - ( 0 0 82.125 )
+				self face self.deathcam_killer.angles
+			}
+			else // does not work for players that are currently dead
+			{
+				self.origin = (trace local.specorg (local.specorg + ( 0 0 local.hoffset ) + ((angles_toforward self.deathcam_killer.viewangles) * -50)) 1) - ( 0 0 82.125 )
+				self face self.deathcam_killer.viewangles
+			}
 		}
 
 		if((local.respawnable == 1 || local.auto_respawn_time > 5) && (self.fireheld == 1 || level.deathcam_respawn == 1)) { break } // force respawn if dead player somehow waited longer than 5 seconds.
 
 		local.deathcam_killer_origin = self.deathcam_killer.origin
 		local.auto_respawn_time += 0.05 // each waitframe = 0.05 seconds.
+		self hide
 		waitframe
 	}
 	if(self != NULL)

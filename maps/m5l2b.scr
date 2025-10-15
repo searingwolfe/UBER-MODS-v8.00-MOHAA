@@ -58,7 +58,7 @@ waitthread setup
 level waittill prespawn
 
 	//exec global/DMprecache.scr // something in this causes players' games to crash (without this, console will print "add the following [model] to the _precache.scr").
-	thread dmprecache
+	exec global/DMprecache.scr::globalmods // don't run any caches.
 	exec alienx/hud.scr
 	exec ui/fix.scr
 	level.dmrespawning = 1
@@ -1539,24 +1539,6 @@ consoleprint:
 		println("----- WARNING: Keep below " + local.max + " entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
-end
-
-////////////////////////////////////////////////////////////////////////
-
-dmprecache:
-
-exec global/respawn_stuck_fix.scr	// background mods that run for each player for all maps.
-exec global/deathcam.scr
-exec global/sv_maplists.scr
-exec killstreaks/damagehandler.scr::assisted_suicide
-
-//-----------------------------------------------------------------------------
-
-					// adding these for maps without manon sounds, to prevent console errors printing "missing aliases".
-level.mapname = getcvar "mapname"
-local.master = spawn scriptmaster
-local.master aliascache manon_pain sound/null.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
-local.master aliascache manon_death sound/null.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
 end
 
 clickitem_fail:

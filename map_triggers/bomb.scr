@@ -191,6 +191,12 @@ local.start = local.player gettagposition "eyes bone"
 local.range = 20240
 ihuddraw_string local.player 101 "Giant Bomb:   Launched"
 
+if(local.player.flying != 1 && local.player.missile == NIL)
+{
+	if(local.player.passenger == 1) { local.player forcetorsostate THROW_OBJECT_V }
+	else { local.player forcetorsostate THROW_OBJECT }
+}
+
 local.groundtarget.origin = trace (local.start + local.fwd_vec * 64) (local.start + local.fwd_vec * local.range )
 
 	if(local.fwd_vec[2] <= 0) { local.height = local.fwd_vec[2] * 60 }

@@ -1,6 +1,9 @@
-main local.name local.originbomb local.anglesbomb local.originwalkie local.angleswalkie local.damageradius local.move1st_b4blowup local.pulsating local.pulsetime: // runs only once when map loads.
+main local.name local.originbomb local.anglesbomb local.originwalkie local.angleswalkie local.damageradius local.blowup_at_origin local.pulsating local.pulsetime: // runs only once when map loads.
 
 exec global/aliascache_triggersounds.scr radiobomb_walkie
+
+ if(local.blowup_at_origin == 1) { local.move1st_b4blowup = 0 }
+ else { local.move1st_b4blowup = 1 }
 
  level.radiobomb_origin[local.name] = local.originbomb
  level.radiobomb_angles[local.name] = local.anglesbomb
@@ -137,8 +140,9 @@ radiobomb local.origin local.angles local.name:
  local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
  local.trigger.scale = 1
  //local.trigger light 0 0 1 100
- local.trigger show	
- //local.trigger droptofloor				
+ local.trigger show
+ //local.trigger droptofloor
+ local.trigger notsolid
 
  if(level.radiobomb_blowup[local.name] != 1) { local.trigger.origin = local.origin
 					       local.trigger.angles = local.angles } 
@@ -324,14 +328,16 @@ walkietalkie local.origin local.angles local.name:
  local.trigger model "items/walkietalkie.tik" 
  if(level.radiobomb_blowup[local.name] != 1 || level.bombstill_at1storigin[local.name] == 1) { local.trigger.origin = local.origin   // if the bomb was blown up, respawn the walkie back to its first spawn origin.
 											       local.trigger.angles = local.angles } // walkie talkie drops from player to ground after blowing up the bomb with USE key.
- if(level.radiobomb_blowup[local.name] == 1 && level.bombstill_at1storigin[local.name] == 0) { local.trigger.origin = level.walkietalkie_origin[local.name]
+ if(level.radiobomb_blowup[local.name] == 1 && level.bombstill_at1storigin[local.name] != 1) { local.trigger.origin = level.walkietalkie_origin[local.name]
 											       local.trigger.angles = level.walkietalkie_angles[local.name]
 											       level.rbomb_dropped[local.name] = 0 }
+
  local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
  local.trigger.scale = 1
  //local.trigger light 0.5 0 1 100
  local.trigger show
  local.trigger droptofloor
+ local.trigger notsolid
 
  level.radiobomb_blowup[local.name] = 0
 
@@ -406,6 +412,7 @@ doit2 local.name local.origin local.angles:
      local.static unglue
      local.static remove
      level.rwalkie_dropped[local.name] = 1
+     self playsound fastradionoise
 
      if(level.rw_bombnowplanted[local.name] != 1) 
      {
@@ -414,16 +421,13 @@ doit2 local.name local.origin local.angles:
 		level.talkie_spectator[local.name] = 0
 		goto walkietalkie local.origin local.angles local.name
 	}
-	
+
 	local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
 	goto walkietalkie local.droppedorigin self.angles local.name
      }
      if(level.rw_bombnowplanted[local.name] == 1) 
      { 
-     	self playsound fastradionoise
-
 	thread walkietalkie self.origin self.angles local.name // using "thread" here allows walkie to respawn faster.
-
 	level.rw_bombnowplanted[local.name] = 0
      }
    }

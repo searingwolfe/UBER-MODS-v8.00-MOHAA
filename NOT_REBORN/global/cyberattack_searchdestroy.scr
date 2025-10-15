@@ -1511,10 +1511,13 @@ camera local.i local.r:
 	local.camera.angles = $("bombsite_" + local.i).angles + ( 20 180 0 )
 	local.camera targetname bombcam
 
-	drawhud 0
-	freezeplayer
-	$player nodamage
-	$player hide
+	if($player != NULL)
+	{
+		drawhud 0
+		freezeplayer
+		$player nodamage
+		$player hide
+	}
 	cuecamera $bombcam
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
@@ -1522,15 +1525,17 @@ camera local.i local.r:
 
 		if($player[local.i].dog != NIL && $player[local.i].dog != NULL) { $player[local.i].dog hide } 	// without first classifying ".dog" as an object, the game assumes it's a variable that doesn't exist.
 	}									   				// therefore check for NIL first, before checking for NULL.
-	$player tele local.camera.origin
+	if($player != NULL) { $player tele local.camera.origin }
 
 	wait (6.0000 + local.r)
 	local.camera remove
-	releaseplayer
-	$player takedamage
-	$player show
-	drawhud 1
-
+	if($player != NULL)
+	{
+		releaseplayer
+		$player takedamage
+		$player show
+		drawhud 1
+	}
 	for(local.i = 1; local.i <= $player.size; local.i++)
 	{
 		$player[local.i] tele $player[local.i].temp_cuecamera_origin

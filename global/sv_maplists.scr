@@ -25,6 +25,8 @@
 main local.debug:
 
 	level.mapname = getcvar "mapname"
+	if(getcvar("sv_maplist") == "") { println("----- ERROR server.cfg: cvar 'sv_maplist' was not defined! Setting it to the current mapname..."); setcvar "sv_maplist" level.mapname }
+
 	if(getcvar "sv_maplist0" == "") { setcvar "sv_maplist0" (getcvar "sv_maplist") } 	// keep memory of the 1st maplist, since "sv_mapist" will be overwritten.
 	if(getcvar "sv_maplist1" == "" && getcvar "sv_maplist2" != "") { local.skip = 1 } 	// after "sv_maplist", allow either "sv_maplist1" or "sv_maplist2".
 	if(getcvar "sv_maplist0" != getcvar "sv_maplist") { local.search = 1 }			// if maplist != maplist0, search maplist0's string instead of maplist.

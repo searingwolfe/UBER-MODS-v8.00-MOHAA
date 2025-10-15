@@ -447,6 +447,7 @@ weather_init local.thunder local.weathersound:
 	level.farplane_color = $world.farplane_color
 	level.rain = 0
 	level.raindest = 0
+	level.weathering = 1
 	if(level.windtime == NIL) { level.windtime = 15.00 }
 	if(level.shuttertime == NIL) { level.shuttertime = 0.80 }
 	if(level.rainvolume == NIL) { level.rainvolume = 0.00 }
@@ -792,10 +793,14 @@ rain_inout:
 
 						if(int($player[local.i].origin[0]) >= local.X_min[local.a] && int($player[local.i].origin[0]) <= local.X_max[local.a] && int($player[local.i].origin[1]) >= local.Y_min[local.a] && int($player[local.i].origin[1]) <= local.Y_max[local.a] && int($player[local.i].origin[2]) >= local.Z_min[local.a] && int($player[local.i].origin[2]) <= local.Z_max[local.a])
 						{
-							if($player.size == 1 && getcvar("cg_weather_alwayson") != "1") { level.raindest = 1; level.weathering = 0 } // singleplayer only
-							if(level.rainvolume > 0 && getcvar("cg_rain_sounds") == "1" && $player[local.i].weather_soundent != NIL && $player[local.i].weather_soundent != NULL && $player[local.i].weather_soundent2 != NIL && $player[local.i].weather_soundent2 != NULL)
+							if($player.size == 1 && getcvar("cg_weather_alwayson") != "1") // singleplayer only
 							{
-								if(level.interior_volumes[local.a].size > 4)
+								if(level.interior_volumes[local.a].size < 6 || int(level.interior_volumes[local.a][6]) != 1) { level.raindest = 1; level.weathering = 0 }
+							}
+
+							if(level.rainvolume > 0 && getcvar("cg_rain_sounds") == "1" && $player[local.i].weather_soundent != NIL && $player[local.i].weather_soundent != NULL && $player[local.i].weather_soundent2 != NIL && $player[local.i].weather_soundent2 != NULL && (level.interior_volumes[local.a].size < 6 || int(level.interior_volumes[local.a][6]) != 1))
+							{
+								if(level.interior_volumes[local.a].size >= 5)
 								{
 									if(level.interior_volumes[local.a][5] < 1 && level.interior_volumes[local.a][5] > 0) { local.sound_on = level.interior_volumes[local.a][5] }
 									else if(level.interior_volumes[local.a][5] <= 0) { local.sound_on = 0 }

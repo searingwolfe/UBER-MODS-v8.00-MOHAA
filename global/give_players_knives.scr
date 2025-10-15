@@ -1,3 +1,11 @@
+// To allow players to spawn with 1+ throwing knives, the "global/throwingknife.scr" script is required.
+// After "level waittill spawn", add the line below to spawn players with 1 knife.
+//
+//	exec global/give_players_knives.scr 1 // number of knives (max = 3).
+//
+// Reborn/Nightfall only: 	Players can throw knives by holding USE(e) key + Secondary FIRE(zoom).
+// original MOH game: 		Players can throw knives by holding USE(e) key + FIRE.
+
 main local.knivesheld:
 
 	if(level.knife_resettime == NIL || level.knife_resettime <= 0) { level.knife_resettime = 45 } // without this, the 1st thrown knife (on a map without extra knives spawned somewhere) will have no velocity.
@@ -32,7 +40,7 @@ spawn_with_knives local.knivesheld:
 
 	self.knivesheld = local.knivesheld
 
-	while(self != NULL && !isalive self && self.dmteam != "spectator") { waitframe } // wait until players are alive again, before giving them knives again.
+	while(self != NULL && (!isalive self || self.dead == 1) && self.dmteam != "spectator") { waitframe } // wait until players are alive again, before giving them knives again.
 
 	if(self != NULL) { self thread global/throwingknife.scr::give_knife NIL NIL NIL } // NILs are used since these knives once thrown have no initial origins/names for resetting them.
 end

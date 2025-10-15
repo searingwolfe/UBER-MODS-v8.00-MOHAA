@@ -1,0 +1,142 @@
+// This script allows players to press the USE(e) key 5 times within 1 second to perform a taunt for 3-6 seconds.
+//
+// The player will do a "show_papers" taunt if holding a weapon, or do a "selectionidle" taunt if not holding any weapons.
+// Players can shoot or switch weapons to cancel the taunt.
+// Players must not be holding FIRE when pressing USE(e) key 4 times.
+// Players can only taunt once every 3 seconds.
+//
+// Add "exec global/player_taunts.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// To prevent this script from printing "Tried to deactivate a non-active weapon in hand 0" errors each time a taunt occurs,
+// 3 lines must be commented out in "models/player/base/anims_shared.txt" within Pak0.pk3 (scroll to bottom of the script).
+// Inside the "show_papers" animation, comment out the 3 "server" lines. Example below.
+//
+// Save this edited file in "main" folder with the following folders: "main/models/player/base/anims_shared.txt" (do not overwrite Pak0.pk3).
+// NOTE: This will cause real "Papers" item not to work properly. Do not edit "show_papers" if other mods are using "Papers".
+/*
+	show_papers			viewmodel/papers/show_papers.skc	crossblend 0.2
+	{
+		server
+		{
+			//entry activatenewweapon
+			//0 fire
+			//last deactivateweapon righthand
+		}
+	}
+*/
+////////////////////////////////////////////////////////////////////////
+//
+// Not compatible with other mods that have a "mike_torso.st" or similar torso state file.
+// To make compatible, add the "PLAYER_TAUNT" state below into the _torso.st file. For UBER MODS drivable vehicles, add the "PLAYER_TAUNT_V" state as well (do not add the "/*" "*/" characters).
+/*
+state PLAYER_TAUNT
+{
+	movetype legs
+
+	action
+	{
+		germanselectionidle				: !HAS_WEAPON
+		show_papers					: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+	//	STAND						: +JUMP
+		STAND						: ANIMDONE_TORSO
+		STAND						: +ATTACK_PRIMARY
+		STAND						: +ATTACK_SECONDARY
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT					: +NEW_WEAPON
+	}
+}
+
+state PLAYER_TAUNT_V
+{
+	movetype legs
+
+	action
+	{
+		germanselectionidle				: !HAS_WEAPON
+		show_papers					: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+	//	VEHICLE_GETOUT					: +JUMP
+		VEHICLE_PASSENGER 				: ANIMDONE_TORSO
+		VEHICLE_PASSENGER				: +ATTACK_PRIMARY
+		VEHICLE_PASSENGER				: +ATTACK_SECONDARY
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT_V					: +NEW_WEAPON
+	}
+}
+*/
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+main:
+
+	while(level.time == NIL) { waitframe }
+	while(level.time < 1) { waitframe } // wait until map has fully loaded.
+
+	while(1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].useheld_count == NIL) { $player[local.i].useheld_count = 0 }
+			if($player[local.i].useheld_pressed == NIL) { $player[local.i].useheld_pressed = 0 }
+
+			if($player[local.i].fireheld != 1 && isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1 && $player[local.i].isdog != 1 && $player[local.i].turreting != 1 && ($player[local.i].driving != 1 || $player[local.i].passenger == 1) && $player[local.i].flying != 1 && $player[local.i].missile == NIL)
+			{
+				if($player[local.i].taunting == 1) // 60 * 0.05 [waitframe] = 3 second cooldown between taunts.
+				{
+					$player[local.i].taunt_count++
+					if($player[local.i].taunt_count >= 60) { $player[local.i].taunting = 0; $player[local.i].taunt_count = 0 }
+				}
+				else
+				{
+					if($player[local.i].useheld == 1)
+					{
+						if($player[local.i].useheld_toggle != 1)
+						{
+							$player[local.i].useheld_pressed++
+							$player[local.i].useheld_toggle = 1
+							$player[local.i].taunt_starting = 1
+						}
+					}
+					else { $player[local.i].useheld_toggle = 0 }
+
+					if($player[local.i].taunt_starting == 1) // rapid-pressing of the USE(e) key has begun.
+					{
+						if($player[local.i].useheld_count <= 20) { $player[local.i].useheld_count++ }
+						else { $player[local.i].useheld_count = 0; $player[local.i].useheld_pressed = 0; $player[local.i].taunt_starting = 0 }
+
+						if($player[local.i].useheld_pressed >= 5)
+						{
+							if($player[local.i].passenger == 1) { $player[local.i] forcetorsostate PLAYER_TAUNT_V } // these states must be present within "nangle_aa_torso.st", or "mike_legs.st".
+							else { $player[local.i] forcetorsostate PLAYER_TAUNT }					// otherwise just do "forcetorsostate RAISE_PAPERS".
+							$player[local.i].taunting = 1
+							$player[local.i].taunt_count = 0
+							$player[local.i].useheld_count = 0; $player[local.i].useheld_pressed = 0; $player[local.i].useheld_toggle = 0; $player[local.i].taunt_starting = 0
+
+							$player[local.i] iprint "Taunting other players..."
+							if($player[local.i].taunt_printed != 1) { $player[local.i] iprint "Taunt other players by pressing USE(e) 5+ times in 1 second."; $player[local.i].taunt_printed = 1 }
+						}
+					}
+				}
+			}
+			else { $player[local.i].useheld_count = 0; $player[local.i].useheld_pressed = 0; $player[local.i].useheld_toggle = 0; $player[local.i].taunt_starting = 0 }
+		}
+
+		local.time = int(getcvar("timelimit")) * 60.000 - level.time // when map time ends, stop this from looping during intermission.
+		if(local.time <= 0) { break }
+		waitframe
+	}
+end

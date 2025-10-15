@@ -2,228 +2,219 @@ main local.origin local.smoketime:
 
 exec global/aliascache_triggersounds.scr joint
 
- local.player = parm.other
- local.trigger = spawn trigger_use targetname "joint_trigger"
- local.trigger.origin = local.origin + ( 0 0 30 )
- local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
- local.trigger model "items/cigarette.tik" 
- local.trigger.angles = ( 0 90 -45 )
- local.trigger.scale = 5
- local.trigger setthread do_random
- local.trigger show
- //if(level.jointsmoketime != NIL) { local.trigger droptofloor } // droptofloor goes through crates and tables if trigger spawns on top of them
+	if($joint_trigger != NULL) { wait 1; println("----- ERROR joint.scr: Cannot have more than one $joint_trigger on the map."); end }
+	local.player = parm.other
+	local.trigger = spawn trigger_use targetname "joint_trigger"
+	local.trigger.origin = local.origin + ( 0 0 30 )
+	local.trigger setsize ( -20 -20 -20 ) ( 20 20 20 )
+	local.trigger model "items/cigarette.tik" 
+	local.trigger.angles = ( 0 90 -45 )
+	local.trigger.scale = 5
+	local.trigger setthread do_random
+	local.trigger show
+	//if(level.jointsmoketime != NIL) { local.trigger droptofloor } // droptofloor goes through crates and tables if trigger spawns on top of them
 
- if(local.smoketime == NIL) { level.jointsmoketime = 9999 }
- if(local.smoketime != NIL) { level.jointsmoketime = local.smoketime }
+	if(local.smoketime == NIL) { level.jointsmoketime = 9999 }
+	if(local.smoketime != NIL) { level.jointsmoketime = local.smoketime }
 
- exec global/flickerrotate.scr joint_trigger ( 0.65 0.8 0.2 ) 125 20 20 20
+	exec global/flickerrotate.scr joint_trigger ( 0.65 0.8 0.2 ) 125 20 20 20
 end
 
 do_random:
 
- self nottriggerable
- local.player = parm.other
- if(local.player.inusejoint)
- {
-  local.player iprint "Cannot use. You are smoking a joint already."
-  wait 1
-  self triggerable
-  end
- }
- else
- {
-  if(level.jointdropped != 1) { $joint_trigger message ("*** You found a nice and fresh fat blunt! Spark it up bro! ***") }
-  else if(level.jointdropped == 1) { $joint_trigger message ("*** You found a partially smoked fat blunt, but who cares! Spark it up bro! ***") }
-  local.player.inusejoint = 1
-  local.player take "models/items/binoculars.tik"
-  local.player give "models/items/papers.tik"
+	self nottriggerable
+	local.player = parm.other
+	if(local.player.inusejoint)
+	{
+		local.player iprint "Cannot use. You are smoking a joint already."
+		wait 1
+		self triggerable
+		end
+	}
+	else
+	{
+		if(level.jointdropped != 1) { $joint_trigger message ("*** You found a nice and fresh fat blunt! Spark it up bro! ***") }
+		else if(level.jointdropped == 1) { $joint_trigger message ("*** You found a partially smoked fat blunt, but who cares! Spark it up bro! ***") }
+		local.player.inusejoint = 1
+		local.player take "models/items/binoculars.tik"
+		local.player give "models/items/papers.tik"
 
-  local.player thread doit self.origin
- }
- self triggerable
+		local.player thread doit self.origin
+	}
+	self triggerable
 end
 
+////////////////////////////////////////////////////////////////////////
 
 doit local.origin:
 
-   if(level.jointdropped != 1) { self stufftext "say *** I just lit a fat blunt, and I'm getting super high! ***" }
-   else if(level.jointdropped == 1) { self stufftext "say *** I just found and lit someone's half-smoked blunt, and I'm getting pretty high still! ***" }
+	if(level.jointdropped != 1) { self stufftext "say *** I just lit a fat blunt, and I'm getting super high! ***" }
+	else if(level.jointdropped == 1) { self stufftext "say *** I just found and lit someone's half-smoked blunt, and I'm getting pretty high still! ***" }
 
-   self attachmodel models/items/cigarette.tik "Bip01 Head" 1.75 ("cig_1" + self.entnum) 1 -1 -1 -1 -1 ( 4 7 -3 )
-   self attachmodel models/emitters/inferno.tik "Bip01 Head" .2 ("cig_2" + self.entnum) 1 -1 -1 -1 -1 ( 4 7 -3 )
-   //self attachmodel models/emitters/fancyfire.tik "Bip01 Head" .2 ("cig_3" + self.entnum) 1 -1 -1 -1 -1 ( 4 7 -3 )
-   //self attachmodel models/emitters/breath_emitter.tik "Bip01 Head" 1.5 ("cig_4" + self.entnum) 1 -1 -1 -1 -1 ( 4 7 -3 )
-   //self attachmodel models/emitters/breath_emitter.tik "Bip01 Head" 1.5 ("cig_5" + self.entnum) 1 -1 -1 -1 -1 ( 4 7 -3 )
-   local.static = spawn script_model
-   local.static model "items/cigarette.tik"
-   local.static.scale = 0.001
-   local.static.origin = self.origin
-   local.static notsolid
-   local.static light (randomfloat 20 / 100.00 + 0.65) (randomfloat 20 / 100.00 + 0.8) (randomfloat 20 / 100.00 + 0.2) 400 //.75 1 .3 400
-   local.static glue self
-   local.static show
+	self thread attachmodels
 
-   ihuddraw_alpha self 104 0
-   ihuddraw_virtualsize self 104 1
-   ihuddraw_alpha self 104 .8
-   ihuddraw_font self 104 "verdana-12"
-   ihuddraw_color self 104 .75 1 .3
-   ihuddraw_rect self 104 -175 202 200 14 
-   ihuddraw_string self 104 "Weed Blunt:   Lighting Up" 
+	local.static = spawn script_model
+	local.static model "items/cigarette.tik"
+	local.static.scale = 0.001
+	local.static.origin = self.origin
+	local.static notsolid
+	local.static light (randomfloat 20 / 100.00 + 0.65) (randomfloat 20 / 100.00 + 0.8) (randomfloat 20 / 100.00 + 0.2) 400 //.75 1 .3 400
+	local.static glue self
+	local.static show
 
-   if($("cig_1" + self.entnum) != NULL) { $("cig_1" + self.entnum).angles = ( 0 180 20 ) }
-   if($("cig_2" + self.entnum) != NULL) { $("cig_2" + self.entnum).angles = ( 0 180 20 ) }
-   //$("cig_3" + self.entnum).angles = ( 0 180 20 )
-   //$("cig_4" + self.entnum).angles = ( 0 180 20 )
-   //$("cig_5" + self.entnum).angles = ( 0 180 20 ) 
+	ihuddraw_alpha self 104 0
+	ihuddraw_virtualsize self 104 1
+	ihuddraw_alpha self 104 .8
+	ihuddraw_font self 104 "verdana-12"
+	ihuddraw_color self 104 .75 1 .3
+	ihuddraw_rect self 104 -175 202 200 14 
+	ihuddraw_string self 104 "Weed Blunt:	Lighting Up" 
 
-   $"joint_trigger" nottriggerable
-   waitframe 			
-   $"joint_trigger" remove // need to waitframe before removing trigger, otherwise trigger "message" will not work.
+	$"joint_trigger" nottriggerable
+	waitframe 			
+	$"joint_trigger" remove // need to waitframe before removing trigger, otherwise trigger "message" will not work.
 
-   self thread smokeweed420
-   local.originold = local.origin + ( 0 0 -30 )
+	self thread smokeweed420
+	local.originold = local.origin + ( 0 0 -30 )
 
-   //huddraw_string 104 "Weed Blunt:   Smoking"
-   if(level.jointdropped != 1) { self iprint ("Yes, that is real weed you're smoking right now.") }
-   else if(level.jointdropped == 1) { self iprint ("You're such a fiend for lighting that blunt up again...") }
+	//huddraw_string 104 "Weed Blunt:	Smoking"
+	if(level.jointdropped != 1) { self iprint ("Yes, that is real weed you're smoking right now.") }
+	else if(level.jointdropped == 1) { self iprint ("You're such a fiend for lighting that blunt up again...") }
 
-   local.result = self waitthread scan_player level.jointsmoketime
+	local.result = self waitthread scan_player level.jointsmoketime
 
-   if(local.result != left)
-   {
-	self.inusejoint = 0
-  	if($("cig_1" + self.entnum) != NULL) { $("cig_1" + self.entnum) remove }
-  	if($("cig_2" + self.entnum) != NULL) { $("cig_2" + self.entnum) remove }
-	//$("cig_3" + self.entnum) remove
-	//$("cig_4" + self.entnum) remove
-	//$("cig_5" + self.entnum) remove
-
-  	if($("cig_11" + self.entnum) != NULL) { $("cig_11" + self.entnum) remove }
-  	if($("cig_22" + self.entnum) != NULL) { $("cig_22" + self.entnum) remove }
-	//huddraw_string 104 "Weed Blunt:   Dropped"
-	ihuddraw_string self 104 ""
-	self stopsound
-	local.static unglue
-	local.static remove
-	self.dogweed = 0
-
-	level.jointdropped = 1 // never = 0 again; jointdropped = 1 after the first joint is found, after each map loads.
-
-	if(level.jointdropped_useheld != 1)
+	if(local.result != left)
 	{
-		//wait 0.5
-     		//huddraw_string 104 ""
-		self stufftext "say *** No! I dropped my fat blunt! ***"
+		//huddraw_string 104 "Weed Blunt:	Dropped"
+		ihuddraw_string self 104 ""
+		self stopsound
+		local.static unglue
+		local.static remove
+		self.smokingweed = 0
+		self.inusejoint = 0
 
-		if(level.joint_went2spectator == 1) // this respawns the trigger at the origin it was last picked up at (hopefully on the ground).
-		{ 				    		// when map loads, players can still change teams without dying, so that case applies here too.
-			level.joint_went2spectator = 0
-			goto main local.originold 
+		level.jointdropped = 1 // never = 0 again; jointdropped = 1 after the first joint is found, after each map loads.
+
+		if(level.jointdropped_useheld != 1)
+		{
+			//wait 0.5
+	  		//huddraw_string 104 ""
+			self stufftext "say *** No! I dropped my fat blunt! ***"
+
+			if(level.joint_went2spectator == 1) // this respawns the trigger at the origin it was last picked up at (hopefully on the ground).
+			{ 					 		// when map loads, players can still change teams without dying, so that case applies here too.
+				level.joint_went2spectator = 0
+				goto main local.originold 
+			}
+
+			//while(self != NULL && !isalive self && (local.droppedorigin == NIL || local.droppedorigin != self.origin)) { local.droppedorigin = self.origin; waitframe }
+			local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
+
+			goto main local.droppedorigin // using "goto" here immediately ends "doit" script and runs "main" as a new thread.
+	 	}
+		if(level.jointdropped_useheld == 1)
+		{
+			self iprint ("Puff puff, pass!")
+			thread main self.origin // using "thread" here allows joint to be dropped faster. also allows "doit" code to finish.
+
+			level.jointdropped_useheld = 0
+	  		//wait 0.5
+	  		//huddraw_string 104 ""
 		}
-
-		//while(self != NULL && !isalive self && (local.droppedorigin == NIL || local.droppedorigin != self.origin)) { local.droppedorigin = self.origin; waitframe }
-		local.droppedorigin = trace self.origin (self.origin + angles_toforward( 90 0 0 ) * 10240)
-
-		goto main local.droppedorigin // using "goto" here immediately ends "doit" script and runs "main" as a new thread.
-    	}
-	if(level.jointdropped_useheld == 1)
-	{
-		self iprint ("Puff puff, pass!")
-		thread main self.origin // using "thread" here allows joint to be dropped faster. also allows "doit" code to finish.
-
-		level.jointdropped_useheld = 0
-     		//wait 0.5
-     		//huddraw_string 104 ""
-    	}
-   }
-   if(local.result == left) { goto main local.originold }
+	}
+	if(local.result == left) { goto main local.originold }
 end
+
+////////////////////////////////////////////////////////////////////////
 
 scan_player local.time:
 
- local.result = ok
- local.team = self.dmteam
- local.count = 0
- self thread instructions
+	local.result = ok
+	local.team = self.dmteam
+	local.count = 0
+	self thread instructions
 
- while(1)
- {
-  	if(self == NULL)
-  	{
-		local.result = left
-		end local.result
-  	}
-  	else
-  	{
-		if(self.isdog != 1 && self.wasdogsmoking == 1) // dog's attachmodels are removed when the dog is removed, player's attachmodels are hidden when player is hidden
-		{
-			self.dogweed = 0
-			self.wasdogsmoking = 0
-		}
-		if(self.isdog == 1 && self.dogweed != 1)
-		{
-			self.dog attachmodel models/items/cigarette.tik "tag_mouth" 1.75 ("cig_11" + self.entnum) 1 -1 -1 -1 -1 ( 6 -4 -2 ) // ( +forward -backward, +down -up, +left -right )
-   			self.dog attachmodel models/emitters/inferno.tik "tag_mouth" .2 ("cig_22" + self.entnum) 1 -1 -1 -1 -1 ( 6 -4 -2 )
-   			if($("cig_11" + self.entnum).size <= 1) { $("cig_11" + self.entnum).angles = ( 0 90 0 ) }
-   			if($("cig_22" + self.entnum).size <= 1) { $("cig_22" + self.entnum).angles = ( 0 90 0 ) }
-			self.dogweed = 1
-			self.wasdogsmoking = 1
-		}
-   		if(self.dmteam != local.team || !isalive self || self.dmteam == spectator)
-   		{
-			if(self.dmteam == spectator || isalive self) { level.joint_went2spectator = 1 }
-    			end local.result
-   		}   
-		if(self.dmteam == local.team && isalive self && self.dmteam != spectator)
-   		{
-    			local.count++
-    			if((local.count / 10) >= local.time)
-    			{
-     				end local.result
-    			}
-   		}
-		local.smoketimer = 0
-		while(self.useheld == 1 && self.dmteam == local.team && isalive self)
-		{ 
-			local.random = randomint(3)
-			if(local.smoketimer >= 10 && local.smoketimer < 30) { ihuddraw_string self 104 "Weed Blunt:   Puffing"; self.smokingweed = 1 }
-			if(local.smoketimer >= 40 && local.smoketimer < 50) { ihuddraw_string self 104 "Weed Blunt:   Dropping" }
-			if(local.smoketimer == 10)
-			{  
-   				if(local.random == 0) { self playsound sparkup1 }
-   				if(local.random == 1) { self playsound sparkup2 }
-   				if(local.random == 2) { self playsound sparkup3 }
+	while(1)
+	{
+	  	if(self == NULL)
+	  	{
+			local.result = left
+			end local.result
+	  	}
+	  	else
+	  	{
+			if(self.dmteam != local.team || !isalive self || self.dmteam == spectator)
+			{
+				if(self.dmteam == spectator || isalive self) { level.joint_went2spectator = 1 }
+	 			end local.result
+			}	
+			if(self.dmteam == local.team && isalive self && self.dmteam != spectator)
+			{
+	 			local.count++
+	 			if((local.count / 10) >= local.time)
+	 			{
+	  				end local.result
+	 			}
 			}
-			if(local.smoketimer == 20)  
-			{  
-   				if(local.random == 0) { self playsound sparkup1 }
-   				if(local.random == 1) { self playsound sparkup2 }
-   				if(local.random == 2) { self playsound sparkup3 }
-			}
-			if(local.smoketimer >= 50)  
-			{  
-   				if(local.random == 0) { self playsound sparkup1 }
-   				if(local.random == 1) { self playsound sparkup2 }
-   				if(local.random == 2) { self playsound sparkup3 }
-				//self iprint ("You dropped the blunt by holding the USE key for 5 seconds.")
-				level.jointdropped_useheld = 1
 
-				end local.result
+			if($("cig_2" + self.entnum) != NULL) { $("cig_2" + self.entnum).scale = 0.5 }
+			if($("cig_22" + self.entnum) != NULL) { $("cig_22" + self.entnum).scale = 0.5 }
+
+			local.smoketimer = 0
+			while(self.useheld == 1 && self.dmteam == local.team && isalive self)
+			{ 
+				local.random = randomint(3)
+				if(local.smoketimer >= 10 && local.smoketimer < 30)
+				{
+					ihuddraw_string self 104 "Weed Blunt:	Puffing"
+					self.smokingweed = 1
+					if($("cig_2" + self.entnum) != NULL) { $("cig_2" + self.entnum).scale = 2 }
+					if($("cig_22" + self.entnum) != NULL) { $("cig_22" + self.entnum).scale = 2 }
+				}
+				else
+				{
+					if($("cig_2" + self.entnum) != NULL) { $("cig_2" + self.entnum).scale = 0.5 }
+					if($("cig_22" + self.entnum) != NULL) { $("cig_22" + self.entnum).scale = 0.5 }
+				}
+
+				if(local.smoketimer >= 40 && local.smoketimer < 50) { ihuddraw_string self 104 "Weed Blunt:	Dropping" }
+				if(local.smoketimer == 10)
+				{  
+					if(local.random == 0) { self playsound sparkup1 }
+					if(local.random == 1) { self playsound sparkup2 }
+					if(local.random == 2) { self playsound sparkup3 }
+				}
+				if(local.smoketimer == 20)  
+				{  
+					if(local.random == 0) { self playsound sparkup1 }
+					if(local.random == 1) { self playsound sparkup2 }
+					if(local.random == 2) { self playsound sparkup3 }
+				}
+				if(local.smoketimer >= 50)  
+				{  
+					if(local.random == 0) { self playsound sparkup1 }
+					if(local.random == 1) { self playsound sparkup2 }
+					if(local.random == 2) { self playsound sparkup3 }
+					//self iprint ("You dropped the blunt by holding the USE key for 5 seconds.")
+					level.jointdropped_useheld = 1
+
+					end local.result
+				}
+				local.smoketimer++
+				wait 0.1
 			}
-			local.smoketimer++
-			wait 0.1
-		}
-		if(local.smoketimer > 10) { ihuddraw_string self 104 "Weed Blunt:   Smoking"; self.smokingweed = 0 }
-  	}
-  	wait 0.1
- }
+			if(local.smoketimer > 10) { ihuddraw_string self 104 "Weed Blunt:	Smoking"; self.smokingweed = 0 }
+  		}
+  		wait 0.1
+	}
 end
+
+////////////////////////////////////////////////////////////////////////
 
 instructions: // separate the "wait 3" from the rest of the scan_player thread.
 
 	wait 3
-	if(self.smokingweed != 1) { ihuddraw_string self 104 "Weed Blunt:   Smoking" }
+	if(self.smokingweed != 1) { ihuddraw_string self 104 "Weed Blunt:	Smoking" }
 	if($joint_trigger == NULL) { self iprint ("Hold USE for 1 or 2 seconds to smoke blunt. Hold USE for 5 seconds to drop it.") }
 end 
 
@@ -243,6 +234,76 @@ smokeweed420: // make the smoking sounds
 		if(local.random == 0) { self playsound sparkup1 }
 		if(local.random == 1) { self playsound sparkup2 }
 		if(local.random == 2) { self playsound sparkup3 }
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+attachmodels:
+
+	self thread attachmodels_init
+
+	local.entnum = self.entnum
+	while(self != NULL && self.inusejoint == 1)
+	{
+		if(self.isdog == 1 && $("cig_1" + self.entnum) != NULL)
+		{
+  			if($("cig_1" + self.entnum) != NULL) { $("cig_1" + self.entnum) remove }
+  			if($("cig_2" + self.entnum) != NULL) { $("cig_2" + self.entnum) remove }
+			if($("cig_3" + self.entnum) != NULL) { $("cig_3" + self.entnum) remove }
+			if($("cig_4" + self.entnum) != NULL) { $("cig_4" + self.entnum) remove }
+
+			self thread attachmodels_init
+		}
+		if(self.isdog != 1 && $("cig_11" + self.entnum) != NULL)
+		{
+  			if($("cig_11" + self.entnum) != NULL) { $("cig_11" + self.entnum) remove }
+  			if($("cig_22" + self.entnum) != NULL) { $("cig_22" + self.entnum) remove }
+  			if($("cig_33" + self.entnum) != NULL) { $("cig_33" + self.entnum) remove }
+  			if($("cig_44" + self.entnum) != NULL) { $("cig_44" + self.entnum) remove }
+
+			self thread attachmodels_init
+		}
+
+		if($("cig_1" + self.entnum) == NULL && $("cig_11" + self.entnum) == NULL) { self thread attachmodels_init }
+		waitframe
+	}
+
+  	if($("cig_1" + local.entnum) != NULL) { $("cig_1" + local.entnum) remove }
+  	if($("cig_2" + local.entnum) != NULL) { $("cig_2" + local.entnum) remove }
+	if($("cig_3" + local.entnum) != NULL) { $("cig_3" + local.entnum) remove }
+	if($("cig_4" + local.entnum) != NULL) { $("cig_4" + local.entnum) remove }
+  	if($("cig_11" + local.entnum) != NULL) { $("cig_11" + local.entnum) remove }
+  	if($("cig_22" + local.entnum) != NULL) { $("cig_22" + local.entnum) remove }
+  	if($("cig_33" + local.entnum) != NULL) { $("cig_33" + local.entnum) remove }
+  	if($("cig_44" + local.entnum) != NULL) { $("cig_44" + local.entnum) remove }
+end
+
+attachmodels_init:
+
+	if(self.isdog == 1)
+	{
+		self.dog attachmodel models/items/cigarette.tik "tag_mouth" 1.75 ("cig_11" + self.entnum) 1 -1 -1 -1 -1 ( 6 -4 -2 ) // ( +forward -backward, +down -up, +left -right )
+		$("cig_11" + self.entnum) attachmodel models/emitters/smoke_smallfry.tik "origin" 0.5 ("cig_22" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 0 )
+		$("cig_11" + self.entnum) attachmodel models/emitters/hexsmoke01.tik "origin" 1 ("cig_33" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 0 )
+		$("cig_11" + self.entnum) attachmodel models/emitters/lanternflame.tik "tag_barrel" 0.5 ("cig_44" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 0 )
+
+		if($("cig_11" + self.entnum).size <= 1) { $("cig_11" + self.entnum).angles = ( 0 90 0 ) }
+		if($("cig_22" + self.entnum).size <= 1) { $("cig_22" + self.entnum).angles = ( 0 270 0 ) }
+		if($("cig_33" + self.entnum).size <= 1) { $("cig_33" + self.entnum).angles = ( 0 0 0 ) }
+		if($("cig_44" + self.entnum).size <= 1) { $("cig_33" + self.entnum).angles = ( 0 0 0 ) }
+	}
+	else
+	{
+		self attachmodel models/items/cigarette.tik "Bip01 Head" 1.75 ("cig_1" + self.entnum) 1 -1 -1 -1 -1 ( 4 7 -3 ) // ( +up -down, +forward -backward, +left -right )
+		$("cig_1" + self.entnum) attachmodel models/emitters/smoke_smallfry.tik "origin" 0.5 ("cig_2" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 0 )
+		$("cig_1" + self.entnum) attachmodel models/emitters/hexsmoke01.tik "origin" 1 ("cig_3" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 0 )
+		$("cig_1" + self.entnum) attachmodel models/emitters/lanternflame.tik "tag_barrel" 0.5 ("cig_4" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 0 ) 
+
+		if($("cig_1" + self.entnum).size <= 1) { $("cig_1" + self.entnum).angles = ( 0 180 20 ) }
+		if($("cig_2" + self.entnum).size <= 1) { $("cig_2" + self.entnum).angles = ( 0 270 0 ) }
+		if($("cig_3" + self.entnum).size <= 1) { $("cig_3" + self.entnum).angles = ( 0 0 0 ) }
+		if($("cig_4" + self.entnum).size <= 1) { $("cig_4" + self.entnum).angles = ( 0 0 0 ) }
 	}
 end
 

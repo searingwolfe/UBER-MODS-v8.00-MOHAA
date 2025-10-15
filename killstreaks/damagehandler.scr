@@ -1,5 +1,37 @@
 main local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.entity:
 
+	// change the pink text when killed by their own "meansofdeath = fire" weapon; temporarily immolate the player with fire if damaged by a "meansofdeath = fire" weapon.
+	// change the pink text when killed by their own rocket launcher, or if knockback >= 250.
+	if(local.entity.classname == Player && isalive local.entity && local.entity.dead != 1 && local.entity.dmteam != "spectator" && local.entity.health > 0)
+	{
+		if(local.knockback >= 350 && local.damage > local.entity.health && local.inflictor == local.entity)
+		{
+			local.entity damage local.entity 9999999 local.entity local.position local.direction local.normal local.knockback local.damageflags 16 local.location
+			local.entity addkills -1
+			end
+		}
+
+		if(local.meansofdeath == 21)
+		{
+			if(local.entity == local.inflictor && local.entity.health <= 5)
+			{
+				local.entity damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 5 0
+				local.entity addkills -1
+				end
+			}
+
+			local.entity.immolated_c = 0
+			if(local.entity.immolated != 1 && local.inflictor.classname == Player && (local.entity.dmteam != local.inflictor.dmteam || getcvar("g_gametype") == "1" || local.entity == local.inflictor))
+			{
+				local.entity thread immolated
+			}
+		}
+	}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
 	// assisted suicide: give kills to players who damaged someone within 1.5 seconds of them beginning to fall off a cliff (all the way until they crater and die).
 	if(local.entity.classname == Player && local.inflictor != NULL && local.inflictor != $world)
 	{
@@ -145,7 +177,7 @@ assisted_suicide:
 				{
 					if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].suicide_assist_c < 30 && $player[local.i].dmteam == $player[local.i].suicide_assist_team && $player[local.i].suicide_assister.dmteam == $player[local.i].suicide_assister_team && $player[local.i].suicide_assister.dmteam != "spectator")
 					{
-						if($player[local.i] getmovement != "falling") { $player[local.i].suicide_assist_c++ }
+						if($player[local.i] getmovement != "falling" || $player[local.i].using_pack == 1) { $player[local.i].suicide_assist_c++ }
 					}
 					else
 					{
@@ -162,10 +194,53 @@ assisted_suicide:
 					$player[local.i].suicide_assister = NIL
 					$player[local.i].suicide_assister_team = NIL
 				}
-
-				if(isalive $player[local.i]) { $player[local.i].craterdeath = 0 }
 			}
 		}
 		waitframe
 	}
+end
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+immolated:
+
+	local.team = self.dmteam
+	self.immolated = 1
+	if(self.immolation != NIL && self.immolation != NULL) { self.immolation remove }
+
+	local.fire = spawn script_model
+	local.fire model "emitters/explosion_conflagration.tik"
+	local.fire anim start
+	local.fire notsolid
+	local.fire.scale = 0.25
+	self.immolation = local.fire
+
+	while(self != NULL && isalive self && self.dmteam == local.team && self.dmteam != "spectator" && self.dead != 1 && self.missile == NIL && self.immolated == 1 && self.immolated_c <= 2)
+	{
+		if(self.immolation != NIL && self.immolation != NULL)
+		{
+			if(self.dog != NIL && self.dog != NULL) { self.immolation.origin = self.dog gettagposition "tag_mouth" }
+			else { self.immolation.origin = self gettagposition "Bip01 Head" }
+		}
+		self.immolated_c++
+		waitframe
+	}
+
+	if(self != NULL) { self.immolated_c = 0 }
+	while(self != NULL && !isalive self && self.dmteam == local.team && self.dmteam != "spectator" && self.immolated == 1 && self.immolated_c <= 80) // immolate dead bodies for 4 seconds.
+	{
+		if(self.immolation != NIL && self.immolation != NULL)
+		{
+			if(self.dog != NIL && self.dog != NULL) { self.immolation.origin = self.dog gettagposition "tag_mouth" }
+			else { self.immolation.origin = self gettagposition "Bip01 Head" }
+		}
+		local.died = 1
+		self.immolated_c++
+		waitframe
+	}
+
+	if(self != NULL) { self.immolated = 0; self.immolated_c = 0 }
+	if(local.fire != NIL && local.fire != NULL) { local.fire remove }
 end

@@ -413,13 +413,13 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-pipesteam_init local.angles1 local.angles2 local.angles3 local.angles4:
+pipesteam_init local.angles1 local.angles2 local.angles3:
 
 	thread emitterstuff emitters/pipe_steam.tik ( 4865 1488 30 ) local.angles1 0.1 stop "pipesteam_1"
 	local.emitter1 = thread emitterstuff emitters/pipe_steam.tik ( 4865 1488 79 ) local.angles1 0.1 stop "pipesteam_1"
 	thread emitterstuff emitters/pipe_steam.tik ( 4865 1488 128 ) local.angles1 0.1 stop "pipesteam_1"
-	local.emitter2 = thread emitterstuff emitters/pipe_steam.tik ( 5216 1730 187 ) ( 90 0 0 ) 0.1 stop "pipesteam_1"
-	local.emitter3 = thread emitterstuff emitters/pipe_steam.tik ( 4641 1217 187 ) ( 90 0 0 ) 0.1 stop "pipesteam_1"
+	local.emitter2 = thread emitterstuff emitters/pipe_steam.tik ( 5216 1730 187 ) local.angles2 0.1 stop "pipesteam_1"
+	local.emitter3 = thread emitterstuff emitters/pipe_steam.tik ( 4641 1217 187 ) local.angles3 0.1 stop "pipesteam_1"
 	local.emitter1.playsound = 1
 	local.emitter2.playsound = 1
 	local.emitter3.playsound = 1
@@ -1047,15 +1047,15 @@ end
 
 UBER_mapextras2:
 
-	thread mg42spawn ( -792.00 1436.00 440.00 ) ( 0 180 0 ) // origin, angles, spawn bipod (0 or 1), targetname, pitchcaps [default = ( -45 45 0 )], max yaw offset (default = 80).
-	thread mg42spawn ( 4530.00 992.00 143.00 ) ( 0 225 0 )
-	thread mg42spawn ( 4690.00 955.00 144.00 ) ( 0 295 0 )
-	thread mg42spawn ( 2223.00 2740.00 -474.00 ) ( 0 180 0 )
-	thread mg42spawn ( 4931.00 1937.00 90.00 ) ( 0 270 0 )
-	thread mg42spawn ( -401.00 1089.00 144.00 ) ( 0 180 0 )
-	thread mg42spawn ( 2751.00 636.00 461.00 ) ( 0 180 0 )
-	thread mg42spawn ( 2919.00 632.00 465.00 ) ( 0 0 0 )
-	thread mg42spawn ( 1853.00 2788.00 463.00 ) ( 0 270 0 )
+	thread mg42spawn ( -790.390014648438 1436.75 440.089996337891 ) ( 0 180 0 ) // origin, angles, spawn bipod (0 or 1), targetname, pitchcaps [default = ( -45 45 0 )], max yaw offset (default = 80).
+	thread mg42spawn ( 4530.02001953125 990.239990234375 143.089996337891 ) ( 0 225 0 )
+	thread mg42spawn ( 4691.89990234375 954.359985351563 143.089996337891 ) ( 0 295 0 )
+	thread mg42spawn ( 2219 2739.23999023438 -472.910003662109 ) ( 0 180 0 )
+	thread mg42spawn ( 4931.75 1938 91.0899963378906 ) ( 0 270 0 )
+	thread mg42spawn ( -402 1088.23999023438 143.089996337891 ) ( 0 180 0 )
+	thread mg42spawn ( 2752.61010742188 636.75 461.089996337891 ) ( 0 180 0 )
+	thread mg42spawn ( 2919 630.239990234375 465.089996337891 ) ( 0 0 0 )
+	thread mg42spawn ( 1853.75 2788 463.089996337891 ) ( 0 270 0 )
 
 	thread solidclip ( -1653 97 50 ) ( -725 -500 -100 ) ( 3116 0 0 ) 0
 	thread solidclip ( 1463 353 25 ) ( 0 -500 -100 ) ( 2482 0 0 ) 0
@@ -1262,14 +1262,13 @@ mg42spawn local.origin local.angles local.spawnbipod local.targetname local.pitc
 	if(local.spawnbipod == 1)
 	{
 		local.bipod = spawn script_model 
-		local.bipod model "statweapons/mg42_bipod_nonstatic.tik"
-		local.bipod.origin = local.mg.origin + ( 0 0 17.09 ) - local.mg.leftvector * 1.325
+		local.bipod model "statweapons/mg42_bipod.tik"
+		local.bipod.origin = local.mg.origin + ( 0 0 1 )
 		local.bipod.angles = local.mg.angles
 		local.bipod.mg = local.mg
 		local.mg.bipod = local.bipod
-		local.mg.origin += ( 0 0 15 )
 	}
-end
+end local.mg
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -3742,7 +3742,13 @@ state MINE_CHUCK
 	}
 }
 
-//////////////// SERVER PLANES
+//==============================================================================
+//==============================================================================
+//
+// Server Planes
+//
+//==============================================================================
+
 state PLANE_TORSO
 {
 
@@ -4551,7 +4557,48 @@ state DOG_TORSO
 //==============================================================================
 //==============================================================================
 //
-// Vehicles
+// Tank Driver
+//
+//==============================================================================
+
+state EXIT_TANK
+{
+	entrycommands
+	{
+		zoomoff
+		viewmodelanim putaway
+	}
+
+	states
+	{
+		STAND			: KILLED
+		PUTAWAY_SKIPANIM	: IMMEDIATE_SWITCH NEW_WEAPON
+		RAISE_WEAPON_T		: ANIMDONE_TORSO
+	}
+}
+
+state RAISE_WEAPON_T
+{
+	movetype legs
+
+	entrycommands
+	{
+		exec global/ac/spawn_detect.scr 1
+		viewmodelanim pullout
+		correctweaponattachments
+	}
+
+	states
+	{
+		STAND			: KILLED
+		RAISE_NOANIM		: ANIMDONE_TORSO
+	}
+}
+
+//==============================================================================
+//==============================================================================
+//
+// Vehicle Driver
 //
 //==============================================================================
 
@@ -6268,5 +6315,107 @@ state PAIN_WAIT_TILL_DONE_V
 		CHECK_SECONDARY_ATTACK_V				: +ATTACK_SECONDARY
 		
 		VEHICLE_PASSENGER					: ANIMDONE_TORSO
+	}
+}
+
+//==============================================================================
+//==============================================================================
+//
+// Throwing Object
+//
+//==============================================================================
+
+state THROW_OBJECT
+{
+	movetype legs
+
+	action
+	{
+		steilhandgranate_crouch_fire_secondary		: POSITION_TYPE "crouching"
+		steilhandgranate_stand_fire_secondary		: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+		STAND						: +JUMP
+		STAND 						: ANIMDONE_TORSO
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT					: +NEW_WEAPON
+	}
+}
+
+state THROW_OBJECT_V
+{
+	movetype legs
+
+	action
+	{
+		steilhandgranate_crouch_fire_secondary		: POSITION_TYPE "crouching"
+		steilhandgranate_stand_fire_secondary		: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+		VEHICLE_GETOUT					: +JUMP
+		VEHICLE_PASSENGER 				: ANIMDONE_TORSO
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT_V					: +NEW_WEAPON
+	}
+}
+
+//==============================================================================
+//==============================================================================
+//
+// Player Taunts
+//
+//==============================================================================
+
+state PLAYER_TAUNT
+{
+	movetype legs
+
+	action
+	{
+		germanselectionidle				: !HAS_WEAPON
+		show_papers					: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+	//	STAND						: +JUMP
+		STAND						: ANIMDONE_TORSO
+		STAND						: +ATTACK_PRIMARY
+		STAND						: +ATTACK_SECONDARY
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT					: +NEW_WEAPON
+	}
+}
+
+state PLAYER_TAUNT_V
+{
+	movetype legs
+
+	action
+	{
+		germanselectionidle				: !HAS_WEAPON
+		show_papers					: default
+	}
+
+	states
+	{
+		STAND	 					: KILLED
+	//	VEHICLE_GETOUT					: +JUMP
+		VEHICLE_PASSENGER 				: ANIMDONE_TORSO
+		VEHICLE_PASSENGER				: +ATTACK_PRIMARY
+		VEHICLE_PASSENGER				: +ATTACK_SECONDARY
+
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT_V					: +NEW_WEAPON
 	}
 }

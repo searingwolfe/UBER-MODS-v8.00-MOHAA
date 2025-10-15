@@ -134,50 +134,56 @@ main: // findset.scr. Run "exec global/findset.scr" in any map script to use the
 					//println("----- Type 'findset exploderfire' to print more details.")
 				}
 			}
+			else { println("----- ERROR. There were no $exploderfire entities to save into 'level.exploderfire' array.") }
 		}
 	}
 
-	if((local.set == "exploderfire") && level.exploderfire != NIL && level.exploderfire.size > 0)
+	if(local.set == "exploderfire")
 	{
-		println("----- $exploderfire data is saved to 'level.exploderfire' matrix array, before removing the entities.")
-		wait 0.25
-		println("----- For example: level.exploderfire[1][2] = $exploderfire[1].origin")
-		wait 0.25
-		println("----- Rows = $exploderfire[row #].")
-		wait 0.25
-		println("----- Columns = level.exploderfire[row #][column #] data. [1] to [9] columns.")
-		println("")
-		wait 0.25
-		println("----- Columns left to right: model, origin, angles, scale, set #, pause, damage, damageradius, fire")
-		println("")
-		wait 1
-		println("level.exploderfire = ")
 
-		for(local.f = 1; local.f <= level.exploderfire.size; local.f++)
+		if(level.exploderfire != NIL && level.exploderfire.size > 0)
 		{
-			local.x = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][0]
-			local.y = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][1]
-			local.z = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][2]
-			local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
-			local.x = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][0]
-			local.y = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][1]
-			local.z = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][2]
-			local.angles = "( " + local.x + " " + local.y + " " + local.z + " )"
-			local.scale = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][4]
-			local.pause = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][6]
+			println("----- $exploderfire data is saved to 'level.exploderfire' matrix array, before removing the entities.")
+			wait 0.25
+			println("----- For example: level.exploderfire[1][2] = $exploderfire[1].origin")
+			wait 0.25
+			println("----- Rows = $exploderfire[row #].")
+			wait 0.25
+			println("----- Columns = level.exploderfire[row #][column #] data. [1] to [9] columns.")
+			println("")
+			wait 0.25
+			println("----- Columns left to right: model, origin, angles, scale, set #, pause, damage, damageradius, fire")
+			println("")
+			wait 1
+			println("level.exploderfire = ")
 
-			local.model = ""
-			for(local.s = 7; local.s < level.exploderfire[local.f][1].size; local.s++)
+			for(local.f = 1; local.f <= level.exploderfire.size; local.f++)
 			{
-				local.model += level.exploderfire[local.f][1][local.s]
+				local.x = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][0]
+				local.y = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][1]
+				local.z = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][2][2]
+				local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+				local.x = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][0]
+				local.y = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][1]
+				local.z = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][3][2]
+				local.angles = "( " + local.x + " " + local.y + " " + local.z + " )"
+				local.scale = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][4]
+				local.pause = waitthread global/math.scr::simplify_decimal level.exploderfire[local.f][6]
+
+				local.model = ""
+				for(local.s = 7; local.s < level.exploderfire[local.f][1].size; local.s++)
+				{
+					local.model += level.exploderfire[local.f][1][local.s]
+				}
+
+				println("[" + local.f + "] : " + local.model + " " + local.origin + " " + local.angles + " " + local.scale + " #" + string(level.exploderfire[local.f][5]) + " " + local.pause + " " + string(level.exploderfire[local.f][7]) + " " + string(level.exploderfire[local.f][8]) + " " + string(level.exploderfire[local.f][9]))
+
+				waitframe
 			}
-
-			println("[" + local.f + "] : " + local.model + " " + local.origin + " " + local.angles + " " + local.scale + " #" + string(level.exploderfire[local.f][5]) + " " + local.pause + " " + string(level.exploderfire[local.f][7]) + " " + string(level.exploderfire[local.f][8]) + " " + string(level.exploderfire[local.f][9]))
-
-			waitframe
+			println("----- Number of 'level.exploderfire' rows: " + level.exploderfire.size)
+			println("")
 		}
-		println("----- Number of 'level.exploderfire' rows: " + level.exploderfire.size)
-		println("")
+		else { println("----- ERROR. There were no $exploderfire entities to save into 'level.exploderfire' array.") }
 	}
 
 	if(local.classname != "") { setcvar "findset" "" }

@@ -167,7 +167,7 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if(self != NULL && $player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum) istouching self || (self.damagetrig != NIL && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig) || (self.trigshot != NIL && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.trigshot)) && $player[local.i].passenger != 1 && $player[local.i].turreting != 1 && $player[local.i].driving != 1)
+			if(self != NULL && $player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum)[1].biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum)[1] istouching self || (self.damagetrig != NIL && $("dogmouthtrig_" + $player[local.i].entnum)[1] istouching self.damagetrig) || (self.trigshot != NIL && $("dogmouthtrig_" + $player[local.i].entnum)[1] istouching self.trigshot)) && $player[local.i].passenger != 1 && $player[local.i].turreting != 1 && $player[local.i].driving != 1)
 			{
 				self.shooter = $player[local.i]
 				for(local.i = 1; local.i <= self.passengers.size; local.i++)
@@ -314,6 +314,13 @@ playergetin:
 		if(self != NULL) { self.attachingdriver = 0 }
 		local.player.enteringvehicle = 0
 		local.player iprint ("Dogs cannot drive vehicles.")
+		end
+	}
+	if(local.player.fireheld == 1 && self.gun != NIL && self.gun != NULL && (self.turretplayer == NIL || self.turretplayer == NULL)) // enter 30_cal turret slot if still holding FIRE.
+	{
+		local.player.enteringvehicle = 0
+		self.attachingdriver = 0
+		self thread turretslot local.player
 		end
 	}
 
@@ -608,8 +615,9 @@ driverreset local.status:
 
 	if(self.driver == NIL) { end } // if the vehicle blew up with nobody driving it, end this thread.
 
-	if(local.status != 1) { cueplayer }				// reattaches camera to player's head
+	//if(local.status != 1) { cueplayer } // reattaches camera to player's head. Not required for vehicles (keeping it will cause turret players' camera to get messed up if players exit the vehicle).
 	self detachdriverslot 0 self.driver
+
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
 	if($("driver_seat_" + self.entnum) != NULL) { self.driver unglue }
 	self.driver exit	// not needed, but added as a redundancy.
@@ -978,6 +986,16 @@ turretslot local.player:
 	self.turretplayer forcetorsostate TURRET_START
 	self.turretplayer iprint ("JUMP = exit turret.")
 	self.turretplayer.turretingent = self // used with killstreaks/damagehandler.scr to properly give score to shooter if turretplayer's vehicle gets blown up by an enemy bazooka rocket.
+	self.turretplayer.drivingent = self
+
+	local.origin_init = self.origin
+	local.angles_init = self.angles
+	local.fwd_vec = angles_toforward self.turretplayer.viewangles
+	local.origin = self.turretplayer gettagposition "eyes bone" + ( 0 0 10000 )
+	local.groundtarget = spawn script_origin // need this entity to initially point the turret towards player's viewangles
+	local.groundtarget.origin = trace local.origin (local.origin + local.fwd_vec * 10240) 0 // when attaching to VehicleTurretGun entities, player's angles will always face the vehicle's angles initially.
+	self.origin += ( 0 0 10000 ) // this moves the vehicle away from any walls in order to find the correct turret angles (may not always work).
+	self.angles = vector_toangles(local.groundtarget.origin - self.origin) // without any waitframes, point the vehicle towards player's angles, attach the player, then move the vehicle's angles back to normal.
 
 	self unlock
 	self.gun unlock
@@ -988,6 +1006,10 @@ turretslot local.player:
 
 	self thread spawn_turretgun_player_glue local.player
 
+	self.angles = local.angles_init // move the vehicle's angles back to where it was before attaching the player.
+	self.origin = local.origin_init
+	local.groundtarget remove
+
 	local.driver = self.driver
 	local.team = local.player.dmteam
 	local.targetname = self.targetname
@@ -997,8 +1019,6 @@ turretslot local.player:
 	{
 		local.player.origin = self.gun.origin
 		if(local.player.fireheld == 1) { self.gun playsound sndfire30cal }
-
-		if($("turretglue_" + self.entnum) != NULL) { $("turretglue_" + self.entnum).angles = ( 0 (local.player.viewangles[1] + 180) 0 ) } // without this, SDKFZ turret will not rotate.
 
 		if(self.turretplayer.driving_state_jump == 1)
 		{
@@ -1046,6 +1066,7 @@ turretplayer_reset local.team local.player local.dead:
 	//local.player forcelegsstate STAND // do not use this when exiting turrets; it will force players into noclip after exiting.
 	local.player takedamage // this prevents a rare bug that kept the turret player from ever dying again (player is somehow, but only sometimes given "nodamage"?)
 	local.player.turretingent = NIL
+	local.player.drivingent = NIL
 
 	if(isalive local.player && local.player.dmteam != "spectator")
 	{
@@ -1079,7 +1100,6 @@ turretplayer_reset local.team local.player local.dead:
 			self.gun notsolid
 			self.gun pitchcaps ( -60 35 0 )
 			if(self.model != "models/vehicles/jeep.tik") { self.gun.scale = 0.5 }
-			if($("turretglue_" + self.entnum) != NULL) { self.gun glue $("turretglue_" + self.entnum) }
 		}
 	}
 	if(self != NULL && self.dead != 1) { self thread turretplayer_reattach local.player local.team }
@@ -1182,17 +1202,19 @@ passengers local.player local.s:
 	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
 	if(local.s_nil == 1)
 	{
-		if(self.seats > 1) { local.player iprint ("JUMP = exit vehicle... Hold FIRE(zoom) = look around. Lean Left/Right = change seats.") }
+		if(self.seats > 1) { local.player iprint ("JUMP = exit vehicle... Hold FIRE(zoom) = look around... Lean Left/Right = change seats.") }
 		else { local.player iprint ("JUMP = exit vehicle... Hold FIRE(zoom) = look around.") }
 	}
 	local.player.origin = self.origin
 	local.player.passenger = 1
+	local.player.drivingent = self
 	local.player.ridingent = self
 	local.player.driving = 1 // should help with other scripts.
 	local.player.driving_state_jump = 0
 	local.PI = 3.14159265359
 	local.driver = self.driver
 	local.outheight = self.outheight
+	local.player forcetorsostate VEHICLE_PASSENGER // For some reason: without this additional "forcetorsostate" line, players cannot shoot from their seat (only when 1st entering seat after each death/respawn).
 
 	local.targetname = self.targetname
 	local.passenger_reattach = 0
@@ -1208,6 +1230,9 @@ passengers local.player local.s:
 
 		if(local.player.viewangles[0] > 180) { local.player.viewangles = ( (10 + (self.angles[0] - 360)) local.player.viewangles[1] local.player.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
 		if(local.player.viewangles[0] < -180) { local.player.viewangles = ( (local.player.viewangles[0] + 360) local.player.viewangles[1] local.player.viewangles[2] ) } // prevent camera from moving too far down.
+
+		if(local.player.fireheld == 1) { $("passenger_seat_" + local.s + "_" + self.entnum).angles = ( self.angles[0] local.player.viewangles[1] self.angles[2] ) } // keep the passenger seat's angles the same as the player's angles, so the player's model can rotate around in his seat.
+		else { $("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles }
 
 		local.cycled = 0
 		local.changeseats = 0
@@ -1246,6 +1271,7 @@ passengers local.player local.s:
 			local.player thread wallstuck_fix
 			self.passengers[local.s] = NIL
 			local.player.passenger = 0
+			local.player.drivingent = NIL
 			local.player.ridingent = NIL
 			local.player.driving = 0
 			if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
@@ -1271,6 +1297,7 @@ passengers local.player local.s:
 		local.player unglue
 		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
 		local.player.passenger = 0
+		local.player.drivingent = NIL
 		local.player.ridingent = NIL
 		local.player.driving = 0
 		if(local.player.dmteam != spectator)
@@ -1452,6 +1479,12 @@ end
 shottrig:
 
 	local.player = parm.other
+	if(self.vehicle == NIL || self.vehicle == NULL) { end }
+
+	for(local.s = 1; local.s <= self.vehicle.seats; local.s++)
+	{
+		if(self.vehicle.passengers[local.s] != NIL && self.vehicle.passengers[local.s] == local.player) { end }
+	}
 	if(self.vehicle != NULL && (self.vehicle.driver == NIL || (self.vehicle.driver != NIL && (self.vehicle.driver.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.vehicle.shooter = local.player }
 end
 
@@ -1470,11 +1503,11 @@ spawn_passenger_seat local.s: // only spawn seats when needed.
 	local.add = 0
 	if(self.model == "models/vehicles/jeep.tik") // ( -right +left, +up -down, +forward -backward )
 	{
-		self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -30 )
+		self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -25 )
 	}
 	else if(self.model == "models/vehicles/jeep_bench.tik") // ( -right +left, +up -down, +forward -backward )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -30 ) } // or -25
+		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -25 ) }
 		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 0 10 -80 ) }
 	}
 	else if(self.model == "models/vehicles/bmwbike.tik") // ( -right +left, +up -down, +forward -backward )
@@ -1548,7 +1581,7 @@ spawn_passenger_seat local.s: // only spawn seats when needed.
 	{
 		if(local.add != 0) { self.playerang_offset[local.s] = local.add }
 		$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( 0 local.add 0 )
-		$("passenger_seat_" + local.s + "_" + self.entnum) bind self
+		//$("passenger_seat_" + local.s + "_" + self.entnum) bind self
 		$("passenger_seat_" + local.s + "_" + self.entnum) hide
 	}
 end
@@ -2177,17 +2210,26 @@ vehicle_settings local.gotout:
 
 	if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik")
 	{
-		self attachmodel models/vehicles/sdkfz_shield.tik "Box02" 1 ("shielddummy_" + self.entnum) 1 -1 -1 -1 -1 ( -42 106 4.25 ) //( +backward -forward, +up -down, +left -right )
-		$("shielddummy_" + self.entnum).angles = ( 180 0 -90 )
-
-		if(self.gun != NIL && self.gun != NULL && self.gun.model == "models/vehicles/jeep_30cal.tik")
+		if(self.model == "models/vehicles/sdkfz.tik")
 		{
-			self attachmodel models/static/jug.tik "Box02" 1 ("turretglue_" + self.entnum) 1 -1 -1 -1 -1 ( -30 106 4 ) //( +backward -forward, +up -down, +left -right )
-			$("turretglue_" + self.entnum).angles = self.angles
-			$("turretglue_" + self.entnum) bind self
-			$("turretglue_" + self.entnum) hide
-			self.gun glue $("turretglue_" + self.entnum) // move the bottom of the turret down onto the vehicle's roof.
+			cache models/static/nazi_crate.tik
+			local.offset = 114
+			self attachmodel models/static/nazi_crate.tik "Box02" 1 ("shielddummy2_" + self.entnum) 1 -1 -1 -1 -1 ( -31 (local.offset - 0.5) 3.95 ) //( +backward -forward, +up -down, +left -right )
+			$("shielddummy2_" + self.entnum).angles = ( 0 180 90 )
+			$("shielddummy2_" + self.entnum).scale = 0.245
 		}
+		else
+		{
+			cache models/static/30cal_crate.tik
+			local.offset = 106
+			self attachmodel models/static/30cal_crate.tik "Box02" 1 ("shielddummy2_" + self.entnum) 1 -1 -1 -1 -1 ( -31 (local.offset - 0.5) 3.7 ) //( +backward -forward, +up -down, +left -right )
+			$("shielddummy2_" + self.entnum).angles = ( 0 180 90 )
+			$("shielddummy2_" + self.entnum).scale = 0.905
+		}
+
+		self attachmodel models/vehicles/sdkfz_shield.tik "Box02" 1 ("shielddummy_" + self.entnum) 1 -1 -1 -1 -1 ( -47 (local.offset - 0.5) 4.25 ) //( +backward -forward, +up -down, +left -right )
+		$("shielddummy_" + self.entnum).angles = ( 180 0 -90 )
+		$("shielddummy_" + self.entnum).scale = 1
 	}
 
 	if(level.vehiclescriptmaster[self.model] != 1) // this only runs once

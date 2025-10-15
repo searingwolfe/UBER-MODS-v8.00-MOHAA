@@ -147,7 +147,7 @@ healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, on
 
 		for(local.i = 1; local.i <= $player.size; local.i++)
 		{
-			if(self != NULL && $player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum).biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum) istouching self || (self.damagetrig != NIL && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.damagetrig) || (self.trigshot != NIL && $("dogmouthtrig_" + $player[local.i].entnum) istouching self.trigshot)) && $player[local.i].passenger != 1 && $player[local.i].turreting != 1 && $player[local.i].driving != 1)
+			if(self != NULL && $player[local.i].isdog == 1 && $("dogmouthtrig_" + $player[local.i].entnum)[1].biting == 1 && ($("dogmouthtrig_" + $player[local.i].entnum)[1] istouching self || (self.damagetrig != NIL && $("dogmouthtrig_" + $player[local.i].entnum)[1] istouching self.damagetrig) || (self.trigshot != NIL && $("dogmouthtrig_" + $player[local.i].entnum)[1] istouching self.trigshot)) && $player[local.i].passenger != 1 && $player[local.i].turreting != 1 && $player[local.i].driving != 1)
 			{
 				self.shooter = $player[local.i]
 				for(local.i = 1; local.i <= self.passengers.size; local.i++)
@@ -550,7 +550,7 @@ driverreset local.status:
 
 	if(self.driver == NIL) { end } // if the vehicle blew up with nobody driving it, end this thread.
 
-	if(local.status != 1) { cueplayer }				// reattaches camera to player's head
+	//if(local.status != 1) { cueplayer }				// reattaches camera to player's head. Don't need this anymore (keeping it will cause turret players' camera to get messed up if they shoot & kill a vehicle driver)
 	self detachdriverslot 0 self.driver
 	self.driver.viewangles = ( 0 self.driver.viewangles[1] 0 )
 	if($("driver_seat_" + self.entnum) != NULL) { self.driver unglue }
@@ -996,12 +996,14 @@ passengers local.player local.s:
 	}
 	local.player.origin = self.origin
 	local.player.passenger = 1
+	local.player.drivingent = self
 	local.player.ridingent = self
 	local.player.driving = 1 // should help with other scripts.
 	local.player.driving_state_jump = 0
 	local.PI = 3.14159265359
 	local.driver = self.driver
 	local.outheight = self.outheight
+	local.player forcetorsostate VEHICLE_PASSENGER // For some reason: without this additional "forcetorsostate" line, players cannot shoot from their seat (only when 1st entering seat after each death/respawn).
 
 	local.targetname = self.targetname
 	local.passenger_reattach = 0
@@ -1022,6 +1024,9 @@ passengers local.player local.s:
 
 		if(local.player.viewangles[0] > 180) { local.player.viewangles = ( (10 + (self.angles[0] - 360)) local.player.viewangles[1] local.player.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
 		if(local.player.viewangles[0] < -180) { local.player.viewangles = ( (local.player.viewangles[0] + 360) local.player.viewangles[1] local.player.viewangles[2] ) } // prevent camera from moving too far down.
+
+		if(local.player.fireheld == 1) { $("passenger_seat_" + local.s + "_" + self.entnum).angles = ( self.angles[0] local.player.viewangles[1] self.angles[2] ) } // keep the passenger seat's angles the same as the player's angles, so the player's model can rotate around in his seat.
+		else { $("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles }
 
 		local.cycled = 0
 		local.changeseats = 0
@@ -1060,6 +1065,7 @@ passengers local.player local.s:
 			local.player thread wallstuck_fix
 			self.passengers[local.s] = NIL
 			local.player.passenger = 0
+			local.player.drivingent = NIL
 			local.player.ridingent = NIL
 			local.player.driving = 0
 			if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
@@ -1085,6 +1091,7 @@ passengers local.player local.s:
 		local.player unglue
 		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
 		local.player.passenger = 0
+		local.player.drivingent = NIL
 		local.player.ridingent = NIL
 		local.player.driving = 0
 		if(local.player.dmteam != spectator)
@@ -1439,6 +1446,12 @@ end
 shottrig:
 
 	local.player = parm.other
+	if(self.vehicle == NIL || self.vehicle == NULL) { end }
+
+	for(local.s = 1; local.s <= self.vehicle.seats; local.s++)
+	{
+		if(self.vehicle.passengers[local.s] != NIL && self.vehicle.passengers[local.s] == local.player) { end }
+	}
 	if(self.vehicle != NULL && (self.vehicle.driver == NIL || (self.vehicle.driver != NIL && (self.vehicle.driver.dmteam != local.player.dmteam || getcvar("g_gametype") == "1")))) { self.vehicle.shooter = local.player }
 end
 
@@ -1480,7 +1493,7 @@ spawn_passenger_seat local.s: // only spawn seats when needed.
 	{
 		if(local.add != 0) { self.playerang_offset[local.s] = local.add }
 		$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( 0 local.add 0 )
-		$("passenger_seat_" + local.s + "_" + self.entnum) bind self
+		//$("passenger_seat_" + local.s + "_" + self.entnum) bind self
 		$("passenger_seat_" + local.s + "_" + self.entnum) hide
 	}
 end

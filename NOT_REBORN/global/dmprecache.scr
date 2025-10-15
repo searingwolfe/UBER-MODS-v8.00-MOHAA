@@ -1,7 +1,29 @@
-exec global/respawn_stuck_fix.scr	// background mods that run for each player for all maps.
-//exec global/deathcam.scr
+main:
+
+	thread globalmods
+	thread cache
+end
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+globalmods:
+
 exec global/sv_maplists.scr		// allows for "sv_maplist2, 3, 4, 5, etc cvars of maplists to sequence after regular "sv_maplist" cvar ends (set them in exec server.cfg).
-exec killstreaks/damagehandler.scr::assisted_suicide
+exec global/server_crashed.scr		// change the map to the "nextmap" after the map that was running when the server last crashed (must add [seta server_crashed "1"] in server.cfg for this to work).
+
+exec global/rocketfix.scr		// fixes all rocket launcher projectiles that would always shoot with backward facing angles.
+
+exec global/deathcam.scr		// players will spectate the players that killed them. customized death animations also occur for all players (custom_deaths.scr).
+//exec global/custom_deaths.scr		// only run this if not running the global/deathcam.scr mod; do not run both scripts together.
+
+exec global/respawn_stuck_fix.scr	// players that are stuck for 3+ seconds inside of walls (including after respawning) will be auto-respawned.
+exec global/respawn_fix.scr		// respawned players will be moved to a new $allied_spawn or $axis_spawn point (if they exist) that is furthest away from all enemies & not next to teammates.
+
+exec killstreaks/damagehandler.scr::assisted_suicide	// runs the assisted suicide mod.
+
+exec global/player_taunts.scr		// allows players to press USE(e) key 4 times within 1 second to do a taunt (show_papers taunt if holding a weapon, or "selectionidle" taunt otherwise).
 
 //-----------------------------------------------------------------------------
 
@@ -10,8 +32,13 @@ level.mapname = getcvar "mapname"
 local.master = spawn scriptmaster
 local.master aliascache manon_pain sound/null.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
 local.master aliascache manon_death sound/null.wav soundparms 1.2 0.1 0.9 0.2 320 3200 auto loaded maps level.mapname
+end
 
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+cache:
 
 cache models/animate/hidden_cabinet_a.tik
 cache models/animate/hidden_cabinet_b.tik
@@ -204,7 +231,9 @@ cache models/items/binoculars.tik
 cache models/emitters/electric_panelmelt.tik
 cache models/emitters/explosion_mine.tik
 cache models/emitters/fx_explosion_mine.tik
-cache models/emitters/snowdrift.tik
+//cache models/emitters/snowdrift.tik
+cache models/emitters/aircraft_explosion.tik
+cache models/emitters/explosion_conflagration.tik
 cache models/emitters/waterfall.tik
 cache models/emitters/welding_spark.tik
 
@@ -306,4 +335,4 @@ cache models/fx/water_ripple_still.tik
 cache models/fx/water_splash_drop.tik
 cache models/fx/water_spray.tik
 cache models/fx/water_trail_bubble.tik
-
+end

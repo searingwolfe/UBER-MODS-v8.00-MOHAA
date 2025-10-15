@@ -420,9 +420,10 @@ rocket local.pos:
 	local.shell.angles = ( (self.plane.angles[0] * -1) (self.plane.angles[1] + 180) self.plane.angles[2] )
 	local.shell.origin = local.place
 	local.shell notsolid //if they are solid when they hit things like tanks or anyhting that gets in the way it makes bashes it out the way
-	local.shell scale .5
+	if(self.plane.model == "models/vehicles/c47fly.tik") { local.shell.scale = self.plane.scale * 1.500 }
+	else { local.shell.scale = self.plane.scale }
 
-	local.speed = waitthread global/math.scr::sqrt (self.plane.velocity[0] * self.plane.velocity[0] + self.plane.velocity[1] * self.plane.velocity[1] + self.plane.velocity[2] * self.plane.velocity[2])
+	local.speed = sqrt (self.plane.velocity[0] * self.plane.velocity[0] + self.plane.velocity[1] * self.plane.velocity[1] + self.plane.velocity[2] * self.plane.velocity[2])
 	local.shell speed (2000 + local.speed)
 
 	local.shell moveto local.pos
@@ -569,9 +570,10 @@ bomb:
 	local.bomb = spawn script_model "targetname" "planebomb"
 	local.bomb model "ammo/us_bomb.tik" 
 	local.bomb.origin = self.plane.origin - ( 0 0 50 )
-
 	local.bomb.angles = ( self.plane.angles + ( 0 90 0 ) )
-	local.bomb notsolid 
+	local.bomb notsolid
+	if(self.plane.model == "models/vehicles/c47fly.tik") { local.bomb.scale = self.plane.scale * 1.500 }
+	else { local.bomb.scale = self.plane.scale }
 
 	thread bombtwist local.bomb
 	local.bomb physics_on

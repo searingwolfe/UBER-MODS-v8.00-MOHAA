@@ -35,7 +35,7 @@ remove_deadbodies:
 				$player[local.i].torso_state_killed = NIL
 			}
 
-			if($player[local.i] != NULL && !isalive $player[local.i] && ($player[local.i].custom_deadbody == NIL || $player[local.i].custom_deadbody == NULL))
+			if($player[local.i] != NULL && !isalive $player[local.i] && ($player[local.i].custom_deadbody == NIL || $player[local.i].custom_deadbody == NULL) && $player[local.i].torso_state_killed != "self")
 			{
 				local.ent = spawn script_model targetname "player_deadbody"
 				local.ent model $player[local.i].model
@@ -61,9 +61,16 @@ end
 
 assign_killer local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.player:
 
-	if(local.player != local.attacker && local.attacker.classname == Player && isalive local.attacker)
+	if((local.player == local.attacker || local.player.isdog == 1 || local.player.flying == 1 || local.player.driving == 1) && (local.meansofdeath == 1 || local.meansofdeath == 14 || local.meansofdeath == 9 || local.meansofdeath == 16))
 	{
-		local.player.deathcam_killer = local.attacker // if players did not kill themselves, and if the attacker is a "Player" (not $world nor other nonplayer entities).
+		local.player.torso_state_killed = "self" // don't spawn a dead body if the player blew himself up with rockets/grenades/etc (not including fire deaths or cratering deaths).
+		end
+	}
+
+	if(local.player != local.attacker && local.attacker.classname == Player)
+	{
+ 		// if players did not kill themselves, and if the attacker is a "Player" (not $world nor other nonplayer entities), make the player spectate the attacker via "global/deathcam.scr" mod.
+		if(isalive local.attacker) { local.player.deathcam_killer = local.attacker }
 	}
 
 		// from behind: direction = ( -1 0 0 )		// death anims added that aren't normally found in multiplayer deaths:

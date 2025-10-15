@@ -4,31 +4,42 @@
 // Add "exec global/rocketfix.scr" into "global/ambient.scr", or add it after "level waittill spawn" to use this script for singleplayer campaign.
 // This script only works for MOHAA Reborn 1.12 / Nightfall
 //
-// Set "local.rocket.playerowner = local.player" or similar (anything != NIL) in any other mod that uses "bazookashell.tik", "bazookashell_dm.tik", or "Panzerschreckshell.tik" models,
-// to prevent this script from rotating those projectiles by 180 degrees.
+// Set "local.rocket.playerowner = local.player", or "local.rocket.player_owner = local.player", or similar (anything != NIL) in any other mod
+// that uses "bazookashell.tik", "bazookashell_dm.tik", or "Panzerschreckshell.tik" models, to prevent this script from rotating those projectiles by 180 degrees.
 //
 // This script only works in maps that have less than 860 total entites.
 
 main:
 
+	while(level.time == NIL) { waitframe }
+	while(level.time < 5) { waitframe } // wait until map has fully loaded.
+	while($player.size < 1) { waitframe } // wait until a player has joined.
+
 	while(1)
 	{
-		for(local.e = 0; local.e <= 868; local.e++)
+		if($player.size >= 1)
 		{
-			local.entity = getentity(local.e)
-			if(local.entity != NULL && local.entity.classname == Projectile && local.entity.readjusted != 1 && (local.entity.playerowner == NIL || local.entity.playerowner == NULL) && (local.entity.model == "models/projectiles/bazookashell_dm.tik" || local.entity.model == "models/projectiles/bazookashell.tik" || local.entity.model == "models/projectiles/panzerschreckshell.tik"))
+			for(local.e = 0; local.e <= 868; local.e++)
 			{
-				local.entity hide
-				local.entity.readjusted = 1
-				local.entity.scale = 0.0001
+				local.entity = getentity(local.e)
+				if(local.entity != NULL && local.entity.classname == Projectile && local.entity.readjusted != 1 && (local.entity.playerowner == NIL || local.entity.playerowner == NULL || local.entity.player_owner == NIL || local.entity.player_owner == NULL) && (local.entity.model == "models/projectiles/bazookashell_dm.tik" || local.entity.model == "models/projectiles/bazookashell.tik" || local.entity.model == "models/projectiles/panzerschreckshell.tik"))
+				{
+					local.entity hide
+					local.entity.readjusted = 1
+					local.entity.scale = 0.0001
 
-				local.new = spawn script_model
-				local.new model local.entity.model
-				local.new.origin = local.entity.origin
-				local.new.angles = ( local.entity.angles[0] (local.entity.angles[1] + 180) local.entity.angles[2] )
-				local.new bind local.entity
-				local.entity thread removerocket local.new
+					local.new = spawn script_model
+					local.new model local.entity.model
+					local.new.origin = local.entity.origin
+					local.new.angles = ( local.entity.angles[0] (local.entity.angles[1] + 180) local.entity.angles[2] )
+					local.new bind local.entity
+					local.entity thread removerocket local.new
+				}
+				//if(local.e % 464 == 0) { waitframe } // 464, 217, 124.
 			}
+
+			local.time = int(getcvar("timelimit")) * 60.000 - level.time // when map time ends, stop this from looping during intermission.
+			if(local.time <= 0) { break }
 		}
 		waitframe
 	}
