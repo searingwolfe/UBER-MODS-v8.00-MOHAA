@@ -1,4 +1,4 @@
-	*Current Version: 7.993 - Updated: 10/15/2025*
+	*Current Version: 7.994 - Updated: 1-7-2026*
 
 ### Table of Contents
 
@@ -1504,6 +1504,7 @@ New script created: "global/server_crashed.scr".
 New map modded: m6l2a
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
