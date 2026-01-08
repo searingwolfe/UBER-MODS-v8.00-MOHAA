@@ -7,7 +7,7 @@
 [In-Game Menu Skin](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#in-game-menu-skin)<br>
 [Elgan's Admin Pro Menu](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#elgans-admin-pro-menu)<br>
 [Essential UBER BASEBUILDER Info](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-uber-basebuilder-info)<br>
-[UBER MODS List of CVARs](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#uber-cvars-scripts-info)<br>
+[UBER MODS List of CVARs](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#uber-mods-list-of-cvars)<br>
 [Essential CYBER ATTACK / SEARCH & DESTROY / FREEZE TAG Info](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-cyber-attack--search--destroy--freeze-tag-info)<br>
 [Killstreak Rewards](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#killstreak-rewards)<br>
 [Drivable Vehicles / Usable Statweapons](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#drivable-vehicles--usable-statweapons)<br>
@@ -1584,6 +1584,7 @@ New script created: "global/spectator_jointeam.scr".
 New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
