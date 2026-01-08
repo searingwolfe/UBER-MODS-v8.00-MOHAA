@@ -210,13 +210,9 @@ ADDITIONAL FEATURES:
 
 # UBER MODS List of CVARs
 
-| cvar name | available options | extra info |
+| CVAR Name | Available Options | Extra Info |
 | -------- | ------- | ------- |
-| January  | $250    |   |
-| February | $80     |   |
-| March    | $420    |   |
-
-| adddeaths |
+| adddeaths | 'adddeaths 1' = add one death to $player[1]'s score. <br> 'adddeaths 27' = add one death to $player[27]'s score. <br> 'adddeaths Searingwolfe' = add one death to Searingwolfe's score. |   |
 | addkills |
 | admin_IPs |
 | alx_basebuild |
@@ -1590,6 +1586,7 @@ New script created: "global/spectator_jointeam.scr".
 New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
