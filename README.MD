@@ -210,6 +210,12 @@ ADDITIONAL FEATURES:
 
 # UBER MODS List of CVARs
 
+| Month    | Savings |
+| -------- | ------- |
+| January  | $250    |
+| February | $80     |
+| March    | $420    |
+
 | adddeaths | --- |
 | addkills | --- |
 | admin_IPs | --- |
@@ -1584,6 +1590,7 @@ New script created: "global/spectator_jointeam.scr".
 New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
