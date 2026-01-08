@@ -173,7 +173,9 @@ ADDITIONAL FEATURES:
 	If holding FIRE for 3+ seconds while placing down an object, placement will be cancelled (laser will turn green). Press FIRE again to uncancel (place down now).
 
 	While holding object + holding USE(e) key, lean left/right to change object angles. Hold lean left/right for 2 seconds to slowly trim object's angles.
-	While holding an object or lift: hold FIRE, then hold USE(e) to remove it.
+	While holding object & not holding USE(e) key, hold FIRE(zoom) to match the object's angles with your viewangles (works for Reborn only).
+	While holding an object: hold FIRE, then hold USE(e) to remove it.
+	While holding a lift: hold FIRE, then hold USE(e) to remove it.
 	While holding a tele: hold USE(e), then hold FIRE to remove it.
 
 	Hold Right-Click to change build-laser from green to blue; this activates "Trimming Mode" for the object being held (works for Reborn only).
@@ -208,110 +210,75 @@ ADDITIONAL FEATURES:
 
 # UBER CVARS Scripts Info
 
-- for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
+| adddeaths |
+| addkills |
+| admin_IPs |
+| alx_basebuild |
+| alx_objectlimitboost |
+| alx_objectlimitdown |
+| alx_removeall |
+| alx_removelifts |
+| alx_removeobjects |
+| alx_removeteles |
+| alx_removeturrets |
+| alx_timeboost |
+| alx_timedown |
+| cg_rain_volume |
+| cg_thunder |
+| cg_weather |
+| cg_weather_density |
+| cheats |
+| check |
+| check_giantbomb |
+| check_grenade |
+| check_health |
+| check_lightbomb |
+| check_rocket |
+| check_snowball |
+| coord2 |
+| coord_pointer |
+| cybsnd_debug |
+| cybsnd_info |
+| cybsnd_score |
+| drawpath |
+| drawsize |
+| entities |
+| entity_pointer |
+| faceto |
+| file_playernames |
+| find |
+| findclass |
+| findent |
+| findmodel |
+| findset |
+| g_deathcam |
+| g_ubergametype |
+| g_uberhardcode |
+| g_ubermods |
+| g_throwingknives |
+| hacker_kill |
+| hacker_takeall |
+| help |
+| hide |
+| noclip2 |
+| nodamage |
+| spectator |
+| players |
+| playerspawns |
+| proximity_pointer |
+| score |
+| show |
+| subtractdeaths |
+| subtractkills |
+| takedamage |
+| teams |
+| time |
+| timelimit |
+| track |
+| votekick |
+| wuss2 |
 
-- maxentities = 869 in code, but players may crash joining Reborn servers (singleplayer maps) if current entities = 725+, or 140+ remaining entities.
-
-| File Name:        | CVAR without quotes or brackets:           | Description:   |
-|:-------------:|:-------------:|:-----:|
-| exec cvars/playercount.scr      | "players 1" | print to console the # of players in-game (type these into the server's console window). |
-|       | "players 2" | print to console the # of players in-game & their usernames. |
-|       | "players 3" | see which players in $player array are NULL. |
-| exec cvars/entitycount.scr      | "entities 1" | wait 4 seconds to print # of entities & remaining entities until maxentities (1024) is reached. |
-|       | "entities 2" | print to console the # of players in-game & their usernames. |
-|       | "entities 3" | print all entities & their targetnames, but print slower. |
-|       | "entities 4" | print only non-NULL entities ($player entities do not print for "entities" 4, 5, 6, 7). |
-|       | "entities 5" | print only non-NULL entities that have targetnames. |
-|       | "entities 6" | print only non-NULL entities that do not have targetnames (targetnames = ""). |
-|       | "entities 7" | print only non-NULL entities, and print their classnames. |
-| exec cvars/track.scr      | "track 1" | iprint each players' coords & angle to their own screens.  |
-|       | "track 2" | iprint and print to console each players' coords & angles once every 3 seconds. |
-|       | "track 0" | turn off tracking. |
-| exec cvars/check.scr      | "check_giantbomb 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
-|       | "check_giantbomb 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
-|       | "check_lightbomb 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
-|       | "check_lightbomb 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
-|       | "check_health 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
-|       | "check_health 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
-|       | "check_grenade 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
-|       | "check_grenade 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
-|       | "check_rocket 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
-|       | "check_rocket 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
-|       | "check_snowball 1" | teleports all spectators to each of the trigger's randomized origins every 3 seconds. |
-|       | "check_snowball 2" | spawn in a dummy model at each of the trigger's origins (only works once). |
-|       | "check 0" | make all "check_[trigger]" cvars "0". |
-| exec cvars/playerspawns.scr      | "playerspawns 1" | spawn dummy models at all Allies/Axis or FFA spawns (only works in singleplayer maps, not including Training). |
-|       | "playerspawns 0" | remove the dummy models. |
-| exec cvars/find.scr      | "find truckclip" | teleport all players to $truckclip's coords (also printing: coords, angles, entnum, and target). |
-|       | "find endtrigger" | teleport all players to $endtrigger's coords (also printing: coords, angles, entnum, and target). |
-|       | "find barrel[1]" | teleport all players to $barrel[1]'s coords (also printing: coords, angles, entnum, and target). |
-|       | "find barrel[2]" | teleport all players to $barrel[2]'s coords (also printing: coords, angles, entnum, and target). |
-| exec cvars/findent.scr      | "findent 65" | teleport all players to entity 65's coords (also printing: coords, angles, classname, model, targetname, target, health). |
-|       | "findent 450" | teleport all players to entity 450's coords (also printing: coords, angles, classname, model, targetname, target, health). |
-|       | "findent 0" | does not work if "findent" < sv_maxclients since these entities are reserved for players. |
-| exec cvars/findclass.scr      | "findclass ScriptModel" | print the entnums and targetnames of all entities with a "ScriptModel" classname. |
-|       | "findclass CrateObject" | print the entnums and targetnames of all entities with a "CrateObject" classname. |
-|       | "findclass TurretGun" | print the entnums and targetnames of all entities with a "TurretGun" classname. |
-|       | "findclass Trigger" | print the entnums and targetnames of all entities with a "Trigger" classname. Note: may include other entities such as "TriggerUse" and "TriggerUseOnce" |
-| exec cvars/findmodel.scr      | "findmodel models/static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
-|       | "findmodel static/indycrate.tik" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
-|       | "findmodel static/indycrate" | print the entnums and targetnames of all entities with a "models/static/indycrate.tik" model. |
-| exec cvars/findset.scr      | "findset 7" | print all entnums and their targetnames in the map with .set = 7 (exploder-related entities). |
-|       | "findset 20" | print all entnums and their targetnames in the map with .set = 20 (exploder-related entities). |
-|       | "findset all" | print all entnums and their ".set" values, then prints total number of entities for each ".set" value. |
-|       | "findset exploder" | (or "exploders") print all $exploder origins + set numbers, and print the total number of $exploder entities for each #set. |
-|       | "findset exploderfire" | (or "exploderfires") print all $exploderfire data saved within the "level.exploderfire" matrix array ($exploderfire entities are removed afterwards). |
-| exec cvars/drawpath.scr      | "drawpath bomberpath" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
-|       | "drawpath spotpath1_1" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
-|       | "drawpath exploderchunk[1]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
-|       | "drawpath exploderchunk[12]" | spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node. |
-|       | "drawpath 0" | delete all nodes & lasers drawn by drawpath. |
-| exec cvars/drawsize.scr      | "drawsize exploder_trigshot[1]" | to spawn lasers around the setsize edges of the trigger/entity. setsizes must be saved to "local.ent.setsize1 = and "local.ent.setsize2", for example: local.ent.setsize1 = ( -100 -100 -50 ) and local.ent.setsize2 = ( 100 100 50 ), in order to use this cvar. Green lasers = setsize2's vertex. Red lasers = setsize1's vertex. |
-|       | "drawsize 0" | delete all lasers drawn by drawsize. |
-| exec cvars/cybsnd.scr      | "cybsnd_score 1" | print the current Cyber Attack, Search & Destroy, or Freeze Tag score (rounds Allies won, Axis won). |
-|       | "cybsnd_info 1" | print round start time, rounds to win, change sides (0 or 1 for switching bombsites), melt time, melt respawn (0 or 1 for spawning at frozen body or regular spawn), spectators auto-join teams (once round begins), bomb camera (1 or 0, when bomb explodes), bomb camera distance. |
-|       | "cybsnd_debug 1" | print once per second the Allies/Axis team count (living players) and Allies/Axis team total. If these values are inaccurate, then the mod has broken somehow (wait for the next the round, or reload the map). |
-| exec cvars/coord_pointer.scr      | "coord_pointer [27 or Searingwolfe]" | give/take a coord pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser, and press FIRE to iprint the origin + angle of the aimed target as integers (also prints them to console). Double click at the exact same spot (ideally in spectator or while noclipping) to print origin + angle in 3 decimal places and write to "coords.txt". Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). 
-| exec cvars/entity_pointer.scr      | "entity_pointer [27 or Searingwolfe]" | give/take an entity pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser near a notsolid entity or trigger (ideally near their origins), and press FIRE to iprint & print to console the entity's info. Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). |
-| exec cvars/proximity_pointer.scr      | "proximity_pointer [27 or Searingwolfe]" | give/take a proximity pointer to $player[27] or the player with the name "Searingwolfe". Hold USE(e) to aim the laser near a notsolid entity or trigger (ideally near their origins), and press FIRE to iprint & print to console the entity's info. Press FIRE without holding USE(e) to iprint & print to console the entity's info that is closest to the player (not including weapons or attached throwing knives). Hold USE(e) + Lean Left/Right + press FIRE to teleport to the aimed target location (iprints coords, but does not write to "coords.txt"). |
-| exec cvars/ubergametype.scr      | "g_ubergametype bb" | "g_ubergametype bb" = Base-Builder gametype. |
-|       | "g_ubergametype cyb" | Cyber Attack gametype. |
-|       | "g_ubergametype snd" | Search & Destroy gametype. |
-|       | "g_ubergametype ft" | Freeze-Tag gametype. |
-|       | "g_ubergametype 0" | regular TDM or FFA (based on "g_gametype"). |
-|       | "g_ubermods 2" | default, all UBER mods enabled. |
-|       | "g_ubermods 1" | No crates or teles, fewer triggers for multiplayer maps. Crates & teles, but no extra mods for singleplayer maps. |
-|       | "g_ubermods 0" | all UBER mods disabled. |
-|       | "g_throwingknives 1" | all players spawn with 1 throwing knife (hold USE + FIRE to throw), and 4 extra knives spawn around the map. |
-|       | "g_throwingknives 0" | no throwing knives. |
-|       | "g_uberhardcode 1" | force all maps to use the g_ubergametypes found in "global/uberversion.scr", and disable "g_ubergametype" cvar. |
-|       | "g_uberhardcode 0" | re-enable the "g_ubergametype" cvar. |
-|       | "g_deathcam 1" | enable deathcams; players will spectate their killers for a few seconds. |
-|       | "g_deathcam 0" | disable deathcams; players will stay at their dead bodies as normal. |
-|       | "time 1" | print the map's time remaining (in minutes:seconds format). |
-|       | "score 1" | print each player's kills and deaths, along with their $player[client num] and netname. |
-|       | "teams 1" | print each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num] and netname, and then print the total number of players on each team. |
-| exec cvars/adminstuff.scr      | "hacker_kill 27" | continuously kill $player[27], or other $player[numbers]. |
-|       | "hacker_kill Searingwolfe" | continuously kill the player with the name "Searingwolfe", or other named players. |
-|       | "hacker_takeall [27 or Searingwolfe]" | continuously take all their weapons. |
-|       | "spectator [27 or Searingwolfe]" | continuously force them into spectator. |
-|       | "votekick [27 or Searingwolfe]" | all players vote to kick: Hold USE(e) key + Lean Left = VOTE NO (default), Hold USE(e) key + Lean Right = VOTE YES. |
-|       | "noclip2 [27 or Searingwolfe]" | noclip them around the map; still works if "cheats" = "0". |
-|       | "nodamage [27 or Searingwolfe]" | make them take no damage. |
-|       | "takedamage [27 or Searingwolfe]" | make them take damage again. |
-|       | "show [27 or Searingwolfe]" | make them visible again. |
-|       | "hide [27 or Searingwolfe]" | make them invisible. |
-|       | "wuss2 [27 or Searingwolfe]" | give them all weapons; still works if "cheats" = "0". |
-|       | "addkills [27 or Searingwolfe]" | give them +1 kill. |
-|       | "adddeaths [27 or Searingwolfe]" | give them +1 death. |
-|       | "subtractkills [27 or Searingwolfe]" | give them -1 kill. |
-|       | "subtractdeaths [27 or Searingwolfe]" | give them -1 death. |
-|       | "coord2 1" | print $player[1]'s coords & angles to a "main/cvars/coords.txt" file (must create this file for "coord2" CVAR to work) in "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line. |
-|       | "coord2 entity" | print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line. |
-|       | "coord2 trigger" | print "( 0 0 0 ) " coords format on the same line. |
-|       | "coord2 spawn" | print ""0 0 0" "angle" "0"" coords format on a new line. |
-
-- For "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
+Type 'help [cvar name]' into server console window for more info, or 'help all' to print this list.
 
 #
 
@@ -727,7 +694,8 @@ Singleplayer maps finished so far: [Training](https://github.com/searingwolfe/UB
 [M6L1A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L1A-fully-modded),
 [M6L1B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L1B-fully-modded),
 [M6L1C](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L1C-fully-modded),
-[M6L2A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L2A-fully-modded)
+[M6L2A](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L2A-fully-modded),
+[M6L2B](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#M6L2B-fully-modded)
 
 ---------------
 
@@ -1414,6 +1382,41 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 ---------------
 
+#### M6L2B fully modded
+
+- Added "hail" weather ("snow" and "blizzard" don't work very well, since the map is too tall; "func_rain" entities must be spawned with custom setsizes lower than the map's height for these weather types).
+
+- Numerous hidden rooms, pathways, rooftops, and shortcuts are accessible via red teleporters across the map.
+- Some lasers added to outline the map's edges, the 2nd floor inside the Allies spawn snowy park building window, hidden rooms inside Axis spawn, and other invisible walls/edges.
+- 4 jetpacks added for players to fly onto any rooftop.
+- 7 ladders added for the 6 wooden towers & one in the Allies spawn for climbing up/down the snowy park building window near the edge of the map.
+- 6 wooden spotlight towers will occasionally play wood creaking sounds.
+- The Axis building door can be opened/closed like a real door.
+
+- For "g_ubermods 2":
+	- A rideable train comes out of the Allies-side tunnel and travels towards the Axis spawn (removed if "g_ubergametype bb", base-builder, is set).
+	- By default, the train travels on the left track, slows down & stops at the train station in Axis spawn.
+	- The train will wait there until a player enters the train's passenger seat (pressing USE(e) near the doors), then slowly moving again and into the tunnel.
+	- A train switch in the Axis rail control tower can switch the tracks below left (default & not pulsating) or right (pulsating red).
+	- If switched to the right-side track, the train will not stop, and instead travel through the tunnel, off map, then back out of the Allies-side tunnel again.
+	- Players can switch seats within the train by leaning left/right. If in the middle seat (facing forward) and exiting the train by pressing JUMP, the player will move to the top of the train.
+	- Players can blow up the train with a Radiobomb-Walkie, Giant Bomb or Light Bomb, or blowing up a vehicle near them. The train will crash & fall depending on which direction the radiusdamage came from.
+
+	- 4 vehicles (removed if "g_ubergametype bb", base-builder, is set), 2 flyable planes, 2 radiobomb walkies, 8 extra throwing knives added to the map.
+	- Vehicles can drive through any metal fence on this map.
+	- 1 radios inside the 2nd floor Axis spawn can turn on/off and cycle through playing 3 static sounds or music while turned on.
+	- 2 sets of bangalore wallbombs added.
+	- 2 radiobomb walkies added.
+	- Airstrikes will randomly occur by first choosing 1 of 3 map zones, then randomizing the zone's dimensions (instead of the entire map, since part of it is long and skinny).
+- For "g_ubermods 1":
+	- 6 auto-spotlights in the 6 wooden towers will follow loops of SplinePath nodes on the map, following any player that gets too close to the lights.
+	- 5 regular spotlights also added that players can control.
+	- 1 spotlight color switches can turn on/off the rapid color-changing of the white spotlight near the Axis rail control tower.
+	- 2 spotlight color switches can turn on/off the rapid color-changing of the auto-spotlights or turn on/off slower color-changing.
+	- All lasers added to outline the map's edges and other invisible walls/edges.
+
+---------------
+
 - All other singleplayer maps will eventually be modded: M3 (v7.97), M4 (v7.98), M5 (v7.99), M6 (v7.999), and final version edits (v8.00).
 
 #
@@ -1422,88 +1425,166 @@ NOTE: avoid flying too high above the map while in spectator, since this map is 
 
 v7.993 (10-15-2025):
 
-Drivable Vehicles/Tanks/Boats upgraded (global/playervehicle.scr, playertank, playerboat).
+New CVAR created: "help".
 
-	- Passengers in drivable vehicles/boats will now rotate their bodies when holding FIRE(zoom) and looking around.
-	- Prevented passengers from damaging themselves if shooting at their vehicle/boat for all instances.
-	- Fixed SDKFZ mg42 turrets occasionally not shooting from the turret player's crosshairs.
-		- Removed SDKFZ mg42 turret glue entities for moving the turrets down a few units since they were not resetting properly, breaking the turrets (may re-add later if fixed).
-	- Fixed tank/vehicle turret players' cameras from getting messed up when killing a vehicle driver ("cuecamera" was causing problems, so it was removed from drivable vehicle/boat/tank scripts).
-	- Tank drivers that blow up players sitting in passenger & turret seats will now receive scorepoints for blowing them up.
-	- Players that get into vehicle/tank turrets (jeep_30cal.tik) will now be instantly rotated to the angles they were facing before getting in, by briefly rotating the entire vehicle's angles (may not work if vehicle/tank is near a wall).
-		- Players getting into vehicles/tanks can now also hold FIRE to use the 30_cal turret, instead of only pressing & releasing FIRE before being placed into the driver seat (easier for players to use turret seats).
-	- Prevented camera problems for tank drivers, VehicleTurretGun users, & TurretGun users when other tank drivers exit tanks (due to "cueplayer" affecting all players), by respawning the driver & moving him back to the tank when exiting it.
-	- Fixed players' invisible weapon & arm that occurs when exiting tanks, by adding "EXIT_TANK" & "RAISE_WEAPON_T" states to "global/[name]_torso.st" file, which puts weapon away, then raises it again after waiting until torso anims are done.
+	- Type "help 1" or "help all" into console to print all available UBER MODS cvars.
+	- From the printed list, type "help [cvar name]" to print all available options & info for that cvar.
 
-Other UBER mod upgrades/fixes.
+	- Updated READMEs for all the UBER MODS cvars to match the text printed from the "help all" cvar.
 
-	- Changed Incendiary Snowball Gun (Hi-Standard Silenced Pistol, map_triggers/snowball_ammo.scr) damaging emitter from "snowdrift" to "aircraft_explosion" (formerly named "Toxic Snowball Gun").
-		- For Reborn / Nightfall only: the Incendiary Snowball Gun will immolate nearby enemy players by gluing an "explosion_conflagration" emitter onto them for a few seconds.
-		- For Reborn / Nightfall only: if a player kills themselves with this weapon, the death message will print "was reduced to a pile of smoldering ashes" instead of "turned into pink mist".
+New CVAR created: "faceto".
 
-	- Players that throw knives will now do an arm-throwing animation when unarmed as well (previously only worked if holding a weapon).
-	- Players that throw Giant Bombs or Light Bombs will now do an arm-throwing animation.
-	- Added a readme in "global/throwingknife.scr", since this script now uses a new "THROW_OBJECT" state in "_torso.st" global file (also added a readme in "global/give_players_knives.scr").
-	- Throwing knives will now fall to the ground if hitting a player/entity and after that entity moves or disappears.
+	- Run "exec global/faceto.scr" in any map script to use the "faceto [targetname without $]" cvar.
+	- For multiple entities with same targetname: "faceto barrel[1]", "faceto barrel[2]", etc.
+	- This cvar makes all players on the map face towards/look directly at the entity (also printing: coords, angles, entnum, target, etc).
 
-	- For setting a map's "level.interior_volumes" array (in the "weather" folder) for global/ambience_mp.scr,
-		- The first number should not = 1 or greater, otherwise the script will remove it when exploder #set 1 gets removed.
-		- Since the first number can be a decimal to control the "rain sounds" volume for this volume, make this "0.99999" to maintain a max volume of "1".
-		- Setting the second number = 1 forces any weather to play "outside" sounds for this volume instead of "interior" sounds, allowing for multiple different "outside" ambiences. 
-		- Example:	( -3648 -3232 0 ) ( -10000 -10000 -10000 ) ( 0 1132 10000 ) sound/amb_stereo/Amb_M6_ParkAreaExt.mp3 0.99999 1
+Drivable vehicles & flak88 turrets improved.
 
-	- "global/rocketfix.scr" (script for rotating by 180 degrees all rocket projectiles' angles) will now end before map intermission begins (when map time = 0), to prevent potential server crashes.
-	- Players with Radiobomb Walkies (maps/gen_mapscripts/radiobomb_walkietrig.scr) can now, by default, use walkies to blow up radiobombs without first moving the radiobombs from their initial origins.
-	- Updated "map_triggers/joint_trigger.scr" with more smoke emitters. Players holding USE(e) to smoke the joint will emit smoke from their mouths.
+	- Passenger players' models will now rotate properly in their seats, regardless of the vehicle/boat's angles (facing up/down, banked on sloped terrain, etc).
+	- Sine & cosine functions of the passenger & vehicle's relative-yaw angle prevent the passenger's angles from clipping into the vehicle (player's actual camera, however, is still stuck vertical. hopefully a fix soon).
+	- When passengers hold secondary FIRE(zoom) to look around (not stuck to vehicle's angles), these math functions update in real-time to adjust their player model's angles and keep them perpendicular to the vehicle.
 
-	- The "find", "findent", "proximity_pointer", and "entity_pointer" cvars will also print ".setsize1" and ".setsize2" for the selected entity if they exist.
-	- Increased rocket launcher damage from 250 to 500 per rocket, allowing only 2+ rockets to blow up a drivable tank instead of 4+ rockets.
-	- Increased the size of flyable planes' rocket projectiles & bomb drops.
-	- Players that directly hit flyable planes with a tank shell or other projectiles will now receive scorepoints.
+	- For drivable tanks, ensured that jeep_30cal_viewmodels are removed to prevent them sticking to players' screens when they detach from the turret, and fixed some NULL errors from tank projectiles.
+	- For Flak88 Turrets, holding secondary FIRE(zoom) for looking around also adjusts the driver dummy model's angles to keep it perpendicular to the turret's angles (since the dummy is an attachmodel, it doesn't need sine & cosine functions).
 
-	- Players that blow themselves up with rocket launchers will print "rocketed himself" death message, instead of the normal "blew himself up" death message (Reborn / Nightfall only).
-	- Server will now print to console "Intermission... Changing maps shortly." when map time has ended.
+	- Fixed players that could switch teams in a passenger seat and respawn back to the vehicle, instead of respawning normally.
+	- Fixed passengers becoming solid when changing seats, since they must remain notsolid while the vehicle's trig_shot & trig_proj determines damage.
+	- Fixed issue with "passengers" thread not remembering who the player is (local.player was sometimes NIL), but this rarely caused the script to break since it was still waiting a "waitframe".
+	- Passengers that are taunting (by pressing USE(e) 5+ times within 1 second) are now able to JUMP to exit the vehicle & cancel the taunt.
 
-New script created: "global/respawn_fix.scr".
+Flyable planes improved (when ejecting/crashing).
 
-	- This script moves respawned players to a new "$allied_spawn" or "$axis_spawn" point (if they exist) that is furthest away from all enemies & not next to teammates.
-	- Sometimes, players can spawn camp enemies even if there's other further-away spawn points outside of the camp zone, since the game may prefer spawn points in map corners/edges or outside the original map's bounds.
-	- If 2+ teammates are stuck inside each other, the script will auto-respawn them.
+	- Crashing flyable planes will now twist & bank its angles while falling if the player ejected at a non-horizontal angle (non-zero roll angle), improving plane crash realism.
+	- The twist rate depends on how much roll-angle the player had before ejecting, and how fast the plane was traveling.
 
-	- NOTE: Do not use this script if 2+ spawn points exist that don't have any targetnames in the map's original .BSP (i.e. map dm/mohdm1, dm/mohdm2 ... obj/obj_team1, obj/obj_team2...),
-	- since the players will only be moved to spawn points with "$[team]_spawn" targetnames ("$deathmath_spawn" for FFA gametypes).
+	- Players ejecting from planes will be briefly notsolid until 100+ units away from the plane.
+	- This keep the plane from suddenly stopping and falling straight down when touching the parachuting player, and keeps the player from suddenly falling full-speed after "landing" on the plane (cancelling parachute).
+	- Players ejecting from planes and currently parachuting downwards will now stop moving down if their velocity suddenly becomes 0 (landed on an entity, not just ground) or if they fall too far under the map.
 
-	- Add "exec global/respawn_fix.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script.
-	- For respawning to team-spawnpoints besides "allied_spawn", "axis_spawn", "deathmatch_spawn": add the example below instead with different names (each teams' spawnpoints all must have the same name):
-	- Parameters: allies spawnpoint targetname, axis spawnpoint targetname, free-for-all spawnpoint targetname
-	- Example: exec global/respawn_fix.scr "new_allies_spawn" "new_axis_spawn" "new_ffa_spawn"
+	- Crashing flyable planes' explosion emitters will now always be 25 units behind the plane's angles, ensuring the explosions remain visible if a fast-moving plane crashes into a wall, ground, water, etc.
+	- Fire & smoke emitters are now binded instead of glued to the crashing plane, ensuring they emit from directly inside the plane.
 
-New script created: "global/player_taunts.scr".
+Misc improvements.
 
-	- This script allows players to press the USE(e) key 5 times within 1 second to perform a taunt for 3-6 seconds.
+	- For UBER Base-Builder ("g_ubergametype bb"), fixed Lifts that were moving too far down when moving up/down.
+	- While holding an Object, players can now hold secondary FIRE(zoom) while not holding USE(e) to rotate it up/down with the same angles as the player's viewangles (Reborn / Nightfall only).
 
-	- The player will do a "show_papers" taunt if holding a weapon, or do a "selectionidle" taunt if not holding any weapons.
-	- Players can shoot or switch weapons to cancel the taunt.
-	- Players must not be holding FIRE when pressing USE(e) key 4 times.
-	- Players can only taunt once every 3 seconds.
+	- Fixed bugs between "g_uberhardcode" and "g_ubergametype" cvars for some cases, only after the map initially loaded.
+	- The "proximity_pointer" cvar will now print "multiple entities found at origin = [coords]" and a list of entnums & targetnames if more than one entity shares that exact origin.
+	- Type "help proximity_pointer" into console for more info.
 
-	- Add "exec global/player_taunts.scr" into "global/dmprecache.scr", or add it after "level waittill spawn" to use this script.
+	- Increased Guided Missile's shoot-down trigger box from 25 units radius to 75 units radius, and ensured that the trigger always stays with the missile (binded it instead of gluing it).
+	- This makes Guided Missiles much easier to shoot down with bullets, as intended.
 
-New script created: "global/server_crashed.scr".
+	- Fixed Giant Bomb & Light Bomb explosions occuring at their groundtarget destination even if the bomb itself did not make it all the way there (an object/vehicle/etc blocked its path).
+	- Explosions will now always occur at the Giant/Light Bomb's projectile origin.
+	- Added a lanternflame emitter onto the Joint trigger's tip. 
 
-	- This script writes the server's current map to "cvars/mapname.txt".
-	- When the server crashes, the map will be changed to the "next map" after the map that was running when the server last crashed (full list in "nextmap" thread).
-	- For example, if the server crashed on dm/mohdm6, the server will auto-reopen and change to dm/mohdm7 (instead of staying on the map initially ran by server.cfg).
+	- Reduced each set of Bangalore Wall-Bomb's idle entities by 2 (maps/training_mapscripts/bangalore_wallbomb.scr), by only briefly spawning in the explosion & debris emitters when a player triggers the alarmswitch.
 
-	- This script can run with other server auto-reopen scripts. Whenever the server closes & then reopens, the server will auto-change maps to the "next map".
-	- This script only works in Reborn / Nightfall.
+	- Replaced the elevator script in M1L3C with "global/elevator.scr", and removed some unwanted switches & invisible wall clips.
+	- Added trainsparks & smoke emitters for the train in M2L1 that occasionally speeds cross the tracks behind Allies spawn.
+	- Replaced the train & traincab scripts in M2L3 with "global/trainsequence.scr".
+	- Added flyable planes in M4L2. Replaced the train, trainswitch1, and trainswitch2 scripts in M4L2 with "global/trainsequence.scr", and replaced the elevator script with "global/elevator.scr".
+	- Changed some outdoor ambience sounds in M6L2A.
 
-	- Add [seta server_crashed "1"] in server.cfg.
-	- Add "exec global/server_crashed.scr" in global/dmprecache.scr for this script to work.
+	- Custom death animations (global/custom_deaths.scr) improved by turning physics on for the spawned dead body, and matching the new body's velocity with the player's actual hidden dead body (also making the real body notsolid).
+	- Players that are killed by any $world damage will no longer spawn a dead body for a custom death animation, preventing the unnecessary extra body from blocking part of the dead player's view.
 
-New map modded: m6l2a
+	- Added "speed" function in "global/math.scr", allowing scripters to add "local.speed = waitthread global/math.scr::speed local.velocity" to quickly determine a "( 0 0 0 ) format" velocity's speed, outputted as an integer.
+
+	- Fixed "global/respawn_fix.scr" script (always respawn players at farthest spawn point from all other enemy players) that wasn't properly respawning players if they were alive but their ".dead = 1" (spectating in deathcams mod).
+
+	- For "global/weather.scr", fixed a bug that caused interior weather sounds to stop playing if running through an interior ambience volume with < 1 max volume (i.e. set to 0.5).
+	- Also fixed a spamming NULL error if a player's weather_soundent or weather_soundent2 is somehow NULL.
+
+New scripts created: "global/trainsequence.scr" & "global/trainsequence_switch.scr".
+
+	- See these scripts for more README info on how to use them, or see examples from M2L3, M4L2, M6L2B.
+
+	- The "global/trainsequence.scr" script spawns a rideable train that follows down a simple array of path nodes, and resets after a specified "off time".
+
+		- There are 4 general path cases for the train:
+			- entrance tunnel to exit tunnel.
+			- entrance tunnel to stop, stop to exit tunnel.
+			- entrance tunnel to stop.
+			- entrance tunnel to crash.
+			- At the end of each path when going through the exit tunnel, the train will keep traveling off-map for 1/2 the "off time" duration,
+			- then move from off-map towards the entrance tunnel and back on-map for the other 1/2 duration.
+			- Multiple path cases can be mixed together. For example, entrance tunnel to stop, stop to next stop, stop to crash.
+			- The train will not continue its path after crashing.
+
+		- The train will start at the 1st node in its path and move to each node down the list, facing the node's angles & moving at the relative speed value once reaching that node.
+			- Once reaching a "stop" or "tram" node, the train will stop completely.
+			- The script makes all "stop" & "tram" nodes' speed = 0 ("crash" nodes maintain their speed) to slow down the train before reaching this node.
+			- Any passengers inside the train will be kicked out once reaching a "stop" or "tram" node.
+			- If reaching a "stop" node if there's more nodes to travel to, the train waits until a passenger enters the train to continue moving.
+			- Otherwise if reahing a "tram" node, the train waits until "off time" passes.
+			- If the train path ends at a "stop", "crash", or "tram" node, the train will not fully reset until "off time" passes.
+			- If there's more nodes to travel to, the stopped train will slighly move its current node to prevent jumping forward the train once the train continues its path again.
+			- If the train reaches a "crash" node, the train will explode, rotate left/right, and fall onto its side, emitting smoke.
+			- Any player or vehicle that gets in front of the train will be killed or blown up.
+
+		- Players can ride the train by standing near the train windows and pressing USE(e). Cancel entering the train by leaning left/right.
+			- Once inside the train, lean left/right to change seats. JUMP to exit the train.
+			- If exiting from the middle seat (facing forward), the player will exit at the top of the train instead of its sides.
+
+		- If the map has a rideable traincab (i.e. $choochootrain in M2L3), the traincab can be added for players to ride in once the train begins moving.
+			- An optional cabdoor can also be added for the 1st traincab passenger to open/close the door.
+
+		- If the train has a traincab, players will be auto-attached to the traincab once the train begins moving.
+			- Once moving, players can JUMP to detatch and remain inside the traincab, and then press USE(e) to reattach.
+			- Traincab riders can lean left/right to change seats.
+			- Traincab riders in the 1st seat (closest to the cabdoor), can lean left/right to open/close the cabdoor.
+			- Traincab riders in the 1st seat must hold FIRE(zoom) & lean left/right to change seats.
+			- Any players that exit the train or traincab while off-map will be respawned instead.
+
+		- Projectiles can also crash the train immediately, and settings can be changed to allow grenades, etc to blow up the train.
+			- When impacting the train, the train will fall and explode based on the direction the projectile came from.
+			- If hitting the train's front side, the train blows up the exact same way as when the train blows up at a scripted node (when dostuff = 2 for crash, but instead crashing immediately), by blowing up while it's falling over.
+			- If hitting the left or right sides, the train falls over, then blows up. If hitting the back side, the train moves to one side, falls over, then blows up.
+			- The train resets after its "off time" passes.
+
+	- The "global/trainsequence_switch.scr" script spawns in train switches to change a train's path. This script also deals with global/trainsequence.scr's spawning & changing of a train path's spline nodes.
+
+		- Train switches are initially not pulsating red by default.
+		- While the train is traveling down a path (not off-map), train switches cannot be switched, since paths can only be changed once the train stops following the path.
+		- For this script, the array of spline nodes for the train path must be in the map's .scr file, and must be in a thread called: "train_splinepath".
+		- If the train switch already exists (i.e. the custom map-made $trainswitch1 in M4L2), the script will move this train switch instead of spawning a new one.
+		- Optionally, include the targetnames for the left & right rails. The train switch will move these rails & play rail-switching sounds (or if no rails, they can instead be NIL to spawn a sound entity that plays a rail-switching sound).
+
+New script created: "global/elevator.scr".
+
+- See these scripts for more README info on how to use them, or see examples from M1L3C, M4L2.
+
+- This script allows players to use the map's current elevator or use any other object as an elevator.
+	- The elevator has 2 switches inside: a switch to move the elevator up one floor (up-switch), and another switch to move the elevator down one floor (down-switch).
+	- Each floor can have a gate that moves down when the elevator arrives at that floor.
+	- Each floor can also have an elevator-calling switch somewhere on an adjacent wall, which moves the elevator up/down to the call-switch's current floor.
+
+- The elevator will always move the same speed when moving up/down one floor or multiple floors.
+	- All switches will stop pulsating red while the elevator is moving.
+	- When the elevator reaches a floor, that floor's call-switch will be disabled.
+	- If the elevator is at the bottom floor, the down-switch will be disabled. If the elevator is at the top floor, the up-switch will be disabled.
+
+New script created: "global/spectator_jointeam.scr".
+
+- This simple script keeps track of spectators that chose a team (".dmteam" is no longer "spectator"), but have not chosen a weapon & have not spawned yet.
+- Some scripts, such as throwingknife.scr, may allow mods to be used/thrown/activated by spectators that only chose teams.
+- In any other mods/scripts that have ".dmteam != "spectator"" or similar, it is recommended to also add ".spectator_jointeam != 1" as well.
+
+	- Example: "if(self.dmteam != "spectator" && self.spectator_jointeam != 1)" will check if the player has fully left spectator.
+	- Example: "if(self.dmteam == "spectator" || self.spectator_jointeam == 1)" will check if the player is still in spectator, even after selecting a team but not yet a weapon.
+
+- In any of those mods/scripts, also add "exec global/spectator_jointeam.scr" to run this script & determine ".spectator_jointeam" values for each player.
+
+- The "global/give_players_knives.scr" script that spawns players with 1+ throwing knives (Hold USE(e) + FIRE(zoom) to throw) will now check if players have fully joined a team before giving them a knife.
+	- This fixes the bug that allowed players to choose a team but not yet a weapon, and still be able to noclip around and throw knives at people.
+
+New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
