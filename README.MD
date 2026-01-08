@@ -213,72 +213,72 @@ ADDITIONAL FEATURES:
 | CVAR Name | Available Options | Extra Info |
 | -------- | ------- | ------- |
 | adddeaths | 'adddeaths 1' = add one death to $player[1]'s score. <br> 'adddeaths 27' = add one death to $player[27]'s score. <br> 'adddeaths Searingwolfe' = add one death to Searingwolfe's score. |   |
-| addkills |
-| admin_IPs |
-| alx_basebuild |
-| alx_objectlimitboost |
-| alx_objectlimitdown |
-| alx_removeall |
-| alx_removelifts |
-| alx_removeobjects |
-| alx_removeteles |
-| alx_removeturrets |
-| alx_timeboost |
-| alx_timedown |
-| cg_rain_volume |
-| cg_thunder |
-| cg_weather |
-| cg_weather_density |
-| cheats |
-| check |
-| check_giantbomb |
-| check_grenade |
-| check_health |
-| check_lightbomb |
-| check_rocket |
-| check_snowball |
-| coord2 |
-| coord_pointer |
-| cybsnd_debug |
-| cybsnd_info |
-| cybsnd_score |
-| drawpath |
-| drawsize |
-| entities |
-| entity_pointer |
-| faceto |
-| file_playernames |
-| find |
-| findclass |
-| findent |
-| findmodel |
-| findset |
-| g_deathcam |
-| g_ubergametype |
-| g_uberhardcode |
-| g_ubermods |
-| g_throwingknives |
-| hacker_kill |
-| hacker_takeall |
-| help |
-| hide |
-| noclip2 |
-| nodamage |
-| spectator |
-| players |
-| playerspawns |
-| proximity_pointer |
-| score |
-| show |
-| subtractdeaths |
-| subtractkills |
-| takedamage |
-| teams |
-| time |
-| timelimit |
-| track |
-| votekick |
-| wuss2 |
+| addkills | 'addkills 1' = add one kill to $player[1]'s score. <br> 'addkills 27' = add one kill to $player[27]'s score. <br> 'addkills Searingwolfe' = add one kill to Searingwolfe's score. |   |
+| admin_IPs | 'admin_IPs 1' = print list of admin IP addresses from 'level.admin_IPs', found in 'cvars/adminstuff.scr'. | This list prevents auto-changing admins' names & kicking them from stufftext detection. |
+| alx_basebuild | 'alx_basebuild 0' = turn off base-building immediately & respawn everyone. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). <br> This cvar only works when currently base-building. |
+| alx_objectlimitboost | 'alx_objectlimitboost 200' = increase base-build object limit by 200, or any # of objects. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). <br> This cvar only works when currently base-building. |
+| alx_objectlimitdown | 'alx_objectlimitdown 200' = decrease base-build object limit by 200, or any # of objects. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). <br> This cvar only works when currently base-building. |
+| alx_removeall | 'alx_removeall 1' = remove everything placed by $player[1]. <br> 'alx_removeall 27' = remove everything placed by $player[27]. <br> 'alx_removeall Searingwolfe' = remove everything placed by Searingwolfe. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). |
+| alx_removelifts | 'alx_removelifts 1' = remove all lifts placed by $player[1]. <br> 'alx_removelifts 27' = remove all lifts placed by $player[27]. <br> 'alx_removelifts Searingwolfe' = remove all lifts placed by Searingwolfe. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). |
+| alx_removeobjects | 'alx_removeobjects 1' = remove all static objects placed by $player[1]. <br> 'alx_removeobjects 27' = remove all static objects placed by $player[27]. <br> 'alx_removeobjects Searingwolfe' = remove all static objects placed by Searingwolfe. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). |
+| alx_removeteles | 'alx_removeteles 1' = remove all teles placed by $player[1]. <br> 'alx_removeteles 27' = remove all teles placed by $player[27]. <br> 'alx_removeteles Searingwolfe' = remove all teles placed by Searingwolfe. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). |
+| alx_removeturrets | 'alx_removeturrets 1' = remove all TurretGun objects placed by $player[1]. <br> 'alx_removeturrets 27' = remove all TurretGun objects placed by $player[27]. <br> 'alx_removeturrets Searingwolfe' = remove all TurretGun objects placed by Searingwolfe. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). |
+| alx_timeboost | 'alx_timeboost 120' = increase build time limit by 120 seconds, or any # of seconds. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). <br> This cvar only works when currently base-building. |
+| alx_timedown | 'alx_timedown 120' = decrease build time limit by 120 seconds, or any # of seconds. | This cvar only works in Base-Builder UBER MODS gametype ('g_ubergametype' = bb). <br> This cvar only works when currently base-building. |
+| cg_rain_volume |  |  |
+| cg_thunder |  |  |
+| cg_weather |  |  |
+| cg_weather_density |  |  |
+| cheats |  |  |
+| check |  |  |
+| check_giantbomb |  |  |
+| check_grenade |  |  |
+| check_health |  |  |
+| check_lightbomb |  |  |
+| check_rocket |  |  |
+| check_snowball |  |  |
+| coord2 |  |  |
+| coord_pointer |  |  |
+| cybsnd_debug |  |  |
+| cybsnd_info |  |  |
+| cybsnd_score |  |  |
+| drawpath |  |  |
+| drawsize |  |  |
+| entities |  |  |
+| entity_pointer |  |  |
+| faceto |  |  |
+| file_playernames |  |  |
+| find |  |  |
+| findclass |  |  |
+| findent |  |  |
+| findmodel |  |  |
+| findset |  |  |
+| g_deathcam |  |  |
+| g_ubergametype |  |  |
+| g_uberhardcode |  |  |
+| g_ubermods |  |  |
+| g_throwingknives |  |  |
+| hacker_kill |  |  |
+| hacker_takeall |  |  |
+| help |  |  |
+| hide |  |  |
+| noclip2 |  |  |
+| nodamage |  |  |
+| spectator |  |  |
+| players |  |  |
+| playerspawns |  |  |
+| proximity_pointer |  |  |
+| score |  |  |
+| show |  |  |
+| subtractdeaths |  |  |
+| subtractkills |  |  |
+| takedamage |  |  |
+| teams |  |  |
+| time |  |  |
+| timelimit |  |  |
+| track |  |  |
+| votekick |  |  |
+| wuss2 |  |  |
 
 Type 'help [cvar name]' into server console window for more info, or 'help all' to print this list.
 
@@ -1586,6 +1586,7 @@ New script created: "global/spectator_jointeam.scr".
 New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
