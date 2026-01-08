@@ -12,7 +12,7 @@
 ### [Killstreak Rewards](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#killstreak-rewards)<br>
 ### [Drivable Vehicles / Usable Statweapons](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#drivable-vehicles--usable-statweapons)<br>
 ### [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)<br>
-### [Updates & Bug Fixes](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#updates--bug-fixes)
+### [Updates & Bug Fixes](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#updates--bug-fixes-1)
 
 #
 
@@ -1586,6 +1586,7 @@ New script created: "global/spectator_jointeam.scr".
 New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
