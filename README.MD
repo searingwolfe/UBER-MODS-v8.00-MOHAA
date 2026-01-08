@@ -210,73 +210,73 @@ ADDITIONAL FEATURES:
 
 # UBER MODS List of CVARs
 
-| adddeaths |
-| addkills |
-| admin_IPs |
-| alx_basebuild |
-| alx_objectlimitboost |
-| alx_objectlimitdown |
-| alx_removeall |
-| alx_removelifts |
-| alx_removeobjects |
-| alx_removeteles |
-| alx_removeturrets |
-| alx_timeboost |
-| alx_timedown |
-| cg_rain_volume |
-| cg_thunder |
-| cg_weather |
-| cg_weather_density |
-| cheats |
-| check |
-| check_giantbomb |
-| check_grenade |
-| check_health |
-| check_lightbomb |
-| check_rocket |
-| check_snowball |
-| coord2 |
-| coord_pointer |
-| cybsnd_debug |
-| cybsnd_info |
-| cybsnd_score |
-| drawpath |
-| drawsize |
-| entities |
-| entity_pointer |
-| faceto |
-| file_playernames |
-| find |
-| findclass |
-| findent |
-| findmodel |
-| findset |
-| g_deathcam |
-| g_ubergametype |
-| g_uberhardcode |
-| g_ubermods |
-| g_throwingknives |
-| hacker_kill |
-| hacker_takeall |
-| help |
-| hide |
-| noclip2 |
-| nodamage |
-| spectator |
-| players |
-| playerspawns |
-| proximity_pointer |
-| score |
-| show |
-| subtractdeaths |
-| subtractkills |
-| takedamage |
-| teams |
-| time |
-| timelimit |
-| track |
-| votekick |
-| wuss2 |
+| adddeaths | |  |
+| addkills | |  |
+| admin_IPs | |  |
+| alx_basebuild | |  |
+| alx_objectlimitboost | |  |
+| alx_objectlimitdown | |  |
+| alx_removeall | |  |
+| alx_removelifts | |  |
+| alx_removeobjects | |  |
+| alx_removeteles | |  |
+| alx_removeturrets | |  |
+| alx_timeboost | |  |
+| alx_timedown | |  |
+| cg_rain_volume | |  |
+| cg_thunder | |  |
+| cg_weather | |  |
+| cg_weather_density | |  |
+| cheats | |  |
+| check | |  |
+| check_giantbomb | |  |
+| check_grenade | |  |
+| check_health | |  |
+| check_lightbomb | |  |
+| check_rocket | |  |
+| check_snowball | |  |
+| coord2 | |  |
+| coord_pointer | |  |
+| cybsnd_debug | |  |
+| cybsnd_info | |  |
+| cybsnd_score | |  |
+| drawpath | |  |
+| drawsize | |  |
+| entities | |  |
+| entity_pointer | |  |
+| faceto | |  |
+| file_playernames | |  |
+| find | |  |
+| findclass | |  |
+| findent | |  |
+| findmodel | |  |
+| findset | |  |
+| g_deathcam | |  |
+| g_ubergametype | |  |
+| g_uberhardcode | |  |
+| g_ubermods | |  |
+| g_throwingknives | |  |
+| hacker_kill | |  |
+| hacker_takeall | |  |
+| help | |  |
+| hide | |  |
+| noclip2 | |  |
+| nodamage | |  |
+| spectator | |  |
+| players | |  |
+| playerspawns | |  |
+| proximity_pointer | |  |
+| score | |  |
+| show | |  |
+| subtractdeaths | |  |
+| subtractkills | |  |
+| takedamage | |  |
+| teams | |  |
+| time | |  |
+| timelimit | |  |
+| track | |  |
+| votekick | |  |
+| wuss2 | |  |
 
 Type 'help [cvar name]' into server console window for more info, or 'help all' to print this list.
 
@@ -1584,6 +1584,7 @@ New script created: "global/spectator_jointeam.scr".
 New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
