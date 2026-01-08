@@ -3,7 +3,7 @@
 # Table of Contents
 
 ### [How To Install / Uninstall](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#how-to-install--uninstall)<br> <br>
-### [Essential CVARS for UBER MODS Servers](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-cvars-for-uber-mods-servers)<br> <br>
+### [Essential CVARS for UBER MODS Servers](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-cvars-for-uber-mods-servers)<br>
 ### [In-Game Menu Skin](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#in-game-menu-skin)<br> <br>
 ### [Elgan's Admin Pro Menu](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#elgans-admin-pro-menu)<br> <br>
 ### [Essential UBER BASEBUILDER Info](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#essential-uber-basebuilder-info)<br> <br>
@@ -1586,6 +1586,7 @@ New script created: "global/spectator_jointeam.scr".
 New map modded: m6l2b
 
 [Singleplayer Map Mods](https://github.com/searingwolfe/UBER-MODS-v8.00-MOHAA?tab=readme-ov-file#singleplayer-maps-mods)
+
 
 
 
