@@ -430,8 +430,8 @@ Init_Lift_Builder local.player local.modelnumber:
 	local.player.buildingmapnow = 1
 	local.player thread laserremove_fix
 
-	local.player iprint "You have selected a Lift."
-	local.player iprint "First set the lowest point. Then set the highest point."
+	local.player iprint "You have selected a Lift... First set its lowest height... Then set its highest point and location."
+	local.player iprint "To delete your lift: Hold FIRE, then Hold USE(e)."
 
 	if(level.base_build_object[local.modelnumber].modelname == "statweapons/mg42_gun.tik")
 	{
@@ -567,7 +567,8 @@ Init_Lift_Builder local.player local.modelnumber:
 
 					local.x remove
 
-					local.player iprint "Lift Start-Position set. Now set the destination."
+					local.player iprint "Lift's lower height set... Now set it down at its highest point."
+					local.player iprint "Hold USE(e) to orbit the lift in place."
 					local.fireheld = 1
 					local.waittime = 0
 
@@ -733,8 +734,6 @@ Place_Object_Lift local.builder local.ent local.modelnumber local.player:
 	local.builder.modelnumber = local.modelnumber
 	local.builder.playerowner = local.player
 
-	local.builder thread move_lift local.distance
-
 	level.objectlimitcount++
 	if(level.objectlimitcount == level.objectlimit) { iprintlnbold "Object limit reached." }
 
@@ -793,7 +792,8 @@ Init_builder local.player local.modelnumber:
 	local.player.buildingmapnow = 1
 	local.player thread laserremove_fix
 
-	local.player iprint "Object selected. hold USE(e) button (followed by FIRE) to place it. Hold FIRE (followed by USE(e) button) to delete it."
+	local.player iprint "You have selected an Object... Hold USE(e) + FIRE to place it."
+	local.player iprint "To delete your object: Hold FIRE, then Hold USE(e)."
 
 	local.builder = spawn script_model
 	local.builder model level.base_build_object[local.modelnumber].modelname
@@ -1364,7 +1364,7 @@ Init_Builder_Teleporter local.player local.modelnumber:
 
 				local.x remove
 
-				local.player iprint "Teleporter Start-Position set. Now set the destination."
+				local.player iprint "Teleporter Start-Position set... Now set the destination."
 				local.fireheld = 1
 			
 				while(1)

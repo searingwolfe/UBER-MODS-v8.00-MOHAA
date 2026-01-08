@@ -55,8 +55,13 @@ main local.target local.inflictor local.damage local.position local.direction lo
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-	// only for killing train riders in M2L3.
-	if((getcvar("mapname") == "m2l3") && (local.entity.targetname == "train_drivershot_1" || local.entity.targetname == "train_drivershot_2" || local.entity.targetname == "choochoo_trigger") && local.inflictor != NULL) { local.entity.shooter = local.inflictor; end }
+	// only for improving train crashes if damaged by a flying object, bomb, rocket, etc that deals "radiusdamage", causing $world to deal damage to entities.
+
+	if(local.entity.train != NIL && local.entity.train != NULL && local.entity.train.model == "models/vehicles/bp44train.tik" && local.entity.train.train_sequencing == 1)
+	{
+		local.entity.train.damagerorigin = local.entity.train.origin + local.position
+		end
+	}
 
 //-----------------------------------------------------------------------------
 
@@ -215,6 +220,7 @@ immolated:
 	local.fire anim start
 	local.fire notsolid
 	local.fire.scale = 0.25
+	local.fire loopsound snowballfire
 	self.immolation = local.fire
 
 	while(self != NULL && isalive self && self.dmteam == local.team && self.dmteam != "spectator" && self.dead != 1 && self.missile == NIL && self.immolated == 1 && self.immolated_c <= 2)

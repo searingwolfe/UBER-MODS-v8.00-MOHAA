@@ -1,0 +1,1714 @@
+// This script spawns a rideable train that follows down a simple array of path nodes, and resets after a specified "off time".
+// Run this before "level waittill prespawn" for sounds to work.
+//
+// There are 4 general path cases for the train:
+//	- entrance tunnel to exit tunnel.
+//	- entrance tunnel to stop, stop to exit tunnel.
+//	- entrance tunnel to stop.
+//	- entrance tunnel to crash.
+// At the end of each path when going through the exit tunnel, the train will keep traveling off-map for 1/2 the "off time" duration,
+// then move from off-map towards the entrance tunnel and back on-map for the other 1/2 duration.
+// Multiple path cases can be mixed together. For example, entrance tunnel to stop, stop to next stop, stop to crash.
+// The train will not continue its path after crashing.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// Players can ride the train by standing near the train windows and pressing USE(e). Cancel entering the train by leaning left/right.
+// Once inside the train, lean left/right to change seats. JUMP to exit the train.
+// If exiting from the middle seat (facing forward), the player will exit at the top of the train instead of its sides.
+//
+// If the train has a traincab, players will be auto-attached to the traincab once the train begins moving.
+// Once moving, players can JUMP to detatch and remain inside the traincab, and then press USE(e) to reattach.
+// Traincab riders can lean left/right to change seats.
+// Traincab riders in the 1st seat (closest to the cabdoor), can lean left/right to open/close the cabdoor.
+// Traincab riders in the 1st seat must hold FIRE(zoom) & lean left/right to change seats.
+// Any players that exit the train or traincab while off-map will be respawned instead.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// A simple array must be created that contains train path data for each spline node.
+// Each row in the array contains: the spline node's name, origin, angles, speed, and dostuff function (1 = stop, 2 = crash, 3 = tram or auto-continue after "offtime" passes), ...
+// ... origin to begin train stopping sounds (if dostuff = 1 or 3) or begin train crashing sounds (if dostuff = 2).
+//
+// Place the "origin to begin train stopping/crashing sounds" along the train path and a few hundred units away from the "dostuff" node.
+// If timed properly, the train sounds & trainspark emitters will be finished as soon as the train reaches the "dostuff" node.
+//
+// The train will start at the 1st node and move to each node down the list, facing the node's angles & moving at the relative speed value once reaching that node.
+// Once reaching a "stop" or "tram" node, the train will stop completely.
+// The script makes all "stop" & "tram" nodes' speed = 0 ("crash" nodes maintain their speed) to slow down the train before reaching this node.
+// Any passengers inside the train will be kicked out once reaching a "stop" or "tram" node.
+// If reaching a "stop" node if there's more nodes to travel to, the train waits until a passenger enters the train to continue moving.
+// Otherwise if reahing a "tram" node, the train waits until "off time" passes.
+// If the train path ends at a "stop", "crash", or "tram" node, the train will not fully reset until "off time" passes.
+// If there's more nodes to travel to, the stopped train will slighly move its current node to prevent jumping forward the train once the train continues its path again.
+// If the train reaches a "crash" node, the train will explode, rotate left/right, and fall onto its side, emitting smoke.
+// Any player or vehicle that gets in front of the train will be killed or blown up. 
+//
+////////////////////////////////////////////////////////////////////////
+//
+// Once the array is made, the script can be started by running "exec global/trainsequence.scr local.array train1 60" or similar.
+// This line has the following parameters: array, train name (give the train a targetname), off time, existing traincab targetname, existing cabdoor targetname, ...
+// ... traincab's offset from train vector ( forward, left, up ), cabdoor's offset from traincab vector.
+//
+// If the map has a rideable traincab (i.e. $choochootrain in M2L3), the traincab can be added for players to ride in once the train begins moving.
+// An optional cabdoor can also be added for the 1st traincab passenger to open/close the door.
+// Add offset vectors for both the traincab & cabdoor to orient them behind the train properly, relative to the train & traincab respectively.
+//
+// To change the traincab's initial angles before it binds to the train (assuming its targetname is $choochootrain), set "$choochootrain.angles_init = ( 0 90 0 )" or similar before running "exec global/trainsequence.scr".
+//
+////////////////////////////////////////////////////////////////////////
+//
+//	// path node name, node origin, node angles, node speed, dostuff (1 = stop, 2 = crash, 3 = tram), origin to begin stopping sounds (if dostuff = 1 or 3) or crashing sounds (if dostuff = 2).
+//	//
+//	local.array = makeArray
+//		trainpath	( 100 0 50 )		( 0 90 0 )	0.35
+//		t500		( 100 -100 50 )		( 0 90 0 )	0.35
+//		t501		( 100 -200 50 )		( 0 90 0 )	0.35
+//		t502		( 100 -300 50 )		( 0 90 0 )	0.35
+//		t503		( 100 -400 50 )		( 0 90 0 )	0.35	1 ( 100 -300 50 ) // stop here, wait for a player to hop in the train to continue the path.
+//		t504		( 100 -500 50 )		( 0 90 0 )	0.35
+//		t505		( 100 -600 50 )		( 0 90 0 )	0.35
+//		t506		( 100 -700 50 )		( 0 90 0 )	0.35
+//		t507		( 100 -800 50 )		( 0 90 0 )	0.35	2 ( 100 -700 50 )  // crash the train at the end of the path.
+//	endArray
+//
+// 	// path array, train name, off time, traincab targetname, cabdoor targetname, traincab's offset from train vector ( forward, left, up ), cabdoor's offset from traincab vector, projectiles off (1 = projectiles cannot crash the train).
+//	//
+//	exec global/trainsequence.scr local.array train1 60 choochootrain choochootraindoor ( -847 17 125 ) ( -15 -110 16 )
+//	//exec global/trainsequence.scr local.array train1 60 // train without a traincab.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// Projectiles can also crash the train immediately, and settings can be changed to allow grenades, etc to blow up the train.
+// When impacting the train, the train will fall and explode based on the direction the projectile came from.
+// If hitting the train's front side, the train blows up the exact same way as when the train blows up at a scripted node (when dostuff = 2 for crash, but instead crashing immediately), by blowing up while it's falling over.
+// If hitting the left or right sides, the train falls over, then blows up. If hitting the back side, the train moves to one side, falls over, then blows up.
+// The train resets after its "off time" passes.
+//
+// After running "exec global/trainsequence.scr local.array train1 60", add one or more lines below to modify which projectiles can destroy the train. The default values are also shown below:
+// 
+//	$train1.damage_rockets = 0	// allow rockets to blow up the train.
+//	$train1.damage_shells = 1	// allow tank shells to blow up the train.
+//	$train1.damage_grenades = 0	// allow grenades to blow up the train.
+//	$train1.damage_panzeriv = 0	// allow panzerIV shells to blow up the train (right-clicking grenades in UBER MODS).
+//	$train1.damage_world = 1	// allow $world "radiusdamage" explosions to blow up the train.
+
+main local.array local.name local.offtime local.traincab local.cabdoor local.traincab_offset local.cabdoor_offset local.projectile_off:
+
+	thread scriptmaster local.cabdoor // if this runs after "level waittill prespawn", some players may not hear train sounds until they reconnect.
+
+	while(level.time == NIL) { waitframe }
+	while(level.time < 1) { waitframe } // wait until map has fully loaded.
+
+	if(local.array == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter for train path node data is missing!"); end } // make sure the data was inputted correctly.
+	if(local.array[1][1] == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter must be an array!"); end }
+	for(local.a = 1; local.a <= local.array.size; local.a++)
+	{
+		if(local.array[local.a].size < 2) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' row [" + local.a + "] is missing a vector for 'origin' column!"); end }
+		if(local.array[local.a].size < 3) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' row [" + local.a + "] is missing a vector for 'angles' column!"); end }
+		if(local.array[local.a].size < 4) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' row [" + local.a + "] is missing an integer for 'speed' column!"); end }
+		if($(local.array[local.a][1]) != NULL && $(local.array[local.a][1]).size > 1) { wait 1; println("----- ERROR global/trainsequence.scr: $" + local.array[local.a][1] + " node has the same targetname as another entity!"); end }
+		if(local.array[local.a][2][2] == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter's [" + local.a + "][2] origin must be in ( 0 0 0 ) format!"); end }
+		if(local.array[local.a][3][2] == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter's [" + local.a + "][3] angles must be in ( 0 0 0 ) format!"); end }
+		if(local.array[local.a][4].size > 1) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter's [" + local.a + "][4] speed must be an integer!"); end }
+		if(local.array[local.a].size >= 5)
+		{
+			if(local.array[local.a][5].size > 1) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter's [" + local.a + "][5] must be an integer!"); end }
+			if(local.array[local.a][5] != 1 && local.array[local.a][5] != 2 && local.array[local.a][5] != 3) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter's [" + local.a + "][5] can only be integers: '1' for stop, '2' for crash, or '3' for tram."); end }
+		}
+		if(local.array[local.a].size >= 6 && local.array[local.a][6][2] == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'array' parameter's [" + local.a + "][6] origin must be in ( 0 0 0 ) format!"); end }
+	}
+	if(local.name == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'name' parameter for train's targetname is missing!"); end }
+	else if($(local.name) != NULL && $(local.name).size > 1) { wait 1; println("----- ERROR global/trainsequence.scr: $" + local.name + " has the same targetname as another entity!"); end }
+	if(local.offtime != NIL && local.offtime.size > 1) { wait 1; println("----- ERROR global/trainsequence.scr: 'off time' parameter must be an integer!"); end }
+	if(local.traincab != NIL)
+	{
+		if(local.traincab.size != 1 && $(local.traincab) == NULL) { wait 1; println("----- ERROR global/trainsequence.scr: $" + local.traincab + " does not exist!"); end }
+		if($(local.traincab) != NULL && $(local.traincab).size > 1) { wait 1; println("----- ERROR global/trainsequence.scr: $" + local.traincab + " has the same targetname as another entity!"); end }
+		if(local.traincab == NULL) { wait 1; println("----- ERROR global/trainsequence.scr: " + local.traincab + " does not exist!"); end }
+		if(local.traincab.size != 1) { local.traincab = $(local.traincab) } // if the "traincab" parameter has a string input instead of a $targetname input, set "traincab" to be $(local.traincab).
+	}
+	if(local.cabdoor != NIL)
+	{
+		if(local.cabdoor.size != 1 && $(local.cabdoor) == NULL) { wait 1; println("----- ERROR global/trainsequence.scr: $" + local.cabdoor + " does not exist!"); end }
+		if($(local.cabdoor) != NULL && $(local.cabdoor).size > 1) { wait 1; println("----- ERROR global/trainsequence.scr: $" + local.cabdoor + " has the same targetname as another entity!"); end }
+		if(local.cabdoor == NULL) { wait 1; println("----- ERROR global/trainsequence.scr: " + local.cabdoor + " does not exist!"); end }
+		if(local.cabdoor.size != 1) { local.cabdoor = $(local.cabdoor) } // if the "cabdoor" parameter has a string input instead of a $targetname input, set "cabdoor" to be $(local.cabdoor).
+	}
+	if(local.traincab_offset != NIL && local.traincab_offset[2] == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'traincab_offset' parameter must be in ( 0 0 0 ) format!"); end }
+	if(local.cabdoor_offset != NIL && local.cabdoor_offset[2] == NIL) { wait 1; println("----- ERROR global/trainsequence.scr: 'cabdoor_offset' parameter must be in ( 0 0 0 ) format!"); end }
+
+	local.temp = local.name
+	local.name = ""
+	for(local.n = 0; local.n <= local.temp.size - 1; local.n++) // fix the given name if there's a $ in front of it.
+	{
+		if(local.temp[local.n] != "$") { local.name += local.temp[local.n] }
+	}
+
+	local.pathname = local.array[1][1] // start at the first node.
+	if(local.offtime == NIL) { local.offtime = 60 } // default seconds until train resets.
+
+	waitthread global/trainsequence_switch.scr::splinepath_init local.array // spawn all the path's nodes if each node's information was placed in an array.
+
+	thread train_init local.array local.name local.pathname local.offtime local.traincab local.cabdoor local.traincab_offset local.cabdoor_offset local.projectile_off
+end
+
+////////////////////////////////////////////////////////////////////////
+//////////		Train Spawn
+////////////////////////////////////////////////////////////////////////
+
+train_init local.array local.name local.pathname local.offtime local.traincab local.cabdoor local.traincab_offset local.cabdoor_offset local.projectile_off:
+
+	if($(local.name) != NULL) { $(local.name) remove }
+
+	local.train = spawn script_model targetname local.name
+	local.train model "vehicles/bp44train.tik"
+	local.train.origin = ( 0 0 9999 )
+	local.train.angles = ( 0 0 0 )
+	local.train.passengers[1] = NIL // initialize as array to make size = 0 instead of size = -1 (may not be required).
+
+	local.train.seats = 5 // number of passenger seats (5 = max).
+
+	local.train.pathname = local.pathname
+	local.train.offtime = local.offtime
+	local.train.path = local.array
+
+	local.train thread moving_train_check
+	local.train thread trainfront_trigger
+	if($(local.traincab) != NULL) { local.train waitthread traincab_init $(local.traincab) $(local.cabdoor) local.traincab_offset local.cabdoor_offset }
+
+	local.trigs = local.train waitthread spawn_damagetrigs
+
+	local.trigs[1] attachmodel models/vehicles/bp44train.tik "Box03" 0.001 ("train_soundent_" + local.train.entnum) 1 -1 -1 -1 -1 ( 5 0 -250 ) //( +left -right, +up -down, +forward -backward )
+	local.train.soundent = $("train_soundent_" + local.train.entnum)
+
+	local.trigs[1] attachmodel models/fx/fx_nebelwerfer.tik "Box03" 1.5 ("trainsmoke_" + local.train.entnum) 1 -1 -1 -1 -1 ( 5 230 400 ) //( +left -right, +up -down, +forward -backward )
+	$("trainsmoke_" + local.train.entnum).angles = ( 75 90 0 )
+	$("trainsmoke_" + local.train.entnum) anim idle
+	$("trainsmoke_" + local.train.entnum) thread smokey local.train
+	$("trainsmoke_" + local.train.entnum) notsolid
+	local.trigs[1] attachmodel models/fx/fx_nebelwerfer.tik "Box03" 1.5 ("trainsmoke2_" + local.train.entnum) 1 -1 -1 -1 -1 ( 5 230 75 ) //( +left -right, +up -down, +forward -backward )
+	$("trainsmoke2_" + local.train.entnum).angles = ( 80 90 0 )
+	$("trainsmoke2_" + local.train.entnum) anim idle
+	$("trainsmoke2_" + local.train.entnum) thread smokey local.train
+	$("trainsmoke2_" + local.train.entnum) notsolid
+
+	local.trigs[2] attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( 66 24 384 ) //( +left -right, +up -down, +forward -backward )
+	local.trigs[2] attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( -58 24 384 )
+	local.trigs[2] attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( 66 24 -191 )
+	local.trigs[2] attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( -58 24 -191 )
+	$("trainsparks_" + local.train.entnum)[1].angles = ( 90 -90 0 )
+	$("trainsparks_" + local.train.entnum)[2].angles = ( 90 -90 0 )
+	$("trainsparks_" + local.train.entnum)[3].angles = ( 90 -90 0 )
+	$("trainsparks_" + local.train.entnum)[4].angles = ( 90 -90 0 ) // trainsparks have 2 spraying directions: one that is always horizontal, and the other is controlled by $trainspark.angles[0].
+	$("trainsparks_" + local.train.entnum) anim stop
+
+	local.train thread trainsequence_init local.offtime
+	if(local.projectile_off != 1) { local.train thread traincrash_projectile } // if projectiles or $world explosions hit the train, blow the train up.
+end
+
+trainsequence_init local.offtime:
+
+	local.wait = local.offtime / 2.000
+	if(local.wait < 1) { local.wait = 1 } // without waiting at least 1 second, the train could travel in a straight line instead of the path, due to the nodes not fully spawning yet.
+
+	wait local.wait
+	self thread trainsequence
+end
+
+//-----------------------------------------------------------------------------
+
+spawn_damagetrigs local.train:
+
+	local.trig = spawn trigger_multiple targetname (self.targetname + "_damagetrig") spawnflags 128 // for calculating how much damage was given (triggers with health will not go to a setthread until it's fully dead).
+	local.trig.origin = self.origin
+	local.trig.health = 9999999		// make sure triggers with health & "spawnflags 128" are slightly larger in setsizes than other "spawnflags 128" triggers,
+	local.trig glue self			// otherwise the overlapping trigger that was last spawned in will have bullet-triggering priority,
+	local.trig thread removetrig		// preventing the trigger with health from taking any damage.
+	local.trig thread healthboost local.s
+	local.trig show
+	local.trig notsolid
+	local.trig setsize ( -151 -151 -1 ) ( 151 151 101 ) // make sure this is 1+ units smaller than the "damagetrig" in all +/- ( X Y Z ) directions.
+
+	if(local.train != NIL && local.train != NULL)
+	{
+		local.trig.model = "models/static/jug.tik"	// any entities that have attachmodels on them will crash the server if those entities do not have a specified model, since there is no "Box01" to attach to;
+		local.trig.scale = 0.01				// this also does not print any errors when crashing the server.
+		local.trig.traincab = self
+		local.trig.train = local.train			
+	}
+	else
+	{
+		local.trig.model = self.model
+		local.trig.scale = self.scale
+		local.trig.train = self
+	}
+
+	local.trigshot = spawn trigger_multiple targetname (self.targetname + "_trigshot") spawnflags 128 // instantly determine the vehicle's shooter (runs setthread each time it's triggered).
+	local.trigshot.origin = self.origin
+	local.trigshot glue self
+	local.trigshot thread removetrig
+	local.trigshot setthread shottrig
+	local.trigshot show
+	local.trigshot notsolid
+	local.trigshot setsize ( -150 -150 0 ) ( 150 150 100 )
+
+	if(local.train != NIL && local.train != NULL)
+	{
+		local.trigshot.model = "models/static/jug.tik"
+		local.trigshot.scale = 0.01
+		local.trigshot.traincab = self
+		local.trigshot.train = local.train			
+	}
+	else
+	{
+		local.trigshot.model = self.model
+		local.trigshot.scale = self.scale
+		local.trigshot.train = self
+	}
+
+	local.trig.trigshot = local.trigshot
+	local.trigshot.damagetrig = local.trig
+	self.damagetrig = local.trig
+	self.trigshot = local.trigshot
+
+	local.trigs[1] = local.trig // damagetrig
+	local.trigs[2] = local.trigshot // trigshot
+end local.trigs
+
+////////////////////////////////////////////////////////////////////////
+//////////		Train Movement
+////////////////////////////////////////////////////////////////////////
+
+trainsequence local.node:
+
+	if(self.train_sequencing == 1 || self.dead == 1) { end }
+	self.train_sequencing = 1
+	self.dead = 0
+	self.traincrash = 0
+	self.trainstop = 0
+	self.train_getout = 0
+	self.can_getout = 1
+	self.kickout_passengers = 0
+	self.slowingdown = 0
+	self.train_offmap = 0
+
+	if(self.traincab != NIL && self.traincab != NULL)
+	{
+		self.traincab.kickout_passengers = 0
+		self waitthread traincab_init self.traincab self.traincab.cabdoor self.traincab_offset self.cabdoor_offset
+	}
+	if(self.trigshot != NIL && self.trigshot != NULL) { self.trigshot triggerable; self.trigproj triggerable }
+
+	while(self.trainswitches_switching == 1) { waitframe }
+
+	for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++)
+	{
+		$("trainsparks_" + self.entnum)[local.t].scale = 1
+		$("trainsparks_" + self.entnum)[local.t].model = "animate/fx_trainspark.tik"
+		$("trainsparks_" + self.entnum)[local.t] anim stop
+	}
+
+	self stoploopsound
+	self.soundent stoploopsound
+	waitframe // always wait at least 1 frame before doing "followpath" if removing/respawning in spline nodes, otherwise "followpath" will not work properly.
+
+	self loopsound train_rolling
+	self.soundent loopsound missile_room
+
+	if(local.node != NIL && $(local.node) != NULL)
+	{
+		self thread trainsound_leaving // continue after the .stop = 1 or .tram = 1 node if there's more nodes in the path (determined in "trainstop").
+		local.pathnode = local.node
+	}
+	else { local.pathnode = self.pathname } // otherwise, begin at the 1st node.
+
+	local.current = $(local.pathnode)
+	if(local.current == NULL) { end } // train died while it was still leaving a station.
+
+	for(local.n = 1; local.n <= 1025; local.n++) // search through the current splinepath for any .stop = 1, .crash = 1, or .tram = 1 nodes.
+	{
+		local.target = local.current.target
+		if($(local.target) == NULL) { break }
+
+		if($(local.target).stop == 1 || $(local.target).tram == 1 || $(local.target).crash == 1)
+		{
+			if($(local.target).crash == 1)
+			{
+				self thread traincrash local.pathnode local.target
+				end
+			}
+			if($(local.target).stop == 1 || $(local.target).tram == 1)
+			{
+				self thread trainstop local.pathnode local.target
+				end
+			}
+		}
+		local.current = $(local.target)
+	}
+
+	//waitframe
+	self followpath $(local.pathnode) // continue from here if the train isn't crashing or stopping next.
+	self waitmove
+
+	self stoploopsound
+	self.soundent stoploopsound
+	self.train_sequencing = 0
+	self thread train_offmap
+end
+
+//-----------------------------------------------------------------------------
+
+train_offmap:
+
+	if(self.train_offmap == 1) { end }
+	self.train_offmap = 1
+	self.can_getout = 2
+	if(self.traincab != NIL && self.traincab != NULL) { self.traincab.can_getout = 2 }
+
+	self time (self.offtime / 2)
+	self moveto (self.origin + self.forwardvector * 7000) // exit the level for 1/2 the offtime duration.
+	self waitmove
+
+	self waitthread global/trainsequence_switch.scr::train_splinepath_change
+
+	self.angles = $(self.pathname)[1].angles
+	self.origin = $(self.pathname)[1].origin + self.forwardvector * -7000 // re-enter the level for the other 1/2 duration.
+	self moveto $(self.pathname)[1].origin
+	//self rotateto $(self.pathname)[1].angles
+	self waitmove
+
+	self.train_offmap = 0
+	self.can_getout = 1
+	if(self.traincab != NIL && self.traincab != NULL) { self.traincab.can_getout = 1 }
+
+	if(self.dead != 1) { self thread trainsequence }
+end
+
+//-----------------------------------------------------------------------------
+
+moving_train_check:
+
+	while(self != NULL)
+	{
+		if(self.train_sequencing == 1 && self.slowingdown != 1)
+		{
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1 && $player[local.i].flying != 1)
+				{
+					local.dist = vector_length($player[local.i].origin - (self.origin + angles_toforward(self.angles) * 450)) // 450 units in front of the train.
+
+					if($player[local.i].driving != 1 && $player[local.i].passenger != 1 && local.dist < 100)
+					{
+						$player[local.i] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+					if($player[local.i].driving == 1 && $player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && local.dist < 150)
+					{
+						$player[local.i].drivingent damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+					}
+				}
+			}
+		}
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+trainstop local.pathnode local.target:
+
+	if(self.trainstop == 1) { end }
+	self.trainstop = 1
+	self thread trainstop_sounds local.target
+
+	if(local.target != NIL) { self followpath $(local.pathnode) }
+	else { self followpath $(local.target) }
+	self waitmove
+
+	self.train_sequencing = 0
+	self stoploopsound
+	self.soundent stoploopsound
+	if(self.dead == 1) { end }
+
+	self.train_getout = 1 // allows players to get out (0 = no, 1 = yes, 2 = yes and respawn them if off the map for example).
+	self.kickout_passengers = 1 // immediately kicks out any train riders.
+	if(self.traincab != NIL && self.traincab != NULL) { self.traincab.kickout_passengers = 1 }
+	waitframe
+	self.kickout_passengers = 0 // need at least 1 waitframe for train riders to get kicked out.
+	if(self.traincab != NIL && self.traincab != NULL) { self.traincab.kickout_passengers = 0 }
+	if(self.dead == 1) { end }
+
+	if($(local.target) != NULL && $(local.target).stopend != 1)
+	{
+		if($(local.target).tram == 1) // only temporarily stop, then automatically continue after "offtime" passes.
+		{
+			//wait self.offtime
+			local.c = 0
+			while(self != NULL && self.dead != 1 && local.c <= self.offtime * 20) { local.c++; waitframe }
+			if(self.dead == 1) { end }
+
+			self waitthread global/trainsequence_switch.scr::train_splinepath_change local.target
+			self.trainstop = 0
+			self thread trainsequence local.target
+			end
+		}
+		else // otherwise, just end & wait until a player hops into the train.
+		{
+			//wait 1
+			local.c = 0
+			while(self != NULL && self.dead != 1 && local.c <= 20) { local.c++; waitframe }
+			if(self.dead == 1) { end }
+
+			while(self != NULL)
+			{
+				if(self.passengers.size > 0)
+				{
+					self waitthread global/trainsequence_switch.scr::train_splinepath_change local.target
+					self.trainstop = 0
+					self thread trainsequence local.target
+					end
+				}
+				waitframe
+			}
+		}
+	}
+
+	wait self.offtime // simply wait before resetting if the train stopped at the end of its path.
+
+	self waitthread global/trainsequence_switch.scr::train_splinepath_change
+	self.trainstop = 0
+	self thread trainsequence
+end
+
+trainstop_sounds local.target:
+
+	wait 2 // prevent this from occurring while the train is resetting.
+	while(self != NULL)
+	{
+		if($(local.target).dostuff_origin != NIL && vector_length(self.origin - $(local.target).dostuff_origin) <= 100) { break }
+
+		if(self.train_sequencing == 0) { self.trainstop = 0; end }
+		waitframe
+	}
+
+	self.slowingdown = 1
+	$("trainsparks_" + self.entnum) anim start
+	self playsound train_stopping
+	wait 1
+	self stoploopsound
+	self.soundent stoploopsound
+
+	while(self != NULL && $("trainsparks_" + self.entnum)[1].scale > 0 && self.train_sequencing == 1)
+	{
+		for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++) { $("trainsparks_" + self.entnum)[local.t].scale -= 0.0052 }
+		if(self.train_sequencing == 0) { self.trainstop = 0; end }
+		waitframe
+	}
+
+	$("trainsparks_" + self.entnum) anim stop
+	for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++) { $("trainsparks_" + self.entnum)[local.t].scale = 1 }
+end
+
+//-----------------------------------------------------------------------------
+
+trainsound_leaving:
+
+	wait 0.5
+	self loopsound train_rolling
+	wait 0.5
+	if(self.passengers[1] != NIL && self.passengers[1] != NULL) { self.passengers[1] playsound train_start }
+	else if(self.passengers[2] != NIL && self.passengers[2] != NULL) { self.passengers[2] playsound train_start }
+
+	if(self != NULL) { self playsound m2l3_trainapproach }
+	$("trainsparks_" + self.entnum) anim start
+
+	for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++) { $("trainsparks_" + self.entnum)[local.t].scale = 0.001 }
+	while($("trainsparks_" + self.entnum)[1].scale < 1)
+	{
+		for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++) { $("trainsparks_" + self.entnum)[local.t].scale += 0.01 }
+		waitframe
+	}
+
+	$("trainsparks_" + self.entnum) anim stop
+	for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++) { $("trainsparks_" + self.entnum)[local.t].scale = 1 }
+end
+
+//-----------------------------------------------------------------------------
+
+traincrash local.pathnode local.target:
+
+	if(self.traincrash == 1) { end }
+	self.traincrash = 1
+
+	if(self.dead != 1)
+	{
+		self followpath $(local.pathnode)
+		self move
+	}
+	else { local.wasdead = 1 }
+
+	while(self != NULL && self.velocity == ( 0 0 0 ) && self.dead != 1) { waitframe }
+	while(self != NULL && self.dead != 1) 
+	{
+		if($(local.target).dostuff_origin != NIL && vector_length(self.origin - $(local.target).dostuff_origin) <= 100) { break }
+		waitframe
+	}
+
+	if(self.dead != 1)
+	{
+		for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++) { $("trainsparks_" + self.entnum)[local.t].scale = 1 }
+		$("trainsparks_" + self.entnum) anim start
+		self playsound train_crashing
+	}
+
+	local.c = 0
+	while(self != NULL && self.dead != 1 && local.c < 42) // if the train stopped moving too early (tank/vehicle/object in the way), blow it up immediately, otherwise wait 4.2 seconds (originally 4.5).
+	{
+		if(local.origin != NIL && self.origin == local.origin) { break }
+		local.origin = self.origin
+		local.c++
+		wait 0.1
+	}
+	if(self.dead == 1 && local.wasdead != 1) { self.traincrash = 0; end } // if traincrash_projectile thread ran before this one finished, end this thread.
+	
+	if(self.trigshot != NIL && self.trigshot != NULL) { self.trigshot nottriggerable; self.trigproj nottriggerable }
+
+	self stoploopsound
+	//self.soundent playsound train_crash1
+	self.train_sequencing = 0
+	self.train_getout = 1
+	self.dead = 1
+	self endpath // prematurely end "followpath"
+	self stop // prematurely end "waitmove" & "move"
+
+	if(self.traincrash_direction == NIL) { self.traincrash_direction = "front" }
+	if(self.traincrash_direction == "left") { local.r = 0; local.noyaw = 1; local.bind = 1 } // don't yaw-rotate if direction came from left or right.
+	else if(self.traincrash_direction == "right") { local.r = 1; local.noyaw = 1; local.bind = 1 }
+	else { local.r = randomint(2) }
+	if(local.r == 0) { local.r2 = 1 } // traincab will yaw-rotate opposite from the train.
+	else { local.r2 = 0 }
+	if(local.noyaw == 1) { local.r2 = local.r }
+	if(self.traincrash_direction == "front") { local.moveback = 1 }
+	if(self.traincrash_direction == "back") { local.moveback = 0 }
+
+	if(self.traincab != NIL && self.traincab != NULL && local.bind != 1) { self.traincab unbind }
+
+	if(local.wasdead != 1 || self.traincrash_direction == "front")
+	{
+		self thread train_rotate local.r 0 0 local.noyaw local.moveback
+		if(self.traincab != NIL && self.traincab != NULL && local.bind != 1) { self.traincab thread train_rotate local.r2 1 1 local.noyaw local.moveback }
+	}
+	else
+	{
+		if(self.traincab != NIL && self.traincab != NULL && local.bind != 1) { self.traincab thread train_rotate local.r2 1 1 local.noyaw local.moveback }
+		self waitthread train_rotate local.r 0 0 local.noyaw local.moveback
+	}
+	
+	//wait 0.15
+	$("trainsparks_" + self.entnum) anim stop
+
+	if(local.wasdead != 1 || self.traincrash_direction == "front")
+	{
+		local.expwall = spawn script_model
+		local.expwall model "fx/fx_truck_explosion.tik"
+		local.expwall.origin = self.origin + angles_toup self.angles * 65 + angles_toforward self.angles * 425
+		local.expwall.angles = self.angles
+		local.expwall notsolid
+		local.expwall.scale = 2
+		local.expwall anim idle
+
+		local.debris = spawn script_model
+		local.debris model "animate/explosion_bombwall.tik"
+		local.debris.origin = self.origin + angles_toup self.angles * 200 + angles_toforward self.angles * 425
+		local.debris.angles = self.angles
+		local.debris notsolid
+		local.debris anim start
+
+		local.upamount = 0
+	}
+	else { local.upamount = -75 }
+	waitframe
+
+	thread jitter_large
+
+	if(local.yaw == 1)
+	{
+		if(local.r == 0) { local.add = angles_toforward ( 0 (self.angles[1] + 90) 0 ) * 25 } // "left"
+		else { local.add = angles_toforward ( 0 (self.angles[1] - 90) 0 ) * 25 } // "right"
+	}
+	else { local.add = 0 }
+
+	local.explosion1 = spawn script_model
+	local.explosion1 model "animate/fx_explosion_tank.tik" //"emitters/mortar_higgins.tik"
+	local.explosion1.origin = self.origin
+	local.explosion1.angles = ( 260 -90 0 )
+	local.explosion1 anim start
+	local.explosion1.scale = 1.2
+	local.explosion1 playsound explode_building2_large
+
+	self thread explosion_glue local.explosion1 local.upamount 270 local.add	// explosion, up amount, forward amount, left amount ( +left -right ).
+	radiusdamage (local.explosion1.origin + ( 0 0 250 )) 500 750
+
+	if(local.wasdead != 1 || self.traincrash_direction == "front") { wait .5 }
+	else { waitframe }
+
+	local.explosion2 = spawn script_model
+	local.explosion2 model "animate/fx_explosion_tank.tik" //"emitters/mortar_higgins.tik"
+	local.explosion2.origin = self.origin
+	local.explosion2.angles = ( 260 -90 0 )
+	local.explosion2 anim start
+	local.explosion2.scale = 1.2
+	local.explosion2 playsound explode_building2_large
+	self thread explosion_glue local.explosion2 local.upamount 0 local.add		// explosion, up amount, forward amount, left amount ( +left -right ).
+	radiusdamage (local.explosion2.origin + ( 0 0 250 )) 500 750
+
+	if(local.wasdead != 1 || self.traincrash_direction == "front") { wait .5 }
+	else { waitframe }
+
+	local.explosion3 = spawn script_model
+	local.explosion3 model "animate/fx_explosion_tank.tik" //"emitters/mortar_higgins.tik"
+	local.explosion3.origin = self.origin
+	local.explosion3.angles = ( 260 -90 0 )
+	local.explosion3 anim start
+	local.explosion3.scale = 1.2
+	local.explosion3 playsound explode_building2_large
+	self thread explosion_glue local.explosion3 local.upamount -270 local.add	// explosion, up amount, forward amount, left amount ( +left -right ).
+	radiusdamage (local.explosion3.origin + ( 0 0 250 )) 500 750
+
+	waitframe
+	local.explosion1 anim stop
+	local.explosion2 anim stop
+	local.explosion3 anim stop
+	if(local.expwall != NIL && local.expwall != NULL) { local.expwall remove }
+	if(local.debris != NIL && local.debris != NULL) { local.debris remove }
+
+	for(local.t = 1; local.t <= $("trainsparks_" + self.entnum).size; local.t++) { $("trainsparks_" + self.entnum)[local.t].scale = 4 }
+	if(local.r == 0)
+	{
+
+		$("trainsparks_" + self.entnum)[1].model = "models/emitters/thin_black_short.tik"
+		$("trainsparks_" + self.entnum)[2].model = "models/emitters/linger_smoke.tik"
+		$("trainsparks_" + self.entnum)[3].model = "models/emitters/thin_black_short.tik"
+		$("trainsparks_" + self.entnum)[4].model = "models/emitters/linger_smoke.tik"
+	}
+	else
+	{
+		$("trainsparks_" + self.entnum)[1].model = "models/emitters/linger_smoke.tik"
+		$("trainsparks_" + self.entnum)[2].model = "models/emitters/thin_black_short.tik"
+		$("trainsparks_" + self.entnum)[3].model = "models/emitters/linger_smoke.tik"
+		$("trainsparks_" + self.entnum)[4].model = "models/emitters/thin_black_short.tik"
+	}
+
+	self stoploopsound
+	self.soundent stoploopsound
+	self loopsound train_fire
+	self.soundent loopsound train_fire
+
+	wait self.offtime
+
+	local.explosion1 remove
+	local.explosion2 remove
+	local.explosion3 remove
+	self.traincrash_direction = NIL
+	self.traincrash = 0
+	self.dead = 0
+
+	self waitthread global/trainsequence_switch.scr::train_splinepath_change
+	self thread trainsequence
+end
+
+explosion_glue local.explosion local.up local.forward local.add:
+
+	while(self != NULL && local.explosion != NULL)
+	{
+		local.explosion.origin = self.origin + ( 0 0 local.up ) + angles_toforward self.angles * local.forward + angles_toforward ( 0 (self.angles[1] + 90) 0 ) * local.add
+		waitframe
+	}
+end
+
+train_rotate local.r local.nosparks local.reduceheight local.noyaw local.moveback:
+
+	local.c = 20
+	local.d = 0
+	local.e = 0
+	if(local.r == 0) { local.num = 1 }
+	else { local.num = -1 }
+	local.height = self.origin[2]
+	local.yaw = self.angles[1]
+	if(local.moveback == 0) { local.mult = 3 }
+	else if(local.moveback == 1) { local.mult = -3 }
+	else { local.mult = 0 }
+	self time 0.1
+
+	while(local.c > 0)
+	{
+		self stop
+		if(local.noyaw == 1) { self rotateto ( self.angles[0] (local.yaw - local.e * local.num) (90 / local.c * local.num) ) }
+		else { self rotateto ( self.angles[0] (local.yaw + (20 - local.c) * local.num) (90 / local.c * local.num) ) }	// must use "moveto" or "rotateto" for binded objects to stay binded to the traincab.
+
+		if(local.reduceheight == 1) { self moveto (( self.origin[0] self.origin[1] (local.height - (60 / local.c)) ) + self.forwardvector * local.d * local.mult) }
+		else { self moveto (( self.origin[0] self.origin[1] (local.height + (80 / local.c)) ) + self.forwardvector * local.d * local.mult) }
+		self move
+
+		local.c--
+		local.d += 0.25
+		local.e += 0.001
+		if(local.d == 4.5)
+		{
+			if(local.nosparks != 1)
+			{
+				if(local.r == 0) { $("trainsparks_" + self.entnum)[3] playsound train_crash2 }
+				else { $("trainsparks_" + self.entnum)[4] playsound train_crash4 }
+			}
+			else if(self.traincab != NIL && self.traincab != NULL)
+			{
+				if(local.r == 0) { self.traincab playsound train_crash4 }
+				else { self.traincab playsound train_crash2 }
+			}
+			else
+			{
+				if(local.r == 0) { self playsound train_crash2 }
+				else { self playsound train_crash4 }	
+			}
+			exec global/earthquake.scr .35 2 0 0
+		}
+		waitframe
+	}
+
+	if(self.traincab != NIL && self.traincab != NULL)
+	{
+		self.traincab playsound explode_traincab
+		local.dirt = spawn script_model
+		local.dirt model "emitters/explosion_mine_shockwave.tik"
+		local.dirt.origin = self.traincab.origin
+		local.dirt.scale = 4
+		local.dirt anim start
+		waitframe
+		local.dirt remove
+	}
+end
+
+jitter_large:
+
+	waitexec global/earthquake.scr .35 10 0 0
+	waitexec global/earthquake.scr .23 6 0 0
+	waitexec global/earthquake.scr 1 1 0 0
+	waitexec global/earthquake.scr 1.25 .3 0 1
+end
+
+//-----------------------------------------------------------------------------
+
+smokey local.train:
+
+	local.maxspeed = 200.000 // lower = bigger smoke, higher = smaller smoke.
+	while(self != NULL && local.train != NULL)
+	{
+		local.speed = waitthread global/math.scr::speed local.train.velocity
+		self.scale = local.speed / local.maxspeed
+
+		if(local.speed == 0) { self hide }
+		else { self show }
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+emitterstuff local.model local.origin local.angles local.scale local.anim local.targetname:
+
+	local.emitter = spawn script_model
+	local.emitter model local.model
+	if(local.emitter.model == "models/emitters/inferno.tik") { local.emitter.origin = local.origin + ( 0 0 50 ) }
+	else { local.emitter.origin = local.origin }
+	if(local.angles[2] != NIL) { local.emitter.angles = local.angles }
+	if(local.scale != NIL && local.scale > 0) { local.emitter.scale = local.scale }
+	if(local.anim != NIL) { local.emitter anim local.anim }
+	if(local.targetname != NIL) { local.emitter.targetname = local.targetname }
+	local.emitter notsolid
+end local.emittter
+
+////////////////////////////////////////////////////////////////////////
+//////////		Train Passengers
+////////////////////////////////////////////////////////////////////////
+
+trainfront_trigger:
+
+	local.trig = spawn trigger_use
+	local.trig.origin = self.origin
+	local.trig setsize ( -125 -125 -50 ) ( 125 125 248 )
+	local.trig.train = self
+	local.trig setthread triggered
+	local.trig glue self
+	self.playertrig = local.trig
+end
+
+triggered:
+
+	local.player = parm.other
+	if(local.player.classname != Player) { end }
+
+	if(self.train == NULL || self.train.dead == 1 || local.player == NIL || local.player == NULL || local.player.enteringvehicle == 1 || !isalive local.player || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL || local.player.leanleftheld == 1 || local.player.leanrightheld == 1) { end }
+
+	if(self.train != NULL) { self.train thread playergetin }
+end
+
+//-----------------------------------------------------------------------------
+
+playergetin:
+
+	local.player = parm.other
+	if(local.player.classname != Player) { end }
+	local.team = local.player.dmteam
+	if(self.attachingdriver == 1) { end }
+	self.attachingdriver = 1
+	local.player.enteringvehicle = 1
+
+	local.player iprint "Entering train... JUMP/crouch to get in immediately... lean left/right to cancel."
+
+	for(local.s = 1; local.s <= self.seats; local.s++)
+	{
+		if(self.passengers[local.s] != NIL && self.passengers[local.s] != NULL && (self.passengers[local.s].dmteam != local.player.dmteam || getcvar("g_gametype") == "1")) { local.cancel = 1 }
+	}
+	if(local.cancel == 1)
+	{
+		local.player iprint "An enemy player is in this train!"
+		local.player.enteringvehicle = 0
+		self.attachingdriver = 0
+		end
+	}
+
+	local.player safeholster 1
+	local.c = 0
+	local.fireholding = 0
+	local.standing = 0
+	while(self != NULL && local.player != NULL && local.c <= 20) // wait 1
+	{
+		for(local.s = 1; local.s <= self.seats; local.s++)
+		{
+			if(self.passengers[local.s] == NIL) { break }
+		}
+		if(local.player getposition != "standing" && local.standing == 1 && local.s <= self.seats && local.player getmovement != "falling")
+		{
+			local.player safeholster 0
+			local.player.enteringvehicle = 0
+			self.attachingdriver = 0
+			self thread passengers local.player
+			end
+		}
+
+		if(local.player getposition == "standing") { local.standing = 1 }
+		local.c++
+		waitframe
+	}
+
+	if(self == NULL || self.dead == 1 || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.driving == 1 || local.player.passenger == 1 || local.player.flying == 1 || local.player.missile != NIL)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		if(local.player != NULL) { local.player.enteringvehicle = 0 }
+		end
+	}
+	if(local.player.leanleftheld == 1 || local.player.leanrightheld == 1)
+	{
+		if(self != NULL) { self.attachingdriver = 0 }
+		local.player.enteringvehicle = 0
+		local.player safeholster 0
+		local.player iprint "You canceled entering the train by leaning left/right."
+		end
+	}
+
+	self.attachingdriver = 0
+	local.player.enteringvehicle = 0
+	local.player safeholster 0
+	self thread passengers local.player
+end
+
+//-----------------------------------------------------------------------------
+
+passengers local.player local.s:
+
+	if(local.player == NIL) { local.player = parm.other }
+	if(local.player.classname != Player) { end } // somehow the "self" DrivableVehicle entity was able to run this script as parm.other and crash the server; this line prevents that from ever happening.
+	if(local.s == NIL) { local.s_nil = 1 }
+	local.team = local.player.dmteam
+	waitframe	// need this here, otherwise passengers could be attached to the same seat!
+
+	if(self == NULL || self.dead == 1 || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dmteam == "spectator" || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 && local.player.missile != NIL) { end }
+
+	if(local.s == NIL)
+	{
+		for(local.s = 1; local.s <= self.seats; local.s++)
+		{
+			if(self.passengers[local.s] == NIL) { self.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
+		}
+		if(local.s > self.seats) { local.player iprint ("No more seats available."); end }
+
+		for(local.e = 1; local.e <= self.seats; local.e++)
+		{
+			if(self.passengers[local.e] != NIL && self.passengers[local.e] != local.player && (self.passengers[local.e].dmteam != local.player.dmteam || getcvar("g_gametype") == "1"))
+			{
+				self.passengers[local.e] = NIL
+				local.player iprint ("An enemy player is in this train!")
+				end
+			}
+		}
+	}
+	else if(self.passengers[local.s] != NIL && self.passengers[local.s] != local.player) { local.player iprint ("This seat is already occupied."); end }
+	else { self.passengers[local.s] = local.player }
+
+	if(self.model != NIL && self.model == "models/vehicles/bp44train.tik") { self waitthread seatstuff local.s }
+	else { self waitthread seatstuff_cab local.s }
+
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { local.player glue $("passenger_seat_" + local.s + "_" + self.entnum) }
+
+	local.player playsound snd_stepmetal
+
+	if(local.s_nil == 1) { local.player take "models/items/binoculars.tik" } // using these will cause camera jittering again.
+	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
+	local.player forcelegsstate STAND
+	//local.player hide
+	//local.player noclip
+	local.player nodamage // keep this off until the player receives damage, then quickly do "takedamage" and give damage, before doing "nodamage" again in "healthboost" thread (allows for more damage types such as bazooka rockets to count as kills).
+	local.player notsolid // need this, otherwise vehicles cannot reverse properly.
+	if(local.s_nil == 1)
+	{
+		if(self.seats > 1) { local.player iprint ("JUMP = exit train... Hold FIRE(zoom) = look around... Lean Left/Right = change seats.") }
+		else { local.player iprint ("JUMP = exit train... Hold FIRE(zoom) = look around.") }
+	}
+	local.player.origin = self.origin
+	local.player.passenger = 1
+	local.player.drivingent = self
+	local.player.ridingent = self
+	local.player.driving = 1 // should help with other scripts.
+	local.player.driving_state_jump = 0
+	local.PI = 3.14159265359
+	local.outheight = self.outheight
+	local.player forcetorsostate VEHICLE_PASSENGER // For some reason: without this additional "forcetorsostate" line, players cannot shoot from their seat (only when 1st entering seat after each death/respawn).
+
+	if(local.s == 1 && self.cabdoor != NIL && self.cabdoor != NULL) { local.player thread traincab_doorguy self.cabdoor }
+
+	local.targetname = self.targetname
+	while(self != NULL && self.dead != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.change_team_score != 1 && level.bbactive != 0 && $("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
+	{
+		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
+
+		if(local.player.fireheld != 1)
+		{
+			if(self.playerang_offset[local.s] != NIL) { local.player.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) + ( self.angles[0] self.playerang_offset[local.s] self.angles[2] ) } // some vehicles' passengers should not face forward (view is blocked)
+			else { local.player.viewangles = ( (self.angles[0] + 10) self.angles[1] self.angles[2] ) }
+		}
+
+		if(local.player.viewangles[0] > 180) { local.player.viewangles = ( (10 + (self.angles[0] - 360)) local.player.viewangles[1] local.player.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
+		if(local.player.viewangles[0] < -180) { local.player.viewangles = ( (local.player.viewangles[0] + 360) local.player.viewangles[1] local.player.viewangles[2] ) } // prevent camera from moving too far down.
+
+		if(local.player.fireheld == 1)
+		{
+			if(local.player.firehelding_passenger != 1)
+			{
+				local.player.firehelding_passenger = 1
+				local.init_vehicleYaw = self.angles[1]
+				if(local.init_vehicleYaw > 180) { local.init_vehicleYaw -= 360 }
+				if(local.init_vehicleYaw <= -180) { local.init_vehicleYaw += 360 }
+			}
+
+			local.viewangles1 = local.player.viewangles[1]
+			if(local.viewangles1 >= 180) { local.viewangles1 -= 360 }
+			if(local.viewangles1 <= -180) { local.viewangles1 += 360 }
+			local.selfangles0 = self.angles[0]
+			if(local.selfangles0 >= 180) { local.selfangles0 -= 360 }
+			if(local.selfangles0 <= -180) { local.selfangles0 += 360 }
+			local.selfangles1 = self.angles[1]
+			if(local.selfangles1 >= 180) { local.selfangles1 -= 360 }
+			if(local.selfangles1 <= -180) { local.selfangles1 += 360 }
+			local.selfangles2 = self.angles[2]
+			if(local.selfangles2 >= 180) { local.selfangles2 -= 360 }
+			if(local.selfangles2 <= -180) { local.selfangles2 += 360 }
+
+			local.relativeYaw = (local.viewangles1 - local.init_vehicleYaw) + (local.init_vehicleYaw - local.selfangles1)
+			if(local.relativeYaw >= 180) { local.relativeYaw -= 360 }
+			if(local.relativeYaw <= -180) { local.relativeYaw += 360 }
+
+			local.sinYaw = waitthread global/math.scr::sine local.relativeYaw
+			local.cosYaw = waitthread global/math.scr::cosine local.relativeYaw
+			//local.PI = 3.14159265359
+			//local.relativeYaw = local.relativeYaw * (local.PI / 180)
+			//local.sinYaw = sin local.relativeYaw
+			//local.cosYaw = cos local.relativeYaw
+
+			local.newPitch = local.selfangles0 * local.cosYaw - local.selfangles2 * local.sinYaw
+			local.newRoll  = local.selfangles0 * local.sinYaw + local.selfangles2 * local.cosYaw
+
+			$("passenger_seat_" + local.s + "_" + self.entnum).angles = ( local.newPitch local.player.viewangles[1] local.newRoll )
+		}
+		else
+		{
+			$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( self.angles[0] self.playerang_offset[local.s] self.angles[2] )
+			local.player.firehelding_passenger = 0
+		}
+
+		local.cycled = 0
+		local.changeseats = 0
+		local.newseat = 0
+		local.p = local.s
+		if(local.leaning == 0 && local.player.leanleftheld == 1 && local.player.leanrightheld != 1 && (self.model != NIL || (self.model == NIL && (local.s != 1 || (local.s == 1 && local.player.fireheld == 1))))) // lean left to cycle upward through available passenger seats.
+		{
+			for(local.z = 1; local.z <= self.seats; local.z++)
+			{
+				if(local.p + local.z > self.seats && local.cycled != 1) { local.p = 1; local.z = 0; local.cycled = 1 }
+				if(self.passengers[local.p + local.z] == NIL) { local.changeseats = 1; local.newseat = local.p + local.z; break }
+			}
+		}
+		if(local.leaning == 0 && local.player.leanleftheld != 1 && local.player.leanrightheld == 1 && (self.model != NIL || (self.model == NIL && (local.s != 1 || (local.s == 1 && local.player.fireheld == 1))))) // lean right to cycle downward through available passenger seats.
+		{
+			for(local.z = 1; local.z <= self.seats; local.z++)
+			{
+				if(local.p - local.z < 1 && local.cycled != 1) { local.p = self.seats; local.z = 0; local.cycled = 1 }
+				if(self.passengers[local.p - local.z] == NIL) { local.changeseats = 1; local.newseat = local.p - local.z; break }
+			}
+		}
+
+		if((local.player.driving_state_jump == 1 && self.can_getout != 0) || local.changeseats == 1 || self.kickout_passengers == 1) // Press JUMP to exit vehicle.
+		{
+			local.player unglue
+			if(local.player.isdog != 1) { local.player show }
+			local.player give "models/items/binoculars.tik"
+			//local.player noclip
+			local.player forcetorsostate STAND
+			local.player forcelegsstate STAND
+
+			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+			if(local.changeseats != 1 || self.kickout_passengers == 1 || (self.model != "models/vehicles/bp44train.tik" && self.trainfront.train_sequencing != 1))
+			{
+				local.player solid
+				local.player takedamage
+
+				if(self.kickout_passengers == 1 && self.kickoutdist != NIL)
+				{
+					local.player.origin += angles_toleft self.angles * self.kickoutdist
+				}
+				else
+				{
+					if($("passenger_seat_" + local.s + "_" + self.entnum).leftdist == 0) { local.player.origin += angles_toup self.angles * self.outheight }
+					else { local.player.origin += angles_toleft self.angles * $("passenger_seat_" + local.s + "_" + self.entnum).leftdist }
+				}
+				local.player droptofloor
+				if(self.can_getout == 2) { local.player respawn }
+			}
+
+			local.player thread wallstuck_fix
+			self.passengers[local.s] = NIL
+			local.player.passenger = 0
+			local.player.drivingent = NIL
+			local.player.ridingent = NIL
+			local.player.driving = 0
+			local.player.firehelding_passenger = 0
+			if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+
+			if(local.changeseats == 1 && self.no_changing_seats != 1) { self thread passengers local.player local.newseat }
+			end
+		}
+		if(local.player.leanleftheld != 1 && local.player.leanrightheld != 1) { local.leaning = 0 }
+
+		local.angles = self.angles
+		waitframe
+	}
+	if(self != NULL)
+	{
+		self.passengers[local.s] = NIL
+		if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
+	}
+
+	if(local.player != NULL)
+	{
+		local.player unglue
+		local.player.viewangles = ( 0 local.player.viewangles[1] 0 ) // passenger reset
+		local.player.passenger = 0
+		local.player.drivingent = NIL
+		local.player.ridingent = NIL
+		local.player.driving = 0
+		local.player.firehelding_passenger = 0
+		if(local.player.dmteam != spectator)
+		{
+			if(isalive local.player) { local.player give "models/items/binoculars.tik" }
+			if(local.player.isdog != 1) { local.player show }
+			local.player solid
+			local.player takedamage
+			//local.player noclip
+			local.player forcetorsostate STAND
+			local.player forcelegsstate STAND
+			if(local.player.dmteam == local.team) // if the passenger did not switch teams
+			{
+				local.player.origin += angles_toup local.angles * local.outheight
+				local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+				local.player thread wallstuck_fix
+	
+				if(self != NULL && self.shooter != NIL)
+				{
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { local.player damage self.shooter.player_owner 9999999 self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { local.player damage self.shooter.owner 9999999 self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+					else { local.player damage self.shooter 9999999 self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 9 0 }
+				}
+			}
+			else { local.player respawn }
+
+			if(self != NULL && self.dead == 1) { local.player damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+
+			local.origin = local.player.origin
+			while(local.player != NULL && !isalive local.player && local.player.dmteam != "spectator")
+			{
+				local.player.origin = ( local.origin[0] local.origin[1] local.player.origin[2] ) // for some reason, passengers' dead bodies would move forward across the ground until they hit a wall.
+				local.player notsolid
+				local.player droptofloor
+				waitframe
+			}
+		}
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+seatstuff local.s: // using attachmodels and gluing players to them makes the best vehicle seats, but requires 1 entity per seat.
+
+	while($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove; waitframe }
+
+	local.add = 0  // offset = ( +left -right, +up -down, +forward -backward )
+	if(local.s == 1) { self attachmodel models/static/jug.tik "Box03" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 63 97 -39 ); local.add = 90; $("passenger_seat_" + local.s + "_" + self.entnum).leftdist = -88 }
+	if(local.s == 5) { self attachmodel models/static/jug.tik "Box03" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -51 97 -39 ); local.add = -90; $("passenger_seat_" + local.s + "_" + self.entnum).leftdist = 76 }
+
+	if(local.s == 4) { self attachmodel models/static/jug.tik "Box03" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -51 75 -111 ); local.add = -90; $("passenger_seat_" + local.s + "_" + self.entnum).leftdist = 76 }
+	if(local.s == 2) { self attachmodel models/static/jug.tik "Box03" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 63 75 -111 ); local.add = 90; $("passenger_seat_" + local.s + "_" + self.entnum).leftdist = -88 }
+	if(local.s == 3) { self attachmodel models/static/jug.tik "Box03" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 5 97 -60 ); local.add = 0; $("passenger_seat_" + local.s + "_" + self.entnum).leftdist = 0 }
+
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
+	{
+		self.playerang_offset[local.s] = local.add
+		$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( 0 local.add 0 )
+		//$("passenger_seat_" + local.s + "_" + self.entnum) bind self
+		$("passenger_seat_" + local.s + "_" + self.entnum) hide
+	}
+
+	self.outheight = 155 // move all players up by this amount when exiting the train by pressing JUMP.
+end
+
+shottrig:
+
+	local.player = parm.other
+	if(self.train == NIL || self.train == NULL) { end }
+
+	for(local.s = 1; local.s <= self.train.seats; local.s++)
+	{
+		if(self.train.passengers[local.s] != NIL && self.train.passengers[local.s] == local.player) { end }
+	}
+	for(local.s = 1; local.s <= self.train.seats; local.s++)
+	{
+		if(self.train.passengers[local.s] != NIL && self.train.passengers[local.s] != local.player && (self.train.passengers[local.s].dmteam != local.player.dmteam || getcvar("g_gametype") == "1"))
+		{
+			self.damagetrig.shooter = local.player
+		}
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0)
+	{
+		if(self.health < local.health)
+		{
+			for(local.i = 1; local.i <= self.passengers.size; local.i++)
+			{
+				local.damage = ((local.health - self.health) / (3 + self.train.passengers.size))
+				if(self.train.passengers[local.s] != NIL && self.train.passengers[local.s] != NULL && self.shooter != NIL)
+				{
+					self.train.passengers[local.s] takedamage
+					if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.train.passengers[local.s] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.train.passengers[local.s] damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					else { self.train.passengers[local.s] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
+					self.train.passengers[local.s] nodamage
+				}
+			}
+		}
+		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		if(self.shooter != NIL) { self thread shooter_NIL }
+		waitframe
+	}
+end
+
+shooter_NIL:
+
+	waitframe
+	if(self != NULL) { self.shooter = NIL }
+end
+
+removetrig:
+
+	while(self != NULL && self.train != NULL) { waitframe }
+	if(self != NULL) { self remove }
+end
+
+//-----------------------------------------------------------------------------
+
+wallstuck_fix:
+
+	local.c = 0
+	local.origin = self.origin
+	local.team = self.dmteam
+
+	if(self.wallstuck_fixing == 1) { end }
+	self.wallstuck_fixing = 1
+
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.driving != 1 && level.change_team_score != 1 && level.bbactive != 0 && self.passenger != 1 && self.flying != 1 && self.missile != NIL) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
+	{
+		if(local.c >= 60) // about 3 seconds
+		{
+			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
+			break
+		}
+		local.c++
+		waitframe
+	}
+	if(self != NULL) { self.wallstuck_fixing = 0 }
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster local.cabdoor:
+
+	cache models/vehicles/bp44train.tik
+	cache models/animate/fx_trainspark.tik
+	cache models/fx/fx_nebelwerfer.tik
+	cache models/static/jug.tik
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache train_start sound/vehicle/veh_truck_shiftin.wav soundparms 1.5 0.0 1.0 0.0 500 3000 auto loaded maps level.mapname
+	local.master aliascache train_rolling sound/vehicle/veh_train_m6l3a_move.wav soundparms 1.8 0.0 1.0 0.0 3000 6000 auto loaded maps level.mapname
+	local.master aliascache train_stopping sound/vehicle/veh_train_m6l3a_stop.wav soundparms 1.2 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname
+	local.master aliascache train_crashing sound/vehicle/M4_TrainBreaking.wav soundparms 1.8 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname // veh_train_m2l3_approach.wav
+	local.master aliascache m2l3_trainapproach sound/vehicle/veh_train_m2l3_approach.wav soundparms 1.3 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname
+	local.master aliascache missile_room sound/amb/Amb_MissileRoom.wav soundparms 0.8 0.0 1.0 0.0 3000 6000 auto loaded maps level.mapname
+
+	local.master aliascache train_crash1 sound/mechanics/damage_vehicle_2.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
+	local.master aliascache train_crash2 sound/mechanics/damage_vehicle_4.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
+	local.master aliascache train_crash3 sound/mechanics/damage_vehicle_1.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
+	local.master aliascache train_crash4 sound/mechanics/damage_vehicle_3.wav soundparms 1.3 0.5 0.7 0.5 4000 6000 auto loaded maps level.mapname
+	local.master aliascache train_fire sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 300 3000 auto loaded maps level.mapname
+
+	local.master aliascache explode_building2_large1 sound/weapons/explo/Explo_StoneLarge1.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
+	local.master aliascache explode_building2_large2 sound/weapons/explo/Explo_StoneLarge2.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
+	local.master aliascache explode_building2_large3 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
+	local.master aliascache explode_building2_large4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
+	local.master aliascache explode_building2_large5 sound/weapons/explo/Exp_Shingle_01.WAV soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
+
+	local.master aliascache snd_stepmetal1 sound/characters/fs_metal_01.wav soundparms 0.4 0.3 0.9 0.2 200 2500 auto loaded maps level.mapname
+	local.master aliascache snd_stepmetal2 sound/characters/fs_metal_02.wav soundparms 0.4 0.3 0.9 0.2 200 2500 auto loaded maps level.mapname
+	local.master aliascache snd_stepmetal3 sound/characters/fs_metal_03.wav soundparms 0.4 0.3 0.9 0.2 200 2500 auto loaded maps level.mapname
+	local.master aliascache snd_stepmetal4 sound/characters/fs_metal_04.wav soundparms 0.4 0.3 0.9 0.2 200 2500 auto loaded maps level.mapname
+
+	local.master aliascache explode_traincab sound/weapons/explo/Explo_WoodLarge1.wav soundparms 1.2 0.2 0.8 0.4 1000 8000 auto loaded maps level.mapname
+
+	if($(local.cabdoor) != NULL)
+	{
+		local.master aliascache gateslide_open sound/mechanics/m2l1a_gate_open.wav soundparms 1.5 0.0 0.7 0.0 160 1600 item loaded maps level.mapname
+		local.master aliascache gateslide_close1 sound/mechanics/DoorMetalClose_stop1.wav soundparms 1.1 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+		local.master aliascache gateslide_close2 sound/mechanics/DoorMetalClose_stop3.wav soundparms 1.1 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+		local.master aliascache gateslide_close3 sound/mechanics/DoorMetalClose_stop4.wav soundparms 1.1 0.2 0.8 0.2 160 1600 item loaded maps level.mapname
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+//////////		Secondary Train Cab
+////////////////////////////////////////////////////////////////////////
+
+traincab_init local.traincab local.cabdoor local.traincab_offset local.cabdoor_offset:
+
+	if($(local.traincab).soundent == NIL || $(local.traincab).soundent == NULL)
+	{
+		local.soundent = spawn script_model
+		local.soundent model "static/jug.tik"
+		local.soundent.origin = $(local.traincab).origin
+		local.soundent.angles = $(local.traincab).angles
+		local.soundent.scale = 0.01
+		local.soundent bind $(local.traincab)
+		local.soundent notsolid
+		$(local.traincab).soundent = local.soundent
+	}
+	if($(local.traincab).trigger == NIL || $(local.traincab).trigger == NULL)
+	{
+		local.trig = spawn trigger_use
+		local.trig.origin = $(local.traincab).origin
+		local.trig setsize ( -125 -125 -50 ) ( 125 125 50 )
+		local.trig glue $(local.traincab)
+		local.trig setthread playergetin_cab
+		local.trig.train = self
+		local.trig.traincab = $(local.traincab)
+		$(local.traincab).trigger = local.trig
+	}
+	else { local.trigexists = 1 }
+
+	self.angles = ( 0 0 0 )
+	$(local.traincab).origin = self.origin + angles_toforward self.angles * local.traincab_offset[0] + angles_toleft self.angles * local.traincab_offset[1] + angles_toup self.angles * local.traincab_offset[2]
+	if($(local.traincab).angles_init != NIL) { $(local.traincab).angles = $(local.traincab).angles_init }
+	else { $(local.traincab).angles = self.angles }
+	$(local.traincab) show
+	$(local.traincab) bind self
+	$(local.traincab).trainfront = self // trainfront = bp44train, train = train cab.
+
+	$(local.traincab).seats = 20 // max = 20 seats.
+
+	self.traincab = $(local.traincab)
+	self.traincab_offset = local.traincab_offset
+	self.cabdoor_offset = local.cabdoor_offset
+
+	if($(local.traincab + "_damagetrig") == NULL) { $(local.traincab) waitthread spawn_damagetrigs self }
+
+	if($(local.cabdoor) != NULL)
+	{
+		$(local.cabdoor).origin = $(local.traincab).origin + angles_toforward $(local.traincab).angles * local.cabdoor_offset[0] + angles_toleft $(local.traincab).angles * local.cabdoor_offset[1] + angles_toup $(local.traincab).angles * local.cabdoor_offset[2]
+		$(local.cabdoor).angles = $(local.traincab).angles
+		$(local.cabdoor) bind $(local.traincab)
+		$(local.cabdoor) show
+		$(local.cabdoor) solid
+		$(local.cabdoor).origin += ( -128 0 0 ) // open train door initially
+		$(local.cabdoor).closed = 0
+		$(local.traincab).cabdoor = $(local.cabdoor)
+
+		if($(local.cabdoor).doortrig == NIL || $(local.cabdoor).doortrig == NULL)
+		{
+			local.doortrig = spawn trigger_use
+			local.doortrig.origin = $(local.cabdoor).origin
+			local.doortrig setsize ( -100 -100 -100 ) ( 100 100 100 )
+			local.doortrig glue $(local.cabdoor)
+			local.doortrig.cabdoor = $(local.cabdoor)
+			local.doortrig.trainfront = self
+			local.doortrig setthread doortrig
+			local.doortrig thread doordisable
+			$(local.cabdoor).doortrig = local.doortrig
+		}
+	}
+
+	waitframe
+	if(local.trigexists != 1) { local.trig thread removetrig_use local.traincab self }
+end
+
+removetrig_multiple local.traincab local.train:
+
+	while(self != NULL && local.train != NULL && $(local.traincab) != NULL && local.train.train_sequencing != 1 && local.train.dead != 1) { waitframe }
+	if(self != NULL) { self triggerable }
+	waitframe
+	if(self != NULL) { self remove }
+	if(local.train == NULL || local.train.dead == 1) { end }
+
+	local.trig = spawn trigger_use
+	local.trig.origin = $(local.traincab).origin
+	local.trig setsize ( -125 -125 -100 ) ( 125 125 100 )
+	local.trig glue $(local.traincab)
+	local.trig setthread playergetin_cab
+	local.trig.train = local.train
+	local.trig.traincab = $(local.traincab)
+	$(local.traincab).trigger = local.trig
+
+	local.trig thread removetrig_use local.traincab local.train
+end
+
+removetrig_use local.traincab local.train:
+
+	while(self != NULL && local.train != NULL && $(local.traincab) != NULL && local.train.train_sequencing == 1 && local.train.dead != 1) { waitframe }
+	if(self != NULL) { self remove }
+	if(local.train == NULL || local.train.dead == 1) { end }
+
+	local.trig = spawn trigger_multiple
+	local.trig.origin = $(local.traincab).origin
+	local.trig setsize ( -125 -125 -100 ) ( 125 125 100 )
+	local.trig glue $(local.traincab)
+	local.trig setthread playergetin_cab
+	local.trig.train = local.train
+	local.trig.traincab = $(local.traincab)
+	$(local.traincab).trigger = local.trig
+
+	local.trig nottriggerable
+	local.trig thread removetrig_multiple local.traincab local.train
+end
+
+//-----------------------------------------------------------------------------
+
+playergetin_cab:
+
+	local.player = parm.other
+	if(self.train != NULL && self.traincab != NULL && isalive local.player && local.player.dead != 1 && local.player.attachingdriver != 1 && local.player.dmteam != "spectator" && local.player.driving != 1 && local.player.passenger != 1 && local.player.flying != 1 && local.player.missile == NIL && level.change_team_score != 1 && level.bbactive != 0)
+	{
+		self.traincab thread passengers local.player
+	}	
+end
+
+seatstuff_cab local.s: // using attachmodels and gluing players to them makes the best vehicle seats, but requires 1 entity per seat.
+
+	while($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove; waitframe }
+
+	// current seating arrangement: 5x4 matrix when looking out of the cab towards the traincab door. seat #1 is always closest to the traincab door.
+	// 3 - 2 - 1 - 20 - 19					// seat numbers
+	// 4 - 9 - 10 - 13 - 18
+	// 5 - 8 - 11 - 14 - 17
+	// 6 - 7 - 12 - 15 - 16
+
+	// -234 = -125 = -16 = 93 = 202 	----- 75	// roll & pitch distances ( pitch yaw roll )
+	// -234 = -125 = -16 = 93 = 202 	----- 40
+	// -234 = -125 = -16 = 93 = 202 	----- 7
+	// -234 = -125 = -16 = 93 = 202 	----- -32
+
+	// 0 - 20 - 90 - 160 - 180				// seat angles
+	// 17 - 35 - 90 - 140 - 160
+	// 25 - 45 - 90 - 135 - 153
+	// 32 - 55 - 90 - 125 - 145
+
+	if(self.floordist == NIL) { self.floordist = -48 } // traincab distance from origin to floor
+
+	//( +left -right, +up -down, +forward -backward )
+	if(local.s == 1) { self.soundent attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 75 self.floordist -16 ); local.add = 90 }
+	else if(local.s == 2) { self.soundent attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 75 self.floordist -125 ); local.add = 20 }
+	else if(local.s == 3) { self.soundent attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 75 self.floordist -234 ); local.add = 0 }
+	else if(local.s == 4) { self.soundent attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 40 self.floordist -234 ); local.add = 17 }
+	else if(local.s == 5) { self.soundent attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 7 self.floordist -234 ); local.add = 25 }
+	else if(local.s == 6) { self.soundent attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -32 self.floordist -234 ); local.add = 32 }
+	else if(local.s == 7) { self.soundent attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -32 self.floordist -125 ); local.add = 55 }
+	else if(local.s == 8) { self.damagetrig attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 7 self.floordist -125 ); local.add = 45 }
+	else if(local.s == 9) { self.damagetrig attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 40 self.floordist -125 ); local.add = 35 }
+	else if(local.s == 10) { self.damagetrig attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 40 self.floordist -16 ); local.add = 90 }
+	else if(local.s == 11) { self.damagetrig attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 7 self.floordist -16 ); local.add = 90 }
+	else if(local.s == 12) { self.damagetrig attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -32 self.floordist -16 ); local.add = 90 }
+	else if(local.s == 13) { self.damagetrig attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 40 self.floordist 93 ); local.add = 140 }
+	else if(local.s == 14) { self.damagetrig attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 7 self.floordist 93 ); local.add = 135 }
+	else if(local.s == 15) { self.trigshot attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -32 self.floordist 93 ); local.add = 125 }
+	else if(local.s == 16) { self.trigshot attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -32 self.floordist 202 ); local.add = 145 }
+	else if(local.s == 17) { self.trigshot attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 7 self.floordist 202 ); local.add = 153 }
+	else if(local.s == 18) { self.trigshot attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 40 self.floordist 202 ); local.add = 160 }
+	else if(local.s == 19) { self.trigshot attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 75 self.floordist 202 ); local.add = 180 }
+	else if(local.s == 20) { self.trigshot attachmodel models/static/jug.tik "Box06" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 75 self.floordist 93 ); local.add = 160 }
+
+	if(local.add == NIL) { local.add = 0 }
+
+	if(self.outdirection == "right") { local.add += 180; self.kickoutdist = 180 }
+	else { self.kickoutdist = -180 }
+
+	if(local.add > 360) { local.add -= 360 }
+
+	self.outheight = 0
+	$("passenger_seat_" + local.s + "_" + self.entnum).leftdist = 0
+
+	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL)
+	{
+		self.playerang_offset[local.s] = local.add
+		$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles + ( 0 local.add 0 )
+		//$("passenger_seat_" + local.s + "_" + self.entnum) bind self
+		$("passenger_seat_" + local.s + "_" + self.entnum) hide
+	}
+end
+
+////////////////////////////////////////////////////////////////////////
+
+traincab_doorguy local.cabdoor:
+
+	local.team = self.dmteam
+	self iprint ("Lean Left/Right = open/close door.")
+
+	$(local.cabdoor).traincab_door_toggle = 0
+	while(isalive self && self.dmteam == local.team && self.dead != 1 && self.passenger == 1 && $(local.cabdoor) != NULL)
+	{
+		if($(local.cabdoor).traincab_door_toggle != 1 && $(local.cabdoor).moving != 1 && (self.leanleftheld == 1 || self.leanrightheld == 1) && self.fireheld != 1)
+		{
+			$(local.cabdoor) thread toggle_traindoor self
+			$(local.cabdoor).traincab_door_toggle = 1
+		}
+		if(self.leanleftheld != 1 && self.leanrightheld != 1) { $(local.cabdoor).traincab_door_toggle = 0 }
+		waitframe
+	}
+end
+
+doortrig:
+
+	local.player = parm.other
+	if(self.cabdoor.moving != 1) { self.cabdoor thread toggle_traindoor local.player }
+end
+
+doordisable:
+
+	while(self != NULL && self.trainfront != NULL)
+	{
+		if(self.trainfront.dead == 1 || self.trainfront.train_sequencing == 1) { self nottriggerable }
+		else { self triggerable }
+		waitframe
+	}
+	if(self != NULL && self.trainfront == NULL) { self remove }
+end
+
+toggle_traindoor local.player:
+
+	self.moving = 1
+	self time 2
+
+	if(self.closed != 1)
+	{
+		self.closing = 1
+		local.player iprint "Closing cab door."
+		self moveeast 128 // close train door
+		self loopsound gateslide_open
+		self waitmove
+
+		self stoploopsound
+		self playsound gateslide_close
+		self.closing = 0
+		self.closed = 1
+	}
+	else
+	{
+		self.opening = 1
+		local.player iprint "Opening cab door."
+		self movewest 128 // open train door
+		self loopsound gateslide_open
+		self waitmove
+
+		self stoploopsound
+		self playsound gateslide_close
+		self.opening = 0
+		self.closed = 0
+	}
+	self.moving = 0
+end
+
+////////////////////////////////////////////////////////////////////////
+//////////		Train Crash Projectile Impact
+////////////////////////////////////////////////////////////////////////
+
+traincrash_projectile:
+
+	local.trigshot = spawn trigger_multiple spawnflags 128 targetname (self.targetname + "_trigshot") // triggers when any radiusdamage explosion (grenades, rockets, bombs, world, not bullets) hits it.
+	local.trigshot.origin = self.origin
+	local.trigshot setsize ( -600 -600 -300 ) ( 600 600 300 )
+	local.trigshot.setsize1 = ( -600 -600 -300 )
+	local.trigshot.setsize2 = ( 600 600 300 )
+	local.trigshot glue self
+	local.trigshot setthread trigshot_train
+	local.trigshot.train = self
+	self.trigshot = local.trigshot
+
+	local.trigproj = spawn trigger_multiple spawnflags 20 targetname (self.targetname + "_trigproj") // triggers when any projectiles hit or go through it (not players' bullets).
+	local.trigproj.origin = self.origin
+	local.trigproj setsize ( -600 -600 -300 ) ( 600 600 300 )
+	local.trigproj.setsize1 = ( -600 -600 -300 )
+	local.trigproj.setsize2 = ( 600 600 300 )
+	local.trigproj glue self
+	local.trigproj setthread trigproj_train
+	local.trigproj.train = self
+	self.trigproj = local.trigproj
+	local.trigproj.trigshot = local.trigshot
+	local.trigshot.trigproj = local.trigproj
+
+	if(self.damage_rockets == NIL) { self.damage_rockets = 0 }			// allow rockets to blow up the train.
+	if(self.damage_shells == NIL) { self.damage_shells = 1	}			// allow tank shells to blow up the train.
+	if(self.damage_grenades == NIL) { self.damage_grenades = 0 }			// allow grenades to blow up the train.
+	if(self.damage_panzeriv == NIL) { self.damage_panzeriv = 0 }			// allow panzerIV shells to blow up the train (right-clicking grenades in UBER MODS).
+	if(self.damage_world == NIL) { self.damage_world = 1 }				// allow $world "radiusdamage" explosions to blow up the train.
+end
+
+//-----------------------------------------------------------------------------
+
+trigshot_train:
+
+	local.damager = parm.other
+	if(self.train.damagerorigin != NIL && self.train.damagerorigin != NULL) { local.origin = self.train.damagerorigin }
+	else { local.origin = local.damager.origin }
+
+	if((local.damager == $world && self.train.damage_world == 1) || self.projectile == 1)
+	{
+		local.a_vector = angles_toforward self.train.angles * 10
+		local.b_vector = local.origin - self.train.origin
+
+		local.a_vector = ( local.a_vector[0] local.a_vector[1] 0 )
+		local.b_vector = ( local.b_vector[0] local.b_vector[1] 0 )
+		local.angle_xy = thread angle_between_vectors local.a_vector local.b_vector	// find the angle between train's forward vector and the vector between train & shooter.
+		local.product = thread cross_product_vectors local.a_vector local.b_vector	// use cross product to determine if the angle between the vectors is positive or negative.
+		if(local.product < 0) { local.angle_xy = 360 - local.angle_xy }			// keep the angle in 0 - 360 range.
+
+		local.frontback_angle = 30 // angles to trigger front/back direction (i.e. for 10, angles 0-5 & 355-360 will trigger front, or angles 175-185 will trigger back.
+
+		if(local.angle_xy >= (local.frontback_angle / 2) && local.angle_xy <= (180 - local.frontback_angle / 2)) { self.train.traincrash_direction = "right" }
+		else if(local.angle_xy >= (180 + local.frontback_angle / 2) && local.angle_xy <= (360 - local.frontback_angle / 2)) { self.train.traincrash_direction = "left" }
+		else if(local.angle_xy > (180 - local.frontback_angle / 2) && local.angle_xy < (180 + local.frontback_angle / 2)) { self.train.traincrash_direction = "front" }
+		else { self.train.traincrash_direction = "back" }
+		if(local.damager == $world && local.origin == ( 0 0 0 )) { self.train.traincrash_direction = "front" }
+
+		self.train.traincrash = 0
+		self.train.dead = 1 // kill the train.
+		self nottriggerable
+		self.trigproj nottriggerable
+
+		self.train thread traincrash // knock the train over, then blow it up.
+	}
+	self.projectile = 0
+	self.damagerorigin = NIL
+end
+
+//-----------------------------------------------------------------------------
+
+trigproj_train:
+
+	local.projectile = parm.other
+	self.count = 0
+	local.check = 0
+
+	if(self.train.damage_rockets == 1 && (local.projectile.model == "models/projectiles/bazookashell_dm.tik" || local.projectile.model == "models/projectiles/bazookashell.tik" || local.projectile.model == "models/projectiles/panzerschreckshell.tik"))
+	{
+		self.trigshot.projectilething = local.projectile
+		self.trigshot.projectile = 1
+	}
+
+	if(self.train.damage_shells == 1 && local.projectile.model == "models/projectiles/tigercannonshell.tik")
+	{
+		self.trigshot.projectilething = local.projectile
+		self.trigshot.projectile = 1
+	}
+
+	if(self.train.damage_grenades == 1 && (local.projectile.model == "models/projectiles/m2fgrenade_primary.tik" || local.projectile.model == "models/projectiles/steilhandgranate_primary.tik"))
+	{
+		self.trigshot.projectilething = local.projectile
+		self.trigshot.projectile = 1
+	}
+
+	if(self.train.damage_panzeriv == 1 && local.projectile.model == "models/projectiles/panzerivshell.tik")
+	{
+		self.trigshot.projectilething = local.projectile
+		self.trigshot.projectile = 1
+	}
+
+	waitframe
+	while(self != NULL && self.count <= 2 && (self.count != 0 || local.check == 0)) // make self.projectile = 0 again if projectiles flew through the triggers without impacting or blowing up near them,
+	{										// otherwise bullets & grenades will still be able to blow up the train.
+		self.count++
+		local.check = 1
+		waitframe
+	}
+	if(self != NULL && self.trigshot != NULL) { self.trigshot.projectile = 0 }
+end
+
+//-----------------------------------------------------------------------------
+
+angle_between_vectors local.avec local.bvec:
+
+	local.PI = 3.14159265359
+	local.dotproduct = vector_dot local.avec local.bvec
+	local.magnitude_avec = vector_length local.avec
+	local.magnitude_bvec = vector_length local.bvec
+	local.radians = waitthread global/math.scr::arccosine (local.dotproduct / (local.magnitude_avec * local.magnitude_bvec))
+	local.angle = local.radians * (180 / local.PI)
+end local.angle
+
+cross_product_vectors local.avec local.bvec:
+
+	local.cross_vec = vector_cross local.avec local.bvec
+	if(local.cross_vec[0] != 0) { local.product = local.cross_vec[0] }
+	else if(local.cross_vec[1] != 0) { local.product = local.cross_vec[1] }
+	else if(local.cross_vec[2] != 0) { local.product = local.cross_vec[2] }
+end local.product
+

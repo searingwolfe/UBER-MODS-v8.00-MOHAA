@@ -42,9 +42,12 @@ remove_deadbodies:
 				local.ent.origin = $player[local.i].origin
 				local.ent.angles = $player[local.i].angles
 				local.ent notsolid
-				local.ent bind $player[local.i] // need this if the player's dead body was affected by knockback.
+				//local.ent bind $player[local.i] // need this if the player's dead body was affected by knockback.
+				local.ent physics_on
+				local.ent.velocity = $player[local.i].velocity
 
 				$player[local.i] hide // if the killer blows himself & the player up at the same time, hide the player's actual dead body if still visible.
+				$player[local.i] notsolid
 				$player[local.i].custom_deadbody = local.ent
 
 				if($player[local.i].torso_state_killed != NIL) { local.ent anim $player[local.i].torso_state_killed }
@@ -61,7 +64,7 @@ end
 
 assign_killer local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.player:
 
-	if((local.player == local.attacker || local.player.isdog == 1 || local.player.flying == 1 || local.player.driving == 1) && (local.meansofdeath == 1 || local.meansofdeath == 14 || local.meansofdeath == 9 || local.meansofdeath == 16))
+	if(local.attacker == $world || ((local.player == local.attacker || local.player.isdog == 1 || local.player.flying == 1 || local.player.driving == 1) && (local.meansofdeath == 1 || local.meansofdeath == 14 || local.meansofdeath == 9 || local.meansofdeath == 16)))
 	{
 		local.player.torso_state_killed = "self" // don't spawn a dead body if the player blew himself up with rockets/grenades/etc (not including fire deaths or cratering deaths).
 		end

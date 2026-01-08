@@ -1,0 +1,65 @@
+// This simple script keeps track of spectators that chose a team (".dmteam" is no longer "spectator"), but have not chosen a weapon & have not spawned yet.
+// Some scripts, such as throwingknife.scr, may allow mods to be used/thrown/activated by spectators that only chose teams.
+// In any other mods/scripts that have ".dmteam != "spectator"" or similar, it is recommended to also add ".spectator_jointeam != 1" as well.
+//
+// Example: "if(self.dmteam != "spectator" && self.spectator_jointeam != 1)" will check if the player has fully left spectator.
+// Example: "if(self.dmteam == "spectator" || self.spectator_jointeam == 1)" will check if the player is still in spectator, even after selecting a team but not yet a weapon.
+//
+// In any of those mods/scripts, also add "exec global/spectator_jointeam.scr" to run this script & determine ".spectator_jointeam" values for each player.
+
+main:
+
+	if(level.spectator_jointeam_script == 1) { end }
+	level.spectator_jointeam_script = 1
+
+	while(1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if($player[local.i].dmteam == "spectator" && $player[local.i].spectator_jointeam == NIL)
+			{
+				$player[local.i] thread player_fromspectator
+				$player[local.i].spectator_jointeam = 1
+			}
+		}
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+player_fromspectator:
+
+	while(self != NULL && self.dmteam == "spectator") { waitframe }
+	while(self != NULL && self.dmteam != "spectator")
+	{
+		local.weapon = self waitthread check_hand_weapon
+		if(local.weapon != NIL && local.weapon != NULL) { break }
+		waitframe
+	}
+
+	if(self != NULL) { self.spectator_jointeam = NIL }
+end
+
+//-----------------------------------------------------------------------------
+
+check_hand_weapon:
+
+	local.team = self.dmteam
+	local.maxframes = 30
+	local.numframes = 0
+	local.weapon = NULL
+	local.tname = "mefgun" + self.entnum
+
+	while(self != NULL && self.dmteam == local.team)
+	{
+		self weaponcommand dual targetname local.tname
+		local.weapon = $(local.tname)
+
+		if(local.weapon != NULL || local.numframes > local.maxframes) { break }
+
+		waitframe
+		local.numframes++
+	}
+	if(local.weapon != NULL) { local.weapon.targetname = NIL }
+end local.weapon

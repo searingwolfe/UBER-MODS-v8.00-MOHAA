@@ -19,14 +19,17 @@ exec cvars/playerspawns.scr	// "playerspawns" cvar. "playerspawns 1" = spawn dum
 				//			"playerspawns 0" = remove all dummy models at player spawn points.
 				//
 exec cvars/find.scr		// "find [targetname without $]" cvar. "find truckclip", "find endtrigger", "find aispawn", or multiple ents with the same targetname: "find barrel[1]", "find barrel[2]",
-				// 			to teleport all players on the map to the entity's coords (also printing: coords, angles, entnum, and target).
+				// to teleport all players on the map to the entity's coords (also printing: coords, angles, entnum, and target).
+				//
+exec cvars/faceto.scr		// "faceto [targetname without $]" cvar. "faceto truckclip", "faceto endtrigger", "faceto aispawn", or multiple ents with the same targetname: "faceto barrel[1]", "faceto barrel[2]",
+				// to make all players on the map face towards/look at the entity (also printing: coords, angles, entnum, and target).
 				//
 exec cvars/drawpath.scr		// "drawpath [1st ent's targetname without $ in a path]" cvar. "drawpath bomberpath", "drawpath spotpath1_1", "drawpath latertruckpath", or multiple paths with the same targetname: "drawpath
 				// exploderchunk[1]", "drawpath exploderchunk[12]", to spawn nodes & lasers and draw them to each .target, until there's no more .targets or until the .target reaches an already-drawn node.
 				// "drawpath 0" cvar deletes all nodes & lasers drawn by drawpath.
 				//
 exec cvars/drawsize.scr		// "drawsize [targetname without $]" cvar. "drawsize trigger_explode", "drawsize tank01", "drawsize exploder_trigshot", or multiple entities with the same targetname: "drawsize
-				// exploder_trigger[1]", "drawsize exploder_trigger[12]", to lasers around the setsize edges of the trigger/entity. setsizes must be saved to "local.ent.setsize1 = and "local.ent.setsize2",
+				// exploder_trigger[1]", "drawsize exploder_trigger[12]", to spawn lasers around the setsize edges of the trigger/entity. setsizes must be saved to "local.ent.setsize1 = and "local.ent.setsize2",
 				// for example: local.ent.setsize1 = ( -100 -100 -50 ) and local.ent.setsize2 = ( 100 100 50 ), in order to use this cvar. Green lasers = setsize2's vertex. Red lasers = setsize1's vertex.
 				// "drawsize 0" cvar deletes all lasers drawn by drawsize.
 				//
@@ -60,8 +63,7 @@ exec cvars/ubergametype.scr	// "g_ubergametype" cvar. 	"g_ubergametype bb" = Bas
 				// "g_deathcam" cvar.		"g_deathcam 1" = enable deathcams; players will spectate their killers for a few seconds.
 				//				"g_deathcam 0" = disable deathcams; players will stay at their dead bodies as normal.
 				// "time" cvar.			"time 1" = print the map's time remaining (in minutes:seconds format).
-				// "score" cvar.		"score 1" = print each player's kills and deaths, along with their $player[client num] and netname.
-				// "teams" cvar.		"teams 1" = print each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num] and netname,
+				// "teams" cvar.		"teams 1" = print each player's current team (allies, axis, spectator, or free-for-all if "g_gametype" = 1) and their $player[client num],
 				//				and then print the total number of players on each team.
 				//
 exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 1" = continuously kill $player[1].
@@ -71,15 +73,15 @@ exec cvars/adminstuff.scr	// "hacker_kill" cvar.		"hacker_kill 1" = continuously
 				// "noclip2" cvar.		"noclip2 1" = noclip around the map; still works if "cheats" = "0"; $player[1] client num = 1.
 				//				other hidden CVARS: "nodamage 1", "takedamage ", "show ", "hide ", "wuss2 " ("hide" makes a player invisible to wallhacks).
 				//
-				// "addkills" cvar.		"addkills 1" = add one kill to $player[1].
-				// "adddeaths" cvar.		"adddeaths 1" = add one death to $player[1].
-				// "subtractkills" cvar.	"subtractkills 1" = subtract one kill from $player[1].
-				// "subtractdeaths" cvar.	"subtractdeaths 1" = subtract one death from $player[1].
-				//
-				// "coord2" cvar.		print $player[1]'s coords & angles to a "main/cvars/coords.txt" file (must create this file for CVAR to work).
+				// "coord2" cvar.		print $player[1]'s coords & angles to a "main/cvars/coords.txt" file.
 				//				"coord2 entity" or "coord2 1" = print "( 0 0 0 ) ( 0 0 0 )" coords/angles format on a new line.
 				//				"coord2 trigger" = print "( 0 0 0 ) " coords format on the same line.
 				//				"coord2 spawn" = print ""0 0 0" "angle" "0"" coords format on a new line.
+				//				"coord2 mapwall" = print previous '( 0 0 0 )' and current '( 0 0 0 ) 5' on the same line, and print current '( 0 0 0 )' on a new line.
+				//
+exec cvars/help.scr		// "help" cvar.			"help all" or "help 1" = print all available UBER MODS cvars.
+				//				"help [cvar name]" = print all available options for that cvar.
+				//
 				//
 				// for "players same name" fix: add admin's IPs at top of "adminstuff.scr", to give admins name-changing priority.
 end
@@ -94,7 +96,7 @@ end
 
 //
 
-entprint local.targetname local.int:
+entprint local.targetname local.int local.face:
 
 	if(local.targetname != NIL)
 	{
@@ -117,8 +119,16 @@ entprint local.targetname local.int:
 			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname).targetorigin[2]
 			local.targetorigin = "( " + local.x + " " + local.y + " " + local.z + " )"
 
-			if($(local.targetname).entnum != NIL) { println("----- Teleporting to entity " + $(local.targetname).entnum + ": $" + local.targetname) }
-			if($(local.targetname).entnum == NIL) { println("----- Teleporting to simple entity: $" + local.targetname) }
+			if(local.face != NIL)
+			{
+				if($(local.targetname).entnum != NIL) { println("----- Facing towards entity " + $(local.targetname).entnum + ": $" + local.targetname) }
+				if($(local.targetname).entnum == NIL) { println("----- Facing towards simple entity: $" + local.targetname) }
+			}
+			else
+			{
+				if($(local.targetname).entnum != NIL) { println("----- Teleporting to entity " + $(local.targetname).entnum + ": $" + local.targetname) }
+				if($(local.targetname).entnum == NIL) { println("----- Teleporting to simple entity: $" + local.targetname) }
+			}
 			println("----- $" + local.targetname + ".origin = " + local.origin)
 			println("----- $" + local.targetname + ".angles = " + local.angles)
 			println("----- $" + local.targetname + ".classname = " + $(local.targetname).classname)
@@ -260,8 +270,16 @@ entprint local.targetname local.int:
 
 			if($player.size >= 1)
 			{
-				if($(local.targetname).entnum != NIL) { $player iprint ("----- Teleporting to entity " + $(local.targetname).entnum + ": $" + local.targetname) }
-				if($(local.targetname).entnum == NIL) { $player iprint ("----- Teleporting to simple entity: $" + local.targetname) }
+				if(local.face != NIL)
+				{
+					if($(local.targetname).entnum != NIL) { $player iprint ("----- Facing towards entity " + $(local.targetname).entnum + ": $" + local.targetname) }
+					if($(local.targetname).entnum == NIL) { $player iprint ("----- Facing towards simple entity: $" + local.targetname) }
+				}
+				else
+				{
+					if($(local.targetname).entnum != NIL) { $player iprint ("----- Teleporting to entity " + $(local.targetname).entnum + ": $" + local.targetname) }
+					if($(local.targetname).entnum == NIL) { $player iprint ("----- Teleporting to simple entity: $" + local.targetname) }
+				}
 				$player iprint ("----- $" + local.targetname + ".origin = " + local.origin)
 				$player iprint ("----- $" + local.targetname + ".angles = " + local.angles)
 				$player iprint ("----- $" + local.targetname + ".classname = " + $(local.targetname).classname)
@@ -421,8 +439,16 @@ entprint local.targetname local.int:
 			local.z = waitthread global/math.scr::simplify_decimal $(local.targetname)[local.int].targetorigin[2]
 			local.targetorigin = "( " + local.x + " " + local.y + " " + local.z + " )"
 
-			if($(local.targetname)[local.int].entnum != NIL) { println("----- Teleporting to entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
-			if($(local.targetname)[local.int].entnum == NIL) { println("----- Teleporting to simple entity: $" + local.targetname + "[" + local.int + "]") }
+			if(local.face != NIL)
+			{
+				if($(local.targetname)[local.int].entnum != NIL) { println("----- Facing towards entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
+				if($(local.targetname)[local.int].entnum == NIL) { println("----- Facing towards simple entity: $" + local.targetname + "[" + local.int + "]") }
+			}
+			else
+			{
+				if($(local.targetname)[local.int].entnum != NIL) { println("----- Teleporting to entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
+				if($(local.targetname)[local.int].entnum == NIL) { println("----- Teleporting to simple entity: $" + local.targetname + "[" + local.int + "]") }
+			}
 			println("----- $" + local.targetname + "[" + local.int + "].origin = " + local.origin)
 			println("----- $" + local.targetname + "[" + local.int + "].angles = " + local.angles)
 			println("----- $" + local.targetname + "[" + local.int + "].classname = " + $(local.targetname)[local.int].classname)
@@ -520,10 +546,6 @@ entprint local.targetname local.int:
 				else { println("----- $" + local.targetname + "[" + local.int + "].trigger = " + $(local.targetname)[local.int].trigger2.targetname) }
 			}
 
-			if($(local.targetname)[local.int].farplane != NIL) { println("----- $" + local.targetname + "[" + local.int + "].farplane = " + $(local.targetname)[local.int].farplane) }
-			if($(local.targetname)[local.int].farplane_color != NIL) { println("----- $" + local.targetname + "[" + local.int + "].farplane_color = " + $(local.targetname)[local.int].farplane_color) }
-			if($(local.targetname)[local.int].farplane_cull != NIL) { println("----- $" + local.targetname + "[" + local.int + "].farplane_cull = " + $(local.targetname)[local.int].farplane_cull) }
-
 			if($(local.targetname)[local.int].owner != NIL && $(local.targetname)[local.int].owner != NULL)
 			{
 				for(local.k = 1; local.k <= $player.size; local.k++)
@@ -553,8 +575,16 @@ entprint local.targetname local.int:
 
 			if($player.size >= 1)
 			{
-				if($(local.targetname)[local.int].entnum != NIL) { $player iprint ("----- Teleporting to entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
-				if($(local.targetname)[local.int].entnum == NIL) { $player iprint ("----- Teleporting to simple entity: $" + local.targetname + "[" + local.int + "]") }
+				if(local.face != NIL)
+				{
+					if($(local.targetname)[local.int].entnum != NIL) { $player iprint ("----- Facing towards entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
+					if($(local.targetname)[local.int].entnum == NIL) { $player iprint ("----- Facing towards simple entity: $" + local.targetname + "[" + local.int + "]") }
+				}
+				else
+				{
+					if($(local.targetname)[local.int].entnum != NIL) { $player iprint ("----- Teleporting to entity " + $(local.targetname)[local.int].entnum + ": $" + local.targetname + "[" + local.int + "]") }
+					if($(local.targetname)[local.int].entnum == NIL) { $player iprint ("----- Teleporting to simple entity: $" + local.targetname + "[" + local.int + "]") }
+				}
 				$player iprint ("----- $" + local.targetname + "[" + local.int + "].origin = " + local.origin)
 				$player iprint ("----- $" + local.targetname + "[" + local.int + "].angles = " + local.angles)
 				$player iprint ("----- $" + local.targetname + "[" + local.int + "].classname = " + $(local.targetname)[local.int].classname)
@@ -651,10 +681,6 @@ entprint local.targetname local.int:
 					}
 					else { $player iprint ("----- $" + local.targetname + "[" + local.int + "].trigger = " + $(local.targetname)[local.int].trigger2.targetname) }
 				}
-
-				if($(local.targetname)[local.int].farplane != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].farplane = " + $(local.targetname)[local.int].farplane) }
-				if($(local.targetname)[local.int].farplane_color != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].farplane_color = " + $(local.targetname)[local.int].farplane_color) }
-				if($(local.targetname)[local.int].farplane_cull != NIL) { $player iprint ("----- $" + local.targetname + "[" + local.int + "].farplane_cull = " + $(local.targetname)[local.int].farplane_cull) }
 
 				if($(local.targetname)[local.int].owner != NIL && $(local.targetname)[local.int].owner != NULL)
 				{

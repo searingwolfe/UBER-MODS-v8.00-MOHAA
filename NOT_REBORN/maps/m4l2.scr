@@ -165,6 +165,11 @@ exec jetpack/trigger.scr ( -5028 3847 0 )
 exec guidedmissile/trigger.scr ( -7095 3839 0 )
 exec guidedmissile/trigger.scr ( 5323 4519 240 )
 
+exec server_planes/trigger.scr ( -6795 3839 0 ) "axis" 1 0 ( -6795 3839 900 )		// team (only 1 per modelpair), flying plane scale, modelpair, starting origin (default = origin + 500)
+exec server_planes/trigger.scr ( 5174 4630 236 ) "allies" 1 0 ( 5174 4630 900 )		// Allies/Axis modelpair: 0 = p47/fockwulf, 1 = stuka_dsrt/stuka, 2 = c47 for both teams
+exec server_planes/trigger.scr ( -7375 -2479 0 ) "axis" 1 1 ( -7375 -2479 900 )
+exec server_planes/trigger.scr ( 5981 -3017 339 ) "allies" 1 2 ( 5981 -2517 900 )
+
 	thread vehicles_undermap
 }
 
@@ -197,15 +202,15 @@ setup:
 
 	level.mapname = getcvar "mapname"
 	local.master = spawn scriptmaster
-	local.master aliascache movingobject sound/mechanics/M1_LightTurn.wav soundparms 1.2 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
-	local.master aliascache movingobject_stop sound/mechanics/Mec_GeneratorOff_01.wav soundparms 1.0 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
+	//local.master aliascache movingobject sound/mechanics/M1_LightTurn.wav soundparms 1.2 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
+	//local.master aliascache movingobject_stop sound/mechanics/Mec_GeneratorOff_01.wav soundparms 1.0 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
 	local.master aliascache transformer_humming1 sound/amb/Amb_LightHum_01.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
 	local.master aliascache transformer_humming2 sound/amb/Amb_LightHum_02.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
 	local.master aliascache transformer_humming3 sound/amb/Amb_LightHum_03.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
 	local.master aliascache airvent sound/mechanics/Mec_GeneratorRun_01.wav soundparms 1.0 0.0 1.0 0.0 200 2000 auto loaded maps level.mapname
 	local.master aliascache track_switching sound/mechanics/M4_TrainTrackSlide.wav soundparms 1.2 0.0 1.2 0.0 320 2200 auto loaded maps level.mapname
 	local.master aliascache fence_crash sound/mechanics/damage_vehicle_2.wav soundparms 1.5 0.0 1.2 0.0 500 6000 item loaded maps level.mapname
-
+/*
 	local.master aliascache train_rolling sound/vehicle/veh_train_m6l3a_move.wav soundparms 1.8 0.0 1.0 0.0 3000 6000 auto loaded maps level.mapname
 	local.master aliascache train_stopping sound/vehicle/veh_train_m6l3a_stop.wav soundparms 1.2 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname
 	local.master aliascache train_crashing sound/vehicle/veh_train_m2l3_approach.wav soundparms 1.3 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname
@@ -221,7 +226,7 @@ setup:
 	local.master aliascache explode_building2_large3 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
 	local.master aliascache explode_building2_large4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
 	local.master aliascache explode_building2_large5 sound/weapons/explo/Exp_Shingle_01.WAV soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
-
+*/
 	removeclass actor
 	removeclass Health
 	removeclass Weapon
@@ -348,6 +353,9 @@ setup:
 	$fakegetawaytruck remove
 	$electrichum remove //[1] - [31]
 	$t371 remove
+	$elevator_movedown_trigger remove
+	$elevator_moveup_trigger remove
+	$elevator_switch remove
 
 	//$sit remove //[1] - [4] furniture/cardchair.tik
 
@@ -416,11 +424,13 @@ setup:
 
 		if(getcvar("g_ubergametype") != "bb")
 		{
-			level.train_off_time = 60 // seconds until train resets.
-			thread trainswitch1
-			thread trainswitch2
-			thread train_splinepath
-			thread train_initialize
+			local.array = thread train_splinepath
+			exec global/trainsequence.scr local.array trainfront 30 // array, train name, off time.
+ 
+			exec global/trainsequence_switch.scr trainfront trainswitch1 trainswitch1_pulsating NIL NIL leftrail01 rightrail01
+			exec global/trainsequence_switch.scr trainfront trainswitch2 trainswitch2_pulsating ( -5364 3788 392 ) ( 0 180 0 ) leftrail02 rightrail02
+ 
+			thread gatecrash trainfront ( -1364 1747 0 )
 		}
 		else
 		{
@@ -439,22 +449,14 @@ setup:
 	exec global/doorlocked.scr ( -6782 1805 320 ) gateiron
 	exec global/doorlocked.scr ( 6013 2313 270 ) gateiron
 
-	thread elevator
-	thread elevatorplayers_fellout
-
-	$leftrail01 rotateyup 1		// Position 1st left rail
-	$leftrail01 move
-	$leftrail02 rotateyup 1		// Position 2nd left rail
-	$leftrail02 move
-
-	if(getcvar("g_ubergametype") != "bb")
-	{
-		$trainswitch1 notsolid
-		$trainswitch1_pulsating notsolid
-		$trainswitch1 show
-		$trainswitch1_pulsating hide
-		thread rails_init
-	}
+	local.array = makeArray
+		( -4672 2208 -88 )		( -4752 2076 -181 ) 180		elevator_gate_2		1	// floor 1
+		( -4672 2208 472 )		( -4600 2322 377 ) 0		elevator_gate_1		0	// floor 2
+	endArray
+	exec global/elevator.scr local.array elevator_cab 100 0 1 ( -4673 2164 -335 ) ( -4673 2101 -239 )
+ 
+	//thread elevatorplayers_fellout
+	thread rails_init
 
 	level.springfield = 1
 	level.bar = 1
@@ -465,21 +467,32 @@ setup:
 	level.rifle = 1
 end
 
+rails_init:
+ 
+	$leftrail02 rotateyup 1
+	$leftrail02 move
+	$rightrail01 rotateydown 1
+	$rightrail01 move
+ 
+	$trainswitch1 notsolid
+	$trainswitch1 show
+	$trainswitch1 time 2
+	$trainswitch1_pulsating notsolid
+	$trainswitch1_pulsating hide
+	$trainswitch1_pulsating time 2
+ 
+	$trainswitch1 rotateydown 180
+	$trainswitch1_pulsating rotateydown 180
+	$trainswitch1 move
+	$trainswitch1_pulsating move
+end
+
 objectclass_replace:
 
 	removeclass Object
 	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { thread cratesstuff animate/trainswitch.tik ( -5364 3788 392 ) ( 0 180 0 ) }
 	thread cratesstuff miscobj/clipboard.tik ( -5045 1966 96 ) ( 0 114.999992 0 )
 	thread cratesstuff miscobj/clipboard.tik ( -3273 4802 -48 ) ( 0 114.999992 0 )
-end
-
-rails_init:
-
-	level waittill spawn
-
-	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2") { local.nosound = 1 } // only runs once if "g_ubermods = 0".
-	thread rotate "down" local.nosound
-	waitthread moverail 1 "down"
 end
 
 ////////////////////////////////////////////////////////////////////////
@@ -506,7 +519,7 @@ airstrikes_alternate:
 		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime local.bombs local.timetodrop 1 }	// axis = 50% chance
 		if(local.r == 1)												// allies = 33% chance
 		{														// c47 = 17% chance
-			local.r2 = randomint(5)
+			local.r2 = randomint(6)
 			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
 			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
 			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
@@ -518,156 +531,131 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-// Elevator stuff
-elevator:
+train_splinepath: // this thread is run by global/trainsequence_switch.scr.  2 track switches in this map: $trainswitch1 & $trainswitch2
 
-	spawn script_model model "animate/electrical_switch_nopulse.tik" "targetname" "upper_switch"
-	$upper_switch.origin = ( -4600 2322 377 )
-	$upper_switch.angle = -3
-	$upper_switch anim turn
-	$upper_switch anim waittill animdone
-	$upper_switch anim on
-
-	spawn trigger_use "targetname" "Upper_Trig"
-	$Upper_Trig.origin = ( -4600 2322 377 )
-	$Upper_Trig setsize ( -5 -5 -5 ) ( 5 5 5 )
-	$Upper_Trig setthread elevator_moveup
-
-	spawn script_model model "animate/electrical_switch_pulse.tik" "targetname" "lower_switch"
-	$lower_switch.origin = ( -4752 2076 -181 )
-	$lower_switch.angle = -179
-
-	spawn trigger_use "targetname" "Lower_Trig"
-	$Lower_Trig.origin = ( -4752 2076 -181 )
-	$Lower_Trig setsize ( -5 -5 -5 ) ( 5 5 5 )
-	$Lower_Trig setthread elevator_movedown
-
-	$elevator_gate_1 movedown 70
-	$elevator_gate_1 waitmove
-
-	$elevator_switch bind $elevator_cab
-	$elevator_switch anim off
-	$elevator_switch.model = "animate/electrical_switch_pulse.tik"
-
-	$elevator_cab time 4
-	$elevator_gate_1 time 0.75
-	$elevator_gate_2 time 0.75
-
-	$Upper_Trig nottriggerable
-end
-
-elevator_movedown:
-
-	$elevator_movedown_trigger nottriggerable
-	$Upper_Trig nottriggerable
-	$Lower_Trig nottriggerable
-
-	$upper_switch.model = "animate/electrical_switch_nopulse.tik"
-	$upper_switch anim turn
-	$upper_switch anim waittill animdone
-	$upper_switch anim on
-	$lower_switch.model = "animate/electrical_switch_nopulse.tik"
-	$lower_switch anim turn
-	$lower_switch anim waittill animdone
-	$lower_switch anim on
-	$elevator_switch.model = "animate/electrical_switch_nopulse.tik"
-	$elevator_switch anim turn
-	$elevator_switch anim waittill animdone
-	$elevator_switch anim on
-
-	$elevator_gate_1 playsound elevator_gate
-	$elevator_gate_1 moveup 70
-	$elevator_gate_1 waitmove
-
-	$elevator_cab playsound elevator_start
-	wait .5
-	$elevator_cab loopsound movingobject
-	$elevator_cab moveto $elevator_way2
-	$elevator_cab waitmove
-	$elevator_cab stoploopsound
-	$elevator_cab playsound movingobject_stop
-
-	$elevator_gate_2 playsound elevator_gate
-	$elevator_gate_2 movedown 70
-	$elevator_gate_2 waitmove
-
-	$elevator_switch.model = "animate/electrical_switch_pulse.tik"
-	$elevator_switch anim off
-	$upper_switch.model = "animate/electrical_switch_pulse.tik"
-	$upper_switch anim off
-	$Upper_Trig triggerable
-	$elevator_moveup_trigger triggerable
-end
-
-elevator_moveup:
-
-	$elevator_moveup_trigger nottriggerable
-	$Upper_Trig nottriggerable
-	$Lower_Trig nottriggerable
-
-	$upper_switch.model = "animate/electrical_switch_nopulse.tik"
-	$upper_switch anim turn
-	$upper_switch anim waittill animdone
-	$upper_switch anim on
-	$lower_switch.model = "animate/electrical_switch_nopulse.tik"
-	$lower_switch anim turn
-	$lower_switch anim waittill animdone
-	$lower_switch anim on
-	$elevator_switch.model = "animate/electrical_switch_nopulse.tik"
-	$elevator_switch anim turn
-	$elevator_switch anim waittill animdone
-	$elevator_switch anim on
-
-	$elevator_gate_2 playsound elevator_gate
-	$elevator_gate_2 moveup 70
-	$elevator_gate_2 waitmove
-
-	$elevator_cab playsound elevator_start
-	wait .5
-	$elevator_cab loopsound movingobject
-	$elevator_cab moveto $elevator_way1
-	$elevator_cab waitmove
-	$elevator_cab stoploopsound
-	$elevator_cab playsound movingobject_stop
-
-	$elevator_gate_1 playsound elevator_gate
-	$elevator_gate_1 movedown 70
-	$elevator_gate_1 waitmove
-
-	$elevator_switch.model = "animate/electrical_switch_pulse.tik"
-	$elevator_switch anim off
-	$lower_switch.model = "animate/electrical_switch_pulse.tik"
-	$lower_switch anim off
-	$Lower_Trig triggerable
-	$elevator_movedown_trigger triggerable
-end
-
-elevatorplayers_fellout:
-
-	exec map_triggers/tele.scr ( -4673 2164 -335 ) ( -4673 2101 -239 ) 0 // under elevator
-
-	local.trig = spawn trigger_use
-	local.trig.origin = $elevator_cab.origin + ( 0 0 10 )
-	local.trig.destination = $elevator_cab.origin + ( 0 0 -150 )
-	local.trig model "fx/corona_red.tik"
-	local.trig setsize ( -10 -10 -10 ) ( 10 10 0 )
-	local.trig.scale = 1.5
-	local.trig notsolid
-	local.trig show
-	local.trig setthread tele
-
-	while($elevator_cab != NULL)
+	if($trainswitch1 != NULL && $trainswitch1.switched == 1) // train stopping path
 	{
-		local.trig.origin = $elevator_cab.origin + ( 0 0 10 )
-		local.trig.destination = $elevator_cab.origin + ( 0 0 -150 )
-		waitframe
+		local.array = makeArray // targetname, origin, angles, speed, function (1 = stop, 2 = crash, 3 = tram or temporary stop), origin to begin stopping/crashing sounds.
+			trainpath 	(( 8385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t500 		(( 7385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t501 		(( 6908 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t502 		(( 6426 2316 272 ) + ( 0 0 7 )) 	( -359.520538 180 0 ) 		0.40 // .angles[0] here comes from "vector_toangles($t503.origin - $t502.origin)
+			t503 		(( 5948 2316 268 ) + ( 0 0 7 )) 	( -358.346558 180 0 ) 		0.40
+			t504 		(( 5463 2316 254 ) + ( 0 0 7 )) 	( -356.753510 180 0 ) 		0.40
+			t505 		(( 4987 2316 227 ) + ( 0 0 7 )) 	( -357.493744 -178.73 0 ) 	0.40
+			t506 		(( 4484 2289 205 ) + ( 0 0 7 )) 	( -357.667114 -170.47 0 ) 	0.40
+			t507 		(( 4003 2186 185 ) + ( 0 0 7 )) 	( -357.531281 -161.63 0 ) 	0.40
+			t508 		(( 3545 2013 164 ) + ( 0 0 7 )) 	( -357.600861 -151.79 0 ) 	0.40
+			t509 		(( 3120 1751 143 ) + ( 0 0 7 )) 	( -357.596954 -150.10 0 ) 	0.40
+			t510 		(( 2688 1499 122 ) + ( 0 0 7 )) 	( -357.563141 -158.11 0 ) 	0.40
+			t511 		(( 2219 1329 101 ) + ( 0 0 7 )) 	( -357.671539 -168.05 0 ) 	0.40
+			t512 		(( 1736 1237 81 ) + ( 0 0 7 )) 		( -357.463531 -177.05 0 ) 	0.40
+			t513 		(( 1240 1221 59 ) + ( 0 0 7 )) 		( -357.473877 180 0 ) 		0.40
+			t514 		(( 764 1221 38 ) + ( 0 0 7 )) 		( -357.364807 180 0 ) 		0.40
+			t515 		(( 286 1221 16 ) + ( 0 0 7 )) 		( -358.070831 180 0 ) 		0.40
+			t516 		(( -189 1208 0 ) + ( 0 0 7 )) 		( 0 -171.79 0 ) 		0.40
+			t517 		(( -606 1146 0 ) + ( 0 0 7 )) 		( 0 -162.48 0 ) 		0.40
+			t518 		(( -1018 1011 0 ) + ( 0 0 7 )) 		( 0 -155.64 0 ) 		0.40
+			t519 		(( -1422 820 0 ) + ( 0 0 7 )) 		( 0 -149.27 0 ) 		0.40
+			t520 		(( -1763 604 0 ) + ( 0 0 7 )) 		( 0 -138.43 0 ) 		0.40
+			t521 		(( -2064 319 0 ) + ( 0 0 7 )) 		( 0 -126.58 0 ) 		0.40
+			t522 		(( -2298 -53 0 ) + ( 0 0 7 )) 		( 0 -121.58 0 ) 		0.30
+			t523 		(( -2529 -447 0 ) + ( 0 0 7 )) 		( 0 -128.42 0 ) 		0.25
+			t524 		(( -2837 -782 0 ) + ( 0 0 7 )) 		( 0 -144.10 0 ) 		0.20
+			t525 		(( -3243 -1056 0 ) + ( 0 0 7 )) 	( 0 -154.21 0 ) 		0.15
+			t526 		(( -3670 -1248 0 ) + ( 0 0 7 )) 	( 0 -164.27 0 ) 		0.10
+			t527 		(( -4145 -1367 0 ) + ( 0 0 7 )) 	( 0 -175.73 0 ) 		0.01 	1 ( -3650 -1225 0 )
+		endArray
 	}
-end
-
-tele:
-	local.player = parm.other
-	local.player tele self.destination
-end
+	else if($trainswitch2 != NULL && $trainswitch2.switched == 1) // train crashing path
+	{
+		local.array = makeArray
+			trainpath 	(( 8385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t500 		(( 7385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t501 		(( 6908 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t502 		(( 6426 2316 272 ) + ( 0 0 7 )) 	( -359.520538 180 0 ) 		0.40
+			t503 		(( 5948 2316 268 ) + ( 0 0 7 )) 	( -358.346558 180 0 ) 		0.40
+			t504 		(( 5463 2316 254 ) + ( 0 0 7 )) 	( -356.753510 180 0 ) 		0.40
+			t505 		(( 4987 2316 227 ) + ( 0 0 7 )) 	( -357.493744 -178.73 0 ) 	0.40
+			t506 		(( 4484 2289 205 ) + ( 0 0 7 )) 	( -357.667114 -170.47 0 ) 	0.40
+			t507 		(( 4003 2186 185 ) + ( 0 0 7 )) 	( -357.531281 -161.63 0 ) 	0.40
+			t508 		(( 3545 2013 164 ) + ( 0 0 7 )) 	( -357.600861 -151.79 0 ) 	0.40
+			t509 		(( 3120 1751 143 ) + ( 0 0 7 )) 	( -357.596954 -150.10 0 ) 	0.40
+			t510 		(( 2688 1499 122 ) + ( 0 0 7 )) 	( -357.563141 -158.11 0 ) 	0.40
+			t511 		(( 2219 1329 101 ) + ( 0 0 7 )) 	( -357.671539 -168.05 0 ) 	0.40
+			t512 		(( 1736 1237 81 ) + ( 0 0 7 )) 		( -357.463531 -177.05 0 ) 	0.40
+			t513 		(( 1240 1221 59 ) + ( 0 0 7 )) 		( -357.473877 180 0 ) 		0.40
+			t514 		(( 764 1221 38 ) + ( 0 0 7 )) 		( -357.364807 180 0 ) 		0.40
+			t515 		(( 286 1221 16 ) + ( 0 0 7 )) 		( -358.118835 180 0 ) 		0.40
+			t516 		(( -201 1208 0 ) + ( 0 0 7 )) 		( 0 170.05 0 ) 			0.40
+			t517 		(( -643 1295 0 ) + ( 0 0 7 )) 		( 0 157.10 0 ) 			0.40
+			t518 		(( -1030 1476 0 ) + ( 0 0 7 )) 		( 0 143.50 0 ) 			0.40
+			t519 		(( -1361 1734 0 ) + ( 0 0 7 )) 		( 0 131.20 0 ) 			0.40
+			t520 		(( -1639 2064 0 ) + ( 0 0 7 )) 		( 0 121.75 0 ) 			0.40
+			t521 		(( -1880 2462 0 ) + ( 0 0 7 )) 		( 0 113.40 0 ) 			0.40
+			t522 		(( -2088 2963 0 ) + ( 0 0 7 )) 		( 0 120.89 0 ) 			0.40
+			t523 		(( -2362 3383 0 ) + ( 0 0 7 )) 		( 0 131.19 0 ) 			0.40
+			t524 		(( -2681 3714 0 ) + ( 0 0 7 )) 		( 0 144.79 0 ) 			0.40
+			t525 		(( -3050 3950 0 ) + ( 0 0 7 )) 		( 0 161.04 0 ) 			0.40
+			t526 		(( -3479 4063 0 ) + ( 0 0 7 )) 		( 0 176.09 0 ) 			0.40
+			t527 		(( -4044 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t528 		(( -4526 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.45
+			t529 		(( -5005 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.50
+			t530 		(( -5486 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.55
+			t531 		(( -5965 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.55
+			t532 		(( -6345 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.55
+			t533 		(( -6725 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.50
+			t534 		(( -7110 4084 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.45 	2 ( -5920 4075 0 )
+		endArray
+	}
+	else // train tunnel path
+	{
+		local.array = makeArray
+			trainpath 	(( 8385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t500 		(( 7385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t501 		(( 6908 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+			t502 		(( 6426 2316 272 ) + ( 0 0 7 )) 	( -359.520538 180 0 ) 		0.40
+			t503 		(( 5948 2316 268 ) + ( 0 0 7 )) 	( -358.346558 180 0 ) 		0.40
+			t504 		(( 5463 2316 254 ) + ( 0 0 7 )) 	( -356.753510 180 0 ) 		0.40
+			t505 		(( 4987 2316 227 ) + ( 0 0 7 )) 	( -357.493744 -178.73 0 ) 	0.40
+			t506 		(( 4484 2289 205 ) + ( 0 0 7 )) 	( -357.667114 -170.47 0 ) 	0.40
+			t507 		(( 4003 2186 185 ) + ( 0 0 7 )) 	( -357.531281 -161.63 0 ) 	0.40
+			t508 		(( 3545 2013 164 ) + ( 0 0 7 )) 	( -357.600861 -151.79 0 ) 	0.40
+			t509 		(( 3120 1751 143 ) + ( 0 0 7 )) 	( -357.596954 -150.10 0 ) 	0.40
+			t510 		(( 2688 1499 122 ) + ( 0 0 7 )) 	( -357.563141 -158.11 0 ) 	0.40
+			t511 		(( 2219 1329 101 ) + ( 0 0 7 )) 	( -357.671539 -168.05 0 ) 	0.40
+			t512 		(( 1736 1237 81 ) + ( 0 0 7 )) 		( -357.463531 -177.05 0 ) 	0.40
+			t513 		(( 1240 1221 59 ) + ( 0 0 7 )) 		( -357.473877 180 0 ) 		0.40
+			t514 		(( 764 1221 38 ) + ( 0 0 7 )) 		( -357.364807 180 0 ) 		0.40
+			t515 		(( 286 1221 16 ) + ( 0 0 7 )) 		( -358.118835 180 0 ) 		0.40
+			t516 		(( -201 1208 0 ) + ( 0 0 7 )) 		( 0 170.05 0 ) 			0.40
+			t517 		(( -643 1295 0 ) + ( 0 0 7 )) 		( 0 157.10 0 ) 			0.40
+			t518 		(( -1030 1476 0 ) + ( 0 0 7 )) 		( 0 143.50 0 ) 			0.40
+			t519 		(( -1361 1734 0 ) + ( 0 0 7 )) 		( 0 131.20 0 ) 			0.40
+			t520 		(( -1639 2064 0 ) + ( 0 0 7 )) 		( 0 121.75 0 ) 			0.40
+			t521 		(( -1880 2462 0 ) + ( 0 0 7 )) 		( 0 113.40 0 ) 			0.40
+			t522 		(( -2088 2963 0 ) + ( 0 0 7 )) 		( 0 120.89 0 ) 			0.40
+			t523 		(( -2362 3383 0 ) + ( 0 0 7 )) 		( 0 131.19 0 ) 			0.40
+			t524 		(( -2681 3714 0 ) + ( 0 0 7 )) 		( 0 144.79 0 ) 			0.40
+			t525 		(( -3050 3950 0 ) + ( 0 0 7 )) 		( 0 161.04 0 ) 			0.40
+			t526 		(( -3476 4074 0 ) + ( 0 0 7 )) 		( 0 177.48 0 ) 			0.40
+			t527 		(( -3712 4094 0 ) + ( 0 0 7 )) 		( 0 -170.00 0 ) 		0.40
+			t528 		(( -4040 4062 0 ) + ( 0 0 7 )) 		( 0 -159.50 0 ) 		0.40
+			t529 		(( -4384 3891 0 ) + ( 0 0 7 )) 		( 0 -144.07 0 ) 		0.40
+			t530 		(( -4652 3730 0 ) + ( 0 0 7 )) 		( 0 -163.33 0 ) 		0.40
+			t531 		(( -4897 3631 0 ) + ( 0 0 7 )) 		( 0 -171.02 0 ) 		0.40
+			t532 		(( -5158 3604 0 ) + ( 0 0 7 )) 		( 0 -179.00 0 ) 		0.40
+			t533 		(( -5644 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t534 		(( -6127 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t535 		(( -6605 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t536 		(( -7086 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t537 		(( -7563 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t538 		(( -8043 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t539 		(( -8523 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+			t540 		(( -9003 3604 0 ) + ( 0 0 7 )) 		( 0 180 0 ) 			0.40
+		endArray
+	}
+end local.array // end by outputting the local.array.
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -781,1291 +769,11 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-trainswitch1:
-
-	if($trainswitch1 == NULL || $trainswitch1_pulsating == NULL) { end }
-
-	local.trig = spawn trigger_use
-	local.trig.origin = $trainswitch1.origin
-	local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
-	local.trig setthread trainswitch1_triggered
-	local.trig thread switch1_message
-end
-
-trainswitch1_triggered:
-
-	self nottriggerable
-	level.trainswitches_switching = 1
-	if(level.train_sequencing != 1)
-	{
-		if(self.toggle != 1)
-		{
-			level.switch1_switched = 1
-			waitthread train_splinepath_change
- 			local.player = parm.other
- 			//local.player iprint ("*** Switching rails to a dead-end track. ***")
-			$trainswitch1 hide
-			$trainswitch1_pulsating show
-			thread rotate "up"
-			waitthread moverail 1 "up"
-			self.toggle = 1
-		}
-		else
-		{
-			level.switch1_switched = 0
-			waitthread train_splinepath_change
- 			local.player = parm.other
- 			//local.player iprint ("*** Switching rails to the correct track. ***")
-			$trainswitch1 show
-			$trainswitch1_pulsating hide
-			thread rotate "down"
-			waitthread moverail 1 "down"
-			self.toggle = 0
-		}
-		wait 1
-	}
-	else
-	{
-		local.player = parm.other
- 		local.player iprint ("*** Rails cannot be switched right now! ***")
-		self message ""
-	}
-	self triggerable
-	level.trainswitches_switching = 0
-end
-
-switch1_message:
-
-	while(self != NULL)
-	{
-		if(level.train_sequencing != 1)
-		{
-			if(self.toggle != 1) { self message ("*** Switching rails to a dead-end track. ***") }
-			else { self message ("*** Switching rails to the correct track. ***") }
-		}
-		else { self message "" }
-		waitframe
-	}
-end
-
-rotate local.direction local.nosound:
-
-	$trainswitch1 time 2
-	$trainswitch1_pulsating time 2
-	if(local.direction == "up") { $trainswitch1 rotateyup 180; $trainswitch1_pulsating rotateyup 180 }
-	else { $trainswitch1 rotateydown 180; $trainswitch1_pulsating rotateydown 180 }
-	$trainswitch1 move
-	$trainswitch1_pulsating move
-	if(local.nosound != 1) { $trainswitch1 playsound trackswitch }
-end
-
-moverail local.rails local.direction:
-
-	$("rightrail0" + local.rails) time 2
-	$("leftrail0" + local.rails) time 2
-	if(local.direction == "up") { $("rightrail0" + local.rails) rotateyup 1; $("leftrail0" + local.rails) rotateyup 1 }
-	else { $("rightrail0" + local.rails) rotateydown 1; $("leftrail0" + local.rails) rotateydown 1 }
-	$("rightrail0" + local.rails) move
-	$("rightrail0" + local.rails) playsound track_switching
-	$("leftrail0" + local.rails) waitmove
-end
-
-////////////////////////////////////////////////////////////////////////
-
-trainswitch2:
-
-	local.tswitch = spawn script_model // targetname "trainswitch2"
-	local.tswitch model "animate/trainswitch.tik"
-	local.tswitch.origin = ( -5364.00 3788.00 392.00 )
-	local.tswitch.angles = ( 0 180 0 )
-	local.tswitch anim idle
-	local.tswitch notsolid
-
-	local.tswitchtrig = spawn trigger_use
-	local.tswitchtrig.origin = local.tswitch.origin
-	local.tswitchtrig setsize ( -20 -20 -20 ) ( 20 20 20 )
-	local.tswitchtrig setthread trainswitch2_triggered
-	local.tswitchtrig.switch = local.tswitch
-	local.tswitchtrig message ("*** Switching rails to a dead-end track. ***")
-	local.tswitchtrig thread switch2_message
-end
-
-trainswitch2_triggered:
-
-	self nottriggerable
-	level.trainswitches_switching = 1
-	if(level.train_sequencing != 1)
-	{
-		if(self.toggle != 1)
-		{
-			if(self.switchedtwice != 1)
-			{
-				self.switch.model = "animate/trainswitch_pulsating.tik"
-				self.switch anim move
-			}
-			else
-			{
-				self.switch remove
-				self.switch = spawn script_model
-				self.switch model "animate/trainswitch_pulsating.tik"
-				self.switch.origin = ( -5364.00 3788.00 392.00 )
-				self.switch.angles = ( 0 180 0 )
-				self.switch anim idle
-				self.switch notsolid
-				self.switch anim move
-			}
-
-			level.switch2_switched = 1
-			waitthread train_splinepath_change
- 			local.player = parm.other
- 			//local.player iprint ("*** Switching rails to a dead-end track. ***")
-			self message ("*** Switching rails to the correct track. ***")
-			self.switch playsound trackswitch
-			waitthread moverail 2 "down"
-			self.toggle = 1
-		}
-		else
-		{
-			self.switch remove
-			self.switch = spawn script_model
-			self.switch model "animate/trainswitch.tik"
-			self.switch.origin = ( -5364.00 3788.00 392.00 )
-			self.switch.angles = ( 0 0 0 )
-			self.switch anim idle
-			self.switch notsolid
-			self.switch anim move
-
-			level.switch2_switched = 0
-			waitthread train_splinepath_change
-			local.player = parm.other
- 			//local.player iprint ("*** Switching rails to the correct track. ***")
-			self message ("*** Switching rails to a dead-end track. ***")
-			self.switch playsound trackswitch
-			waitthread moverail 2 "up"
-			self.toggle = 0
-			self.switchedtwice = 1
-		}
-		wait 1 // or self.switch anim waittill animdone
-	}
-	else
-	{
-		local.player = parm.other
- 		local.player iprint ("*** Rails cannot be switched right now! ***")
-		self message ""
-		local.triggeredonce = 0
-	}
-
-	level.trainswitches_switching = 0
-	self triggerable
-end
-
-switch2_message:
-
-	while(self != NULL)
-	{
-		if(level.train_sequencing != 1)
-		{
-			if(self.toggle != 1) { self message ("*** Switching rails to a dead-end track. ***") }
-			else { self message ("*** Switching rails to the correct track. ***") }
-		}
-		else { self message "" }
-		waitframe
-	}
-end
-
-////////////////////////////////////////////////////////////////////////
-
-train_splinepath:
-
-	if($trainfront == NULL) { level waittill spawn } // need this, otherwise SplinePath nodes will not spawn.
-
-	spawn info_splinepath targetname trainpath // train arriving
-	$trainpath.origin = ( 8385 2316 272 ) + ( 0 0 7 )
-	$trainpath.angles = ( 0 180 0 )
-	$trainpath speed 0.35
-
-	spawn info_splinepath targetname t500
-	$t500.origin = ( 7385 2316 272 ) + ( 0 0 7 )
-	$t500.angles = ( 0 180 0 )
-	$t500 speed 0.35
-
-	spawn info_splinepath targetname t501
-	$t501.origin = ( 6908 2316 272 ) + ( 0 0 7 )
-	$t501.angles = ( 0 180 0 )
-	$t501 speed 0.35
-
-	spawn info_splinepath targetname t502
-	$t502.origin = ( 6426 2316 272 ) + ( 0 0 7 )
-	$t502.angles = ( -359.520538 180 0 ) // .angles[0] here comes from "vector_toangles($t503.origin - $t502.origin)
-	$t502 speed 0.35
-
-	spawn info_splinepath targetname t503
-	$t503.origin = ( 5948 2316 268 ) + ( 0 0 7 )
-	$t503.angles = ( -358.346558 180 0 )
-	$t503 speed 0.35
-
-	spawn info_splinepath targetname t504
-	$t504.origin = ( 5463 2316 254 ) + ( 0 0 7 )
-	$t504.angles = ( -356.753510 180 0 )
-	$t504 speed 0.35
-
-	spawn info_splinepath targetname t505
-	$t505.origin = ( 4987 2316 227 ) + ( 0 0 7 )
-	$t505.angles = ( -357.493744 -178.73 0 )
-	$t505 speed 0.35
-
-	spawn info_splinepath targetname t506
-	$t506.origin = ( 4484 2289 205 ) + ( 0 0 7 )
-	$t506.angles = ( -357.667114 -170.47 0 )
-	$t506 speed 0.35
-
-	spawn info_splinepath targetname t507
-	$t507.origin = ( 4003 2186 185 ) + ( 0 0 7 )
-	$t507.angles = ( -357.531281 -161.63 0 )
-	$t507 speed 0.35
-
-	spawn info_splinepath targetname t508
-	$t508.origin = ( 3545 2013 164 ) + ( 0 0 7 )
-	$t508.angles = ( -357.600861 -151.79 0 )
-	$t508 speed 0.35
-
-	spawn info_splinepath targetname t509
-	$t509.origin = ( 3120 1751 143 ) + ( 0 0 7 )
-	$t509.angles = ( -357.596954 -150.10 0 )
-	$t509 speed 0.35
-
-	spawn info_splinepath targetname t510
-	$t510.origin = ( 2688 1499 122 ) + ( 0 0 7 )
-	$t510.angles = ( -357.563141 -158.11 0 )
-	$t510 speed 0.35
-
-	spawn info_splinepath targetname t511
-	$t511.origin = ( 2219 1329 101 ) + ( 0 0 7 )
-	$t511.angles = ( -357.671539 -168.05 0 )
-	$t511 speed 0.35
-
-	spawn info_splinepath targetname t512
-	$t512.origin = ( 1736 1237 81 ) + ( 0 0 7 )
-	$t512.angles = ( -357.463531 -177.05 0 )
-	$t512 speed 0.35
-
-	spawn info_splinepath targetname t513
-	$t513.origin = ( 1240 1221 59 ) + ( 0 0 7 )
-	$t513.angles = ( -357.473877 180 0 )
-	$t513 speed 0.35
-
-	spawn info_splinepath targetname t514
-	$t514.origin = ( 764 1221 38 ) + ( 0 0 7 )
-	$t514.angles = ( -357.364807 180 0 )
-	$t514 speed 0.35
-
-   if(level.switch1_switched == 1) // train stopping path
-   {
-	spawn info_splinepath targetname t515
-	$t515.origin = ( 286 1221 16 ) + ( 0 0 7 )
-	$t515.angles = ( -358.070831 180 0 )
-	$t515 speed 0.35
-
-	spawn info_splinepath targetname t516
-	$t516.origin = ( -189 1208 0 ) + ( 0 0 7 )
-	$t516.angles = ( 0 -171.79 0 )
-	$t516 speed 0.35
-
-	spawn info_splinepath targetname t517
-	$t517.origin = ( -606 1146 0 ) + ( 0 0 7 )
-	$t517.angles = ( 0 -162.48 0 )
-	$t517 speed 0.35
-
-	spawn info_splinepath targetname t518
-	$t518.origin = ( -1018 1011 0 ) + ( 0 0 7 )
-	$t518.angles = ( 0 -155.64 0 )
-	$t518 speed 0.35
-
-	spawn info_splinepath targetname t519
-	$t519.origin = ( -1422 820 0 ) + ( 0 0 7 )
-	$t519.angles = ( 0 -149.27 0 )
-	$t519 speed 0.35
-
-	spawn info_splinepath targetname t520
-	$t520.origin = ( -1763 604 0 ) + ( 0 0 7 )
-	$t520.angles = ( 0 -138.43 0 )
-	$t520 speed 0.35
-
-	spawn info_splinepath targetname t521
-	$t521.origin = ( -2064 319 0 ) + ( 0 0 7 )
-	$t521.angles = ( 0 -126.58 0 )
-	$t521 speed 0.35
-
-	spawn info_splinepath targetname t522
-	$t522.origin = ( -2298 -53 0 ) + ( 0 0 7 )
-	$t522.angles = ( 0 -121.58 0 )
-	$t522 speed 0.30
-
-	spawn info_splinepath targetname t523
-	$t523.origin = ( -2529 -447 0 ) + ( 0 0 7 )
-	$t523.angles = ( 0 -128.42 0 )
-	$t523 speed 0.25
-
-	spawn info_splinepath targetname t524
-	$t524.origin = ( -2837 -782 0 ) + ( 0 0 7 )
-	$t524.angles = ( 0 -144.10 0 )
-	$t524 speed 0.20
-
-	spawn info_splinepath targetname t525
-	$t525.origin = ( -3243 -1056 0 ) + ( 0 0 7 )
-	$t525.angles = ( 0 -154.21 0 )
-	$t525 speed 0.15
-
-	spawn info_splinepath targetname t526
-	$t526.origin = ( -3670 -1248 0 ) + ( 0 0 7 )
-	$t526.angles = ( 0 -164.27 0 )
-	$t526 speed 0.10
-
-	spawn info_splinepath targetname t527
-	$t527.origin = ( -4145 -1367 0 ) + ( 0 0 7 )
-	$t527.angles = ( 0 -175.73 0 )
-	$t527 speed 0.01
-
-	$trainpath.target = $t500
-	$t500.target = $t501
-	$t501.target = $t502
-	$t502.target = $t503
-	$t503.target = $t504
-	$t504.target = $t505
-	$t505.target = $t506
-	$t506.target = $t507
-	$t507.target = $t508
-	$t508.target = $t509
-	$t509.target = $t510
-	$t510.target = $t511
-	$t511.target = $t512
-	$t512.target = $t513
-	$t513.target = $t514
-	$t514.target = $t515
-	$t515.target = $t516
-	$t516.target = $t517
-	$t517.target = $t518
-	$t518.target = $t519
-	$t519.target = $t520
-	$t520.target = $t521
-	$t521.target = $t522
-	$t522.target = $t523
-	$t523.target = $t524
-	$t524.target = $t525
-	$t525.target = $t526
-	$t526.target = $t527
-   }
-   else if(level.switch2_switched == 1) // train crashing path
-   {
-	spawn info_splinepath targetname t515
-	$t515.origin = ( 286 1221 16 ) + ( 0 0 7 )
-	$t515.angles = ( -358.118835 180 0 )
-	$t515 speed 0.35
-
-	spawn info_splinepath targetname t516
-	$t516.origin = ( -201 1208 0 ) + ( 0 0 7 )
-	$t516.angles = ( 0 170.05 0 )
-	$t516 speed 0.35
-
-	spawn info_splinepath targetname t517
-	$t517.origin = ( -643 1295 0 ) + ( 0 0 7 )
-	$t517.angles = ( 0 157.10 0 )
-	$t517 speed 0.35
-
-	spawn info_splinepath targetname t518
-	$t518.origin = ( -1030 1476 0 ) + ( 0 0 7 )
-	$t518.angles = ( 0 143.50 0 )
-	$t518 speed 0.35
-
-	spawn info_splinepath targetname t519
-	$t519.origin = ( -1361 1734 0 ) + ( 0 0 7 )
-	$t519.angles = ( 0 131.20 0 )
-	$t519 speed 0.35
-
-	spawn info_splinepath targetname t520
-	$t520.origin = ( -1639 2064 0 ) + ( 0 0 7 )
-	$t520.angles = ( 0 121.75 0 )
-	$t520 speed 0.35
-
-	spawn info_splinepath targetname t521
-	$t521.origin = ( -1880 2462 0 ) + ( 0 0 7 )
-	$t521.angles = ( 0 113.40 0 )
-	$t521 speed 0.35
-
-	spawn info_splinepath targetname t522
-	$t522.origin = ( -2088 2963 0 ) + ( 0 0 7 )
-	$t522.angles = ( 0 120.89 0 )
-	$t522 speed 0.35
-
-	spawn info_splinepath targetname t523
-	$t523.origin = ( -2362 3383 0 ) + ( 0 0 7 )
-	$t523.angles = ( 0 131.19 0 )
-	$t523 speed 0.35
-
-	spawn info_splinepath targetname t524
-	$t524.origin = ( -2681 3714 0 ) + ( 0 0 7 )
-	$t524.angles = ( 0 144.79 0 )
-	$t524 speed 0.35
-
-	spawn info_splinepath targetname t525
-	$t525.origin = ( -3050 3950 0 ) + ( 0 0 7 )
-	$t525.angles = ( 0 161.04 0 )
-	$t525 speed 0.35
-
-	spawn info_splinepath targetname t526
-	$t526.origin = ( -3479 4063 0 ) + ( 0 0 7 )
-	$t526.angles = ( 0 176.09 0 )
-	$t526 speed 0.35
-
-	spawn info_splinepath targetname t527
-	$t527.origin = ( -4044 4084 0 ) + ( 0 0 7 )
-	$t527.angles = ( 0 180 0 )
-	$t527 speed 0.40
-
-	spawn info_splinepath targetname t528
-	$t528.origin = ( -4526 4084 0 ) + ( 0 0 7 )
-	$t528.angles = ( 0 180 0 )
-	$t528 speed 0.45
-
-	spawn info_splinepath targetname t529
-	$t529.origin = ( -5005 4084 0 ) + ( 0 0 7 )
-	$t529.angles = ( 0 180 0 )
-	$t529 speed 0.50
-
-	spawn info_splinepath targetname t530
-	$t530.origin = ( -5486 4084 0 ) + ( 0 0 7 )
-	$t530.angles = ( 0 180 0 )
-	$t530 speed 0.50
-
-	spawn info_splinepath targetname t531
-	$t531.origin = ( -5965 4084 0 ) + ( 0 0 7 )
-	$t531.angles = ( 0 180 0 )
-	$t531 speed 0.50
-
-	spawn info_splinepath targetname t532
-	$t532.origin = ( -6345 4084 0 ) + ( 0 0 7 )
-	$t532.angles = ( 0 180 0 )
-	$t532 speed 0.50
-
-	spawn info_splinepath targetname t533
-	$t533.origin = ( -6725 4084 0 ) + ( 0 0 7 )
-	$t533.angles = ( 0 180 0 )
-	$t533 speed 0.50
-
-	spawn info_splinepath targetname t534
-	$t534.origin = ( -7105 4084 0 ) + ( 0 0 7 )
-	$t534.angles = ( 0 180 0 )
-	$t534 speed 0.50
-
-	$trainpath.target = $t500
-	$t500.target = $t501
-	$t501.target = $t502
-	$t502.target = $t503
-	$t503.target = $t504
-	$t504.target = $t505
-	$t505.target = $t506
-	$t506.target = $t507
-	$t507.target = $t508
-	$t508.target = $t509
-	$t509.target = $t510
-	$t510.target = $t511
-	$t511.target = $t512
-	$t512.target = $t513
-	$t513.target = $t514
-	$t514.target = $t515
-	$t515.target = $t516
-	$t516.target = $t517
-	$t517.target = $t518
-	$t518.target = $t519
-	$t519.target = $t520
-	$t520.target = $t521
-	$t521.target = $t522
-	$t522.target = $t523
-	$t523.target = $t524
-	$t524.target = $t525
-	$t525.target = $t526
-	$t526.target = $t527
-	$t527.target = $t528
-	$t528.target = $t529
-	$t529.target = $t530
-	$t530.target = $t531
-	$t531.target = $t532
-	$t532.target = $t533
-	$t533.target = $t534
-   }
-   else // train tunnel path
-   {
-	spawn info_splinepath targetname t515
-	$t515.origin = ( 286 1221 16 ) + ( 0 0 7 )
-	$t515.angles = ( -358.118835 180 0 )
-	$t515 speed 0.35
-
-	spawn info_splinepath targetname t516
-	$t516.origin = ( -201 1208 0 ) + ( 0 0 7 )
-	$t516.angles = ( 0 170.05 0 )
-	$t516 speed 0.35
-
-	spawn info_splinepath targetname t517
-	$t517.origin = ( -643 1295 0 ) + ( 0 0 7 )
-	$t517.angles = ( 0 157.10 0 )
-	$t517 speed 0.35
-
-	spawn info_splinepath targetname t518
-	$t518.origin = ( -1030 1476 0 ) + ( 0 0 7 )
-	$t518.angles = ( 0 143.50 0 )
-	$t518 speed 0.35
-
-	spawn info_splinepath targetname t519
-	$t519.origin = ( -1361 1734 0 ) + ( 0 0 7 )
-	$t519.angles = ( 0 131.20 0 )
-	$t519 speed 0.35
-
-	spawn info_splinepath targetname t520
-	$t520.origin = ( -1639 2064 0 ) + ( 0 0 7 )
-	$t520.angles = ( 0 121.75 0 )
-	$t520 speed 0.35
-
-	spawn info_splinepath targetname t521
-	$t521.origin = ( -1880 2462 0 ) + ( 0 0 7 )
-	$t521.angles = ( 0 113.40 0 )
-	$t521 speed 0.35
-
-	spawn info_splinepath targetname t522
-	$t522.origin = ( -2088 2963 0 ) + ( 0 0 7 )
-	$t522.angles = ( 0 120.89 0 )
-	$t522 speed 0.35
-
-	spawn info_splinepath targetname t523
-	$t523.origin = ( -2362 3383 0 ) + ( 0 0 7 )
-	$t523.angles = ( 0 131.19 0 )
-	$t523 speed 0.35
-
-	spawn info_splinepath targetname t524
-	$t524.origin = ( -2681 3714 0 ) + ( 0 0 7 )
-	$t524.angles = ( 0 144.79 0 )
-	$t524 speed 0.35
-
-	spawn info_splinepath targetname t525
-	$t525.origin = ( -3050 3950 0 ) + ( 0 0 7 )
-	$t525.angles = ( 0 161.04 0 )
-	$t525 speed 0.35
-
-	spawn info_splinepath targetname t526
-	$t526.origin = ( -3476 4074 0 ) + ( 0 0 7 )
-	$t526.angles = ( 0 177.48 0 )
-	$t526 speed 0.35
-
-	spawn info_splinepath targetname t527
-	$t527.origin = ( -3712 4094 0 ) + ( 0 0 7 )
-	$t527.angles = ( 0 -170.00 0 )
-	$t527 speed 0.35
-
-	spawn info_splinepath targetname t528
-	$t528.origin = ( -4040 4062 0 ) + ( 0 0 7 )
-	$t528.angles = ( 0 -159.50 0 )
-	$t528 speed 0.35
-
-	spawn info_splinepath targetname t529
-	$t529.origin = ( -4384 3891 0 ) + ( 0 0 7 )
-	$t529.angles = ( 0 -144.07 0 )
-	$t529 speed 0.35
-
-	spawn info_splinepath targetname t530
-	$t530.origin = ( -4652 3730 0 ) + ( 0 0 7 )
-	$t530.angles = ( 0 -163.33 0 )
-	$t530 speed 0.35
-
-	spawn info_splinepath targetname t531
-	$t531.origin = ( -4897 3631 0 ) + ( 0 0 7 )
-	$t531.angles = ( 0 -171.02 0 )
-	$t531 speed 0.35
-
-	spawn info_splinepath targetname t532
-	$t532.origin = ( -5158 3604 0 ) + ( 0 0 7 )
-	$t532.angles = ( 0 -179.00 0 )
-	$t532 speed 0.35
-
-	spawn info_splinepath targetname t533
-	$t533.origin = ( -5644 3604 0 ) + ( 0 0 7 )
-	$t533.angles = ( 0 180 0 )
-	$t533 speed 0.35
-
-	spawn info_splinepath targetname t534
-	$t534.origin = ( -6127 3604 0 ) + ( 0 0 7 )
-	$t534.angles = ( 0 180 0 )
-	$t534 speed 0.35
-
-	spawn info_splinepath targetname t535
-	$t535.origin = ( -6605 3604 0 ) + ( 0 0 7 )
-	$t535.angles = ( 0 180 0 )
-	$t535 speed 0.35
-
-	spawn info_splinepath targetname t536
-	$t536.origin = ( -7086 3604 0 ) + ( 0 0 7 )
-	$t536.angles = ( 0 180 0 )
-	$t536 speed 0.35
-
-	spawn info_splinepath targetname t537
-	$t537.origin = ( -7563 3604 0 ) + ( 0 0 7 )
-	$t537.angles = ( 0 180 0 )
-	$t537 speed 0.35
-
-	spawn info_splinepath targetname t538
-	$t538.origin = ( -8043 3604 0 ) + ( 0 0 7 )
-	$t538.angles = ( 0 180 0 )
-	$t538 speed 0.35
-
-	spawn info_splinepath targetname t539
-	$t539.origin = ( -9023 3604 0 ) + ( 0 0 7 )
-	$t539.angles = ( 0 180 0 )
-	$t539 speed 0.35
-
-	$trainpath.target = $t500 // train leaving
-	$t500.target = $t501
-	$t501.target = $t502
-	$t502.target = $t503
-	$t503.target = $t504
-	$t504.target = $t505
-	$t505.target = $t506
-	$t506.target = $t507
-	$t507.target = $t508
-	$t508.target = $t509
-	$t509.target = $t510
-	$t510.target = $t511
-	$t511.target = $t512
-	$t512.target = $t513
-	$t513.target = $t514
-	$t514.target = $t515
-	$t515.target = $t516
-	$t516.target = $t517
-	$t517.target = $t518
-	$t518.target = $t519
-	$t519.target = $t520
-	$t520.target = $t521
-	$t521.target = $t522
-	$t522.target = $t523
-	$t523.target = $t524
-	$t524.target = $t525
-	$t525.target = $t526
-	$t526.target = $t527
-	$t527.target = $t528
-	$t528.target = $t529
-	$t529.target = $t530
-	$t530.target = $t531
-	$t531.target = $t532
-	$t532.target = $t533
-	$t533.target = $t534
-	$t534.target = $t535
-	$t535.target = $t536
-	$t536.target = $t537
-	$t537.target = $t538
-    }
-end
-
-train_splinepath_change:
-
-	$trainpath remove
-	for(local.i = 0; local.i <= 999; local.i++)
-	{
-		if(local.i < 10 && $("t50" + local.i) != NULL) { $("t50" + local.i) remove }
-		else if($("t5" + local.i) != NULL) { $("t5" + local.i) remove }
-		else { break }
-	}
-
-	waitframe
-	waitthread train_splinepath
-end
-
-//-----------------------------------------------------------------------------
-
-train_initialize:
-
-	level waittill spawn // need this for train and traindoor's origins to adjust properly.
-
-	local.train = spawn script_model targetname "trainfront"
-	local.train model "vehicles/bp44train.tik"
-	local.train.origin = ( 0 0 0 )
-	local.train.angles = ( 0 0 0 )
-	local.train2 = spawn script_model targetname "trainfront2"
-	local.train2 model "static/indycrate.tik"
-	local.train2.origin = ( 0 0 130 )
-	local.train2.scale = 0.01
-	local.train2 bind local.train
-
-	local.boom1 = spawn script_model targetname "train_explosion1"
-	local.boom1 model "models/emitters/mortar_higgins.tik"
-	local.boom1.origin = ( 0 0 0 )
-	local.boom1.angles = ( 0 -90 0 ) + ( 260 0 0 )
-	local.boom1.scale = 1.5
-	local.boom1 anim stop
-	local.boom1 notsolid
-	local.boom2 = spawn script_model targetname "train_explosion2"
-	local.boom2 model "models/emitters/mortar_higgins.tik"
-	local.boom2.origin = ( 0 0 0 )
-	local.boom2.angles = ( 0 -90 0 ) + ( 260 0 0 )
-	local.boom2.scale = 1.5
-	local.boom2 anim stop
-	local.boom2 notsolid
-	local.boom3 = spawn script_model targetname "train_explosion3"
-	local.boom3 model "models/emitters/mortar_higgins.tik"
-	local.boom3.origin = ( 0 0 0 )
-	local.boom3.angles = ( 0 -90 0 ) + ( 260 0 0 )
-	local.boom3.scale = 1.5
-	local.boom3 anim stop
-	local.boom3 notsolid
-
-	local.spark1 = spawn script_model targetname "trainsparks"
-	local.spark1 model animate/fx_trainspark.tik
-	local.spark1.origin = local.train.origin + local.train.forwardvector * 345 + local.train.leftvector * 67 + ( 0 0 25 )
-	local.spark1.angles = ( 0 180 0 )
-	local.spark1 bind local.train
-	local.spark1 anim stop
-	local.spark2 = spawn script_model targetname "trainsparks"
-	local.spark2 model animate/fx_trainspark.tik
-	local.spark2.origin = local.train.origin + local.train.forwardvector * 345 + local.train.leftvector * -67 + ( 0 0 25 )
-	local.spark2.angles = ( 0 180 0 )
-	local.spark2 bind local.train
-	local.spark2 anim stop
-	local.spark3 = spawn script_model targetname "trainsparks"
-	local.spark3 model animate/fx_trainspark.tik
-	local.spark3.origin = local.train.origin + local.train.forwardvector * -225 + local.train.leftvector * 67 + ( 0 0 25 )
-	local.spark3.angles = ( 0 180 0 )
-	local.spark3 bind local.train
-	local.spark3 anim stop
-	local.spark4 = spawn script_model targetname "trainsparks"
-	local.spark4 model animate/fx_trainspark.tik
-	local.spark4.origin = local.train.origin + local.train.forwardvector * -225 + local.train.leftvector * -67 + ( 0 0 25 )
-	local.spark4.angles = ( 0 180 0 )
-	local.spark4 bind local.train
-	local.spark4 anim stop
-
-	local.trigent = spawn script_model targetname "trainfront_runover_trig"
-	local.trigent model "static/banquet_table.tik"
-	local.trigent.origin = $trainfront.origin + $trainfront.forwardvector * 420 + ( 0 0 30 )
-	local.trigent.angles = ( 0 90 90 )
-	local.trigent notsolid
-	local.trigent hide
-	local.trigent bind $trainfront
-	$trainfront.runovertrig = local.trigent
-
-	$trainfront thread moving_train_check
-	$trainfront thread trainfront_trigger
-
-	wait level.train_off_time
-	while(1)
-	{
-		while(level.train_sequencing == 1 || level.train_offmap == 1) { waitframe }
-		waitthread trainsequence
-		waitthread train_offmap
-		waitthread gates_reset
-	}
-end
-
-//-----------------------------------------------------------------------------
-
-trainsequence:
-
-	if(level.train_sequencing == 1) { end }
-	level.train_sequencing = 1
-	level.train_getout = 0
-	level.traincrashed = 0
-	$leftgate01.cancel = 0
-	$rightgate01.cancel = 0
-
-	while(level.trainswitches_switching == 1) { waitframe }
-
-	for(local.t = 1; local.t <= $trainsparks.size; local.t++)
-	{
-		$trainsparks[local.t].scale = 1
-		$trainsparks[local.t].model = "animate/fx_trainspark.tik"
-		$trainsparks[local.t] anim stop
-	}
-
-	$trainfront.moving = 1
-	$trainfront.slowingdown = 0
-
-	$trainfront followpath $trainpath
-	$trainfront move
-	$trainfront stoploopsound
-	$trainfront2 stoploopsound
-	$trainfront loopsound train_rolling
-	$trainfront2 loopsound missile_room
-
-	if(level.switch1_switched == 1)
-	{
-		thread trainstop
-		$trainfront waitmove
-	}
-	else if(level.switch2_switched == 1)
-	{
-		thread gatecrash
-		waitthread traincrash
-	}
-	else
-	{
-		thread gatecrash
-		$trainfront waitmove
-		$trainfront stoploopsound
-		$trainfront2 stoploopsound
-	}
-
-	$trainfront.moving = 0
-	level.train_sequencing = 0
-end
-
-//-----------------------------------------------------------------------------
-
-train_offmap:
-
-	if(level.train_offmap == 1) { end }
-	level.train_offmap = 1
-
-	if(level.switch1_switched != 1 && level.switch2_switched != 1 && $trainfront.origin[0] > -8000)
-	{
-		$trainfront time (level.train_off_time / 2)
-		$trainfront moveto ($trainfront.origin + $trainfront.forwardvector * 7000)
-		$trainfront waitmove
-
-		$trainfront.origin = $trainpath.origin + $trainfront.forwardvector * -7000
-		$trainfront moveto $trainpath.origin
-		$trainfront waitmove
-	}
-	else { wait level.train_off_time }
-	level.train_offmap = 0
-end
-
-//-----------------------------------------------------------------------------
-
-moving_train_check:
-
-	while(self != NULL)
-	{
-		if(self.moving == 1 && self.slowingdown != 1)
-		{
-			for(local.i = 1; local.i <= $player.size; local.i++)
-			{
-				if(isalive $player[local.i] && $player[local.i].dmteam != "spectator" && $player[local.i].dead != 1 && $player[local.i].flying != 1)
-				{
-					local.dist = vector_length(self.origin - $player[local.i].origin)
-					local.relative_origin = (self.origin + self.forwardvector * local.dist) // check the train's origin directly below player's feet, in case the train is on a sloped angle.
-
-					if($player[local.i].driving != 1 && $player[local.i].passenger != 1 && $player[local.i] istouching self.runovertrig && $player[local.i].origin[2] < local.relative_origin[2] + 240)
-					{
-						$player[local.i] damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
-					}
-					if($player[local.i].driving == 1 && $player[local.i].drivingent != NIL && $player[local.i].drivingent != NULL && $player[local.i].drivingent istouching self.runovertrig)
-					{
-						$player[local.i].drivingent damage $world 15000 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
-					}
-				}
-			}
-		}
-
-		if((self.origin[0] < 7056 && self.origin[0] > 6839) || (self.origin[0] < 6397 && self.origin[0] > 6274) || (self.origin[0] < 6032 && self.origin[0] > 5995) || (self.origin[0] < -7663 && self.origin[0] > -7712)) { self.can_getout = 0 }
-		else if(self.origin[0] < -8127 || self.origin[0] > 7855) { self.can_getout = 2 }
-		else { self.can_getout = 1 }
-		waitframe
-	}
-end
-
-//-----------------------------------------------------------------------------
-
-trainstop:
-
-	if(level.trainstopping == 1) { end }
-	level.trainstopping = 1
-
-	wait 1 // make sure the train respawns first
-	while($trainfront != NULL && $trainfront.origin[0] >= -3650)
-	{
-		if(level.train_sequencing == 0) { level.trainstopping = 0; end }
-		waitframe
-	}
-
-	$trainsparks anim start
-	$trainfront playsound train_stopping
-	wait 1
-	$trainfront stoploopsound
-	$trainfront2 stoploopsound
-	$trainfront.slowingdown = 1
-
-	while($trainsparks[1].scale > 0)
-	{
-		for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale -= 0.006 }
-		waitframe
-	}
-
-	$trainsparks anim stop
-	for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale = 1 }
-	level.trainstopping = 0
-	level.train_getout = 1
-end
-
-//-----------------------------------------------------------------------------
-
-traincrash:
-
-	if(level.traincrashing == 1) { end }
-	level.traincrashing = 1
-
-	wait 1 // make sure the train respawns first
-	while($trainfront != NULL && $trainfront.origin[0] >= -5875) 
-	{
-		if(level.train_sequencing == 0) { level.traincrashing = 0; end }
-		waitframe
-	}
-
-	$trainsparks anim start
-	$trainfront playsound train_crashing
-	wait 1
-	$trainfront stoploopsound
-
-	local.origin = $trainfront.origin
-	local.c = 0
-	while($trainfront != NULL && $trainfront.origin[0] >= -6750 && local.c < 20) // if the train stopped moving too early (tank/vehicle/object in the way), blow it up after 1 second.
-	{
-		if($trainfront.origin == local.origin) { local.c++ }
-		local.origin = $trainfront.origin
-		waitframe
-	}
-	
-	$trainfront endpath // prematurely end "followpath"
-	local.r = randomint(2)
-	if(local.r == 0) { $trainfront thread train_blowup_rotate_right 128 25 } // ; $trainsparks[1] playsound train_crash1
-	else { $trainfront thread train_blowup_rotate_left 128 25 } // ; $trainsparks[2] playsound train_crash3
-	thread train_rotate local.r
-	//$trainfront2 playsound train_crash1
-	level.traincrashed = 1
-	
-	//wait 0.15
-
-	$train_explosion1.origin = $trainfront.origin + $trainfront.forwardvector * 350 + ( 0 0 25 )
-	$train_explosion2.origin = $trainfront.origin + ( 0 0 25 )
-	$train_explosion3.origin = $trainfront.origin + $trainfront.forwardvector * -270 + ( 0 0 25 )
-
-	$trainsparks anim stop
-	thread jitter_large
-	$train_explosion1.model = "emitters//explosion_tank.tik"
-	$train_explosion1 anim start
-	$train_explosion1 playsound explode_building2_large
-	radiusdamage ($train_explosion1.origin + ( 0 0 250 )) 500 750
-	wait .5
-	$train_explosion2 anim start
-	$train_explosion2 playsound explode_building2_large
-	radiusdamage ($train_explosion2.origin + ( 0 0 250 )) 500 750
-	wait .5
-	$train_explosion3 anim start
-	$train_explosion3 playsound explode_building2_large
-	radiusdamage ($train_explosion3.origin + ( 0 0 250 )) 500 750
-
-	waitframe
-	$train_explosion1 anim stop
-	$train_explosion2 anim stop
-	$train_explosion3 anim stop
-
-	for(local.t = 1; local.t <= $trainsparks.size; local.t++) { $trainsparks[local.t].scale = 3 }
-	if(local.r == 0) { $trainsparks[2].model = "models/emitters/linger_smoke.tik"; $trainsparks[4].model = "models/emitters/linger_smoke.tik" }
-	else { $trainsparks[1].model = "models/emitters/linger_smoke.tik"; $trainsparks[3].model = "models/emitters/linger_smoke.tik" }
-
-	//$trainfront thread trainsound_arriving
-	$trainfront stoploopsound
-	$trainfront2 stoploopsound
-	$trainfront loopsound train_fire
-	$trainfront2 loopsound train_fire
-	level.train_sequencing = 0
-	level.traincrashing = 0
-end
-
-train_rotate local.r:
-
-	local.c = 30
-	local.d = 0
-	if(local.r == 0) { local.num = 1 }
-	else { local.num = -1 }
-
-	while(local.c > 0)
-	{
-		$trainfront.angles = ( $trainfront.angles[0] $trainfront.angles[1] (90 / local.c * local.num) )
-		$trainfront.origin = ( ($trainfront.origin[0] - local.d) $trainfront.origin[1] (70 / local.c) )
-		local.c--
-		local.d += 0.25
-
-		if(local.d >= 4.5)
-		{
-			if(local.r == 0) { $trainsparks[3] playsound train_crash2 }
-			else { $trainsparks[4] playsound train_crash4 }
-			exec global/earthquake.scr .35 2 0 0
-		}
-		waitframe
-	}
-end
-
-train_blowup_rotate_left local.movedist local.rotatedist:
-
-	self endpath
-	self time 1
-	//self movewest local.movedist
-	self rotateYup local.rotatedist
-	self waitmove
-	self.velocity = (0 0 0)
-end
-
-train_blowup_rotate_right local.movedist local.rotatedist:
-
-	self endpath
-	self time 1
-	//self movewest local.movedist
-	self rotateYdown local.rotatedist
-	self waitmove
-	self.velocity = (0 0 0)
-end
-
-jitter_large:
-
-	waitexec global/earthquake.scr .35 10 0 0
-	waitexec global/earthquake.scr .23 6 0 0
-	waitexec global/earthquake.scr 1 1 0 0
-	waitexec global/earthquake.scr 1.25 .3 0 1
-end
-
-//-----------------------------------------------------------------------------
-
-trainfront_trigger:
-
-	local.trig = spawn trigger_use targetname "train_trigger"
-	local.trig.origin = self.origin
-	local.trig setsize ( -300 -300 0 ) ( 300 300 248 )
-	local.trig.vehicle = self
-	local.trig setthread train_drivers
-	local.trig.train = self
-	local.trig glue self
-
-	self.passengers[1] = NIL // initialize as array to make size = 0 instead of size = -1
-	self.passengers_cab[1] = NIL
-
-	self.first_seat = "left" // the 1st driver's seat, either "left" or "right".
-
-	self thread seatstuff self.first_seat
-end
-
-//-----------------------------------------------------------------------------
-
-train_drivers:
-
-	local.player = parm.other
-	local.team = local.player.dmteam
-	waitframe
-
-	if(self.train.moving == 0 || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player.dead == 1 || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || level.change_team_score == 1) { end }
-
-	for(local.s = 1; local.s <= self.train.seats; local.s++)
-	{
-		if(self.train.passengers[local.s] == NIL) { self.train.passengers[local.s] = local.player; break } // assign player to the 1st available passenger seat
-	}
-	if(local.s > self.train.seats) { end } // no seats available.
-
-	if(self.train.driver != NIL && local.player.dmteam != self.train.driver.dmteam && local.player.dmteam != "spectator" && getcvar("g_gametype") != "1")
-	{
-		self.train.passengers[local.s] = NIL
-		local.player iprint ("An enemy player is driving this train!")
-		end
-	}
-
-	local.player take "models/items/binoculars.tik" // using these will cause camera jittering again.
-	local.player forcetorsostate VEHICLE_PASSENGER // prevents camera jittering.
-	local.player forcelegsstate STAND
-	local.player notsolid
-	local.player iprint ("Hold USE(e) = exit train. Hold FIRE(zoom) = look around.")
-	local.player.origin = self.train.origin
-	local.player.passenger = 1
-	local.player.driving = 1 // should help with other scripts.
-	local.player.driving_state_jump = 0
-	local.PI = 3.14159265359
-	local.holdtime = 0
-
-	local.player.drivingent = $("train_drivershot_" + local.s)
-
-	local.player.angles = ( 10 (self.train.angles[1] + $("train_driverslot_" + local.s).angle_offset) self.train.angles[2] )
-	local.player glue $("train_driverslot_" + local.s)
-	if(local.player.dog != NIL && local.player.dog != NULL) { local.player.dog glue $("train_driverslot_" + local.s); local.dog = 1 }
-
-	while(self.train != NULL && level.change_team_score != 1 && isalive local.player && local.player.dmteam == local.team && local.player.dead != 1 && level.traincrashed != 1 && level.train_getout != 1)
-	{
-		local.player anim unarmed_stand_idle // need this, since VEHICLE_PASSENGER state uses "movetype anim" instead of "movetype legs", which omits all legs animations (player will landshark without this).
-
-		if(local.player.fireheld != 1) { local.player.viewangles = ( 10 (self.train.angles[1] + $("train_driverslot_" + local.s).angle_offset) self.train.angles[2] ) }
-		if(local.dog == 1) { local.player.dog.angles = self.train.angles }
-
-		if(local.player.useheld == 1 && self.train.can_getout != 0) { local.holdtime++ }
-		else { local.holdtime = 0 }
-
-		if(local.holdtime >= 20)
-		{
-			local.player thread train_driver_reset self.train local.s local.holdtime local.team
-			end
-		}
-		waitframe
-	}
-	if(local.player != NULL) { local.player thread train_driver_reset self.train local.s NIL local.team }
-end
-
-//-----------------------------------------------------------------------------
-
-train_driver_reset local.train local.s local.holdtime local.team:
-
-	self unglue
-	if(self.dog != NIL && self.dog != NULL) { self.dog unglue }
-	self.viewangles = ( self.viewangles[0] self.viewangles[1] 0 )
-	self.drivingent = NIL
-
-	if(isalive self && self.dmteam != "spectator")
-	{
-		if(self.isdog != 1) { self show }
-		self solid
-		self forcetorsostate STAND
-		self thread wallstuck_fix
-
-		if(self.dmteam == local.team)
-		{
-			if(local.holdtime == NIL || (local.holdtime != NIL && local.holdtime < 20))
-			{
-				if(local.s == 2) { self.origin = local.train.origin + local.train.forwardvector * -150 + local.train.leftvector * -170 }
-				else { self.origin = local.train.origin + local.train.forwardvector * -150 + local.train.leftvector * 170 }
-			}
-			else { self.origin = local.train.origin + local.train.upvector * 250 }
-			self give "models/items/binoculars.tik"
-
-			if(local.train.can_getout == 2) { self respawn }
-		}
-
-		if(level.traincrashed == 1) { self damage $world 9999999 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-	}
-	self.passenger = 0
-	self.driving = 0
-	local.train.passengers[local.s] = NIL
-end
-
-//-----------------------------------------------------------------------------
-
-seatstuff local.first_seat: // using attachmodels and gluing players to them makes the best vehicle seats, but requires 1 entity per seat.
-
-	self.seats = 2
-
-	if(local.first_seat == "right")
-	{
-		self attachmodel models/static/jug.tik "Box03" 1 ("train_driverslot_1") 1 -1 -1 -1 -1 ( -51 97 -40 ) //( +left -right, +up -down, +forward -backward )
-		self attachmodel models/static/jug.tik "Box03" 1 ("train_driverslot_2") 1 -1 -1 -1 -1 ( 63 97 -40 )
-		$train_driverslot_1.angle_offset = -90
-		$train_driverslot_2.angle_offset = 90
-	}
-	else
-	{
-		self attachmodel models/static/jug.tik "Box03" 1 ("train_driverslot_1") 1 -1 -1 -1 -1 ( 63 97 -40 )
-		self attachmodel models/static/jug.tik "Box03" 1 ("train_driverslot_2") 1 -1 -1 -1 -1 ( -51 97 -40 )
-		$train_driverslot_1.angle_offset = 90
-		$train_driverslot_2.angle_offset = -90
-	}
-	$train_driverslot_1 hide
-	$train_driverslot_2 hide
-	$train_driverslot_1.angles = ( 0 $train_driverslot_1.angle_offset 0 )
-	$train_driverslot_2.angles = ( 0 $train_driverslot_2.angle_offset 0 )
-	self thread seatstuff_angles
-
-	local.trig_shot1 = spawn trigger_multiple targetname "train_drivershot_1" spawnflags 128 // these triggers are required since the train is not a DrivableVehicle with health.
-	local.trig_shot1.origin = $train_driverslot_1.origin
-	local.trig_shot1 glue $train_driverslot_1
-	local.trig_shot1 setsize ( -100 -100 0 ) ( 100 100 100 ) // player setsizes
-	local.trig_shot1.health = 9999999
-	local.trig_shot1.train = self
-	local.trig_shot1 thread healthboost 1
-
-	local.trig_shot2 = spawn trigger_multiple targetname "train_drivershot_2" spawnflags 128
-	local.trig_shot2.origin = $train_driverslot_2.origin
-	local.trig_shot2 glue $train_driverslot_2
-	local.trig_shot2 setsize ( -100 -100 0 ) ( 100 100 100 ) // player setsizes
-	local.trig_shot2.health = 9999999
-	local.trig_shot2.train = self
-	local.trig_shot2 thread healthboost 2
-end
-
-seatstuff_angles:
-
-	while(self != NULL)
-	{
-		for(local.i = 1; local.i <= self.seats; local.i++)
-		{
-			$("train_driverslot_" + local.i).angles = self.angles + ( 0 $("train_driverslot_" + local.i).angle_offset 0 )
-		}
-		waitframe
-	}
-end
-
-//-----------------------------------------------------------------------------
-
-healthboost local.seat: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
-
-	local.health = self.health
-	while(self != NULL && self.health > 0)
-	{
-		if(self.health < local.health && self.train.passengers[local.seat] != NIL && self.train.passengers.size >= 1)
-		{
-			if(self.shooter != NIL && self.shooter != NULL && self.shooter != self.train.passengers[local.seat] && (self.shooter.dmteam != self.train.passengers[local.seat].dmteam || getcvar("g_gametype") == "1"))
-			{
-				local.damage = local.health - self.health
-
-				if(self.shooter.player_owner != NIL && self.shooter.player_owner != NULL) { self.train.passengers[local.seat] damage self.shooter.player_owner local.damage self.shooter.player_owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-				else if(self.shooter.owner != NIL && self.shooter.owner != NULL) { self.train.passengers[local.seat] damage self.shooter.owner local.damage self.shooter.owner (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-				else { self.train.passengers[local.seat] damage self.shooter local.damage self.shooter (0 0 0) (0 0 0) (0 0 0) 0 9 0 0 }
-				self.shooter = NIL
-			}
-		}
-		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
-		waitframe
-	}
-end
-
-//-----------------------------------------------------------------------------
-
-wallstuck_fix:
-
-	local.c = 0
-	local.origin = self.origin
-	local.team = self.dmteam
-
-	if(self.wallstuck_fixing == 1) { end }
-	self.wallstuck_fixing = 1
-
-	while(self != NULL && isalive self && self.dmteam == local.team) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
-	{
-		if(local.c >= 60) // about 3 seconds
-		{
-			if((self getmovement) == falling && self.origin == local.origin) { self respawn }
-			break
-		}
-		local.c++
-		waitframe
-	}
-	if(self != NULL) { self.wallstuck_fixing = 0 }
-end
-
-//-----------------------------------------------------------------------------
-
-gatecrash:
-
-	if(level.gates_crashed == 1 || level.gates_crashed == 2) { end }
-	level.gates_crashed = 1
-
-	wait 1
-	while($trainfront != NULL && $trainfront.origin[0] > 0) // make sure the lines below don't prematurely start
-	{
-		if(level.train_sequencing == 0) { level.gates_crashed = 0; end }
-		waitframe
-	}
-	while($trainfront != NULL && $trainfront.origin[0] >= -1295 && $trainfront.origin[1] < 1700)
-	{
-		if(level.train_sequencing == 0) { level.gates_crashed = 0; end }
-		waitframe
-	}
+gatecrash local.train local.origin:
+
+	if(local.origin == NIL) { end }
+	while($(local.train) == NULL) { waitframe }
+	while($(local.train) != NULL && vector_length($(local.train).origin - local.origin) > 100) { waitframe }
 
 	if($gate01_trigger.inc != 0 || $leftgate01.velocity != ( 0 0 0 ))
 	{
@@ -2075,12 +783,19 @@ gatecrash:
 		$rightgate01 playsound fence_crash
 
 		$leftgate01.cancel = 1
+		$rightgate01.cancel = 1
 		thread crashopen_leftgate
 		thread crashopen_rightgate
 
 		level.gates_crashed = 2
 		$gate01_trigger nottriggerable
 	}
+
+	while($(local.train) != NULL && $(local.train).train_sequencing == 1) { waitframe }
+	while($(local.train) != NULL && $(local.train).train_sequencing != 1) { waitframe }
+
+	waitthread gates_reset
+	thread gatecrash $(local.train) local.origin
 end
 
 crashopen_leftgate:
@@ -2131,8 +846,6 @@ crashopen_rightgate:
 	$rightgate01 waitmove
 end
 
-//-----------------------------------------------------------------------------
-
 gates_reset:
 
 	if($gate01_trigger.inc != 0)
@@ -2159,6 +872,8 @@ gates_reset:
 		}
 	}
 
+	$leftgate01.cancel = 0
+	$rightgate01.cancel = 0
 	$gate01_trigger triggerable
 	level.gates_crashed = 0
 end
@@ -2706,5 +1421,8 @@ save1:
 end
 caught:
 end
-
+elevator_moveup:
+end
+elevator_movedown:
+end
 

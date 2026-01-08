@@ -1,0 +1,389 @@
+// This script allows players to use the map's current elevator or use any other object as an elevator.
+// Run this before "level waittill prespawn" for sounds to work.
+//
+// The elevator has 2 switches inside: a switch to move the elevator up one floor (up-switch), and another switch to move the elevator down one floor (down-switch).
+// Each floor can have a gate that moves down when the elevator arrives at that floor.
+// Each floor can also have an elevator-calling switch somewhere on an adjacent wall, which moves the elevator up/down to the call-switch's current floor.
+//
+// The elevator will always move the same speed when moving up/down one floor or multiple floors.
+// All switches will stop pulsating red while the elevator is moving.
+// When the elevator reaches a floor, that floor's call-switch will be disabled.
+// If the elevator is at the bottom floor, the down-switch will be disabled. If the elevator is at the top floor, the up-switch will be disabled.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// A simple array must be created that contains origin data for each floor.
+// Each row in the array contains: the elevator's origin at this floor, the call-switch's origin & angle, the elevator gate's targetname, and a "1" value to start the elevator at this floor.
+//
+// The elevator's height (origin[2] value) may not be the same as the floor's height, so some testing will need to be done to get the elevator's floor to stop at the same height as the rest of the floor.
+// Set the call-switch origin & angle to "NIL" to prevent the script from spawning a call-switch for that floor.
+// Set the gate name to "NIL" or "NULL" if that floor does not have a gate.
+//
+////////////////////////////////////////////////////////////////////////
+//
+// Once the array is made, the script can be started by running "exec global/elevator.scr local.array $elevator_cab 100" or similar.
+// This line has the following parameters: array, elevator targetname, elevator speed, spawn roof tele (1 = yes), lower shaft tele origin, lower shaft tele destination.
+//
+// If the up/down switches in the elevator are not aligned properly, set the "flip" parameter to "1", otherwise leave it "0".
+// Set the "flip" parameter to "2" to remove these switches entirely.
+//
+// If spawning a roof tele, a tele will remain on the elevator's roof, allowing anyone who falls on top of the elevator to get back inside it.
+// If spawning a lower shaft tele, a tele will be spawned at the bottom of the elevator shaft for any players that fall in, with a tele destination ideally placed at the lowest floor.
+// Prevent the script from spawning a lower shaft tele by leaving blank or NIL the lower shaft tele origin & destination.
+//
+////////////////////////////////////////////////////////////////////////
+// 
+//	// elevator origin, call-switch origin, call-switch angle, gate name (NIL if one doesn't exist), start at this floor (1 = yes).
+//	//
+//	local.array = makeArray
+//		( -4672 2208 -88 )		( -4752 2076 -181 ) 180		elevator_gate_2		1	// floor 1
+//		( -4672 2208 472 )		( -4600 2322 377 ) 0		elevator_gate_1		0	// floor 2
+//	endArray
+//
+//	// array, elevator targetname, elevator speed, flip switches orientation (0 = no, 1 = yes, 2 = remove switches), spawn roof tele (1 = yes), lower shaft tele origin, lower shaft tele destination.
+//	//
+// 	exec global/elevator.scr local.array $elevator_cab 100 0 1 ( -4673 2164 -335 ) ( -4673 2101 -239 ) // elevator speed = 100, don't flip switches, spawning a roof tele & spawning a lower shaft tele (origin & destination).
+//	//exec global/elevator.scr local.array $elevator_cab 100 0 // elevator speed = 100.
+//
+
+main local.array local.elevator local.speed local.flip local.rooftele local.shafttele_origin local.shafttele_destination:
+
+	thread scriptmaster
+
+	while(level.time == NIL) { waitframe }
+	while(level.time < 1) { waitframe } // wait until map has fully loaded.
+
+	if(local.array == NIL) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter for elevator floor data is missing!"); end }
+	if(local.array[1][1] == NIL) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter must be an array!"); end }
+	for(local.a = 1; local.a <= local.array.size; local.a++)
+	{
+		if(local.array[local.a][1][2] == NIL) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter's [" + local.a + "][1] origin must be in ( 0 0 0 ) format!"); end }
+		if(local.array[local.a].size >= 2 && local.array[local.a][2][2] == NIL) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter's [" + local.a + "][2] origin must be in ( 0 0 0 ) format!"); end }
+		if(local.array[local.a].size >= 3)
+		{
+			if(local.array[local.a][3].size > 1) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter's [" + local.a + "][3] angle must be an integer!"); end }
+			if(local.array[local.a][3] < 0) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter's [" + local.a + "][3] angle must be greater than 0!"); end }
+		}
+		if(local.array[local.a].size >= 4)
+		{
+			if(local.array[local.a][4].size != 1 && $(local.array[local.a][4]) == NULL) { wait 1; println("----- ERROR global/elevator.scr: $" + local.array[local.a][4] + " does not exist!"); end }
+			if($(local.array[local.a][4]) != NULL && $(local.array[local.a][4]).size > 1) { wait 1; println("----- ERROR global/elevator.scr: $" + local.array[local.a][4] + " has the same targetname as another entity!"); end }
+			if(local.array[local.a][4] == NULL) { wait 1; println("----- ERROR global/elevator.scr: " + local.array[local.a][4] + " does not exist!"); end }
+		}
+		if(local.array[local.a].size >= 5)
+		{
+			if(local.array[local.a][5].size > 1) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter's [" + local.a + "][5] must be an integer!"); end }
+			if(local.array[local.a][5] != 0 && local.array[local.a][5] != 1) { wait 1; println("----- ERROR global/elevator.scr: 'array' parameter's [" + local.a + "][5] can only be integers: '0' or '1'."); end }
+		}
+	}
+	if(local.elevator == NIL) { wait 1; println("----- ERROR global/elevator.scr: 'elevator' parameter is missing!"); end }
+	if(local.elevator.size != 1 && $(local.elevator) == NULL) { wait 1; println("----- ERROR global/elevator.scr: $" + local.elevator + " does not exist!"); end }
+	if($(local.elevator) != NULL && $(local.elevator).size > 1) { wait 1; println("----- ERROR global/elevator.scr: $" + local.elevator + " has the same targetname as another entity!"); end }
+	if(local.elevator == NULL) { wait 1; println("----- ERROR global/elevator.scr: " + local.elevator + " does not exist!"); end }
+
+	if(local.elevator.size != 1) { local.elevator = $(local.elevator) } // if the "elevator" parameter has a string input instead of a $targetname input, set "elevator" to be $(local.elevator).
+	if(local.speed != NIL) { local.elevator.movespeed = local.speed }
+	else { local.elevator.movespeed = 100 } // default = 100
+
+	if(local.flip != 2)
+	{
+		local.upswitch = spawn script_model
+		local.upswitch model "animate/electrical_switch_nopulse.tik"
+		if(local.flip == 1)
+		{
+			local.upswitch.origin = local.elevator.origin + angles_toleft local.elevator.angles * 50 + angles_toup local.elevator.angles * -95
+			local.upswitch.angles = local.elevator.angles + ( 0 -90 0 )
+		}
+		else
+		{
+			local.upswitch.origin = local.elevator.origin + angles_toforward local.elevator.angles * -50 + angles_toup local.elevator.angles * -95
+			local.upswitch.angles = local.elevator.angles + ( 0 180 0 )
+		}
+		local.upswitch bind local.elevator
+		local.upswitch notsolid
+		local.elevator.upswitch = local.upswitch
+
+		local.upswitchtrig = spawn trigger_use
+		local.upswitchtrig.origin = local.upswitch.origin
+		local.upswitchtrig glue local.upswitch
+		local.upswitchtrig setsize ( -5 -5 -5 ) ( 5 5 5 )
+		local.upswitchtrig setthread switched
+		local.upswitchtrig.elevator = local.elevator
+		local.upswitchtrig.switch = local.upswitch
+		local.elevator.upswitchtrig = local.upswitchtrig
+
+		local.downswitch = spawn script_model
+		local.downswitch model "animate/electrical_switch_nopulse.tik"
+		if(local.flip == 1)
+		{
+			local.downswitch.origin = local.elevator.origin + angles_toleft local.elevator.angles * -50 + angles_toup local.elevator.angles * -95
+			local.downswitch.angles = local.elevator.angles + ( 0 90 0 )
+		}
+		else
+		{
+			local.downswitch.origin = local.elevator.origin + angles_toforward local.elevator.angles * 50 + angles_toup local.elevator.angles * -95
+			local.downswitch.angles = local.elevator.angles
+		}
+		local.downswitch bind local.elevator
+		local.downswitch notsolid
+		local.elevator.downswitch = local.downswitch
+
+		local.downswitchtrig = spawn trigger_use
+		local.downswitchtrig.origin = local.downswitch.origin
+		local.downswitchtrig glue local.downswitch
+		local.downswitchtrig setsize ( -5 -5 -5 ) ( 5 5 5 )
+		local.downswitchtrig setthread switched
+		local.downswitchtrig.elevator = local.elevator
+		local.downswitchtrig.switch = local.downswitch
+		local.elevator.downswitchtrig = local.downswitchtrig
+	}
+
+	local.elevator.array = local.array
+	local.elevator.floors = local.array.size
+
+	for(local.a = 1; local.a <= local.array.size; local.a++)
+	{
+		if(local.array[local.a].size >= 5 && local.array[local.a][5] == 1) { local.elevator.currentfloor = local.a }
+
+		if(local.array[local.a].size >= 4 && $(local.array[local.a][4]) != NULL)
+		{
+			if(local.array[local.a][4].size != 1) { local.elevator.gate[local.a] = $(local.array[local.a][4]) }
+			else { local.elevator.gate[local.a] = local.array[local.a][4] }
+			local.elevator.gate[local.a].floor = local.a
+			local.elevator.gate[local.a].open = 0
+		}
+
+		local.elevator waitthread spawn_callswitch local.array[local.a][2] local.array[local.a][3] local.a
+		local.elevator waitthread spawn_callswitchtrig local.array[local.a][2] local.a
+	}
+
+	if(local.elevator.currentfloor == NIL) { local.elevator.currentfloor = 1 }
+	local.elevator thread elevator_switches local.array
+
+	if(local.rooftele == 1) { local.elevator thread elevatorplayers_fellout local.shafttele_origin local.shafttele_destination }
+
+	local.elevator time 0
+	local.elevator moveto local.array[local.elevator.currentfloor][1] // don't use elevator.origin = new origin, otherwise the binded switches will not move with the elevator.
+	local.elevator move
+end
+
+spawn_callswitch local.origin local.angle local.floor:
+
+	local.callswitch = spawn script_model
+	local.callswitch model "animate/electrical_switch_nopulse.tik"
+	local.callswitch.origin = local.origin
+	local.callswitch.angles = ( 0 local.angle 0 )
+	local.callswitch notsolid
+	local.callswitch.floor = local.floor
+	self.callswitch[local.floor] = local.callswitch
+end local.callswitch
+
+spawn_callswitchtrig local.origin local.floor:
+
+	local.callswitchtrig = spawn trigger_use
+	local.callswitchtrig.origin = local.origin
+	local.callswitchtrig setsize ( -5 -5 -5 ) ( 5 5 5 )
+	local.callswitchtrig.floor = local.floor
+	local.callswitchtrig glue self.callswitch[local.floor]
+	local.callswitchtrig setthread switched
+	local.callswitchtrig.elevator = self
+	local.callswitchtrig.switch = self.callswitch[local.floor]
+	self.callswitchtrig[local.floor] = local.callswitchtrig
+end local.callswitchtrig
+
+//-----------------------------------------------------------------------------
+
+switched:
+
+	if(self.elevator == NULL || self.elevator.moving == 1) { end }
+	self.elevator.moving = 1
+
+	if(self.elevator.upswitch != NIL && self.elevator.upswitch != NULL) { self.elevator.upswitch.model = "animate/electrical_switch_nopulse.tik" }
+	if(self.elevator.downswitch != NIL && self.elevator.downswitch != NULL) { self.elevator.downswitch.model = "animate/electrical_switch_nopulse.tik" }
+	for(local.f = 1; local.f <= self.elevator.floors; local.f++)
+	{
+		if(self.elevator.callswitch != NIL && self.elevator.callswitch[local.f] != NULL) { self.elevator.callswitch[local.f].model = "animate/electrical_switch_nopulse.tik" }
+	}
+
+	self.switch playsound elevatorswitch
+	wait 0.28 // getting the timing right
+	self.switch anim on
+
+	if(self.elevator.gate != NIL && self.elevator.gate[self.elevator.currentfloor] != NULL) { self.elevator.gate[self.elevator.currentfloor] waitthread movegate "up" }
+
+	if(self.elevator.upswitchtrig != NIL && self.elevator.upswitchtrig != NULL && self == self.elevator.upswitchtrig)
+	{
+		local.newfloor = self.elevator.currentfloor + 1
+	}
+	else if(self.elevator.downswitchtrig != NIL && self.elevator.downswitchtrig != NULL && self == self.elevator.downswitchtrig)
+	{
+		local.newfloor = self.elevator.currentfloor - 1
+	}
+	else
+	{
+		for(local.f = 1; local.f <= self.elevator.floors; local.f++)
+		{
+			if(self.elevator.callswitchtrig != NIL && self.elevator.callswitchtrig[local.f] != NULL && self == self.elevator.callswitchtrig[local.f])
+			{
+				local.newfloor = local.f
+			}
+		}
+	}
+
+	self.elevator waitthread changefloor local.newfloor
+	self.elevator waitthread elevator_switches self.elevator.array
+
+	self.switch anim off
+	self.elevator.moving = 0
+end
+
+//-----------------------------------------------------------------------------
+
+changefloor local.newfloor:
+
+	self playsound elevatorstart
+	wait .5
+	self loopsound elevatormove
+
+	local.dist = vector_length(self.array[self.currentfloor][1] - self.array[local.newfloor][1])
+	self time (local.dist / self.movespeed * 1.000)
+
+	self moveto self.array[local.newfloor][1]
+	self waitmove
+
+	self stoploopsound
+	self playsound elevatorstop
+	self.currentfloor = local.newfloor
+end
+
+//-----------------------------------------------------------------------------
+
+elevator_switches local.array:
+
+	wait .5
+	for(local.a = 1; local.a <= local.array.size; local.a++)
+	{
+		if(self.currentfloor == local.a)
+		{
+			if(self.callswitch != NIL && self.callswitch[local.a] != NULL)
+			{
+				self.callswitch[local.a].model = "animate/electrical_switch_nopulse.tik"
+				self.callswitchtrig[local.a] nottriggerable
+			}
+
+			if(self.gate != NIL && self.gate[local.a] != NULL) { self.gate[local.a] thread movegate "down" }
+
+			if(local.a == 1)
+			{
+				if(self.upswitch != NIL && self.upswitch != NULL)
+				{
+					self.upswitch.model = "animate/electrical_switch_pulse.tik"
+					self.upswitchtrig triggerable
+				}
+				if(self.downswitch != NIL && self.downswitch != NULL)
+				{
+					self.downswitch.model = "animate/electrical_switch_nopulse.tik"
+					self.downswitchtrig nottriggerable
+				}
+			}
+			else if(local.a == local.array.size)
+			{
+				if(self.upswitch != NIL && self.upswitch != NULL)
+				{
+					self.upswitch.model = "animate/electrical_switch_nopulse.tik"
+					self.upswitchtrig nottriggerable
+				}
+				if(self.downswitch != NIL && self.downswitch != NULL)
+				{
+					self.downswitch.model = "animate/electrical_switch_pulse.tik"
+					self.downswitchtrig triggerable
+				}
+			}
+			else
+			{
+				if(self.upswitch != NIL && self.upswitch != NULL)
+				{
+					self.upswitch.model = "animate/electrical_switch_pulse.tik"
+					self.upswitchtrig triggerable
+				}
+				if(self.downswitch != NIL && self.downswitch != NULL)
+				{
+					self.downswitch.model = "animate/electrical_switch_pulse.tik"
+					self.downswitchtrig triggerable
+				}
+			}
+		}
+		else
+		{
+			if(self.callswitch != NIL && self.callswitch[local.a] != NULL)
+			{
+				self.callswitch[local.a].model = "animate/electrical_switch_pulse.tik"
+				self.callswitchtrig[local.a] triggerable
+			}
+		}
+	}
+end
+
+movegate local.direction:
+
+	self playsound elevatorgate
+	self time 0.75
+	if(local.direction == "up") { self moveup 70 }
+	else { self movedown 70 }
+	self waitmove
+
+	if(local.direction == "up") { self.open = 0 } // self solid
+	else { self.open = 1 } // self notsolid
+end
+
+////////////////////////////////////////////////////////////////////////
+
+elevatorplayers_fellout local.origin local.destination:
+
+	if(local.origin != NIL && local.destination != NIL) // under the elevator
+	{
+		local.trig2 = spawn trigger_use
+		local.trig2.origin = local.origin + ( 0 0 10 )
+		local.trig2.destination = local.destination
+		local.trig2 model "fx/corona_red.tik"
+		local.trig2 setsize ( -10 -10 -10 ) ( 10 10 0 )
+		local.trig2.scale = 1.5
+		local.trig2 notsolid
+		local.trig2 show
+		local.trig2 setthread tele
+	}
+	local.trig = spawn trigger_use // elevator roof
+	local.trig.origin = self.origin + ( 0 0 10 )
+	local.trig.destination = self.origin + ( 0 0 -150 )
+	local.trig model "fx/corona_red.tik"
+	local.trig setsize ( -10 -10 -10 ) ( 10 10 0 )
+	local.trig.scale = 1.5
+	local.trig notsolid
+	local.trig show
+	local.trig setthread tele
+
+	while(self != NULL)
+	{
+		local.trig.origin = self.origin + ( 0 0 10 )
+		local.trig.destination = self.origin + ( 0 0 -150 )
+		waitframe
+	}
+end
+
+tele:
+	local.player = parm.other
+	local.player tele self.destination
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster:
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache elevatormove sound/mechanics/M1_LightTurn.wav soundparms 1.2 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
+	local.master aliascache elevatorstop sound/mechanics/Mec_GeneratorOff_01.wav soundparms 1.0 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
+	local.master aliascache elevatorgate sound/mechanics/Mec_ElevatorGate_03.wav soundparms 1.5 0.0 1.0 0.0 300 3000 auto loaded maps level.mapname
+	local.master aliascache elevatorstart sound/null.wav soundparms 1.5 0.0 1.0 0.0 800 3000 auto loaded maps level.mapname
+	local.master aliascache elevatorswitch sound/items/hit_notify.wav soundparms 1.5 0.0 1.0 0.0 320 2200 auto loaded maps level.mapname
+end

@@ -1,0 +1,475 @@
+// This script spawns in train switches to change a train's path. This script also deals with global/trainsequence.scr's spawning & changing of a train path's spline nodes.
+// Run this before "level waittill prespawn" for sounds to work.
+//
+// Train switches are initially not pulsating red by default.
+// While the train is traveling down a path (not off-map), train switches cannot be switched, since paths can only be changed once the train stops following the path.
+//
+// For this script, the array of spline nodes for the train path must be in the map's .scr file, and must be in a thread called: "train_splinepath".
+// 
+// Given the switch's targetname (i.e. $trainswitch1), the "train_splinepath" thread in the map's .scr file can have if-statements that check if $trainswitch1.switch = 1.
+// That way, the thread will switch to a new array of spline nodes if $trainswitch1 is switched (see UBER MODS m4l2.scr's "train_splinepath" thread for a larger example).
+// Example:
+//
+//	train_splinepath: // 2 track switches in this map: $trainswitch1 & $trainswitch2
+//
+//		if($trainswitch1 != NULL && $trainswitch1.switched == 1) // train stopping path
+//		{
+//			local.array = makeArray // targetname, origin, angles, speed, function (1 = stop, 2 = crash, 3 = tram or temporary stop), origin to begin stopping/crashing sounds.
+//				trainpath 	(( 8385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+//				t500 		(( 7385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+//				t501 		(( 6908 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40 	1 ( -3650 -1225 0 )
+//			endArray
+//		}
+//		else if($trainswitch2 != NULL && $trainswitch2.switched == 1) // train crashing path
+//		{
+//			local.array = makeArray
+//				trainpath 	(( 8385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+//				t500 		(( 7385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+//				t501 		(( 6908 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40 	2 ( -5910 4075 0 )
+//			endArray
+//		}
+//		else // train tunnel path
+//		{
+//			local.array = makeArray
+//				trainpath 	(( 8385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+//				t500 		(( 7385 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+//				t501 		(( 6908 2316 272 ) + ( 0 0 7 )) 	( 0 180 0 ) 			0.40
+//			endArray
+//		}
+//	end local.array // end by outputting the local.array.
+//
+//
+////////////////////////////////////////////////////////////////////////
+//
+// Provide targetnames for the trainswitch & pulsating trainswitch (always at the same origin).
+// If the train switch already exists (i.e. the custom map-made $trainswitch1 in M4L2), the script will move this train switch instead of spawning a new one.
+// Optionally, include the targetnames for the left & right rails. The train switch will move these rails & play rail-switching sounds.
+//
+// Parameters: train or train targetname, trainswitch targetname, pulsating trainswitch targetname, train switch origin, train switch angles, left rail targetname, right rail targetname, rail switch sound origin.
+//
+//	local.array = thread train_splinepath	// the train's path array must be placed in its own thread called "train_splinepath" for the switch to work.
+//
+//	exec global/trainsequence.scr local.array train1 60 // array, train name, off time.
+//	exec global/trainsequence_switch.scr train1 trainswitch1 trainswitch1_pulsating NIL NIL leftrail01 rightrail01	// train's targetname, switch name (give it a name), switchpulse name (give it a name), ...
+//	exec global/trainsequence_switch.scr train1 trainswitch2 trainswitch2_pulsating NIL NIL leftrail02 rightrail02	// ... switchorigin & switchangles (if switch & switchpulse = NULL or NIL), leftrail & rightrail targetnames, ...
+//															// ... rail switch sound origin (if left & right rails = NIL), axis ("x", "y", or "z" for trainswitch rotation).
+////////////////////////////////////////////////////////////////////////
+//
+// If both the trainswitch targetname & pulsating trainswitch targetname are NULL, then "switchorigin" & "switchangles" parameters must be included for the trainswitch's origin & angles. Example below:
+//
+//	exec global/trainsequence_switch.scr train1 trainswitch1 trainswitch1_pulsating ( -64 1112 16 ) ( 0 90 0 ) leftrail01 rightrail01
+//
+// To play a rail switching sound without left/right rails, make both "left rail" & "right rail" parameters = NIL, then add an origin for the sound entity. Example below:
+//
+//	exec global/trainsequence_switch.scr train1 trainswitch1 trainswitch1_pulsating NIL NIL NIL NIL ( -445 1211 6 )
+//
+
+////////////////////////////////////////////////////////////////////////
+//////////		Train Switches
+////////////////////////////////////////////////////////////////////////
+
+main local.train local.switch local.switchpulse local.switchorigin local.switchangles local.leftrail local.rightrail local.trackslide_origin local.axis:
+
+	thread scriptmaster
+
+	while(level.time == NIL) { waitframe }
+	while(level.time < 1) { waitframe } // wait until map has fully loaded.
+	waitframe // wait for local.train to spawn first.
+
+	if(local.train == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'train' parameter is missing!"); end }
+	if(local.train.size != 1 && $(local.train) == NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.train + " does not exist!"); end }
+	if($(local.train) != NULL && $(local.train).size > 1) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.train + " has the same targetname as another entity!"); end }
+	if(local.train == NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: " + local.train + " does not exist!"); end }
+	if(local.train.size != 1) { local.train = $(local.train) } // if the "train" parameter has a string input instead of a $targetname input, set "train" to be $(local.train).
+
+	if(local.switch == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'switch' targetname parameter is missing!"); end }
+	if($(local.switch) != NULL && $(local.switch).size > 1) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.switch + " has the same targetname as another entity!"); end }
+	if(local.switch.size != 1) { local.swstring = local.switch; local.switch = $(local.switch) }
+	if(local.switch != NULL)
+	{
+		local.swstring = local.switch.targetname
+		local.switchorigin = local.switch.origin
+		local.switchangles = local.switch.angles
+	}
+
+	if(local.switchpulse == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'switchpulse' targetname parameter is missing!"); end }
+	if($(local.switchpulse) != NULL && $(local.switchpulse).size > 1) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.switchpulse + " has the same targetname as another entity!"); end }
+	if(local.switchpulse.size != 1) { local.switchpulse = $(local.switchpulse) }
+
+	if(local.switch != NULL && (local.switch.model == "animate/trainswitch.tik" || local.switch.model == "animate/trainswitch_pulsating.tik")) { local.switch remove }
+	if(local.switchpulse != NULL && (local.switchpulse.model == "animate/trainswitch.tik" || local.switchpulse.model == "animate/trainswitch_pulsating.tik")) { local.switchpulse remove }
+	if(local.switch != NULL && local.switchpulse == NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.switch + " exists but $" + local.switchpulse + " does not. They must both exist or both be NULL."); end }
+	if(local.switch == NULL && local.switchpulse != NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.switch + " does not exist but $" + local.switchpulse + " does. They must both exist or both be NULL."); end }
+
+	if(local.switchorigin == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'switchorigin' parameter is missing for $" + local.swstring); end }
+	if(local.switchorigin != NIL && local.switchorigin[2] == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'switchorigin' parameter must be in ( 0 0 0 ) format for $" + local.swstring); end }
+	if(local.switchangles == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'switchangles' parameter is missing for $" + local.swstring); end }
+	if(local.switchangles != NIL && local.switchangles[2] == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'switchangles' parameter must be in ( 0 0 0 ) format for $" + local.swstring); end }
+
+	if(local.leftrail != NIL)
+	{
+		if(local.leftrail.size != 1 && $(local.leftrail) == NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.leftrail + " does not exist!"); end }
+		if($(local.leftrail) != NULL && $(local.leftrail).size > 1) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.leftrail + " has the same targetname as another entity!"); end }
+		if(local.leftrail == NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: " + local.leftrail + " does not exist!"); end }
+		if(local.leftrail.size != 1) { local.leftrail = $(local.leftrail) }
+	}
+	if(local.rightrail != NIL)
+	{
+		if(local.rightrail.size != 1 && $(local.rightrail) == NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.rightrail + " does not exist!"); end }
+		if($(local.rightrail) != NULL && $(local.rightrail).size > 1) { wait 1; println("----- ERROR global/trainsequence_switch.scr: $" + local.rightrail + " has the same targetname as another entity!"); end }
+		if(local.rightrail == NULL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: " + local.rightrail + " does not exist!"); end }
+		if(local.rightrail.size != 1) { local.rightrail = $(local.rightrail) }
+	}
+	if(local.leftrail == NIL && local.rightrail == NIL)
+	{
+		if(local.trackslide_origin != NIL && local.trackslide_origin[2] == NIL) { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'trackslide_origin' parameter must be in ( 0 0 0 ) format for $" + local.swstring); end }
+	}
+	if(local.axis != NIL && local.axis != "x" && local.axis != "y" && local.axis != "z") { wait 1; println("----- ERROR global/trainsequence_switch.scr: 'axis' parameter can only be 'x', 'y', or 'z'."); end }
+
+	if(local.switch == NULL && local.switchpulse == NULL)
+	{
+		local.switch = spawn script_model targetname local.swstring
+		local.switch model "animate/trainswitch.tik"
+		local.switch.origin = local.switchorigin
+		local.switch.angles = local.switchangles
+		local.switch anim idle
+		local.switch notsolid
+
+		local.trig = spawn trigger_use targetname (local.swstring + "_trig")
+		local.trig.origin = local.switchorigin
+		local.trig setsize ( -20 -20 -20 ) ( 20 20 20 )
+		local.trig setthread trainswitch2_triggered
+		local.trig.switch = local.switch
+		local.trig thread switch_message
+	}
+	else
+	{
+		local.trig = spawn trigger_use targetname (local.swstring + "_trig")
+		local.trig.origin = local.switchorigin
+		local.trig setsize ( -10 -10 -10 ) ( 10 10 10 )
+		local.trig setthread trainswitch1_triggered
+		local.trig thread switch_message
+	}
+
+
+	local.trig message ("*** Switching rails to a different track. ***")
+	local.trig.train = local.train
+	local.trig.switch = local.switch
+	local.trig.switchpulse = local.switchpulse
+	local.trig.leftrail = local.leftrail
+	local.trig.rightrail = local.rightrail
+	if(local.axis == "x" || local.axis == "z") { local.trig.axis = local.axis }
+	else { local.trig.axis = "y" }
+
+	if(local.trig.leftrail == NIL && local.trig.rightrail == NIL && local.trackslide_origin != NIL)
+	{
+		local.trig.soundent = spawn script_model
+		local.trig.soundent model "fx/dummy.tik"
+		local.trig.soundent.origin = local.trackslide_origin
+		local.trig.soundent notsolid
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+trainswitch1_triggered:
+
+	self nottriggerable
+	self.train.trainswitches_switching = 1
+	if(self.train.train_sequencing != 1)
+	{
+		if(self.toggle != 1)
+		{
+			self.switch.switched = 1
+			self.train waitthread train_splinepath_change
+
+ 			local.player = parm.other
+ 			//local.player iprint ("*** Switching rails to a different track. ***")
+
+			if($(self.switchpulse) != NULL)
+			{
+				self.switch hide
+				self.switchpulse show
+			}
+
+			thread rotate (self.axis + "left")
+			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "up" self.leftrail self.rightrail }
+			else { self.soundent playsound trackswitch }
+			self.toggle = 1
+		}
+		else
+		{
+			self.switch.switched = 0
+			self.train waitthread train_splinepath_change
+
+ 			local.player = parm.other
+ 			//local.player iprint ("*** Switching rails to the correct track. ***")
+
+			if($(self.switchpulse) != NULL)
+			{
+				self.switch show
+				self.switchpulse hide
+			}
+
+			thread rotate (self.axis + "right")
+			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "down" self.leftrail self.rightrail }
+			else { self.soundent playsound trackswitch }
+			self.toggle = 0
+		}
+		wait 1
+	}
+	else
+	{
+		local.player = parm.other
+ 		local.player iprint ("*** Rails cannot be switched right now! ***")
+		self message ""
+	}
+	self triggerable
+	self.train.trainswitches_switching = 0
+end
+
+//-----------------------------------------------------------------------------
+
+trainswitch2_triggered:
+
+	self nottriggerable
+	self.train.trainswitches_switching = 1
+	if(self.train.train_sequencing != 1)
+	{
+		if(self.toggle != 1)
+		{
+			if(self.switchedtwice != 1)
+			{
+				self.switch.model = "animate/trainswitch_pulsating.tik"
+				self.switch anim move
+			}
+			else
+			{
+				local.origin = self.switch.origin
+				local.angles = self.switch.angles
+				local.name = self.switch.targetname
+				self.switch remove
+
+				self.switch = spawn script_model targetname local.name
+				self.switch model "animate/trainswitch_pulsating.tik"
+				self.switch.origin = local.origin
+				self.switch.angles = local.angles + ( 0 180 0 )
+				self.switch anim idle
+				self.switch notsolid
+				self.switch anim move
+			}
+
+			self.switch.switched = 1
+			self.train waitthread train_splinepath_change
+
+ 			local.player = parm.other
+ 			//local.player iprint ("*** Switching rails to a different track. ***")
+			self message ("*** Switching rails to the correct track. ***")
+			self.switch playsound trackswitch
+
+			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "down" self.leftrail self.rightrail }
+			else { self.soundent playsound trackswitch }
+			self.toggle = 1
+		}
+		else
+		{
+			local.origin = self.switch.origin
+			local.angles = self.switch.angles
+			local.name = self.switch.targetname
+			self.switch remove
+
+			self.switch = spawn script_model targetname local.name
+			self.switch model "animate/trainswitch.tik"
+			self.switch.origin = local.origin
+			self.switch.angles = local.angles + ( 0 180 0 )
+			self.switch anim idle
+			self.switch notsolid
+			self.switch anim move
+
+			self.switch.switched = 0
+			self.train waitthread train_splinepath_change
+
+			local.player = parm.other
+ 			//local.player iprint ("*** Switching rails to the correct track. ***")
+			self message ("*** Switching rails to a different track. ***")
+			self.switch playsound trackswitch
+
+			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "up" self.leftrail self.rightrail }
+			else { self.soundent playsound trackswitch }
+			self.toggle = 0
+			self.switchedtwice = 1
+		}
+		wait 1 // or self.switch anim waittill animdone
+	}
+	else
+	{
+		local.player = parm.other
+ 		local.player iprint ("*** Rails cannot be switched right now! ***")
+		self message ""
+		local.triggeredonce = 0
+	}
+
+	self.train.trainswitches_switching = 0
+	self triggerable
+end
+
+//-----------------------------------------------------------------------------
+
+switch_message:
+
+	while(self != NULL)
+	{
+		if(self.train != NIL && self.train != NULL)
+		{
+			if(self.train.train_sequencing != 1)
+			{
+				if(self.toggle != 1) { self message ("*** Switching rails to a different track. ***") }
+				else { self message ("*** Switching rails to the correct track. ***") }
+			}
+			else { self message "" }
+		}
+		waitframe
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+rotate local.direction local.nosound:
+
+	self.switch time 2
+	self.switchpulse time 2
+	if(local.direction == "xleft") { self.switch rotatexup 180; self.switchpulse rotatexup 180 }
+	if(local.direction == "xright") { self.switch rotatexdown 180; self.switchpulse rotatexdown 180 }
+	if(local.direction == "yleft") { self.switch rotateyup 180; self.switchpulse rotateyup 180 }
+	if(local.direction == "yright") { self.switch rotateydown 180; self.switchpulse rotateydown 180 }
+	if(local.direction == "zleft") { self.switch rotatezup 180; self.switchpulse rotatezup 180 }
+	if(local.direction == "zright") { self.switch rotatezdown 180; self.switchpulse rotatezdown 180 }
+
+	self.switch move
+	self.switchpulse move
+	if(local.nosound != 1) { self.switch playsound trackswitch }
+end
+
+//-----------------------------------------------------------------------------
+
+moverail local.direction local.leftrail local.rightrail:
+
+	if($(local.leftrail) != NULL) { $(local.leftrail) thread movingrail local.direction 1 }
+	if($(local.rightrail) != NULL) { $(local.rightrail) thread movingrail local.direction }
+end
+
+movingrail local.direction local.play:
+
+	self time 2
+	if(local.direction == "up") { self rotateyup 1 }
+	else { self rotateydown 1 }
+
+	if(local.play == 1) { self playsound track_switching }
+	self waitmove
+end
+
+////////////////////////////////////////////////////////////////////////
+
+scriptmaster:
+
+	cache models/animate/trainswitch.tik
+	cache models/animate/trainswitch_pulsating.tik
+
+	level.mapname = getcvar "mapname"
+	local.master = spawn scriptmaster
+	local.master aliascache trackswitch1 sound/mechanics/M4_TrackLever.wav soundparms 1.2 0.0 1.2 0.0 320 2200 auto loaded maps level.mapname
+	local.master aliascache trackswitch2 sound/mechanics/M1_LeverPull.wav soundparms 1.2 0.0 1.0 0.0 320 2200 auto loaded maps level.mapname
+	local.master aliascache track_switching sound/mechanics/M4_TrainTrackSlide.wav soundparms 1.2 0.0 1.2 0.0 320 2200 auto loaded maps level.mapname
+end
+
+////////////////////////////////////////////////////////////////////////
+//////////	Train Sequence Spline Nodes
+////////////////////////////////////////////////////////////////////////
+
+splinepath_init local.patharray local.train local.currentnode:
+
+	if(local.currentnode != NIL)
+	{
+		for(local.n = 1; local.n <= local.patharray.size; local.n++)
+		{
+			if(local.patharray[local.n][1] == local.currentnode)
+			{
+				local.node = waitthread splinenode local.patharray[local.n] local.train local.currentnode
+				local.startindex = local.n + 1
+				break
+			}
+		}
+	}
+	else
+	{
+		local.node = waitthread splinenode local.patharray[1]
+		local.startindex = 2
+	}
+
+	for(local.n = local.startindex; local.n <= local.patharray.size; local.n++)
+	{
+		if(local.node != NIL && local.node != NULL)
+		{
+			if(local.n >= local.startindex + 1)
+			{
+				if(local.node.stop == 1 || local.node.crash == 1 || local.tram == 1)
+				{
+					if(local.node.crash != 1) { local.node speed 0 } // make the last stop/tram node's speed = 0 so it can slowly stop.
+					break
+				}
+			}
+		}
+
+		local.target = local.node
+		local.node = waitthread splinenode local.patharray[local.n] local.train local.currentnode
+		local.target.target = local.node
+	}
+
+	for(local.p = 1; local.p <= $(local.patharray[local.patharray.size][1]).size; local.p++)
+	{
+		if($(local.patharray[local.patharray.size][1])[local.p] != NULL && local.patharray[local.patharray.size].size >= 5 && local.patharray[local.patharray.size][5] >= 1)
+		{
+			if($(local.patharray[local.patharray.size][1])[local.p].crash != 1) { $(local.patharray[local.patharray.size][1])[local.p] speed 0 } // make the last stop/tram node's speed = 0 so it can slowly stop.
+			$(local.patharray[local.patharray.size][1])[local.p].stopend = 1
+		}
+	}
+end
+
+splinenode local.arraynode local.train local.currentnode:
+
+	local.node = spawn info_splinepath targetname local.arraynode[1]
+	if(local.arraynode.size < 2) { local.node.origin = ( 0 0 0 ) }
+	else { local.node.origin = local.arraynode[2] }
+	if(local.arraynode.size < 3) { local.node.angles = ( 0 0 0 ) }
+	else { local.node.angles = local.arraynode[3] }
+	if(local.arraynode.size < 4) { local.node.speed = 0.35 }
+	else { local.node speed local.arraynode[4] }
+
+	if(local.train != NIL && local.train != NULL && local.currentnode != NIL && local.node.targetname == local.currentnode)
+	{
+		local.node.origin = local.train.origin // move the .stop = 1 node to the train's origin, so the train doesn't jolt forward when moving again.
+		local.node.angles = local.train.angles
+	}
+
+	if(local.arraynode.size >= 5)
+	{
+		if(local.arraynode[5] == 1) { local.node.stop = 1 }
+		if(local.arraynode[5] == 2) { local.node.crash = 1 }
+		if(local.arraynode[5] == 3) { local.node.tram = 1 }
+	}
+	if(local.arraynode.size >= 6) { local.node.dostuff_origin = local.arraynode[6] }
+end local.node
+
+train_splinepath_change local.currentnode:
+
+	local.mapname = getcvar "mapname"
+	local.array = waitthread ("maps/" + local.mapname + ".scr")::train_splinepath
+	if(local.array == NIL) { end }
+
+	for(local.n = 1; local.n <= local.array.size; local.n++) // remove the old splinepath
+	{
+		if($(local.array[local.n][1]) != NULL) { $(local.array[local.n][1]) remove }
+	}
+
+	if(local.array != NIL && local.array[1].size > 1) { waitthread splinepath_init local.array self local.currentnode }
+end

@@ -337,7 +337,7 @@ airstrikes_alternate:
 		if(local.r == 0) { waitexec global/bomberplane_nospline.scr axis 2 local.rtime local.bombs local.timetodrop 1 }	// axis = 50% chance
 		if(local.r == 1)												// allies = 33% chance
 		{														// c47 = 17% chance
-			local.r2 = randomint(5)
+			local.r2 = randomint(6)
 			if(local.r2 == 0 || local.r2 == 1) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
 			if(local.r2 == 2 || local.r2 == 3) { waitexec global/bomberplane_nospline.scr allies 2 local.rtime local.bombs local.timetodrop 1 }
 			if(local.r2 == 4) { waitexec global/bomberplane_nospline.scr c47 2 local.rtime local.bombs local.timetodrop 1 }
@@ -376,6 +376,27 @@ trainrun local.reverse:
 		if(local.t % 2 != 0) { $("choochootrain_" + string(local.t)) thread startsound local.reverse }
 	}
 
+	local.train attachmodel models/fx/fx_nebelwerfer.tik "Box03" 1.5 ("trainsmoke_" + local.train.entnum) 1 -1 -1 -1 -1 ( 5 230 400 ) //( +left -right, +up -down, +forward -backward )
+	$("trainsmoke_" + local.train.entnum).angles = ( 75 90 0 )
+	$("trainsmoke_" + local.train.entnum) anim idle
+	$("trainsmoke_" + local.train.entnum) thread smokey local.train
+	$("trainsmoke_" + local.train.entnum) notsolid
+	local.train attachmodel models/fx/fx_nebelwerfer.tik "Box03" 1.5 ("trainsmoke2_" + local.train.entnum) 1 -1 -1 -1 -1 ( 5 230 75 ) //( +left -right, +up -down, +forward -backward )
+	$("trainsmoke2_" + local.train.entnum).angles = ( 80 90 0 )
+	$("trainsmoke2_" + local.train.entnum) anim idle
+	$("trainsmoke2_" + local.train.entnum) thread smokey local.train
+	$("trainsmoke2_" + local.train.entnum) notsolid
+ 
+	local.train attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( 66 24 384 ) //( +left -right, +up -down, +forward -backward )
+	local.train attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( -58 24 384 )
+	local.train attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( 66 24 -191 )
+	local.train attachmodel models/animate/fx_trainspark.tik "Box03" 1 ("trainsparks_" + local.train.entnum) 1 -1 -1 -1 -1 ( -58 24 -191 )
+	$("trainsparks_" + local.train.entnum)[1].angles = ( 90 -90 0 )
+	$("trainsparks_" + local.train.entnum)[2].angles = ( 90 -90 0 )
+	$("trainsparks_" + local.train.entnum)[3].angles = ( 90 -90 0 )
+	$("trainsparks_" + local.train.entnum)[4].angles = ( 90 -90 0 ) // trainsparks have 2 spraying directions: one that is always horizontal, and the other is controlled by $trainspark.angles[0].
+	$("trainsparks_" + local.train.entnum) anim start
+
 	local.traintrig = spawn trigger_multiple
 	local.traintrig.origin = local.train.origin
 	if(local.reverse != 1) { local.traintrig setsize ( -110 -500 -10 ) ( 110 2600 260 ) }
@@ -411,6 +432,20 @@ runover_players local.train:
 		waitframe
 	}
 	self remove
+end
+
+smokey local.train:
+ 
+	local.maxspeed = 200.000 // lower = bigger smoke, higher = smaller smoke.
+	while(self != NULL && local.train != NULL)
+	{
+		local.speed = waitthread global/math.scr::speed local.train.velocity
+		self.scale = local.speed / local.maxspeed
+ 
+		if(local.speed == 0) { self hide }
+		else { self show }
+		waitframe
+	}
 end
 
 ////////////////////////////////////////////////////////////////////////

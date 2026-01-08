@@ -5,7 +5,7 @@
 //
 // Change the weather anytime with the "cg_weather" cvar. Example: "cg_weather rain" in console.
 // Turn on/off thunder anytime with the "cg_thunder" cvar. Example: "cg_thunder 1" in console.
-// Adjust the weather's sound volume anytime with the "cg_rain_volume" cvar. Example: "cg_weather 0.5" in console, or any decimal between 0 and 1.
+// Adjust the weather's sound volume anytime with the "cg_rain_volume" cvar. Example: "cg_rain_volume 0.5" in console, or any decimal between 0 and 1.
 // To change "cg_rain_density", use the "cg_weather_density" cvar instead. Example: "cg_weather_density 0.35" in console, or any number between 0 and 9.
 //
 ////////////////////////////////////////////////////////////////////////
@@ -793,24 +793,35 @@ rain_inout:
 
 						if(int($player[local.i].origin[0]) >= local.X_min[local.a] && int($player[local.i].origin[0]) <= local.X_max[local.a] && int($player[local.i].origin[1]) >= local.Y_min[local.a] && int($player[local.i].origin[1]) <= local.Y_max[local.a] && int($player[local.i].origin[2]) >= local.Z_min[local.a] && int($player[local.i].origin[2]) <= local.Z_max[local.a])
 						{
+							if(level.interior_volumes[local.a].size >= 5)
+							{
+								if(level.interior_volumes[local.a][5] < 1 && level.interior_volumes[local.a][5] > 0) { local.sound_on = level.interior_volumes[local.a][5] }
+								else if(level.interior_volumes[local.a][5] <= 0) { local.sound_on = 0 }
+								else { local.sound_on = 1 }
+							}
+							else { local.sound_on = 1 }
+
 							if($player.size == 1 && getcvar("cg_weather_alwayson") != "1") // singleplayer only
 							{
 								if(level.interior_volumes[local.a].size < 6 || int(level.interior_volumes[local.a][6]) != 1) { level.raindest = 1; level.weathering = 0 }
+								else { level.raindest = 0; level.weathering = 1 }
 							}
 
-							if(level.rainvolume > 0 && getcvar("cg_rain_sounds") == "1" && $player[local.i].weather_soundent != NIL && $player[local.i].weather_soundent != NULL && $player[local.i].weather_soundent2 != NIL && $player[local.i].weather_soundent2 != NULL && (level.interior_volumes[local.a].size < 6 || int(level.interior_volumes[local.a][6]) != 1))
+							if(level.rainvolume > 0 && getcvar("cg_rain_sounds") == "1" && $player[local.i].weather_soundent != NIL && $player[local.i].weather_soundent != NULL && $player[local.i].weather_soundent2 != NIL && $player[local.i].weather_soundent2 != NULL)
 							{
-								if(level.interior_volumes[local.a].size >= 5)
+								if(level.interior_volumes[local.a].size < 6 || int(level.interior_volumes[local.a][6]) != 1)
 								{
-									if(level.interior_volumes[local.a][5] < 1 && level.interior_volumes[local.a][5] > 0) { local.sound_on = level.interior_volumes[local.a][5] }
-									else if(level.interior_volumes[local.a][5] <= 0) { local.sound_on = 0 }
-									else { local.sound_on = 1 }
+									$player[local.i].weather_soundent loopsound rainext (level.rain_sounds_volume * local.sound_on * 0.5) // rainint 1 // sound changed too sharply between rainext and rainint.
+									$player[local.i].weather_soundent2 loopsound rainwindow (level.rain_sounds_volume * local.sound_on) // rainwindow .5
+									$player[local.i].weather_inside = 1
 								}
-								else { local.sound_on = 1 }
-
-								$player[local.i].weather_soundent loopsound rainext (level.rain_sounds_volume * local.sound_on * 0.5) // rainint 1 // sound changed too sharply between rainext and rainint.
-								$player[local.i].weather_soundent2 loopsound rainwindow (level.rain_sounds_volume * local.sound_on) // rainwindow .5
-								$player[local.i].weather_inside = 1
+								else
+								{
+									$player[local.i].weather_soundent loopsound rainext (level.rain_sounds_volume * local.sound_on)
+									if($player[local.i].weather_nearwater == 1) { $player[local.i].weather_soundent2 loopsound rainpuddle (level.rain_sounds_volume * local.sound_on) }
+									else { $player[local.i].weather_soundent2 loopsound rainplant (level.rain_sounds_volume * local.sound_on) }
+									$player[local.i].weather_inside = 0
+								}
 							}
 							break
 						}

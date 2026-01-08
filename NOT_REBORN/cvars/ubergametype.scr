@@ -24,13 +24,16 @@ ubergametype:
 	local.cvar = getcvar("g_ubergametype")
 	while(getcvar("g_ubergametype") == local.cvar) { waitframe }
 
-	if(getcvar("g_uberhardcode") == "1" && level.time != NIL && level.time > 1)
+	if(getcvar("g_uberhardcode") == "1" && level.cvar_uberhardcode_bypass != 1)
 	{
+		setcvar "g_ubergametype" local.cvar
+		level.cvar_uberhardcode_bypass = 0
 		println("----- ERROR. Unable to change g_ubergametype.")
 		println("----- Type 'g_uberhardcode 0' to re-enable g_ubergametype CVAR.")
 		thread ubergametype
 		end
 	}
+	level.cvar_uberhardcode_bypass = 0
 
 	if(getcvar("g_ubergametype") == "bb")
 	{
@@ -71,13 +74,16 @@ uberhardcode:
 	if(getcvar("g_uberhardcode") == "1")
 	{
 		println("----- UBER hard-code: g_ubergametype CVAR disabled.")
-		println("----- UBER hard-code: g_ubergametype is now hard-coded to the list in global/uberversion.scr.")
-		println("g_ubergametype will be changed upon restarting.")
+		println("----- UBER hard-code: g_ubergametype is now hard-coded to the list in 'ubermods/hardcode_list.scr'. Updating the cvar now...")
+
+		level.cvar_uberhardcode_bypass = 1
+		exec ubermods/hardcode_list.scr
 	}
 	if(getcvar("g_uberhardcode") == "0")
 	{
 		println("----- UBER hard-code: g_ubergametype CVAR enabled.")
-		println("g_ubergametype will be changed upon restarting.")
+		println("----- UBER hard-code: g_ubergametype can now be changed manually.")
+		level.cvar_uberhardcode_bypass = 0
 	}
 	thread uberhardcode
 end
@@ -250,3 +256,4 @@ cheats_cvar:
 	else if(getcvar("cheats") == local.cvar1 && getcvar("thereisnomonkey") == "0") { setcvar "cheats" "0";		println("----- 'cheats' are now DISABLED. Map restart not required.") }
 	thread cheats_cvar
 end
+

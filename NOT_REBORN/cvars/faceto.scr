@@ -1,0 +1,105 @@
+main: // faceto.scr. Run "exec global/faceto.scr" in any map script to use the "faceto [targetname without $]" cvar. For multiple entities with same targetname: "faceto barrel[2]"
+
+	while(string(getcvar("faceto")) == "") { waitframe }
+	local.targetname = string(getcvar("faceto"))
+
+	if(local.targetname.size > 3 && local.targetname[local.targetname.size - 1] == "]")
+	{
+		if(local.targetname[local.targetname.size - 3] == "[")
+		{
+			local.arrayint = int(string(local.targetname[local.targetname.size - 2]))
+			local.subtract = 0
+		}
+		if(local.targetname[local.targetname.size - 4] == "[")
+		{
+			local.arrayint = int(string(local.targetname[local.targetname.size - 3]) + string(local.targetname[local.targetname.size - 2]))
+			local.subtract = 1
+		}
+		if(local.targetname[local.targetname.size - 5] == "[")
+		{
+			local.arrayint = int(string(local.targetname[local.targetname.size - 4]) + string(local.targetname[local.targetname.size - 3]) + string(local.targetname[local.targetname.size - 2]))
+			local.subtract = 2
+		}
+
+		local.arrayname = string("")
+		local.multiprint = 1
+
+		for(local.a = 0; local.a < (local.targetname.size - 3 - local.subtract); local.a++)
+		{
+			local.arrayname = local.arrayname + string(local.targetname[local.a])
+		}
+	}
+	if(local.arrayint == NIL && $(local.targetname) == NULL)
+	{
+		println("----- ERROR. Entity: $" + local.targetname + " does not exist!")
+		if($player.size >= 1) { $player iprint ("----- ERROR. Entity: $" + local.targetname + " does not exist!") }
+	}
+
+	if($(local.targetname) != NULL)
+	{
+		if($(local.targetname).size > 1)
+		{
+			println("----- NOTE. Multiple entities named: $" + local.targetname)
+			if($player.size >= 1) { $player iprint ("----- NOTE. Multiple entities named: $" + local.targetname) }
+
+			for(local.e = 1; local.e <= $(local.targetname).size; local.e++)
+			{
+				println("----- $" + local.targetname + "[" + local.e + "]")
+				if($player.size >= 1) { $player iprint ("----- $" + local.targetname + "[" + local.e + "]") }
+			}
+		}
+		if($(local.targetname).size == 1 && local.multiprint != 1)
+		{
+			waitexec cvars/cvars.scr::entprint local.targetname NIL 1
+
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if(isalive $player[local.i]) 
+				{
+					local.vec = $(local.targetname).origin - $player[local.i] gettagposition "eyes bone"
+					local.ang = vector_toangles local.vec
+					$player[local.i] face local.ang
+
+					local.x = waitthread global/math.scr::simplify_decimal $player[local.i].viewangles[0]
+					local.y = waitthread global/math.scr::simplify_decimal $player[local.i].viewangles[1]
+					local.z = waitthread global/math.scr::simplify_decimal $player[local.i].viewangles[2]
+					local.viewangles = "( " + local.x + " " + local.y + " " + local.z + " )"
+					$player[local.i] iprint ("----- $player.viewangles = " + local.viewangles)
+				}
+			}
+			if($player != NULL) { println("----- $player.viewangles = " + local.viewangles) }
+		}
+	}
+	if(local.arrayint != NIL)
+	{
+		if($(local.arrayname).size < local.arrayint)
+		{
+			println("----- ERROR. Entity: $" + local.arrayname + "[" + local.arrayint + "] does not exist!")
+			if($player.size >= 1) { $player iprint ("----- ERROR. Entity: $" + local.arrayname + "[" + local.arrayint + "] does not exist!") }
+		}
+
+		if($(local.arrayname).size >= local.arrayint)
+		{
+			waitexec cvars/cvars.scr::entprint local.arrayname local.arrayint 1
+
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if(isalive $player[local.i]) 
+				{
+					local.vec = $(local.arrayname)[local.arrayint].origin - $player[local.i] gettagposition "eyes bone"
+					local.ang = vector_toangles local.vec
+					$player[local.i] face local.ang
+
+					local.x = waitthread global/math.scr::simplify_decimal $player[local.i].viewangles[0]
+					local.y = waitthread global/math.scr::simplify_decimal $player[local.i].viewangles[1]
+					local.z = waitthread global/math.scr::simplify_decimal $player[local.i].viewangles[2]
+					local.viewangles = "( " + local.x + " " + local.y + " " + local.z + " )"
+					$player[local.i] iprint ("----- $player.viewangles = " + local.viewangles)
+				}
+			}
+			if($player != NULL) { println("----- $player.viewangles = " + local.viewangles) }
+		}
+	}
+	if(local.targetname != "") { setcvar "faceto" "" }
+  	thread main
+end

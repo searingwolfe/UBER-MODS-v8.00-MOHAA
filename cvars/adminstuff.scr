@@ -435,10 +435,11 @@ end
 check_player_stufftexts local.player: // when a player connects, check if their name can be changed via stufftext. If not, auto-kick them for hacking.
 
 	local.c = 0
+	while(local.player == NIL || local.player == NULL || local.c <= 20) { local.c++; waitframe } // make sure the player actually exists, not loading the map (1 second timer).
 	while(local.player != NIL && local.player != NULL && local.player getconnstate != 4) { waitframe } // make sure the player is CS_ACTIVE (in the game), not PRIMED, CONNECTED, ZOMBIE, or FREE.
 	while(local.player != NIL && local.player != NULL && local.player.IP_address_init == NIL) { waitframe } // wait for "IP_addresses" thread to finish obtaining an IP string.
 	while(local.player != NIL && local.player != NULL && local.player.using_OpenMOHAA == NIL) { waitframe } // wait for "using_OpenMOHAA" thread to finish determining if the player is running OpenMOHAA.
-	while(local.player == NIL || local.player == NULL || local.c <= 20) { local.c++; waitframe } // make sure the player actually exists, not loading the map (1 second timer).
+	wait 1
 
 	if(local.player == NIL || local.player == NULL) { end }
 	if(local.player.using_OpenMOHAA == 1) { end }

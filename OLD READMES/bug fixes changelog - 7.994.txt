@@ -1,0 +1,205 @@
+v7.994 (1-7-2026): - New CVAR created: "help".
+
+- Type "help 1" or "help all" into console to print all available UBER MODS cvars.
+- From the printed list, type "help [cvar name]" to print all available options & info for that cvar.
+
+- Updated READMEs for all the UBER MODS cvars to match the text printed from the "help all" cvar.
+
+---------------
+
+- New CVAR created: "faceto".
+
+- Run "exec global/faceto.scr" in any map script to use the "faceto [targetname without $]" cvar.
+- For multiple entities with same targetname: "faceto barrel[1]", "faceto barrel[2]", etc.
+- This cvar makes all players on the map face towards/look directly at the entity (also printing: coords, angles, entnum, target, etc).
+
+---------------
+
+- Drivable vehicles & flak88 turrets improved.
+
+- Passenger players' models will now rotate properly in their seats, regardless of the vehicle/boat's angles (facing up/down, banked on sloped terrain, etc).
+- Sine & cosine functions of the passenger & vehicle's relative-yaw angle prevent the passenger's angles from clipping into the vehicle (player's actual camera, however, is still stuck vertical. hopefully a fix soon).
+- When passengers hold secondary FIRE(zoom) to look around (not stuck to vehicle's angles), these math functions update in real-time to adjust their player model's angles and keep them perpendicular to the vehicle.
+
+- For drivable tanks, ensured that jeep_30cal_viewmodels are removed to prevent them sticking to players' screens when they detach from the turret, and fixed some NULL errors from tank projectiles.
+- For Flak88 Turrets, holding secondary FIRE(zoom) for looking around also adjusts the driver dummy model's angles to keep it perpendicular to the turret's angles (since the dummy is an attachmodel, it doesn't need sine & cosine functions).
+
+- Fixed players that could switch teams in a passenger seat and respawn back to the vehicle, instead of respawning normally.
+- Fixed passengers becoming solid when changing seats, since they must remain notsolid while the vehicle's trig_shot & trig_proj determines damage.
+- Fixed issue with "passengers" thread not remembering who the player is (local.player was sometimes NIL), but this rarely caused the script to break since it was still waiting a "waitframe".
+- Passengers that are taunting (by pressing USE(e) 5+ times within 1 second) are now able to JUMP to exit the vehicle & cancel the taunt.
+
+---------------
+
+- Flyable planes improved (when ejecting/crashing).
+
+- Crashing flyable planes will now twist & bank its angles while falling if the player ejected at a non-horizontal angle (non-zero roll angle), improving plane crash realism.
+- The twist rate depends on how much roll-angle the player had before ejecting, and how fast the plane was traveling.
+
+- Players ejecting from planes will be briefly notsolid until 100+ units away from the plane.
+- This keep the plane from suddenly stopping and falling straight down when touching the parachuting player, and keeps the player from suddenly falling full-speed after "landing" on the plane (cancelling parachute).
+- Players ejecting from planes and currently parachuting downwards will now stop moving down if their velocity suddenly becomes 0 (landed on an entity, not just ground) or if they fall too far under the map.
+
+- Crashing flyable planes' explosion emitters will now always be 25 units behind the plane's angles, ensuring the explosions remain visible if a fast-moving plane crashes into a wall, ground, water, etc.
+- Fire & smoke emitters are now binded instead of glued to the crashing plane, ensuring they emit from directly inside the plane.
+
+---------------
+
+- Misc improvements.
+
+- For UBER Base-Builder ("g_ubergametype bb"), fixed Lifts that were moving too far down when moving up/down.
+- While holding an Object, players can now hold secondary FIRE(zoom) while not holding USE(e) to rotate it up/down with the same angles as the player's viewangles (Reborn / Nightfall only).
+
+- Fixed bugs between "g_uberhardcode" and "g_ubergametype" cvars for some cases, only after the map initially loaded.
+- The "proximity_pointer" cvar will now print "multiple entities found at origin = [coords]" and a list of entnums & targetnames if more than one entity shares that exact origin.
+- Type "help proximity_pointer" into console for more info.
+
+- Increased Guided Missile's shoot-down trigger box from 25 units radius to 75 units radius, and ensured that the trigger always stays with the missile (binded it instead of gluing it).
+- This makes Guided Missiles much easier to shoot down with bullets, as intended.
+
+- Fixed Giant Bomb & Light Bomb explosions occuring at their groundtarget destination even if the bomb itself did not make it all the way there (an object/vehicle/etc blocked its path).
+- Explosions will now always occur at the Giant/Light Bomb's projectile origin.
+- Added a lanternflame emitter onto the Joint trigger's tip. 
+
+- Reduced each set of Bangalore Wall-Bomb's idle entities by 2 (maps/training_mapscripts/bangalore_wallbomb.scr), by only briefly spawning in the explosion & debris emitters when a player triggers the alarmswitch.
+
+- Replaced the elevator script in M1L3C with "global/elevator.scr", and removed some unwanted switches & invisible wall clips.
+- Added trainsparks & smoke emitters for the train in M2L1 that occasionally speeds cross the tracks behind Allies spawn.
+- Replaced the train & traincab scripts in M2L3 with "global/trainsequence.scr".
+- Added flyable planes in M4L2. Replaced the train, trainswitch1, and trainswitch2 scripts in M4L2 with "global/trainsequence.scr", and replaced the elevator script with "global/elevator.scr".
+- Changed some outdoor ambience sounds in M6L2A.
+
+- Custom death animations (global/custom_deaths.scr) improved by turning physics on for the spawned dead body, and matching the new body's velocity with the player's actual hidden dead body (also making the real body notsolid).
+- Players that are killed by any $world damage will no longer spawn a dead body for a custom death animation, preventing the unnecessary extra body from blocking part of the dead player's view.
+
+- Added "speed" function in "global/math.scr", allowing scripters to add "local.speed = waitthread global/math.scr::speed local.velocity" to quickly determine a "( 0 0 0 ) format" velocity's speed, outputted as an integer.
+
+- Fixed "global/respawn_fix.scr" script (always respawn players at farthest spawn point from all other enemy players) that wasn't properly respawning players if they were alive but their ".dead = 1" (spectating in deathcams mod).
+
+- For "global/weather.scr", fixed a bug that caused interior weather sounds to stop playing if running through an interior ambience volume with < 1 max volume (i.e. set to 0.5).
+- Also fixed a spamming NULL error if a player's weather_soundent or weather_soundent2 is somehow NULL.
+
+---------------
+
+- New scripts created: "global/trainsequence.scr" & "global/trainsequence_switch.scr".
+
+- See these scripts for more README info on how to use them, or see examples from M2L3, M4L2, M6L2B.
+
+- The "global/trainsequence.scr" script spawns a rideable train that follows down a simple array of path nodes, and resets after a specified "off time".
+
+- There are 4 general path cases for the train:
+- entrance tunnel to exit tunnel.
+- entrance tunnel to stop, stop to exit tunnel.
+- entrance tunnel to stop.
+- entrance tunnel to crash.
+- At the end of each path when going through the exit tunnel, the train will keep traveling off-map for 1/2 the "off time" duration,
+- then move from off-map towards the entrance tunnel and back on-map for the other 1/2 duration.
+- Multiple path cases can be mixed together. For example, entrance tunnel to stop, stop to next stop, stop to crash.
+- The train will not continue its path after crashing.
+
+- The train will start at the 1st node in its path and move to each node down the list, facing the node's angles & moving at the relative speed value once reaching that node.
+- Once reaching a "stop" or "tram" node, the train will stop completely.
+- The script makes all "stop" & "tram" nodes' speed = 0 ("crash" nodes maintain their speed) to slow down the train before reaching this node.
+- Any passengers inside the train will be kicked out once reaching a "stop" or "tram" node.
+- If reaching a "stop" node if there's more nodes to travel to, the train waits until a passenger enters the train to continue moving.
+- Otherwise if reahing a "tram" node, the train waits until "off time" passes.
+- If the train path ends at a "stop", "crash", or "tram" node, the train will not fully reset until "off time" passes.
+- If there's more nodes to travel to, the stopped train will slighly move its current node to prevent jumping forward the train once the train continues its path again.
+- If the train reaches a "crash" node, the train will explode, rotate left/right, and fall onto its side, emitting smoke.
+- Any player or vehicle that gets in front of the train will be killed or blown up.
+
+- Players can ride the train by standing near the train windows and pressing USE(e). Cancel entering the train by leaning left/right.
+- Once inside the train, lean left/right to change seats. JUMP to exit the train.
+- If exiting from the middle seat (facing forward), the player will exit at the top of the train instead of its sides.
+
+- If the map has a rideable traincab (i.e. $choochootrain in M2L3), the traincab can be added for players to ride in once the train begins moving.
+- An optional cabdoor can also be added for the 1st traincab passenger to open/close the door.
+
+- If the train has a traincab, players will be auto-attached to the traincab once the train begins moving.
+- Once moving, players can JUMP to detatch and remain inside the traincab, and then press USE(e) to reattach.
+- Traincab riders can lean left/right to change seats.
+- Traincab riders in the 1st seat (closest to the cabdoor), can lean left/right to open/close the cabdoor.
+- Traincab riders in the 1st seat must hold FIRE(zoom) & lean left/right to change seats.
+- Any players that exit the train or traincab while off-map will be respawned instead.
+
+- Projectiles can also crash the train immediately, and settings can be changed to allow grenades, etc to blow up the train.
+- When impacting the train, the train will fall and explode based on the direction the projectile came from.
+- If hitting the train's front side, the train blows up the exact same way as when the train blows up at a scripted node (when dostuff = 2 for crash, but instead crashing immediately), by blowing up while it's falling over.
+- If hitting the left or right sides, the train falls over, then blows up. If hitting the back side, the train moves to one side, falls over, then blows up.
+- The train resets after its "off time" passes.
+
+- The "global/trainsequence_switch.scr" script spawns in train switches to change a train's path. This script also deals with global/trainsequence.scr's spawning & changing of a train path's spline nodes.
+
+- Train switches are initially not pulsating red by default.
+- While the train is traveling down a path (not off-map), train switches cannot be switched, since paths can only be changed once the train stops following the path.
+- For this script, the array of spline nodes for the train path must be in the map's .scr file, and must be in a thread called: "train_splinepath".
+- If the train switch already exists (i.e. the custom map-made $trainswitch1 in M4L2), the script will move this train switch instead of spawning a new one.
+- Optionally, include the targetnames for the left & right rails. The train switch will move these rails & play rail-switching sounds (or if no rails, they can instead be NIL to spawn a sound entity that plays a rail-switching sound).
+
+---------------
+
+- New script created: "global/elevator.scr".
+
+- See these scripts for more README info on how to use them, or see examples from M1L3C, M4L2.
+
+- This script allows players to use the map's current elevator or use any other object as an elevator.
+- The elevator has 2 switches inside: a switch to move the elevator up one floor (up-switch), and another switch to move the elevator down one floor (down-switch).
+- Each floor can have a gate that moves down when the elevator arrives at that floor.
+- Each floor can also have an elevator-calling switch somewhere on an adjacent wall, which moves the elevator up/down to the call-switch's current floor.
+
+- The elevator will always move the same speed when moving up/down one floor or multiple floors.
+- All switches will stop pulsating red while the elevator is moving.
+- When the elevator reaches a floor, that floor's call-switch will be disabled.
+- If the elevator is at the bottom floor, the down-switch will be disabled. If the elevator is at the top floor, the up-switch will be disabled.
+
+---------------
+
+- New script created: "global/spectator_jointeam.scr".
+
+- This simple script keeps track of spectators that chose a team (".dmteam" is no longer "spectator"), but have not chosen a weapon & have not spawned yet.
+- Some scripts, such as throwingknife.scr, may allow mods to be used/thrown/activated by spectators that only chose teams.
+- In any other mods/scripts that have ".dmteam != "spectator"" or similar, it is recommended to also add ".spectator_jointeam != 1" as well.
+
+- Example: "if(self.dmteam != "spectator" && self.spectator_jointeam != 1)" will check if the player has fully left spectator.
+- Example: "if(self.dmteam == "spectator" || self.spectator_jointeam == 1)" will check if the player is still in spectator, even after selecting a team but not yet a weapon.
+
+- In any of those mods/scripts, also add "exec global/spectator_jointeam.scr" to run this script & determine ".spectator_jointeam" values for each player.
+
+- The "global/give_players_knives.scr" script that spawns players with 1+ throwing knives (Hold USE(e) + FIRE(zoom) to throw) will now check if players have fully joined a team before giving them a knife.
+- This fixes the bug that allowed players to choose a team but not yet a weapon, and still be able to noclip around and throw knives at people.
+
+---------------
+
+- M6L2B fully modded.
+
+- Added "hail" weather ("snow" and "blizzard" don't work very well, since the map is too tall; "func_rain" entities must be spawned with custom setsizes lower than the map's height for these weather types).
+
+- Numerous hidden rooms, pathways, rooftops, and shortcuts are accessible via red teleporters across the map.
+- Some lasers added to outline the map's edges, the 2nd floor inside the Allies spawn snowy park building window, hidden rooms inside Axis spawn, and other invisible walls/edges.
+- 4 jetpacks added for players to fly onto any rooftop.
+- 7 ladders added for the 6 wooden towers & one in the Allies spawn for climbing up/down the snowy park building window near the edge of the map.
+- 6 wooden spotlight towers will occasionally play wood creaking sounds.
+- The Axis building door can be opened/closed like a real door.
+
+- For "g_ubermods 2":
+	- A rideable train comes out of the Allies-side tunnel and travels towards the Axis spawn (removed if "g_ubergametype bb", base-builder, is set).
+	- By default, the train travels on the left track, slows down & stops at the train station in Axis spawn.
+	- The train will wait there until a player enters the train's passenger seat (pressing USE(e) near the doors), then slowly moving again and into the tunnel.
+	- A train switch in the Axis rail control tower can switch the tracks below left (default & not pulsating) or right (pulsating red).
+	- If switched to the right-side track, the train will not stop, and instead travel through the tunnel, off map, then back out of the Allies-side tunnel again.
+	- Players can switch seats within the train by leaning left/right. If in the middle seat (facing forward) and exiting the train by pressing JUMP, the player will move to the top of the train.
+	- Players can blow up the train with a Radiobomb-Walkie, Giant Bomb or Light Bomb, or blowing up a vehicle near them. The train will crash & fall depending on which direction the radiusdamage came from.
+
+	- 4 vehicles (removed if "g_ubergametype bb", base-builder, is set), 2 flyable planes, 2 radiobomb walkies, 8 extra throwing knives added to the map.
+	- Vehicles can drive through any metal fence on this map.
+	- 1 radios inside the 2nd floor Axis spawn can turn on/off and cycle through playing 3 static sounds or music while turned on.
+	- 2 sets of bangalore wallbombs added.
+	- 2 radiobomb walkies added.
+	- Airstrikes will randomly occur by first choosing 1 of 3 map zones, then randomizing the zone's dimensions (instead of the entire map, since part of it is long and skinny).
+- For "g_ubermods 1":
+	- 6 auto-spotlights in the 6 wooden towers will follow loops of SplinePath nodes on the map, following any player that gets too close to the lights.
+	- 5 regular spotlights also added that players can control.
+	- 1 spotlight color switches can turn on/off the rapid color-changing of the white spotlight near the Axis rail control tower.
+	- 2 spotlight color switches can turn on/off the rapid color-changing of the auto-spotlights or turn on/off slower color-changing.
+
+<><><> <><><>

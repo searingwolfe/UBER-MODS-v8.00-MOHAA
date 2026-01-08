@@ -4,6 +4,14 @@
 
 main local.path local.team local.planes local.offtime local.bombs local.bombswait local.end local.noprint local.bulletstokill local.playerowner:
 
+////////////////////////////////////////////////////////////////////////
+	
+if(level.bomberplane_health == NIL) { level.bomberplane_health = 200 }			// default values:
+if(level.bomberplane_bombspeed == NIL) { level.bomberplane_bombspeed = 0.25 }		// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
+if(level.bomberplane_bombgravity == NIL) { level.bomberplane_bombgravity = 2 }		// higher = bombs drop faster vertically & closer to plane's splinepath
+
+////////////////////////////////////////////////////////////////////////
+
 	if(level.water_volumes != NIL && level.water_volumes.size >= 1)
 	{
 		for(local.v = 1; local.v <= level.water_volumes.size; local.v++)
@@ -35,10 +43,6 @@ main local.path local.team local.planes local.offtime local.bombs local.bombswai
 	else { local.bombsoff = 1 }
 	local.planes = int(local.planes)
 	if(level.scriptmaster_bomberplane != 1) { thread cache_plane_explodestuff }
-
-	if(level.bomberplane_health == NIL || level.bomberplane_health <= 0) { level.bomberplane_health = 200 }
-	if(level.bomberplane_bombspeed == NIL || level.bomberplane_bombspeed <= 0) { level.bomberplane_bombspeed = 0.25 }
-	if(level.bomberplane_bombgravity == NIL || level.bomberplane_bombgravity <= 0) { level.bomberplane_bombgravity = 2 }
 
 	if(local.playerowner != NIL && local.playerowner != NULL) { local.owner_exists = 1 }
 

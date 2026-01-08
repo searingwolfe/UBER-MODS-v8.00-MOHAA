@@ -13,28 +13,59 @@ plane_crashing:
 	self thread plane_crash
 	local.plane = self.plane
 
-	local.flyingexplosion = spawn "models/emitters/fireandsmoke.tik"			
-	local.flyingexplosion glue self.plane
-	local.flyingexplosion.origin = self.plane.origin
+	local.offset = self.plane.scale * -35
+	if(local.offset < -35) { local.offset = -35 }
+
+	local.flyingexplosion = spawn "models/emitters/fireandsmoke.tik"
+	local.flyingexplosion.origin = self.plane.origin + angles_toup self.plane.angles * local.offset
+	local.flyingexplosion bind self.plane
 	if(self.plane.model == "models/vehicles/c47fly.tik") { local.flyingexplosion.scale = self.plane.scale * 2 }
 	else { local.flyingexplosion.scale = self.plane.scale }
 	local.flyingexplosion anim start
 	local.flyingexplosion notsolid
 
-	local.flyingsmoke = spawn "models/emitters/plane_smoke.tik"			
-	local.flyingsmoke glue self.plane
-	local.flyingsmoke.origin = self.plane.origin
+	local.flyingsmoke = spawn "models/emitters/plane_smoke.tik"
+	local.flyingsmoke.origin = self.plane.origin + angles_toup self.plane.angles * local.offset
+	local.flyingsmoke bind self.plane
 	if(self.plane.model == "models/vehicles/c47fly.tik") { local.flyingsmoke.scale = self.plane.scale * 2 }
 	else { local.flyingsmoke.scale = self.plane.scale }
 	local.flyingsmoke anim start
 	local.flyingsmoke notsolid
 
+	local.initial_roll = local.plane.angles[2]
+	if(local.initial_roll > 180) { local.initial_roll -= 360 }
+	if(local.initial_roll < -180) { local.initial_roll += 360 }
+
+	local.bank_angle = local.initial_roll
+	if(local.bank_angle < 1) { local.bank_angle = local.bank_angle * -1 }
+	if(local.bank_angle <= 90) { local.amount = local.bank_angle / 90.000 }
+	else { local.amount = (180 - local.bank_angle) / 90.000 }
+
+	local.mult = 0
+	if(local.initial_roll > 0) { local.mult = 1 }
+	else if(local.initial_roll < 0) { local.mult = -1 }
+
+	local.roll_rate = 3.000 * local.amount * local.mult
+	local.current_roll = local.plane.angles[2]
+
+	self notsolid // keep the plane from suddenly stopping and falling straight down when touching the parachuting player.
+
 	while(local.plane != NIL && local.plane != NULL)
 	{
-		local.plane.angles = vector_toangles(local.plane.velocity)
+		local.angles = vector_toangles(local.plane.velocity)
+		local.plane.angles = ( local.angles[0] local.angles[1] local.current_roll )
+
+		local.current_roll += local.roll_rate
+		if(local.current_roll >= 360) { local.current_roll -= 360 }
+		if(local.current_roll < 0) { local.current_roll += 360 }
+
+		local.dist = vector_length(self.origin - local.plane.origin)
+		if(local.dist < 100) { self notsolid }
+		else if(isalive self && self.dead != 1 && self.driving != 1 && self.passenger != 1 && self.flying != 1 && self.missile == NIL) { self solid }
 		waitframe
 	}
 
+	if(isalive self && self.dead != 1 && self.driving != 1 && self.passenger != 1 && self.flying != 1 && self.missile == NIL) { self solid }
 	local.flyingsmoke remove
 	local.flyingexplosion remove
 end	
@@ -73,11 +104,16 @@ plane_explode local.scale local.hitthing:
 	if(self.plane != NIL && self.plane != NULL)
 	{
 		local.new_uberround = self.plane.new_uberround
-		local.origin = local.plane.origin 
+		local.origin = local.plane.origin
+		local.angles = local.plane.angles
 		//self.plane explode // removed, since the plane has its own radiusdamage when it explodes while touching a player.
 		self.plane remove
 	}
-	else { local.origin = self.origin }
+	else
+	{
+		local.origin = self.origin
+		local.angles = self.angles
+	}
 
 	if(self.plane != NIL && self.plane != NULL && self.plane.model == "models/vehicles/c47fly.tik")
 	{
@@ -92,7 +128,7 @@ plane_explode local.scale local.hitthing:
 	if(local.expscale < 0.6) { local.expscale = 0.6 }
 
 	local.Exp = spawn "emitters/mortar_higgins.tik"
-	local.Exp.origin = local.origin
+	local.Exp.origin = local.origin + angles_toforward local.angles * -25
 	local.Exp.angles = ( 0 -90 0 ) + ( 260 0 0 )
 	local.Exp light 1 0 1 local.radius
 	local.Exp anim start
@@ -101,7 +137,7 @@ plane_explode local.scale local.hitthing:
 	if(local.hitwater == 1)
 	{
 		local.Exp2 = spawn "animate/fx_mortar_water.tik"
-		local.Exp2.origin = local.origin
+		local.Exp2.origin = local.origin + angles_toforward local.angles * -25
 		local.Exp2 anim start
 		local.Exp2.scale = local.expscale * 1.20
 		local.Exp playsound artyexp_water
@@ -109,7 +145,7 @@ plane_explode local.scale local.hitthing:
 	else
 	{
 		local.Exp2 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound"
-		local.Exp2.origin = local.origin
+		local.Exp2.origin = local.origin + angles_toforward local.angles * -25
 		local.Exp2 anim start
 		local.Exp2.scale = local.expscale
 		local.Exp playsound artyexp_sand

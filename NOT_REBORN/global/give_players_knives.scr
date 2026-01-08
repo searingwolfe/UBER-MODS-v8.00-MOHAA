@@ -17,20 +17,25 @@ main local.knivesheld:
 	if(level.throwingknife_scriptmaster != 1) { exec global/throwingknife.scr::initialize }
 	level.throwingknife_scriptmaster = 1
 
+	exec global/spectator_jointeam.scr // determine ".spectator_jointeam" values for each player, to ensure they have fully left "spectator" before allowing knives to be thrown.
+
 	while($player.size < 1) { waitframe } // don't run any $player.size for-loops until at least 1 player has joined.
 	while(1)
 	{
 		for(local.c = 1; local.c <= $player.size; local.c++)
 		{
-			if(isalive $player[local.c] && $player[local.c].dmteam != "spectator" && $player[local.c].knivesheld == NIL) // player came out of spectator for 1st time.
-			{				
-				$player[local.c] thread spawn_with_knives local.knivesheld
+			if($player[local.c].dmteam != "spectator" && $player[local.c].spectator_jointeam != 1)
+			{
+				if(isalive $player[local.c] && $player[local.c].knivesheld == NIL) // player came out of spectator for 1st time.
+				{				
+					$player[local.c] thread spawn_with_knives local.knivesheld
+				}
+				if((!isalive $player[local.c] || $player[local.c].dead == 1) && $player[local.c].knivesheld != NIL && $player[local.c].knivesheld < 1) // player died, increment knivesheld.
+				{				
+					$player[local.c] thread spawn_with_knives local.knivesheld
+				}
 			}
-			if($player[local.c] != NULL && (!isalive $player[local.c] || $player[local.c].dead == 1) && $player[local.c].dmteam != "spectator" && $player[local.c].knivesheld != NIL && $player[local.c].knivesheld < 1) // player died, increment knivesheld.
-			{				
-				$player[local.c] thread spawn_with_knives local.knivesheld
-			}
-			if($player[local.c].dmteam == "spectator") { $player[local.c].knivesheld = NIL }
+			else { $player[local.c].knivesheld = NIL }
 		}
 		waitframe
 	}
@@ -40,7 +45,7 @@ spawn_with_knives local.knivesheld:
 
 	self.knivesheld = local.knivesheld
 
-	while(self != NULL && (!isalive self || self.dead == 1) && self.dmteam != "spectator") { waitframe } // wait until players are alive again, before giving them knives again.
+	while(self != NULL && (!isalive self || self.dead == 1) && self.dmteam != "spectator" && self.spectator_jointeam != 1) { waitframe } // wait until players are alive again, before giving them knives again.
 
 	if(self != NULL) { self thread global/throwingknife.scr::give_knife NIL NIL NIL } // NILs are used since these knives once thrown have no initial origins/names for resetting them.
 end

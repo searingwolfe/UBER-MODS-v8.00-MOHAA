@@ -225,12 +225,12 @@ triggered:
 		{
 			if(self.vehicle.gun != NIL && self.vehicle.gun != NULL && (self.vehicle.turretplayer == NIL || self.vehicle.turretplayer == NULL))
 			{
-				if(local.player getposition == "crouching") { self.vehicle thread passengers }
+				if(local.player getposition == "crouching") { self.vehicle thread passengers local.player }
 				else { self.vehicle thread turretslot local.player }
 				end
 			}
 
-			if(self.vehicle.passengers.size < self.vehicle.seats) { self.vehicle thread passengers }
+			if(self.vehicle.passengers.size < self.vehicle.seats) { self.vehicle thread passengers local.player }
 			else { local.player iprint "There are no seats available." }
 		}
 		else { self.vehicle thread playergetin }
@@ -285,7 +285,7 @@ playergetin:
 			local.player safeholster 0
 			local.player.enteringvehicle = 0
 			self.attachingdriver = 0
-			self thread passengers
+			self thread passengers local.player
 			end
 		}
 
@@ -975,7 +975,7 @@ turretslot local.player:
 
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & turret player could be attached to the same seat!
-	if(self == NULL || self.flooded == 1 || self.dead == 1 || self.turretplayer != NIL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
+	if(self == NULL || self.flooded == 1 || self.dead == 1 || self.turretplayer != NIL || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.missile != NIL) { end }
 
 	self.turretplayer = local.player
 	self.turretplayer.passenger = 1
@@ -1059,6 +1059,7 @@ turretplayer_reset local.team local.player local.dead:
 	local.player.passenger = 0
 	local.player.driving = 0
 	local.player.turreting = 0
+	local.player.remove_viewmodel = 1
 	local.player.scale = 1
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
@@ -1169,7 +1170,7 @@ passengers local.player local.s:
 	local.team = local.player.dmteam
 	waitframe	// need this here, otherwise driver & passenger could be attached to the same seat!
 
-	if(self == NULL || self.flooded == 1 || self.dead == 1 || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0) { end }
+	if(self == NULL || self.flooded == 1 || self.dead == 1 || local.player == NIL || local.player == NULL || !isalive local.player || local.player.dmteam != local.team || local.player == self.driver || local.player == self.turretplayer || local.player.passenger == 1 || local.player.driving == 1 || local.player.flying == 1 || local.player.dead == 1 || level.change_team_score == 1 || level.bbactive == 0 || local.player.missile != NIL) { end }
 
 	if(local.s == NIL)
 	{
@@ -1231,8 +1232,50 @@ passengers local.player local.s:
 		if(local.player.viewangles[0] > 180) { local.player.viewangles = ( (10 + (self.angles[0] - 360)) local.player.viewangles[1] local.player.viewangles[2] ) } // any viewangles[0] +/- 180 will cause camera issues (going under vehicle).
 		if(local.player.viewangles[0] < -180) { local.player.viewangles = ( (local.player.viewangles[0] + 360) local.player.viewangles[1] local.player.viewangles[2] ) } // prevent camera from moving too far down.
 
-		if(local.player.fireheld == 1) { $("passenger_seat_" + local.s + "_" + self.entnum).angles = ( self.angles[0] local.player.viewangles[1] self.angles[2] ) } // keep the passenger seat's angles the same as the player's angles, so the player's model can rotate around in his seat.
-		else { $("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles }
+		if(local.player.fireheld == 1)
+		{
+			if(local.player.firehelding_passenger != 1)
+			{
+				local.player.firehelding_passenger = 1
+				local.init_vehicleYaw = self.angles[1]
+				if(local.init_vehicleYaw > 180) { local.init_vehicleYaw -= 360 }
+				if(local.init_vehicleYaw <= -180) { local.init_vehicleYaw += 360 }
+			}
+
+			local.viewangles1 = local.player.viewangles[1]
+			if(local.viewangles1 >= 180) { local.viewangles1 -= 360 }
+			if(local.viewangles1 <= -180) { local.viewangles1 += 360 }
+			local.selfangles0 = self.angles[0]
+			if(local.selfangles0 >= 180) { local.selfangles0 -= 360 }
+			if(local.selfangles0 <= -180) { local.selfangles0 += 360 }
+			local.selfangles1 = self.angles[1]
+			if(local.selfangles1 >= 180) { local.selfangles1 -= 360 }
+			if(local.selfangles1 <= -180) { local.selfangles1 += 360 }
+			local.selfangles2 = self.angles[2]
+			if(local.selfangles2 >= 180) { local.selfangles2 -= 360 }
+			if(local.selfangles2 <= -180) { local.selfangles2 += 360 }
+
+			local.relativeYaw = (local.viewangles1 - local.init_vehicleYaw) + (local.init_vehicleYaw - local.selfangles1)
+			if(local.relativeYaw >= 180) { local.relativeYaw -= 360 }
+			if(local.relativeYaw <= -180) { local.relativeYaw += 360 }
+
+			//local.sinYaw = waitthread global/math.scr::sine local.relativeYaw
+			//local.cosYaw = waitthread global/math.scr::cosine local.relativeYaw
+			local.PI = 3.14159265359
+			local.relativeYaw = local.relativeYaw * (local.PI / 180)
+			local.sinYaw = sin local.relativeYaw
+			local.cosYaw = cos local.relativeYaw
+
+			local.newPitch = local.selfangles0 * local.cosYaw - local.selfangles2 * local.sinYaw
+			local.newRoll  = local.selfangles0 * local.sinYaw + local.selfangles2 * local.cosYaw
+
+			$("passenger_seat_" + local.s + "_" + self.entnum).angles = ( local.newPitch local.player.viewangles[1] local.newRoll )
+		}
+		else
+		{
+			$("passenger_seat_" + local.s + "_" + self.entnum).angles = self.angles
+			local.player.firehelding_passenger = 0
+		}
 
 		local.cycled = 0
 		local.changeseats = 0
@@ -1260,13 +1303,19 @@ passengers local.player local.s:
 			local.player unglue
 			if(local.player.isdog != 1) { local.player show }
 			local.player give "models/items/binoculars.tik"
-			local.player solid
-			local.player takedamage
 			//local.player noclip
 			local.player forcetorsostate STAND
 			local.player forcelegsstate STAND
-			if(local.changeseats != 1) { local.player.origin += angles_toup self.angles * self.outheight }
+
 			local.player.viewangles = ( local.player.viewangles[0] local.player.viewangles[1] 0 )
+			if(local.changeseats != 1)
+			{
+				local.player solid
+				local.player takedamage
+
+				if(self.can_getout == 2) { local.player respawn }
+				else { local.player.origin += angles_toup self.angles * self.outheight }
+			}
 
 			local.player thread wallstuck_fix
 			self.passengers[local.s] = NIL
@@ -1274,6 +1323,7 @@ passengers local.player local.s:
 			local.player.drivingent = NIL
 			local.player.ridingent = NIL
 			local.player.driving = 0
+			local.player.firehelding_passenger = 0
 			if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove }
 
 			if(local.changeseats == 1 && self.flooded != 1) { self thread passengers local.player local.newseat }
@@ -1300,6 +1350,7 @@ passengers local.player local.s:
 		local.player.drivingent = NIL
 		local.player.ridingent = NIL
 		local.player.driving = 0
+		local.player.firehelding_passenger = 0
 		if(local.player.dmteam != spectator)
 		{
 			if(isalive local.player) { local.player give "models/items/binoculars.tik" }
@@ -1378,6 +1429,7 @@ spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwi
 	local.trig.model = self.model	// any entities that have attachmodels on them will crash the server if those entities do not have a specified model, since there is no "Box01" to attach to;
 	local.trig.scale = self.scale	// this also does not print any errors when crashing the server.
 	local.trig hide
+	//local.trig notsolid	// don't use this, or the trigger will not work.
 
 	local.trigshot = spawn trigger_multiple targetname (self.targetname + "_trigshot") spawnflags 128 // instantly determine the vehicle's shooter (runs setthread each time it's triggered).
 	local.trigshot.origin = self.origin
@@ -1389,6 +1441,7 @@ spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwi
 	local.trigshot.model = self.model
 	local.trigshot.scale = self.scale
 	local.trigshot hide
+	//local.trigshot notsolid
 
 	while($("driver_seat_" + self.entnum) != NULL) { $("driver_seat_" + self.entnum) remove; waitframe }
 	while($("rear_view_" + self.entnum) != NULL) { $("rear_view_" + self.entnum) remove; waitframe }
@@ -1841,7 +1894,7 @@ wallstuck_fix:
 	if(self.wallstuck_fixing == 1) { end }
 	self.wallstuck_fixing = 1
 
-	while(self != NULL && isalive self && self.dmteam == local.team) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.driving != 1 && level.change_team_score != 1 && level.bbactive != 0 && self.passenger != 1 && self.flying != 1 && self.missile != NIL) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
 	{
 		if(local.c >= 60) // about 3 seconds
 		{

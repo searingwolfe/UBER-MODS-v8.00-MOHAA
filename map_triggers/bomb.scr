@@ -244,7 +244,7 @@ local.laser21 gravity 0
 local.laser21.velocity = (angles_toforward ( local.player.viewangles[0] local.player.angles[1] local.player.viewangles[2] )) * local.velocity
 local.laser21.player_owner = local.player
 
-local.laser21 thread waittill_touch local local.laser22 local.groundtarget local.player
+local.laser21 thread waittill_touch local local.laser22 local.groundtarget local.player local.originold
 local.hitthing = local.player
 while(local.hitthing == local.player || (local.player.drivingent != NIL && local.player.drivingent != NULL && local.hitthing == local.player.drivingent) || (local.player.ridingent != NIL && local.player.ridingent != NULL && local.hitthing == local.player.ridingent) || (local.player.flying == 1 && local.hitthing == local.player.plane))
 {
@@ -253,10 +253,10 @@ while(local.hitthing == local.player || (local.player.drivingent != NIL && local
 }
 local.laser21.velocity = ( 0 0 0 )
 
-if(local.laser21.hitwater != 1 && local.laser21.flewtoolong != 1) { thread boomerweenie_explode local.laser21 local.laser22 local.groundtarget local.player }
+if(local.laser21.hitwater != 1 && local.laser21.flewtoolong != 1) { thread boomerweenie_explode local.laser21 local.laser22 local.groundtarget local.player local.originold }
 end
 
-boomerweenie_explode local.laser21 local.laser22 local.groundtarget local.player:
+boomerweenie_explode local.laser21 local.laser22 local.groundtarget local.player local.originold:
 
 	local.blewup = 1
 	for(local.i = 1; local.i <= $player.size; local.i++) 					// use this instead of radiusdamage, so rockets can count as score/kills
@@ -303,7 +303,7 @@ boomerweenie_explode local.laser21 local.laser22 local.groundtarget local.player
 
 	waitframe
 	local.Exp21 = spawn "fx/scriptbazookaexplosion.tik" // also does 250 radiusdamage
-	if(local.groundtarget != NULL) { local.Exp21.origin = local.groundtarget.origin }
+	if(local.groundtarget != NULL) { local.Exp21.origin = local.laser21.origin }
 	if(local.groundtarget == NULL) { local.Exp21.origin = local.originold }
 	local.Exp21.scale = 1.7
 	local.Exp21 light 1 0 0 600
@@ -319,14 +319,14 @@ boomerweenie_explode local.laser21 local.laser22 local.groundtarget local.player
 	if(local.laser21.hitwater == 1) { local.Exp22 = spawn "animate/fx_mortar_water.tik" }
 	else { local.Exp22 = spawn "emitters/mortar_dirt_nosound.tik" targetname "mortar_dirt_nosound" }
 
-	if(local.groundtarget != NULL) { local.Exp22.origin = local.groundtarget.origin }
+	if(local.groundtarget != NULL) { local.Exp22.origin = local.laser21.origin }
 	if(local.groundtarget == NULL) { local.Exp22.origin = local.originold }
 	local.Exp22.scale = 1.7
 	local.Exp22 light 1 .5 0 600
 	local.Exp22 anim start
 	local.Exp23 = spawn script_model
 	local.Exp23 model "fx/barrel_gas_destroyed.tik"
-	if(local.groundtarget != NULL) { local.Exp23.origin = local.groundtarget.origin + ( 0 0 35 ) }
+	if(local.groundtarget != NULL) { local.Exp23.origin = local.laser21.origin + ( 0 0 35 ) }
 	if(local.groundtarget == NULL) { local.Exp23.origin = local.originold }
 	local.Exp23.scale = 1
 	local.Exp23 anim idle
@@ -355,7 +355,7 @@ end
 
 ////////////////////////////////////////////////////////////////////////
 
-waittill_touch local.thread local.laser22 local.groundtarget local.player:
+waittill_touch local.thread local.laser22 local.groundtarget local.player local.originold:
 
 	local.c = level.giantbomb_time
 	while(1)
@@ -387,7 +387,7 @@ waittill_touch local.thread local.laser22 local.groundtarget local.player:
 					self.velocity = ( 0 0 0 )
 					if(local.thread != NULL) { local.thread remove }
 
-					thread boomerweenie_explode self local.laser22 local.groundtarget local.player
+					thread boomerweenie_explode self local.laser22 local.groundtarget local.player local.originold
 					end
 				}
 			}
@@ -399,7 +399,7 @@ waittill_touch local.thread local.laser22 local.groundtarget local.player:
 			self.velocity = ( 0 0 0 )
 			if(local.thread != NULL) { local.thread remove }
 
-			thread boomerweenie_explode self local.laser22 local.groundtarget local.player
+			thread boomerweenie_explode self local.laser22 local.groundtarget local.player local.originold
 			end
 		}
 

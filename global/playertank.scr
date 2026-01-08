@@ -106,6 +106,7 @@ tankreset local.groundtarget: // tank turret must be reset each time a new tank 
 	self.gun dmprojectile projectiles/tigercannonshell.tik // keep this before any waitframes, otherwise it won't work
 	
 	if(local.groundtarget == NIL || local.groundtarget == NULL) { wait 1 } // only wait after map initially loads, for turret to get attached to tank after level waittill spawn.
+	if(self == NULL) { end }
 	local.fwd_vec = angles_toforward self.angles
 	local.groundtarget_gun2 = spawn script_origin
 	local.gun2origin = self gettagposition "turret0"
@@ -946,6 +947,7 @@ turretplayer_reset local.team local.player local.dead:
 	local.player.passenger = 0
 	local.player.driving = 0
 	local.player.turreting = 0
+	local.player.remove_viewmodel = 1
 	local.player.scale = 1
 	if(local.player.dmteam != "spectator") { local.player show }
 	local.player thread wallstuck_fix
@@ -1102,7 +1104,7 @@ wallstuck_fix:
 	if(self.wallstuck_fixing == 1) { end }
 	self.wallstuck_fixing = 1
 
-	while(self != NULL && isalive self && self.dmteam == local.team) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
+	while(isalive self && self.dead != 1 && self.dmteam == local.team && self.driving != 1 && level.change_team_score != 1 && level.bbactive != 0 && self.passenger != 1 && self.flying != 1 && self.missile != NIL) // while player is stuck in a wall (falling) and origin isn't changing, count a few seconds, then respawn the player
 	{
 		if(local.c >= 60) // about 3 seconds
 		{

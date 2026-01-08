@@ -209,7 +209,12 @@ find_nearest_entity local.pointer local.laser local.notuseheld:
 				if(local.dist < local.smallest)
 				{
 					local.smallest = local.dist
-					local.closest = local.entity
+					local.closest = NIL
+					local.closest[1] = local.entity
+				}
+				else if(local.dist == local.smallest)
+				{
+					local.closest[local.closest.size + 1] = local.entity
 				}
 			}
 		}
@@ -228,11 +233,26 @@ find_nearest_entity local.pointer local.laser local.notuseheld:
 	}
 	else
 	{
-		local.closest thread cvars/cvars.scr::entprint
+		if(local.closest.size == 1) { local.closest[1] thread cvars/cvars.scr::entprint }
+		else
+		{
+			local.x = waitthread global/math.scr::simplify_decimal local.closest[1].origin[0]
+			local.y = waitthread global/math.scr::simplify_decimal local.closest[1].origin[1]
+			local.z = waitthread global/math.scr::simplify_decimal local.closest[1].origin[2]
+			local.origin = "( " + local.x + " " + local.y + " " + local.z + " )"
+			println("----- NOTE. Multiple entities found at origin: " + local.origin)
+			self iprint ("----- NOTE. Multiple entities found at origin: " + local.origin)
+
+			for(local.f = 1; local.f <= local.closest.size; local.f++)
+			{
+				println("----- [" + local.closest[local.f].entnum + "]: " + local.closest[local.f].targetname)
+				self iprint ("----- [" + local.closest[local.f].entnum + "]: " + local.closest[local.f].targetname)
+			}
+		}
 
 		if(self != NULL)
 		{
-			self.proximity_pointer_nearthing = local.closest
+			self.proximity_pointer_nearthing = local.closest[1]
 			self.proximity_pointer_finding = 0
 		}
 	}

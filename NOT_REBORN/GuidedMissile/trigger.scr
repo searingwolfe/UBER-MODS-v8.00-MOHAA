@@ -97,15 +97,15 @@ spawnmissile local.trig local.health:
 	else { local.missile light 1 0 0 450 }
 
 	local.missile.trig = spawn trigger_multiple spawnflags 128
-	local.missile.trig.origin = local.trig.origin
-	local.missile.trig setsize ( -25 -25 -25 ) ( 25 25 25 )
-	local.missile.trig glue local.missile
+	local.missile.trig.origin = local.missile.origin + local.missile.upvector * 50
+	local.missile.trig setsize ( -75 -75 -75 ) ( 75 75 75 )
+	local.missile.trig bind local.missile
 	local.missile.trig setthread shot
 	local.missile.trig.health = local.health
 
 	local.missile.cam = spawn script_model
 	local.missile.cam model "fx/dummy.tik"
-	local.missile.cam.origin = local.missile.origin + local.missile.upvector * -200 // local.origin
+	local.missile.cam.origin = local.missile.origin + local.missile.upvector * -200
 	local.missile.cam bind local.missile
 	local.missile.cam notsolid
 
@@ -185,7 +185,7 @@ fly local.missile:
 				local.viewangles = self.viewangles
 				local.velocity = level.guidedmissile_velocity
 
-				local.missile.angles = ( (self.viewangles[0] + 90) self.viewangles[1] self.viewangles[2] )
+				local.missile.angles = ( (self.viewangles[0] + 85) self.viewangles[1] self.viewangles[2] )
 				local.missile.cam unbind local.missile
 				local.missile.fired = 1
 				local.missile thread fly_thrust
@@ -205,7 +205,7 @@ fly local.missile:
 		else
 		{
 			local.missile.velocity = ((angles_toforward self.viewangles) * (level.guidedmissile_velocity / local.c))
-			local.missile.angles = ( ( 90 + self.viewangles[0]) self.viewangles[1] self.viewangles[2])
+			local.missile.angles = ( (self.viewangles[0] + 85) self.viewangles[1] self.viewangles[2])
 
 			local.c -= local.deceleration / local.decel_rate
 			if(local.c < 1)

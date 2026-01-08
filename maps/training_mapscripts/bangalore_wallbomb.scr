@@ -16,20 +16,7 @@ main local.name local.origin local.angles local.horizontaldist local.verticaldis
 	local.sin = (waitthread global/math.scr::sine local.angles[1]) * local.horizontaldist
 	local.cos = (waitthread global/math.scr::cosine local.angles[1]) * local.horizontaldist
 
-	local.explosion = spawn script_model targetname ("bangexplode" + local.name)
-	local.explosion model "fx/fx_truck_explosion.tik"
-	local.explosion.origin = local.origin + ( local.cos local.sin local.verticaldist )
-	local.explosion.angles = local.angles
-	local.explosion notsolid
-	local.explosion.scale = 2
-	local.explosion anim aaaa
-
-	local.debris = spawn script_model targetname ("bangdebris" + local.name)
-	local.debris model "animate/explosion_bombwall.tik"
-	local.debris.origin = local.origin + ( local.cos local.sin local.verticaldist )
-	local.debris.angles = local.angles
-	local.debris notsolid
-	local.debris anim idle
+	local.bangalore.exp_origin = local.origin + ( local.cos local.sin local.verticaldist )
 end local.name
 
 ////////////////////////////////////////////////////////////////////////
@@ -39,9 +26,32 @@ blowup local.name local.offtime local.damageradius local.pulsatingoff:
 	local.rtimedelay = (randomint(15) / 10.0) // randomize a decimal delay time before bangalore blows up.
 	wait local.rtimedelay
 
+	local.explosion = spawn script_model targetname ("bangexplode" + local.name)
+	local.explosion model "fx/fx_truck_explosion.tik"
+	local.explosion.origin = $("bangalore" + local.name).exp_origin
+	local.explosion.angles = ( 0 $("bangalore" + local.name).angles[1] 0 )
+	local.explosion notsolid
+	local.explosion.scale = 2
+	local.explosion anim aaaa
+
+	local.debris = spawn script_model targetname ("bangdebris" + local.name)
+	local.debris model "animate/explosion_bombwall.tik"
+	local.debris.origin = $("bangalore" + local.name).exp_origin
+	local.debris.angles = ( 0 ($("bangalore" + local.name).angles[1] + 180) 0 )
+	local.debris notsolid
+	local.debris anim idle
+
+	//local.bangwall = spawn script_model targetname ("bangwall" + local.name)
+	//local.bangwall model "animate/adam-bombwall.tik"
+	//local.bangwall.origin = $("bangalore" + local.name).origin
+	//local.bangwall.angles = ( 0 $("bangalore" + local.name).angles[1] 0 )
+	//local.bangwall notsolid
+	//local.bangwall anim idle
+
 	$("bangalore" + local.name).model = "animate/bangalore_pulsating_ghosting.tik"
 	$("bangexplode" + local.name) anim idle
 	$("bangdebris" + local.name) anim start
+	//$("bangwall" + local.name) anim start
 	if(local.pulsatingoff == 1) { $("bangalore" + local.name) hide }
 
 	//radiusdamage $("bangexplode" + local.name).origin 300 local.damageradius
@@ -86,9 +96,12 @@ blowup local.name local.offtime local.damageradius local.pulsatingoff:
 	if(local.random1 == 3) { $("bangexplode" + local.name) playsound explode_building_small4 }
 	if(local.random1 == 4) { $("bangexplode" + local.name) playsound explode_building_small5 }
 
-	waitframe  //some emitters need to be turned back off immediately, otherwise player sees explosions again when going in/out of map bounds.
+	waitframe  //some emitters need to be turned back off/removed immediately, otherwise player sees explosions again when going in/out of map bounds.
+	$("bangexplode" + local.name) remove
+	$("bangdebris" + local.name) remove
+	//$("bangwall" + local.name) remove
+
 	if(local.blewup == 1) { radiusdamage $("bangexplode" + local.name).origin 300 local.damageradius }
-	$("bangexplode" + local.name) anim aaaa
 
 	if(local.pulsatingoff != 2) { wait local.offtime } // default
 	if(local.pulsatingoff == 2) 
@@ -99,7 +112,6 @@ blowup local.name local.offtime local.damageradius local.pulsatingoff:
 	}
 
 	$("bangalore" + local.name).model = "animate/bangalore.tik"
-	$("bangdebris" + local.name) anim idle
 	if(local.pulsatingoff == 1 || local.pulsatingoff == 2) { $("bangalore" + local.name) show }
 end
 

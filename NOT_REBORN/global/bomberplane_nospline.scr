@@ -7,11 +7,12 @@ main local.team local.planes local.offtime local.bombs local.bombswait local.end
 
 ////////////////////////////////////////////////////////////////////////
 	
-level.bomberplane_health = 200 		// these are defaults set inside global/bomberplane_nospline.scr
-level.bomberplane_bombspeed = 0.25	// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
-level.bomberplane_bombgravity = 2	// higher = bombs drop faster vertically & closer to plane's splinepath
-level.bomberplane_bombspawntime = 0.2	// time between spawning bombs; lower = bombs spawn less often.
-level.bomberplane_speed = 2350		// lower = planes move slower.
+if(level.bomberplane_health == NIL) { level.bomberplane_health = 200 }			// default values:
+if(level.bomberplane_bombspeed == NIL) { level.bomberplane_bombspeed = 0.25 }		// speed multiplier; higher = bombs drop horizontally further away from plane's splinepath
+if(level.bomberplane_bombgravity == NIL) { level.bomberplane_bombgravity = 2 }		// higher = bombs drop faster vertically & closer to plane's splinepath
+if(level.bomberplane_bombspawntime == NIL) { level.bomberplane_bombspawntime = 0.2 }	// time between spawning bombs; lower = bombs spawn less often.
+if(level.bomberplane_speed == NIL) { level.bomberplane_speed = 2350 }			// lower = planes move slower.
+if(level.bomberplane_axes == NIL) { level.bomberplane_axes = 0 }			// only travel along one axis (0 = both, 1 = 0-180 axis, 2 = 90-270 axis).
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -52,12 +53,6 @@ level.bomberplane_speed = 2350		// lower = planes move slower.
 	local.planes = int(local.planes)
 	if(level.scriptmaster_bomberplane != 1) { thread cache_plane_explodestuff }
 
-	if(level.bomberplane_health == NIL || level.bomberplane_health <= 0) { level.bomberplane_health = 200 }		// defaults
-	if(level.bomberplane_bombspeed == NIL || level.bomberplane_bombspeed <= 0) { level.bomberplane_bombspeed = 0.25 }
-	if(level.bomberplane_bombgravity == NIL || level.bomberplane_bombgravity <= 0) { level.bomberplane_bombgravity = 2 }
-	if(level.bomberplane_bombspawntime == NIL || level.bomberplane_bombspawntime <= 0) { level.bomberplane_bombspawntime = 0.2 }
-	if(level.bomberplane_speed == NIL || level.bomberplane_speed <= 0) { level.bomberplane_speed = 2350 }
-
 	if(local.playerowner != NIL && local.playerowner != NULL) { local.owner_exists = 1 }
 
 	while($auto_bomberplane != NULL || $airstrike_bomberplane != NULL) { waitframe } // wait until airspace is not busy anymore
@@ -71,7 +66,10 @@ level.bomberplane_speed = 2350		// lower = planes move slower.
 	if(local.origin == NIL && local.angles == NIL)
 	{
 		local.height = level.bomberplane_map_setsize2[2]
-		local.r = randomint(3)
+
+		if(level.bomberplane_axes == 1) { local.r = randomint(2) }		// 0 or 1
+		else if(level.bomberplane_axes == 2) { local.r = randomint(2) + 2 }	// 2 or 3
+		else { local.r = randomint(4) }						// 0, 1, 2, 3
 
 		if(local.r == 0) // left-to-right. start at x_min, randomize 0 to y_min, move to x_max.
 		{
