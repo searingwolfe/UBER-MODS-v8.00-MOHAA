@@ -1338,15 +1338,12 @@ spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwi
 
 	local.trig = spawn trigger_multiple targetname (self.targetname + "_damagetrig") spawnflags 128 // for calculating how much damage was given (triggers with health will not go to a setthread until it's fully dead).
 	local.trig.origin = self.origin
-	local.trig.health = self.health		// make sure triggers with health & "spawnflags 128" are slightly larger in setsizes than other "spawnflags 128" triggers,
-	local.trig.vehicle = self		// otherwise the overlapping trigger that was last spawned in will have bullet-triggering priority,
-	local.trig glue self			// preventing the trigger with health from taking any damage.
+	local.trig.health = self.health
+	local.trig.vehicle = self
+	local.trig glue self
 	self.damagetrig = local.trig
 	local.trig thread removetrig
-	local.trig.model = self.model	// any entities that have attachmodels on them will crash the server if those entities do not have a specified model, since there is no "Box01" to attach to;
-	local.trig.scale = self.scale	// this also does not print any errors when crashing the server.
 	local.trig hide
-	//local.trig notsolid	// don't use this, or the trigger will not work.
 
 	local.trigshot = spawn trigger_multiple targetname (self.targetname + "_trigshot") spawnflags 128 // instantly determine the vehicle's shooter (runs setthread each time it's triggered).
 	local.trigshot.origin = self.origin
@@ -1355,10 +1352,7 @@ spawn_driver_seat_and_trigs: // only spawn seats & triggers when needed, otherwi
 	self.trigshot = local.trigshot
 	local.trigshot thread removetrig
 	local.trigshot setthread shottrig
-	local.trigshot.model = self.model
-	local.trigshot.scale = self.scale
 	local.trigshot hide
-	//local.trigshot notsolid
 
 	while($("driver_seat_" + self.entnum) != NULL) { $("driver_seat_" + self.entnum) remove; waitframe }
 	while($("rear_view_" + self.entnum) != NULL) { $("rear_view_" + self.entnum) remove; waitframe }
@@ -1470,81 +1464,92 @@ spawn_passenger_seat local.s: // only spawn seats when needed.
 
 	while($("passenger_seat_" + local.s + "_" + self.entnum) != NULL) { $("passenger_seat_" + local.s + "_" + self.entnum) remove; waitframe }
 
+	if(self.model == "models/vehicles/jeep.tik" || self.model == "models/vehicles/jeep_bench.tik" || self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik" || self.model == "models/vehicles/gmctruck.tik" || self.model == "models/vehicles/shermantank.tik") { local.tag = "Box01" }
+	else { local.tag = "Box02" }
+
+	if(self.seatframe == NIL || self.seatframe == NULL)
+	{
+		self attachmodel self.model local.tag 0.001 ("passenger_seat_frame_" + self.entnum) 1 -1 -1 -1 -1 ( 0 0 0 )
+		self.seatframe = $("passenger_seat_frame_" + self.entnum) 	// any entities that have attachmodels on them will crash the server if those entities do not have a specified model, since there is no "Box01" to attach to;
+		self.seatframe.angles = self.angles				// this also does not print any errors when crashing the server.
+		self.seatframe notsolid
+	}
+
 	local.add = 0
 	if(self.model == "models/vehicles/jeep.tik") // ( -right +left, +up -down, +forward -backward )
 	{
-		self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -25 )
+		self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -25 )
 	}
 	else if(self.model == "models/vehicles/jeep_bench.tik") // ( -right +left, +up -down, +forward -backward )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -25 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 0 10 -80 ) }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 5 -25 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 0 10 -80 ) }
 	}
 	else if(self.model == "models/vehicles/bmwbike.tik") // ( -right +left, +up -down, +forward -backward )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -18 0 -12 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 22 0 -44 ) }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -18 0 -12 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 22 0 -44 ) }
 	}
 	else if(self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik") // ( -right +left, -forward +backward, +up -down )
 	{
 		if(self.model == "models/vehicles/opeltruckgreen_canopy.tik") { local.num = 180 }
 		else { local.num = 0 }
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -19.5 -40 20 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 22 60 ); local.add = local.num }
-		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 87 60 ); local.add = local.num }
-		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 152 60 ); local.add = local.num }
-		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 22 60 ); local.add = local.num }
-		if(local.s == 6) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 87 60 ); local.add = local.num }
-		if(local.s == 7) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 152 60 ); local.add = local.num }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -19.5 -40 20 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 22 60 ); local.add = local.num }
+		if(local.s == 3) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 87 60 ); local.add = local.num }
+		if(local.s == 4) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 29 152 60 ); local.add = local.num }
+		if(local.s == 5) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 22 60 ); local.add = local.num }
+		if(local.s == 6) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 87 60 ); local.add = local.num }
+		if(local.s == 7) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -29 152 60 ); local.add = local.num }
 	}
 	else if(self.model == "models/vehicles/sdkfz.tik" || self.model == "models/vehicles/sdkfz_afrika.tik") //( +backward -forward, +up -down, +left -right )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 10 50 22 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 10 50 -14 ) }
-		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 90 50 22 ) }
-		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 90 50 -14 ) }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 10 50 22 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 10 50 -14 ) }
+		if(local.s == 3) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 90 50 22 ) }
+		if(local.s == 4) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 90 50 -14 ) }
 	}
 	else if(self.model == "models/vehicles/mercedes.tik") //( -right +left, +up -down, +forward -backward )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 -10 5 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 17 -10 -47 ) }
-		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 -10 -47 ) }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 -10 5 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 17 -10 -47 ) }
+		if(local.s == 3) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 -10 -47 ) }
 	}
 	else if(self.model == "models/vehicles/gmctruck.tik") //( -right +left, +up -down, +forward -backward )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -16.5 35 56 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -2 ); local.add = 180 }
-		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -67 ); local.add = 180 }
-		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -132 ); local.add = 180 }
-		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -2 ); local.add = 180 }
-		if(local.s == 6) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -67 ); local.add = 180 }
-		if(local.s == 7) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -132 ); local.add = 180 }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -16.5 35 56 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -2 ); local.add = 180 }
+		if(local.s == 3) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -67 ); local.add = 180 }
+		if(local.s == 4) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -26 69 -132 ); local.add = 180 }
+		if(local.s == 5) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -2 ); local.add = 180 }
+		if(local.s == 6) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -67 ); local.add = 180 }
+		if(local.s == 7) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 21 69 -132 ); local.add = 180 }
 	}
 	else if(self.model == "models/vehicles/european_car_grey.tik" || self.model == "models/vehicles/european_car_silver.tik" || self.model == "models/vehicles/european_car_tan.tik") //( -right +left, +up -down, +forward -backward )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 2 -17 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 17 2 -73 ) }
-		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 2 -73 ) }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 2 -17 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 17 2 -73 ) }
+		if(local.s == 3) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -17 2 -73 ) }
 	}
 	else if(self.model == "models/vehicles/european_delivery_truck_green.tik" || self.model == "models/vehicles/european_delivery_truck_grey.tik" || self.model == "models/vehicles/european_delivery_truck_red3.tik") //( -right +left, +up -down, +forward -backward )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -15 -5.5 -8 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 15 -5.5 -72 ) }
-		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -15 -5.5 -72 ) }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -15 -5.5 -8 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 15 -5.5 -72 ) }
+		if(local.s == 3) { self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -15 -5.5 -72 ) }
 	}
 	else if(self.model == "models/vehicles/m3.tik") // ( +forward -backward, +up -down, -left +right )
 	{
-		if(local.s == 1) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 3 30 27 ) }
-		if(local.s == 2) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -53 68 -38 ) }
-		if(local.s == 3) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -103 68 -38 ) }
-		if(local.s == 4) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -153 68 -38 ) }
-		if(local.s == 5) { self.damagetrig attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -53 68 33 ) }
-		if(local.s == 6) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -103 68 33 ) }
-		if(local.s == 7) { self.trigshot attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -153 68 33 ) }
+		if(local.s == 1) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( 3 30 27 ) }
+		if(local.s == 2) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -53 68 -38 ) }
+		if(local.s == 3) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -103 68 -38 ) }
+		if(local.s == 4) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -153 68 -38 ) }
+		if(local.s == 5) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -53 68 33 ) }
+		if(local.s == 6) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -103 68 33 ) }
+		if(local.s == 7) { self.seatframe attachmodel models/static/jug.tik "Box01" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -153 68 33 ) }
 	}
 	else if(self.model == "models/vehicles/shermantank.tik") //( -right +left, +up -down, +forward -backward )
 	{
-		self.damagetrig attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 85 -153 )
+		self.seatframe attachmodel models/static/jug.tik "Box02" 1 ("passenger_seat_" + local.s + "_" + self.entnum) 1 -1 -1 -1 -1 ( -24 85 -153 )
 	}
 
 	if($("passenger_seat_" + local.s + "_" + self.entnum) != NULL)

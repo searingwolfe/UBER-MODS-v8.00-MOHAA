@@ -49,7 +49,7 @@ exec global/aliascache_triggersounds.scr explode_building_large
 exec global/aliascache_triggersounds.scr explode_wood_small
 exec global/aliascache_triggersounds.scr woodcreak
 exec global/aliascache_triggersounds.scr radio_music2
-exec global/aliascache_triggersounds.scr machines_humming // transformer_humming1,2,3, generator_humming, generator_stop, airvent, missileroom_amb_large,small. 
+exec global/aliascache_triggersounds.scr pipesteam
 }
 exec global/aliascache_triggersounds.scr arty_exp_sand
 
@@ -109,6 +109,16 @@ if(getcvar("g_ubermods") == "1" && getcvar("g_ubergametype") != "bb")
 	exec map_triggers/player_spotlight.scr ( 6157 -3948 770 ) ( 1 0 1 ) s8 700 135 0 0 1		// magenta 
 
 	exec map_triggers/spotlight_colorswitch.scr ( 7018 4008 324 ) ( 0 0 0 ) s0 rainbow
+	exec map_triggers/spotlight_colorswitch.scr ( 3562 6930 398 ) ( 0 -90 0 ) all rainbow
+	exec map_triggers/spotlight_colorswitch.scr ( 3540 4574 398 ) ( 0 90 0 ) all slowrainbow
+
+	exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( 5880 5856 128 ) ( 60 0 0 ) 100 0
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 5831 5912 65 ) ( 0 90 0 ) bb1 60 450 2	// alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
+	exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 663 -7295 439 ) ( 60 90 0 ) 100 0	
+	exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 767 -7350 345 ) ( 0 180 0 ) bb2 60 450 2
+
+	exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( 5351 5768 0 ) ( 0 -90 0 ) ( 5414 5768 0 ) ( 0 0 0 ) 500 1 1 8
+	exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 4824 -5098 132 ) ( 0 180 0 ) ( 4824 -5268 132 ) ( 0 -90 0 ) 500 1 1 8
 }
 
 if(getcvar("g_ubermods") == "2")
@@ -158,18 +168,10 @@ exec server_planes/trigger.scr ( 3983 6625 -31 ) "axis" 1 0 ( 3983 6625 800 )		/
 exec jetpack/trigger.scr ( -32 -6742 174 ) // allies
 exec jetpack/trigger.scr ( 4965 -4359 156 ) // allies
 exec jetpack/trigger.scr ( 4291 7208 64 ) // axis
-exec jetpack/trigger.scr ( 6486 5191 -31 ) // axis    
+exec jetpack/trigger.scr ( 5813 4777 -31 ) // axis
 
 exec guidedmissile/trigger.scr ( -1079 -5071 123 )
 exec guidedmissile/trigger.scr ( 3686 6455 -31 )
-
-exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie1 ( 5351 5768 0 ) ( 0 -90 0 ) ( 5414 5768 0 ) ( 0 0 0 ) 500 1 1 8
-exec maps/gen_mapscripts/radiobomb_walkietrig.scr bombwalkie2 ( 4824 -5098 132 ) ( 0 180 0 ) ( 4824 -5268 132 ) ( 0 -90 0 ) 500 1 1 8
-
-exec maps/training_mapscripts/bangalore_wallbomb.scr bb1 ( 5880 5856 128 ) ( 60 0 0 ) 100 0
-exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 5831 5912 65 ) ( 0 90 0 ) bb1 60 450 2	// alarmswitch origin, angles; bangalore name, time, damageradius, pulsatingoff
-exec maps/training_mapscripts/bangalore_wallbomb.scr bb2 ( 663 -7295 439 ) ( 60 90 0 ) 100 0
-exec map_triggers/map_switches/training_alarmswitch_gunrange.scr ( 767 -7350 345 ) ( 0 180 0 ) bb2 60 450 2
 
 	thread vehicles_undermap
 }
@@ -202,9 +204,9 @@ end
 
 setup:
 
-/*
 	level.mapname = getcvar "mapname"
 	local.master = spawn scriptmaster
+/*
 	local.master aliascache track_switching sound/mechanics/M4_TrainTrackSlide.wav soundparms 1.2 0.0 1.2 0.0 320 2200 auto loaded maps level.mapname
 	local.master aliascache train_rolling sound/vehicle/veh_train_m6l3a_move.wav soundparms 1.8 0.0 1.0 0.0 3000 6000 auto loaded maps level.mapname
 	local.master aliascache train_stopping sound/vehicle/veh_train_m6l3a_stop.wav soundparms 1.2 0.0 1.0 0.0 4000 6000 auto loaded maps level.mapname
@@ -222,6 +224,14 @@ setup:
 	local.master aliascache explode_building2_large4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
 	local.master aliascache explode_building2_large5 sound/weapons/explo/Exp_Shingle_01.WAV soundparms 1.8 0.2 0.8 0.4 2000 8000 auto loaded maps level.mapname
 */
+	local.master aliascache generatorhum sound/mechanics/M1_LightTurn.wav soundparms 0.8 0.0 1.0 0.0 300 3000 item loaded maps level.mapname
+	local.master aliascache generatorstop sound/mechanics/Mec_GeneratorOff_01.wav soundparms 0.5 0.0 1.0 0.0 300 2000 item loaded maps level.mapname
+	local.master aliascache transformer_humming1 sound/amb/Amb_LightHum_01.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
+	local.master aliascache transformer_humming2 sound/amb/Amb_LightHum_02.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
+	local.master aliascache transformer_humming3 sound/amb/Amb_LightHum_03.wav soundparms 1.2 0.0 1.0 0.0 200 2500 auto loaded maps level.mapname
+	local.master aliascache airvent sound/mechanics/Mec_GeneratorRun_01.wav soundparms 1.5 0.0 1.0 0.0 400 3000 auto loaded maps level.mapname
+	local.master aliascache deathfire sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 150 2500 auto loaded maps level.mapname
+	local.master aliascache explode_mine_large sound/weapons/explo/Explo_Mine1.wav soundparms 1.2 0.2 0.8 0.4 1000 8000 auto loaded maps level.mapname
 
 	removeclass Actor
 	removeclass Rain // too many Rain entities (173 total).
@@ -240,8 +250,6 @@ setup:
 	$spotcover remove
 	$spotdamage remove
 	$alarm_sound remove
-	$generator_sound remove // [1] - [2]
-	$electric_fence_sound remove // [1] - [3]
 	$door_locked remove
 	$obj1_trigger1 remove
 	$obj1_trigger2 remove
@@ -256,6 +264,9 @@ setup:
 	//$obj3_front_door remove
 	//$exploder remove
 	//$explodersmashed remove
+	//$generator_sound remove // [1] - [2]
+	$electric_fence_sound remove // [1] - [3]
+	$obj2_so remove
 
 	for(local.e = 0; local.e <= 868; local.e++) // remove some entities that don't have targetnames.
 	{
@@ -272,6 +283,8 @@ setup:
 	if(getcvar("g_ubermods") != "1" && getcvar("g_ubermods") != "2")
 	{
 		removeclass SplinePath // removes 6 auto-spotlight paths.
+		$exploder remove
+		$explodersmashed show
 	}
 	else
 	{
@@ -280,6 +293,10 @@ setup:
 			removeclass SplinePath // removes 6 auto-spotlight paths.
 
 			thread radio_music ( 5408.19 6221.07 290 ) ( 0 180 0 ) // $obj3_radio origin & angles.
+			thread airtanks ( 6512 7308 128 )
+
+			thread cratesstuff static/indycrate.tik ( 6808 6012 -127 ) ( 0 180 0 )
+			thread cratesstuff static/indycrate.tik ( 6808 6083 -127 ) ( 0 180 0 ) // allows vehicles to get into the Axis spawn.
 
 			if(getcvar("g_ubergametype") != "bb")
 			{
@@ -288,14 +305,22 @@ setup:
 	
 				exec global/trainsequence_switch.scr trainfront trainswitch1 trainswitch1_pulsating ( 7140 4208 264 ) ( 0 180 0 ) NIL NIL ( 6960 3176 -112 )
 			}
+
+			thread transformer_exploder 60
+		}
+		else
+		{
+			exec global/spawnladder.scr ( 6035 4666 -30 ) 90 390 13.5 1 1 2 ( 0 0 1 )
+			exec global/spawnladder.scr ( 6389 6643 -30 ) 180 390 13.5 1 1 2 ( 0 0 1 )
+			exec global/spawnladder.scr ( 4803 4682 -30 ) 90 390 13.5 1 1 2 ( 0 0 1 )
+			exec global/spawnladder.scr ( 3541 4755 -30 ) 180 390 13.5 1 1 2 ( 0 0 1 )
+			exec global/spawnladder.scr ( 3562 6748 -30 ) 0 390 13.5 1 1 2 ( 0 0 1 )
+			exec global/spawnladder.scr ( 4885 6915 -30 ) 180 390 13.5 1 1 2 ( 0 0 1 )
+
+			$exploder remove
+			$explodersmashed show
 		}
 
-		exec global/spawnladder.scr ( 6035 4666 -30 ) 90 390 13.5 1 1 2 ( 0 0 1 )
-		exec global/spawnladder.scr ( 6389 6643 -30 ) 180 390 13.5 1 1 2 ( 0 0 1 )
-		exec global/spawnladder.scr ( 4803 4682 -30 ) 90 390 13.5 1 1 2 ( 0 0 1 )
-		exec global/spawnladder.scr ( 3541 4755 -30 ) 180 390 13.5 1 1 2 ( 0 0 1 )
-		exec global/spawnladder.scr ( 3562 6748 -30 ) 0 390 13.5 1 1 2 ( 0 0 1 )
-		exec global/spawnladder.scr ( 4885 6915 -30 ) 180 390 13.5 1 1 2 ( 0 0 1 )
 		exec global/spawnladder.scr ( 6618 4075.5 -30 ) 0 282 13.5 1 1 2 ( 0 0 1 )
 		exec global/spawnladder.scr ( 661.5 -7283 113 ) 270 223 13.5 1 1 2 ( 0 0 1 ) // move this slightly further away from the wall (4+ units away), otherwise people will climb all the way to the roof.
 	}
@@ -528,6 +553,135 @@ train_splinepath: // this thread is run by global/trainsequence_switch.scr.
 		endArray
 	}
 end local.array // end by outputting the local.array.
+
+////////////////////////////////////////////////////////////////////////
+
+transformer_exploder local.offtime:
+
+	if($exploder == NULL) { end }
+
+	local.trigger = spawn trigger_multiple targetname "transformer_exploder_trigger" spawnflags 128
+	local.trigger.origin = $exploder.origin
+	local.trigger setsize ( -50 -75 -85 ) ( 50 10 85 )
+	local.trigger.setsize1 = ( -50 -75 -85 )
+	local.trigger.setsize2 = ( 50 10 85 )
+	local.trigger.set = 71
+	local.trigger.health = 125
+	local.trigger thread healthboost
+
+	$exploder loopsound transformer_humming
+	$generator_sound loopsound generatorhum
+
+	while(local.trigger.dead != 1) { waitframe }
+
+	thread global/exploder.scr::explode 71
+	$exploder stoploopsound
+	$exploder playsound explode_electrical
+	$generator_sound stoploopsound
+
+	local.explode1 = thread emitterstuff "fx/fx_truck_explosion.tik" ( 4718 7345 325 ) ( 0 0 0 ) 1 "idle"
+	local.explode2 = thread emitterstuff "fx/fx_truck_explosion.tik" ( 5132 7345 325 ) ( 0 0 0 ) 1 "idle"
+	local.arc1 = thread emitterstuff "emitters/electric_arc.tik" ( 4718 7345 340 ) ( 0 0 0 ) 1 "idle"
+	local.arc2 = thread emitterstuff "emitters/electric_arc.tik" ( 5132 7345 340 ) ( 0 0 0 ) 1 "idle"
+	local.spark1 = thread emitterstuff "emitters/adamspark.tik" ( 4718 7345 340 ) ( 0 0 0 ) 0.5 "idle"
+	local.spark2 = thread emitterstuff "emitters/adamspark.tik" ( 5132 7345 340 ) ( 0 0 0 ) 0.5 "idle"
+
+	local.spark3 = thread emitterstuff "emitters/adamspark.tik" ( 6172 7500 128 ) ( 0 0 0 ) 0.75 "idle"
+	local.smoke = thread emitterstuff "emitters/smoke_smallfry.tik" ( 6172 7500 125 ) ( 0 -90 0 ) 1 "idle"
+
+	local.smoke light 1 1 1 150
+	local.explode1 light 1 1 1 500
+	local.explode2 light 1 1 1 500
+	radiusdamage ( 4718 7345 340 ) 256 384
+	radiusdamage ( 5132 7345 340 ) 256 384
+
+	local.explode1 playsound explode_mine_large
+	local.explode2 playsound explode_mine_large
+	local.arc1 playsound explode_electrical
+	local.arc2 playsound explode_electrical
+	local.spark1 loopsound deathfire
+	local.spark2 loopsound deathfire
+	local.spark3 loopsound deathfire
+
+	waitframe
+	local.explode1 remove
+	local.explode2 remove
+	local.arc1 stopsound
+	local.arc2 stopsound
+	local.smoke light 0 0 0 0
+
+	local.c = 0
+	local.d = 0
+	while(local.c < local.offtime * 20)
+	{
+		local.r = randomint(100) + 1
+		local.arc1 light 1 1 1 local.r
+		local.arc2 light 1 1 1 local.r
+
+		if(local.d == 20) { local.smoke light 1 1 1 100; local.d = 0 }
+		else { local.smoke light 0 0 0 0 }
+
+		local.c++
+		local.d++
+		waitframe
+	}
+
+	local.trigger remove
+	local.arc1 remove
+	local.arc2 remove
+	local.spark1 remove
+	local.spark2 remove
+	local.spark3 remove
+	local.smoke remove
+
+	thread global/exploder.scr::reset 71
+	thread transformer_exploder local.offtime
+end
+
+healthboost: // shotgun: 340 damage, bazooka: 105 damage, sniper: 106 damage, one grenade: 200 damage, two grenades: 400 damage
+
+	local.health = self.health
+	while(self != NULL && self.health > 0)
+	{
+		if(isalive self) { self.health = local.health } // need "isalive" check to avoid "cannot give health to dead entities" error
+		waitframe
+	}
+	self.dead = 1
+end
+
+////////////////////////////////////////////////////////////////////////
+
+airtanks local.origin:
+
+	local.airtanks = spawn script_model
+	local.airtanks model "static/indycrate.tik" // need a model for script_models to do "loopsound".
+	local.airtanks.origin = local.origin
+	local.airtanks notsolid
+	local.airtanks.scale = 0.01 // don't use "hide", otherwise loopsound will not work.
+
+	local.airtrig = spawn trigger_use
+	local.airtrig.origin = local.origin
+	local.airtrig setsize ( -30 -30 -5 ) ( 30 30 75 )
+	local.airtrig.air_on = 0
+	local.airtrig.airtanks = local.airtanks
+	local.airtrig thread airtanks_toggle
+end
+
+airtanks_toggle:
+
+	self waittill trigger
+	self nottriggerable
+
+	if(self.air_on != 1) { self.airtanks loopsound pipesteam }
+	if(self.air_on == 1) { self.airtanks stoploopsound }
+	
+	self.air_on++
+	if(self.air_on > 1) { self.air_on = 0 }
+
+	wait 1
+	self triggerable
+	self thread airtanks_toggle
+end
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1243,7 +1397,7 @@ emitterstuff local.model local.origin local.angles local.scale local.anim local.
 	if(local.anim != NIL) { local.emitter anim local.anim }
 	if(local.targetname != NIL) { local.emitter.targetname = local.targetname }
 	local.emitter notsolid
-end
+end local.emitter
 
 solidclip local.origin local.setsize1 local.setsize2 local.angle local.targetname:
 
@@ -1407,7 +1561,7 @@ exec alienx/basebuild.scr::basebuild ( 7490.35 -1600.83 -127.88 ) "static/bodies
 //exec alienx/basebuild.scr::basebuild ( 7490.35 -1000.83 -127.88 ) "static/bush_full.tik" 1 0 1 0 90 .5 0 0 0
 
 //axis
-exec alienx/basebuild.scr::basebuild ( 5590.87 6391.13 -31.88 ) "static/indycrate.tik" 1 0 1 0 90 .5 0 0 1
+exec alienx/basebuild.scr::basebuild ( 5590.87 6391.13 -31.88 ) "animate/alarmswitch.tik" 1 0 1 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 5490.87 6391.13 -31.88 ) "statweapons/mg42_gun.tik" 1 1 0 0 90 .5 0 0 1
 exec alienx/basebuild.scr::basebuild ( 5390.87 6391.13 -31.88 ) "statweapons/flak88turret.tik" 1 1 .5 0 90 .25 0 0 1
 exec alienx/basebuild.scr::basebuild ( 5290.87 6391.13 -31.88 ) "static/sandbag_link_main.tik" 1 0 0 1 90 .5 0 0 1
@@ -1440,7 +1594,7 @@ consoleprint:
 		local.entity = getentity(local.i) // $player[1] = entity 0		
 		if(local.entity == NULL && local.i >= local.maxclients) { local.nullent++ }
 		if(local.entity != NULL) { local.e++ }
-		if(local.e >= 650 - local.maxclients) { local.warning = 1 }
+		if(local.e >= 680 - local.maxclients) { local.warning = 1 }
 	}
 	if(local.entity == NULL) // if entity 868 = NULL
 	{
@@ -1455,7 +1609,7 @@ consoleprint:
 	if(local.warning == 1)
 	{
 		wait 1
-		println("----- WARNING: Keep below 650 entities on SP maps for Reborn servers!")
+		println("----- WARNING: Keep below 680 entities on SP maps for Reborn servers!")
 		println("----- Players may soon be unable to join! (stuck connecting to sever)")
 	}
 end

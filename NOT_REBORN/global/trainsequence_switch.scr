@@ -161,7 +161,7 @@ main local.train local.switch local.switchpulse local.switchorigin local.switcha
 	if(local.axis == "x" || local.axis == "z") { local.trig.axis = local.axis }
 	else { local.trig.axis = "y" }
 
-	if(local.trig.leftrail == NIL && local.trig.rightrail == NIL && local.trackslide_origin != NIL)
+	if((local.trig.leftrail == NIL || local.trig.leftrail == NULL) && (local.trig.rightrail == NIL || local.trig.rightrail == NULL) && local.trackslide_origin != NIL)
 	{
 		local.trig.soundent = spawn script_model
 		local.trig.soundent model "fx/dummy.tik"
@@ -193,8 +193,8 @@ trainswitch1_triggered:
 			}
 
 			thread rotate (self.axis + "left")
-			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "up" self.leftrail self.rightrail }
-			else { self.soundent playsound trackswitch }
+			if(self.soundent == NIL || self.soundent == NULL) { waitthread moverail "up" self.leftrail self.rightrail }
+			else { self.soundent playsound track_switching }
 			self.toggle = 1
 		}
 		else
@@ -212,8 +212,8 @@ trainswitch1_triggered:
 			}
 
 			thread rotate (self.axis + "right")
-			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "down" self.leftrail self.rightrail }
-			else { self.soundent playsound trackswitch }
+			if(self.soundent == NIL || self.soundent == NULL) { waitthread moverail "down" self.leftrail self.rightrail }
+			else { self.soundent playsound track_switching }
 			self.toggle = 0
 		}
 		wait 1
@@ -267,8 +267,8 @@ trainswitch2_triggered:
 			self message ("*** Switching rails to the correct track. ***")
 			self.switch playsound trackswitch
 
-			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "down" self.leftrail self.rightrail }
-			else { self.soundent playsound trackswitch }
+			if(self.soundent == NIL || self.soundent == NULL) { waitthread moverail "down" self.leftrail self.rightrail }
+			else { self.soundent playsound track_switching }
 			self.toggle = 1
 		}
 		else
@@ -294,8 +294,8 @@ trainswitch2_triggered:
 			self message ("*** Switching rails to a different track. ***")
 			self.switch playsound trackswitch
 
-			if(self.leftrail != NIL && self.rightrail != NIL) { waitthread moverail "up" self.leftrail self.rightrail }
-			else { self.soundent playsound trackswitch }
+			if(self.soundent == NIL || self.soundent == NULL) { waitthread moverail "up" self.leftrail self.rightrail }
+			else { self.soundent playsound track_switching }
 			self.toggle = 0
 			self.switchedtwice = 1
 		}
