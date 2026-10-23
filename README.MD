@@ -19,7 +19,7 @@
 # How To Install / Uninstall
 
 - From GitHub: click the green "<> Code", download .zip file.
-- All contents within "UBER-MODS-v8.00-MOHAA" folder inside the .zip need to be copy-pasted outside this folder (all contents directly in the .zip).
+- All contents within "UBER-MODS-v8.00-MOHAA" folder inside the .zip need to be copy-pasted outside this folder (all contents directly in the .zip; the root directory should have all the global, maps, models, ubersound, etc folders).
 - Once all contents are copy-pasted outside this folder, delete the "UBER-MODS-v8.00-MOHAA" folder.
 - Change the .zip filetype to .pk3.
 - Add "zzzzzzzzzzzzzzz_" to the beginning of the filename of this .pk3 (ensures that the mod loads last).
